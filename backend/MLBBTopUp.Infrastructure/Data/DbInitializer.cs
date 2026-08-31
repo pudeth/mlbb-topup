@@ -94,6 +94,19 @@ public static class DbInitializer
                         CreatedAt = DateTime.UtcNow
                     });
                 }
+            // Seed Default Admin User if not exists
+            if (!await context.Users.AnyAsync(u => u.Role == "Admin"))
+            {
+                context.Users.Add(new MLBBTopUp.Core.Entities.User
+                {
+                    Name = "Super Admin",
+                    Email = "admin@mlbbtopup.com",
+                    PasswordHash = BCrypt.Net.BCrypt.HashPassword("AdminPassword123!"),
+                    Role = "Admin",
+                    CreatedAt = DateTime.UtcNow
+                });
+                await context.SaveChangesAsync();
+                Console.WriteLine("[+] Default Admin user created: admin@mlbbtopup.com");
             }
 
             await context.SaveChangesAsync();
