@@ -56,6 +56,10 @@ __pycache__/
 venv/
 env/
 ENV/
+**/venv/
+**/build/
+BAKONG CODE/
+BAKONG*
 *.egg-info/
 
 # React Build

@@ -48,7 +48,7 @@ const MobileBottomNav = () => {
 
   return (
     <div
-      className={`lg:hidden fixed bottom-3 sm:bottom-4 left-1/2 -translate-x-1/2 z-50 w-[94%] max-w-[420px] transition-all duration-300 ease-out select-none ${
+      className={`mobile-bottom-nav lg:hidden fixed bottom-3 sm:bottom-4 left-1/2 -translate-x-1/2 z-50 w-[94%] max-w-[420px] transition-all duration-300 ease-out select-none ${
         isVisible
           ? 'translate-y-0 opacity-100 pointer-events-auto'
           : 'translate-y-24 opacity-0 pointer-events-none'

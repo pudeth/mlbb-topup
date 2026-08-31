@@ -403,7 +403,7 @@ const AiAssistant = () => {
       <button
         type="button"
         onClick={() => setIsOpen(!isOpen)}
-        className="fixed bottom-5 right-4 sm:right-6 z-40 p-2 sm:px-4 sm:py-2.5 rounded-2xl bg-gradient-to-r from-slate-950 via-[#0D1527] to-slate-950 border border-cyan-500/50 hover:border-amber-400 text-white font-black shadow-[0_0_25px_rgba(6,182,212,0.35)] hover:shadow-[0_0_35px_rgba(251,191,36,0.45)] hover:scale-105 active:scale-95 transition-all duration-300 flex items-center gap-2.5 group select-none backdrop-blur-xl cursor-pointer"
+        className="ai-assistant-widget fixed bottom-5 right-4 sm:right-6 z-40 p-2 sm:px-4 sm:py-2.5 rounded-2xl bg-gradient-to-r from-slate-950 via-[#0D1527] to-slate-950 border border-cyan-500/50 hover:border-amber-400 text-white font-black shadow-[0_0_25px_rgba(6,182,212,0.35)] hover:shadow-[0_0_35px_rgba(251,191,36,0.45)] hover:scale-105 active:scale-95 transition-all duration-300 flex items-center gap-2.5 group select-none backdrop-blur-xl cursor-pointer"
         aria-label="Open AI Assistant"
       >
         {/* Animated AI Orb Container */}

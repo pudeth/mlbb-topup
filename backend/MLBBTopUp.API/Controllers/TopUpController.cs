@@ -35,11 +35,6 @@ public class TopUpController : BaseController
         }
 
         var result = await _topUpService.CheckAccountAsync(playerId, serverId ?? string.Empty);
-        if (!result.Valid)
-        {
-            return BadRequest(result);
-        }
-
         return Ok(result);
     }
 

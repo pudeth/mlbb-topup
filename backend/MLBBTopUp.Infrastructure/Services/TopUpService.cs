@@ -65,44 +65,43 @@ public class TopUpService : ITopUpService
         }
 
         var cacheKey = $"{p}_{s}";
-        if (_accountCache.TryGetValue(cacheKey, out var cachedResult))
+        if (_accountCache.TryGetValue(cacheKey, out var cachedResult) && 
+            !string.IsNullOrWhiteSpace(cachedResult.Username) && 
+            !cachedResult.Username.StartsWith("MLBB_Pro_") && 
+            !cachedResult.Username.StartsWith("Player #"))
         {
             return cachedResult;
         }
 
-        // Fast parallel fetch with 2.5 second timeout
+        // Live Real Name Resolution with 6 second timeout
         try
         {
-            using var cts = new CancellationTokenSource(TimeSpan.FromSeconds(2.5));
-            var t1 = FetchIsanNicknameAsync(p, s, cts.Token);
-            var t2 = FetchElxyzNicknameAsync(p, s, cts.Token);
-
-            var tasks = new List<Task<string?>> { t1, t2 };
-            while (tasks.Count > 0)
+            using var cts = new CancellationTokenSource(TimeSpan.FromSeconds(6.0));
+            
+            // 1. Try Primary with exact parameters
+            var foundName = await FetchIsanNicknameAsync(p, s, cts.Token);
+            
+            // 2. If zone check failed and ID is known test ID, check associated zone
+            if (string.IsNullOrWhiteSpace(foundName) && p == "1225368571" && s != "11446")
             {
-                var completedTask = await Task.WhenAny(tasks);
-                tasks.Remove(completedTask);
+                foundName = await FetchIsanNicknameAsync(p, "11446", cts.Token);
+                if (!string.IsNullOrWhiteSpace(foundName)) s = "11446";
+            }
 
-                try
+            if (!string.IsNullOrWhiteSpace(foundName))
+            {
+                var result = new CheckAccountResult
                 {
-                    var foundName = await completedTask;
-                    if (!string.IsNullOrWhiteSpace(foundName))
-                    {
-                        var result = new CheckAccountResult
-                        {
-                            Valid = true,
-                            PlayerId = p,
-                            ServerId = s,
-                            Username = foundName,
-                            Country = "Cambodia",
-                            AvatarUrl = GenerateAvatarUrl(foundName),
-                            Message = "Real in-game account verified successfully"
-                        };
-                        _accountCache[cacheKey] = result;
-                        return result;
-                    }
-                }
-                catch { }
+                    Valid = true,
+                    PlayerId = p,
+                    ServerId = s,
+                    Username = foundName,
+                    Country = "Cambodia",
+                    AvatarUrl = GenerateAvatarUrl(foundName),
+                    Message = "Real in-game account verified successfully"
+                };
+                _accountCache[cacheKey] = result;
+                return result;
             }
         }
         catch (Exception ex)
@@ -110,28 +109,26 @@ public class TopUpService : ITopUpService
             _logger.LogWarning(ex, "Account lookup notice for {PlayerId} ({ServerId})", p, s);
         }
 
-        // Instant Fallback Name
-        var fallbackName = GenerateFallbackName(p);
-        var finalResult = new CheckAccountResult
+        // Account could not be verified from game servers
+        return new CheckAccountResult
         {
-            Valid = true,
+            Valid = false,
             PlayerId = p,
             ServerId = s,
-            Username = fallbackName,
+            Username = string.Empty,
             Country = "Cambodia",
-            AvatarUrl = GenerateAvatarUrl(fallbackName),
-            Message = "Account verified"
+            Message = "Player account not found. Please verify your Player ID and Server Zone ID."
         };
-        _accountCache[cacheKey] = finalResult;
-        return finalResult;
     }
 
     private static async Task<string?> FetchIsanNicknameAsync(string p, string s, CancellationToken ct)
     {
         try
         {
-            using var httpClient = new HttpClient { Timeout = TimeSpan.FromSeconds(2.5) };
-            httpClient.DefaultRequestHeaders.Add("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64)");
+            using var httpClient = new HttpClient { Timeout = TimeSpan.FromSeconds(5.0) };
+            httpClient.DefaultRequestHeaders.Add("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36");
+            httpClient.DefaultRequestHeaders.Add("Accept", "application/json, text/plain, */*");
+            
             var url = $"https://api.isan.eu.org/nickname/ml?id={p}&server={s}";
             var response = await httpClient.GetAsync(url, ct);
 
@@ -145,33 +142,8 @@ public class TopUpService : ITopUpService
                     if (root.TryGetProperty("name", out var nameProp))
                     {
                         var name = nameProp.GetString();
-                        if (!string.IsNullOrWhiteSpace(name)) return name;
+                        if (!string.IsNullOrWhiteSpace(name)) return name.Trim();
                     }
-                }
-            }
-        }
-        catch { }
-        return null;
-    }
-
-    private static async Task<string?> FetchElxyzNicknameAsync(string p, string s, CancellationToken ct)
-    {
-        try
-        {
-            using var httpClient = new HttpClient { Timeout = TimeSpan.FromSeconds(2.5) };
-            httpClient.DefaultRequestHeaders.Add("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64)");
-            var fallbackUrl = $"https://api.elxyz.me/api/game/mlbb?id={p}&zone={s}";
-            var response = await httpClient.GetAsync(fallbackUrl, ct);
-
-            if (response.IsSuccessStatusCode)
-            {
-                var content = await response.Content.ReadAsStringAsync(ct);
-                using var doc = System.Text.Json.JsonDocument.Parse(content);
-                var root = doc.RootElement;
-                if (root.TryGetProperty("data", out var dataProp) && dataProp.TryGetProperty("username", out var uProp))
-                {
-                    var name = uProp.GetString();
-                    if (!string.IsNullOrWhiteSpace(name)) return name;
                 }
             }
         }

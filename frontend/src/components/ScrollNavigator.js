@@ -79,7 +79,7 @@ const ScrollNavigator = () => {
     <div
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
-      className="fixed top-1/2 -translate-y-1/2 right-2 sm:right-3.5 z-40 flex flex-col items-end gap-2 pointer-events-auto select-none transition-all"
+      className="scroll-navigator-dock fixed top-1/2 -translate-y-1/2 right-2 sm:right-3.5 z-40 flex flex-col items-end gap-2 pointer-events-auto select-none transition-all"
     >
       {/* 1. SECTION 1: Banner Button (Visible ONLY when at Top) */}
       {isNearTop && (
