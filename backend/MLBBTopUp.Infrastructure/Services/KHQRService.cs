@@ -110,7 +110,7 @@ public class KHQRService : IKHQRService
                 if (result != null && !string.IsNullOrWhiteSpace(result.Md5Hash))
                 {
                     result.Success = true;
-                    result.QrImageUrl = $"https://mlbb-khqr-api.onrender.com/api/payment/qr/{result.Md5Hash}";
+                    result.QrImageUrl = $"{_khqrApiUrl}/api/payment/qr/{result.Md5Hash}";
                     return result;
                 }
             }
@@ -132,7 +132,7 @@ public class KHQRService : IKHQRService
             Currency = currency,
             QrCode = $"00020101021229190015deth_peak3@aclb520459995303{currTag}5404{amount:F2}5802KH5916PuDeth Smart-PAY6010PHNOM PENH62400309Smart-PAY02090123456780110{billNumber}6304ED20",
             Deeplink = $"https://bakong.nbc.org.kh/pay?md5={fallbackHash}",
-            QrImageUrl = $"https://mlbb-khqr-api.onrender.com/api/payment/qr/{fallbackHash}"
+            QrImageUrl = $"{_khqrApiUrl}/api/payment/qr/{fallbackHash}"
         };
     }
 
@@ -176,6 +176,6 @@ public class KHQRService : IKHQRService
 
     public string GetQRImageUrl(string md5Hash)
     {
-        return $"https://mlbb-khqr-api.onrender.com/api/payment/qr/{md5Hash}";
+        return $"{_khqrApiUrl}/api/payment/qr/{md5Hash}";
     }
 }
