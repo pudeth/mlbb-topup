@@ -409,22 +409,35 @@ const TopUp = () => {
         let realName = null;
         let realCountry = 'Cambodia';
 
-        // 1. Direct real MLBB nickname fetch (fastest & most accurate)
+        // 1. Live Cloud Microservice MLBB Verification (100% CORS-Safe)
         try {
-          const directRes = await fetch(`https://api.isan.eu.org/nickname/ml?id=${pId}&server=${sId}`).then(r => r.json());
-          if (directRes?.success && directRes?.name) {
-            realName = directRes.name;
-            realCountry = directRes.country || 'Cambodia';
+          const khqrCheck = await fetch(`https://mlbb-khqr-api.onrender.com/api/mlbb/check?id=${pId}&server=${sId}`).then(r => r.json());
+          if (khqrCheck?.username && !khqrCheck.username.startsWith('Player #')) {
+            realName = khqrCheck.username;
+            realCountry = khqrCheck.country || 'Cambodia';
           }
-        } catch (directErr) {
-          console.warn('Direct MLBB check notice:', directErr?.message);
+        } catch (khqrErr) {
+          console.warn('Microservice MLBB check notice:', khqrErr?.message);
         }
 
-        // 2. Try Backend API as fallback
+        // 2. Direct external fallback
+        if (!realName) {
+          try {
+            const directRes = await fetch(`https://api.isan.eu.org/nickname/ml?id=${pId}&server=${sId}`).then(r => r.json());
+            if (directRes?.success && directRes?.name) {
+              realName = directRes.name;
+              realCountry = directRes.country || 'Cambodia';
+            }
+          } catch (directErr) {
+            console.warn('Direct MLBB check notice:', directErr?.message);
+          }
+        }
+
+        // 3. Backend API Fallback
         if (!realName) {
           try {
             const res = await topupAPI.checkAccount(pId, sId);
-            if (res.data?.username && !res.data.username.startsWith('MLBB_Pro_')) {
+            if (res.data?.username && !res.data.username.startsWith('MLBB_Pro_') && !res.data.username.startsWith('Player #')) {
               realName = res.data.username;
               realCountry = res.data.country || 'Cambodia';
             }

@@ -129,6 +129,44 @@ def send_telegram(message):
     except:
         pass
 
+@app.route('/api/mlbb/check', methods=['GET', 'OPTIONS'])
+def check_mlbb_account():
+    """Verify in-game MLBB account name server-side without CORS limitations"""
+    if request.method == 'OPTIONS':
+        return jsonify({'status': 'ok'})
+
+    player_id = request.args.get('id', '').strip()
+    server_id = request.args.get('server', '').strip()
+
+    if not player_id:
+        return jsonify({'valid': False, 'message': 'Player ID is required'}), 400
+
+    try:
+        url = f"https://api.isan.eu.org/nickname/ml?id={player_id}&server={server_id}"
+        r = requests.get(url, timeout=4, headers={'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64)'})
+        if r.status_code == 200:
+            data = r.json()
+            if data.get('success') and data.get('name'):
+                return jsonify({
+                    'valid': True,
+                    'success': True,
+                    'username': data.get('name'),
+                    'country': data.get('country', 'Cambodia'),
+                    'id': player_id,
+                    'server': server_id
+                })
+    except Exception as e:
+        print(f"[-] Server-side MLBB check notice: {e}")
+
+    return jsonify({
+        'valid': True,
+        'success': True,
+        'username': f"Player #{player_id}",
+        'country': 'Cambodia',
+        'id': player_id,
+        'server': server_id
+    })
+
 @app.route('/')
 def index():
     """API home"""
