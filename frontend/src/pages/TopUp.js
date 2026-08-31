@@ -420,20 +420,7 @@ const TopUp = () => {
           console.warn('Microservice MLBB check notice:', khqrErr?.message);
         }
 
-        // 2. Direct external fallback
-        if (!realName) {
-          try {
-            const directRes = await fetch(`https://api.isan.eu.org/nickname/ml?id=${pId}&server=${sId}`).then(r => r.json());
-            if (directRes?.success && directRes?.name) {
-              realName = directRes.name;
-              realCountry = directRes.country || 'Cambodia';
-            }
-          } catch (directErr) {
-            console.warn('Direct MLBB check notice:', directErr?.message);
-          }
-        }
-
-        // 3. Backend API Fallback
+        // 2. Backend API Fallback (CORS-Safe)
         if (!realName) {
           try {
             const res = await topupAPI.checkAccount(pId, sId);
