@@ -75,8 +75,12 @@ public class KHQRService : IKHQRService
     {
         _httpClient = httpClient;
         _configuration = configuration;
-        _logger = logger;
-        _khqrApiUrl = configuration["KHQR:ApiUrl"] ?? "http://localhost:5000";
+        var rawUrl = configuration["KHQR:ApiUrl"] ?? "http://localhost:5001";
+        if (!rawUrl.StartsWith("http://", StringComparison.OrdinalIgnoreCase) && !rawUrl.StartsWith("https://", StringComparison.OrdinalIgnoreCase))
+        {
+            rawUrl = "https://" + rawUrl;
+        }
+        _khqrApiUrl = rawUrl.TrimEnd('/');
     }
 
     public async Task<KHQRPaymentResponse> CreatePaymentAsync(int orderId, decimal amount, string currency = "USD")

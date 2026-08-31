@@ -12,8 +12,15 @@ public static class DbInitializer
 
         try
         {
-            // Apply pending migrations
-            await context.Database.MigrateAsync();
+            // Apply pending migrations or ensure database is created
+            try
+            {
+                await context.Database.MigrateAsync();
+            }
+            catch
+            {
+                await context.Database.EnsureCreatedAsync();
+            }
             
             // Sync selling prices and exact provider wholesale costs for profit calculation
             var classicPrices = new Dictionary<int, (decimal price, decimal cost, decimal reseller, string name, string desc)>
