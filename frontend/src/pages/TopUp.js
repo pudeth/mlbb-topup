@@ -605,26 +605,61 @@ const TopUp = () => {
       const khqrBase = process.env.REACT_APP_KHQR_API_URL || (typeof window !== 'undefined' && window.location.hostname !== 'localhost' ? 'https://mlbb-khqr-api.onrender.com' : '');
       const getQrUrl = (hash) => hash ? `${khqrBase}/api/payment/qr/${hash}?t=${Date.now()}` : null;
 
-      if (newOrder.payment) {
-        setPaymentData({
-          ...newOrder.payment,
-          currency: currency,
-          khqrQRImageUrl: getQrUrl(newOrder.payment.khqrMd5Hash) || newOrder.payment.khqrQRImageUrl
-        });
-      } else {
-        const payRes = await paymentsAPI.process(newOrder.orderId, {
-          paymentMethod: 'khqr',
-          currency: currency
-        });
+      let createdPayment = newOrder.payment;
 
-        if (payRes.data) {
-          setPaymentData({
-            ...payRes.data,
-            currency: currency,
-            khqrQRImageUrl: getQrUrl(payRes.data.khqrMd5Hash) || payRes.data.khqrQRImageUrl
+      if (!createdPayment) {
+        try {
+          const payRes = await paymentsAPI.process(newOrder.orderId, {
+            paymentMethod: 'khqr',
+            currency: currency
           });
+          if (payRes.data) {
+            createdPayment = payRes.data;
+          }
+        } catch (payErr) {
+          console.warn('Backend payment notice, calling direct KHQR service:', payErr?.message);
         }
       }
+
+      // If backend payment was null or errored, call live KHQR microservice directly
+      if (!createdPayment || !createdPayment.khqrMd5Hash) {
+        try {
+          const directPayRes = await fetch('https://mlbb-khqr-api.onrender.com/api/payment/create', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              amount: selectedProduct.price,
+              currency: currency,
+              bill_number: `MLBB${newOrder.orderId}`,
+              phone: '85512345678'
+            })
+          }).then(r => r.json());
+
+          if (directPayRes && directPayRes.md5_hash) {
+            createdPayment = {
+              orderId: newOrder.orderId,
+              amount: selectedProduct.price,
+              currency: currency,
+              khqrBillNumber: directPayRes.bill_number,
+              khqrMd5Hash: directPayRes.md5_hash,
+              khqrQRCode: directPayRes.qr_code,
+              khqrDeeplink: directPayRes.deeplink,
+              khqrQRImageUrl: `https://mlbb-khqr-api.onrender.com/api/payment/qr/${directPayRes.md5_hash}`
+            };
+          }
+        } catch (directErr) {
+          console.error('Direct KHQR error:', directErr);
+        }
+      }
+
+      if (createdPayment) {
+        setPaymentData({
+          ...createdPayment,
+          currency: currency,
+          khqrQRImageUrl: getQrUrl(createdPayment.khqrMd5Hash) || createdPayment.khqrQRImageUrl
+        });
+      }
+
       setTimeout(() => {
         checkoutSectionRef.current?.scrollIntoView({ behavior: 'smooth' });
       }, 100);
