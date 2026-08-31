@@ -56,7 +56,7 @@ def reload_khqr_instance():
 # In-memory storage for QR codes when database is unavailable
 qr_cache = {}
 
-# Database configuration
+# Database configuration (MySQL & MongoDB Atlas)
 db_config = {
     'host': os.getenv('DB_HOST'),
     'port': int(os.getenv('DB_PORT', 3306)),
@@ -65,13 +65,52 @@ db_config = {
     'password': os.getenv('DB_PASSWORD', '')
 }
 
+# Initialize MongoDB Atlas Client
+mongo_payments = None
+try:
+    from pymongo import MongoClient
+    mongo_uri = os.getenv('MONGODB_URI', 'mongodb+srv://peakmao007_db_user:DNelqTteMX30a7PX@pudeth.olrum6s.mongodb.net/?retryWrites=true&w=majority')
+    if mongo_uri:
+        mongo_client = MongoClient(mongo_uri, serverSelectionTimeoutMS=5000)
+        mongo_db = mongo_client.get_database('mlbbtopup')
+        mongo_payments = mongo_db.payments
+        print("[+] MongoDB Atlas connected successfully!")
+except Exception as mongo_err:
+    print(f"[-] MongoDB Atlas notice: {mongo_err}")
+    mongo_payments = None
+
 def get_db_connection():
     """Get database connection"""
     try:
-        return mysql.connector.connect(**db_config)
+        if db_config['host']:
+            return mysql.connector.connect(**db_config)
     except Error as e:
         print(f"Database error: {e}")
-        return None
+    return None
+
+def save_payment_record(doc):
+    """Save payment record to MongoDB Atlas or cache"""
+    if mongo_payments is not None:
+        try:
+            mongo_payments.update_one({'md5_hash': doc['md5_hash']}, {'$set': doc}, upsert=True)
+            print(f"[+] Payment saved to MongoDB Atlas: {doc.get('md5_hash')}")
+            return True
+        except Exception as e:
+            print(f"[-] MongoDB save error: {e}")
+    qr_cache[doc['md5_hash']] = doc
+    return False
+
+def get_payment_record(md5_hash):
+    """Fetch payment record by MD5 from MongoDB Atlas or cache"""
+    if mongo_payments is not None:
+        try:
+            rec = mongo_payments.find_one({'md5_hash': md5_hash})
+            if rec:
+                rec.pop('_id', None)
+                return rec
+        except Exception as e:
+            print(f"[-] MongoDB fetch error: {e}")
+    return qr_cache.get(md5_hash)
 
 def send_telegram(message):
     """Send Telegram notification"""
@@ -162,33 +201,19 @@ def create_payment():
                 print(f"Warning: Could not generate deeplink: {e}")
                 deeplink = None
         
-        # Save to database (or cache if DB unavailable)
-        conn = get_db_connection()
-        if conn:
-            try:
-                cursor = conn.cursor()
-                cursor.execute("""
-                    INSERT INTO payments 
-                    (bill_number, qr_code, md5_hash, deeplink, amount, currency, customer_phone)
-                    VALUES (%s, %s, %s, %s, %s, %s, %s)
-                """, (bill_number, qr, md5, deeplink, amount, currency, phone))
-                conn.commit()
-                print(f"[+] Payment saved to database: {md5}")
-            except Error as db_error:
-                print(f"Database error: {db_error}")
-            finally:
-                conn.close()
-        else:
-            # Store in memory cache if database is unavailable
-            qr_cache[md5] = {
-                'bill_number': bill_number,
-                'qr_code': qr,
-                'amount': amount,
-                'currency': currency,
-                'phone': phone,
-                'created_at': datetime.now().isoformat()
-            }
-            print(f"[!] Database unavailable. Payment cached in memory: {md5}")
+        # Save to MongoDB Atlas / MySQL / Cache
+        payment_doc = {
+            'bill_number': bill_number,
+            'qr_code': qr,
+            'md5_hash': md5,
+            'deeplink': deeplink,
+            'amount': amount,
+            'currency': currency,
+            'customer_phone': phone,
+            'status': 'UNPAID',
+            'created_at': datetime.now().isoformat()
+        }
+        save_payment_record(payment_doc)
         
         # Send Telegram notification
         send_telegram(f"""
@@ -292,12 +317,23 @@ def check_status(md5):
                 'rate_limited': is_rate_limit
             })
 
-        # Update database and cache if paid
+        # Update MongoDB Atlas, database and cache if paid
         if status == "PAID":
             print(f"[+] Payment is PAID! Updating records...")
             if md5 not in qr_cache:
                 qr_cache[md5] = {}
             qr_cache[md5]['status'] = 'PAID'
+            qr_cache[md5]['paid_at'] = datetime.now().isoformat()
+
+            if mongo_payments is not None:
+                try:
+                    mongo_payments.update_one(
+                        {'md5_hash': md5},
+                        {'$set': {'status': 'PAID', 'paid_at': datetime.now().isoformat()}}
+                    )
+                    print(f"[+] Updated status to PAID in MongoDB Atlas: {md5}")
+                except Exception as e:
+                    print(f"[-] MongoDB update error: {e}")
 
             conn = get_db_connection()
             if conn:
@@ -309,20 +345,6 @@ def check_status(md5):
                         WHERE md5_hash = %s AND status = 'UNPAID'
                     """, (md5,))
                     conn.commit()
-                    
-                    if cursor.rowcount > 0:
-                        cursor.execute("""
-                            SELECT bill_number, amount, currency 
-                            FROM payments WHERE md5_hash = %s
-                        """, (md5,))
-                        result = cursor.fetchone()
-                        
-                        if result:
-                            send_telegram(f"""
-[+] Payment Received
-Amount: {result[1]} {result[2]}
-Bill: {result[0]}
-                            """)
                 finally:
                     conn.close()
 

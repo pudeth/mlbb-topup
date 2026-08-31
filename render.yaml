@@ -12,6 +12,8 @@ services:
         value: "5001"
       - key: DEMO_MODE
         value: "false"
+      - key: MONGODB_URI
+        value: "mongodb+srv://peakmao007_db_user:DNelqTteMX30a7PX@pudeth.olrum6s.mongodb.net/?retryWrites=true&w=majority"
 
   # 2. ASP.NET Core 8 Web API Backend
   - type: web
@@ -28,6 +30,8 @@ services:
         value: "5000"
       - key: PORT
         value: "5000"
+      - key: MONGODB_URI
+        value: "mongodb+srv://peakmao007_db_user:DNelqTteMX30a7PX@pudeth.olrum6s.mongodb.net/?retryWrites=true&w=majority"
       - key: KHQR__ApiUrl
         fromService:
           type: web
