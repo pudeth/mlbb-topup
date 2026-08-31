@@ -496,37 +496,32 @@ def get_qr_image(md5):
     try:
         qr_code = None
         
-        # Try to get from database first
-        conn = get_db_connection()
-        if conn:
-            try:
-                cursor = conn.cursor()
-                cursor.execute("SELECT qr_code FROM payments WHERE md5_hash = %s", (md5,))
-                result = cursor.fetchone()
-                if result:
-                    qr_code = result[0]
-                    print(f"[+] QR code found in database for {md5}")
-            except Exception as db_error:
-                print(f"Database query error: {db_error}")
-            finally:
-                conn.close()
-        
-        # If not in database, check memory cache
-        if not qr_code and md5 in qr_cache:
-            qr_code = qr_cache[md5]['qr_code']
-            print(f"[+] QR code found in cache for {md5}")
+        # 1. Check MongoDB Atlas / memory cache
+        rec = get_payment_record(md5)
+        if rec and rec.get('qr_code'):
+            qr_code = rec['qr_code']
+            print(f"[+] QR code found in MongoDB Atlas for {md5}")
+
+        # 2. Check MySQL database
+        if not qr_code:
+            conn = get_db_connection()
+            if conn:
+                try:
+                    cursor = conn.cursor()
+                    cursor.execute("SELECT qr_code FROM payments WHERE md5_hash = %s", (md5,))
+                    result = cursor.fetchone()
+                    if result:
+                        qr_code = result[0]
+                finally:
+                    conn.close()
         
         if not qr_code:
             print(f"[-] QR code not found for {md5}")
             return jsonify({'error': 'Payment not found'}), 404
         
-        # Generate QR image as bytes
+        # Generate QR image as bytes using official Bakong image generator
         try:
-            print(f"Generating QR image for {md5}...")
             qr_bytes = khqr.qr_image(qr_code, format='bytes')
-            print(f"[+] QR image generated: {len(qr_bytes)} bytes")
-            
-            # Return image directly from memory
             return send_file(
                 io.BytesIO(qr_bytes),
                 mimetype='image/png',
@@ -534,15 +529,16 @@ def get_qr_image(md5):
                 download_name=f'qr_{md5}.png'
             )
         except Exception as img_error:
-            print(f"[-] Error generating QR image: {img_error}")
-            import traceback
-            traceback.print_exc()
-            return jsonify({'error': f'Failed to generate QR image: {str(img_error)}'}), 500
+            print(f"[-] Error generating Bakong styled QR image: {img_error}")
+            import qrcode
+            qr_img = qrcode.make(qr_code)
+            img_io = io.BytesIO()
+            qr_img.save(img_io, 'PNG')
+            img_io.seek(0)
+            return send_file(img_io, mimetype='image/png')
         
     except Exception as e:
         print(f"[-] Error in get_qr_image: {e}")
-        import traceback
-        traceback.print_exc()
         return jsonify({'error': str(e)}), 500
 
 @app.route('/api/payment/callback', methods=['POST', 'GET'])
