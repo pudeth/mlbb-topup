@@ -1408,7 +1408,7 @@ const TopUp = () => {
                 </div>
               </div>
             ) : (
-              <div className="flex flex-col items-center justify-center p-3 bg-white rounded-2xl max-w-[260px] sm:max-w-[280px] mx-auto shadow-2xl overflow-hidden border border-slate-200">
+              <div className="flex flex-col items-center justify-center p-2.5 bg-white rounded-2xl max-w-[270px] sm:max-w-[290px] mx-auto shadow-2xl overflow-hidden border border-slate-200">
                 {(() => {
                   const currentCur = paymentData?.currency || currency;
                   const isRiel = currentCur === 'KHR';
@@ -1423,37 +1423,54 @@ const TopUp = () => {
                     billNumber: paymentData.khqrBillNumber || `MLBB${orderId || 1}`
                   });
 
+                  const qrImgUrl = paymentData?.khqrMd5Hash 
+                    ? `https://mlbb-khqr-api.onrender.com/api/payment/qr/${paymentData.khqrMd5Hash}`
+                    : null;
+
                   return (
                     <div className="relative flex flex-col items-center justify-center w-full bg-white">
-                      {/* KHQR Header Banner */}
-                      <div className="w-full bg-[#cc0000] text-white py-1 px-3 rounded-t-lg flex items-center justify-between mb-2">
-                        <div className="flex items-center gap-1.5">
-                          <span className="font-black text-xs tracking-wider">KHQR</span>
-                        </div>
-                        <span className="text-[10px] font-bold bg-white/20 px-1.5 py-0.5 rounded text-white uppercase">
-                          {currentCur}
-                        </span>
-                      </div>
-
-                      {/* Vector SVG QR Code with Perfect Padding */}
-                      <div className="p-1 bg-white rounded-lg flex items-center justify-center">
-                        <QRCodeSVG
-                          value={validQrString}
-                          size={210}
-                          level="M"
-                          includeMargin={true}
-                          className="w-full h-auto max-w-[210px]"
+                      {qrImgUrl ? (
+                        <img
+                          src={qrImgUrl}
+                          alt="Official Bakong KHQR"
+                          className="w-full max-w-[250px] h-auto object-contain rounded-lg shadow-sm"
+                          onError={(e) => {
+                            // Fallback to SVG if image server unavailable
+                            e.target.style.display = 'none';
+                            const fallbackElem = document.getElementById('qr-svg-fallback');
+                            if (fallbackElem) fallbackElem.style.display = 'flex';
+                          }}
                         />
-                      </div>
+                      ) : null}
 
-                      {/* Merchant & Account Info Footer */}
-                      <div className="w-full text-center mt-1.5 pt-1.5 border-t border-slate-100">
-                        <span className="text-[11px] font-black text-slate-800 block leading-tight">
-                          PuDeth Smart-PAY
-                        </span>
-                        <span className="text-[9px] font-mono text-slate-500 block leading-tight">
-                          deth_peak3@aclb
-                        </span>
+                      {/* SVG Vector Fallback */}
+                      <div
+                        id="qr-svg-fallback"
+                        className={`flex-col items-center justify-center w-full ${qrImgUrl ? 'hidden' : 'flex'}`}
+                      >
+                        <div className="w-full bg-[#cc0000] text-white py-1 px-3 rounded-t-lg flex items-center justify-between mb-2">
+                          <span className="font-black text-xs tracking-wider">KHQR</span>
+                          <span className="text-[10px] font-bold bg-white/20 px-1.5 py-0.5 rounded text-white uppercase">
+                            {currentCur}
+                          </span>
+                        </div>
+                        <div className="p-1 bg-white rounded-lg flex items-center justify-center">
+                          <QRCodeSVG
+                            value={validQrString}
+                            size={210}
+                            level="M"
+                            includeMargin={true}
+                            className="w-full h-auto max-w-[210px]"
+                          />
+                        </div>
+                        <div className="w-full text-center mt-1.5 pt-1.5 border-t border-slate-100">
+                          <span className="text-[11px] font-black text-slate-800 block leading-tight">
+                            PuDeth Smart-PAY
+                          </span>
+                          <span className="text-[9px] font-mono text-slate-500 block leading-tight">
+                            deth_peak3@aclb
+                          </span>
+                        </div>
                       </div>
 
                       {/* Currency Switching Loading Overlay */}
