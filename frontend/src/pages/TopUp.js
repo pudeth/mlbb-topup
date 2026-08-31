@@ -602,12 +602,14 @@ const TopUp = () => {
       const newOrder = orderRes.data;
       setOrderId(newOrder.orderId);
 
+      const khqrBase = process.env.REACT_APP_KHQR_API_URL || (typeof window !== 'undefined' && window.location.hostname !== 'localhost' ? 'https://mlbb-khqr-api.onrender.com' : '');
+      const getQrUrl = (hash) => hash ? `${khqrBase}/api/payment/qr/${hash}?t=${Date.now()}` : null;
+
       if (newOrder.payment) {
-        const ts = Date.now();
         setPaymentData({
           ...newOrder.payment,
           currency: currency,
-          khqrQRImageUrl: newOrder.payment.khqrMd5Hash ? `/api/khqr/qr/${newOrder.payment.khqrMd5Hash}?t=${ts}` : null
+          khqrQRImageUrl: getQrUrl(newOrder.payment.khqrMd5Hash) || newOrder.payment.khqrQRImageUrl
         });
       } else {
         const payRes = await paymentsAPI.process(newOrder.orderId, {
@@ -616,11 +618,10 @@ const TopUp = () => {
         });
 
         if (payRes.data) {
-          const ts = Date.now();
           setPaymentData({
             ...payRes.data,
             currency: currency,
-            khqrQRImageUrl: payRes.data.khqrMd5Hash ? `/api/khqr/qr/${payRes.data.khqrMd5Hash}?t=${ts}` : null
+            khqrQRImageUrl: getQrUrl(payRes.data.khqrMd5Hash) || payRes.data.khqrQRImageUrl
           });
         }
       }
@@ -628,7 +629,8 @@ const TopUp = () => {
         checkoutSectionRef.current?.scrollIntoView({ behavior: 'smooth' });
       }, 100);
     } catch (err) {
-      setError(err.response?.data?.message || 'Failed to initialize payment. Please check account details.');
+      console.error('Payment initialization error:', err);
+      setError(err.response?.data?.message || 'Payment server is initializing. Please try again in a moment.');
     } finally {
       setLoading(false);
     }

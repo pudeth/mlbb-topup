@@ -1,6 +1,14 @@
 import axios from 'axios';
 
-const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:5000/api';
+const getDefaultApiUrl = () => {
+  if (process.env.REACT_APP_API_URL) return process.env.REACT_APP_API_URL;
+  if (typeof window !== 'undefined' && window.location.hostname !== 'localhost' && window.location.hostname !== '127.0.0.1') {
+    return 'https://mlbb-backend-api.onrender.com/api';
+  }
+  return 'http://localhost:5000/api';
+};
+
+const API_URL = getDefaultApiUrl();
 
 // Create axios instance
 const api = axios.create({
