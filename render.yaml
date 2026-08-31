@@ -12,6 +12,20 @@ services:
         value: "5001"
       - key: DEMO_MODE
         value: "false"
+      - key: MERCHANT_BAKONG_ID
+        value: "deth_peak3@aclb"
+      - key: MERCHANT_NAME
+        value: "PuDeth Smart-PAY"
+      - key: MERCHANT_CITY
+        value: "PHNOM PENH"
+      - key: ACQUIRING_BANK
+        value: "FAMILY PHONE"
+      - key: BAKONG_TOKEN
+        value: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJkYXRhIjp7ImlkIjoiMmNhMWUwOGI1M2IxNGNmOCJ9LCJpYXQiOjE3ODgwODkzMDIsImV4cCI6MTc5NTg2NTMwMn0.TZw81eqJhAUIP7Cqg8Od8jlb9yjFvesCrdGU03E1JqM"
+      - key: TELEGRAM_BOT_TOKEN
+        value: "8516986555:AAH3enGgrbjWPKnQRPwXRQHKVfGgqiQ2Rhw"
+      - key: TELEGRAM_CHAT_ID
+        value: "-5216036558"
       - key: MONGODB_URI
         value: "mongodb+srv://peakmao007_db_user:DNelqTteMX30a7PX@pudeth.olrum6s.mongodb.net/?appName=pudeth&retryWrites=true&w=majority"
 
