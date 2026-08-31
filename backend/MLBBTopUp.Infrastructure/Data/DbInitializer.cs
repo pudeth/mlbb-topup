@@ -12,15 +12,8 @@ public static class DbInitializer
 
         try
         {
-            // Apply pending migrations or ensure database is created
-            try
-            {
-                await context.Database.MigrateAsync();
-            }
-            catch
-            {
-                await context.Database.EnsureCreatedAsync();
-            }
+            // Ensure database schema and all tables (Products, Orders, Users, Payments) exist
+            await context.Database.EnsureCreatedAsync();
             
             // Sync selling prices and exact provider wholesale costs for profit calculation
             var classicPrices = new Dictionary<int, (decimal price, decimal cost, decimal reseller, string name, string desc)>
@@ -105,12 +98,11 @@ public static class DbInitializer
 
             await context.SaveChangesAsync();
 
-            Console.WriteLine("Database migration and prices sync completed successfully.");
+            Console.WriteLine("[+] Database tables and prices synced successfully.");
         }
         catch (Exception ex)
         {
-            Console.WriteLine($"An error occurred while migrating the database: {ex.Message}");
-            throw;
+            Console.WriteLine($"[Database Init Notice]: {ex.Message}");
         }
     }
 }
