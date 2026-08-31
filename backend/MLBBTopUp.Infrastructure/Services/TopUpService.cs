@@ -191,19 +191,42 @@ public class TopUpService : ITopUpService
         return $"MLBB_Pro_{hash:D4}";
     }
 
-    public async Task<TopUpResult> ProcessTopUpAsync(int orderId)
+    public async Task<TopUpExecutionResult> ProcessTopUpAsync(int orderId, string playerId, string serverId, int diamondAmount)
     {
-        var order = await _orderService.GetOrderByIdAsync(orderId);
-        if (order == null)
+        try
         {
-            return new TopUpResult { Success = false, Message = "Order not found" };
+            var providerResult = await _topUpProviderClient.SendTopUpAsync(playerId, serverId, diamondAmount, orderId.ToString());
+            return new TopUpExecutionResult
+            {
+                Success = providerResult.Success,
+                TransactionId = providerResult.TransactionId,
+                Message = providerResult.ErrorMessage ?? (providerResult.Success ? "Top-up completed successfully" : "Top-up failed"),
+                ErrorReason = providerResult.ErrorMessage
+            };
         }
-
-        if (order.PaymentStatus != "Completed")
+        catch (Exception ex)
         {
-            return new TopUpResult { Success = false, Message = "Payment not completed" };
+            _logger.LogError(ex, "Error processing topup for order {OrderId}", orderId);
+            return new TopUpExecutionResult
+            {
+                Success = false,
+                Message = ex.Message,
+                ErrorReason = ex.Message
+            };
         }
+    }
 
-        return await _topUpProviderClient.DeliverDiamondsAsync(order);
+    public async Task<string> GetTopUpStatusAsync(string transactionId)
+    {
+        try
+        {
+            var statusResult = await _topUpProviderClient.GetTopUpStatusAsync(transactionId);
+            return statusResult.Status;
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error getting topup status for {TransactionId}", transactionId);
+            return "Failed";
+        }
     }
 }
