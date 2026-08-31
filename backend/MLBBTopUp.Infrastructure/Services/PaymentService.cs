@@ -86,7 +86,7 @@ public class PaymentService : IPaymentService
             OrderId = request.OrderId,
             PaymentMethod = request.PaymentMethod,
             TransactionID = transactionId,
-            Amount = order.Amount,
+            Amount = payAmount,
             Status = "Pending",
             CreatedAt = DateTime.UtcNow
         };
