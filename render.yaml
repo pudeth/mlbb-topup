@@ -24,6 +24,10 @@ services:
     envVars:
       - key: ASPNETCORE_ENVIRONMENT
         value: Production
+      - key: ASPNETCORE_HTTP_PORTS
+        value: "5000"
+      - key: PORT
+        value: "5000"
       - key: KHQR__ApiUrl
         fromService:
           type: web

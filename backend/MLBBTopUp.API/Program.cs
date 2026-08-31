@@ -110,12 +110,12 @@ builder.Services.AddHttpClient<MLBBTopUp.Infrastructure.TopUpProviders.ITopUpPro
 builder.Services.AddScoped<MLBBTopUp.Infrastructure.TopUpProviders.ITopUpProviderClient, 
     MLBBTopUp.Infrastructure.TopUpProviders.RealTopUpProviderClient>();
 
-// Configure CORS
+// Configure CORS to allow both localhost and all Vercel/production domains
 builder.Services.AddCors(options =>
 {
     options.AddPolicy("AllowFrontend", policy =>
     {
-        policy.WithOrigins("http://localhost:3000", "https://localhost:3000", "http://localhost:3001", "https://localhost:3001")
+        policy.SetIsOriginAllowed(origin => true)
               .AllowAnyHeader()
               .AllowAnyMethod()
               .AllowCredentials();
@@ -128,19 +128,12 @@ var app = builder.Build();
 await DbInitializer.InitializeAsync(app.Services);
 
 // Configure the HTTP request pipeline
-if (app.Environment.IsDevelopment())
+app.UseSwagger();
+app.UseSwaggerUI(c =>
 {
-    app.UseSwagger();
-    app.UseSwaggerUI(c =>
-    {
-        c.SwaggerEndpoint("/swagger/v1/swagger.json", "MLBB Top-Up API v1");
-    });
-}
-
-if (!app.Environment.IsDevelopment())
-{
-    app.UseHttpsRedirection();
-}
+    c.SwaggerEndpoint("/swagger/v1/swagger.json", "MLBB Top-Up API v1");
+    c.RoutePrefix = "swagger";
+});
 
 app.UseCors("AllowFrontend");
 
@@ -148,5 +141,9 @@ app.UseAuthentication();
 app.UseAuthorization();
 
 app.MapControllers();
+
+// Health check endpoint
+app.MapGet("/", () => "MLBB Top-Up Backend API is Running!");
+app.MapGet("/health", () => Results.Ok(new { status = "healthy", timestamp = DateTime.UtcNow }));
 
 app.Run();
