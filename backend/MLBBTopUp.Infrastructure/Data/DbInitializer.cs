@@ -94,6 +94,8 @@ public static class DbInitializer
                         CreatedAt = DateTime.UtcNow
                     });
                 }
+            }
+
             // Seed Default Admin User if not exists
             if (!await context.Users.AnyAsync(u => u.Role == "Admin"))
             {
