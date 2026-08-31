@@ -3,8 +3,7 @@ import { useSearchParams, useNavigate, Link } from 'react-router-dom';
 import { useLanguage } from '../context/LanguageContext';
 import { ordersAPI, paymentsAPI, topupAPI, khqrAPI } from '../services/api';
 import { getStoredGames } from '../services/gamesConfig';
-import EventBannerSlider from '../components/EventBannerSlider';
-import { CambodiaFlagFrame, CambodiaCornerBadge } from '../components/CambodiaFlagBadge';
+import { CambodiaFlagFrame } from '../components/CambodiaFlagBadge';
 import ProductPackageImage from '../components/ProductPackageImage';
 
 // Game-specific packages matching upstream supplier catalog
@@ -124,8 +123,8 @@ const parseMlbbId = (input) => {
       detected: true,
     };
   }
-  const bracketMatch = raw.match(/(?:id\s*:\s*)?(\d{5,12})\s*[\[({]\s*(\d{3,7})\s*[)\]}]/i) ||
-                       raw.match(/(\d+)\s*[\[({]\s*(\d+)\s*[)\]}]/);
+  const bracketMatch = raw.match(/(?:id\s*:\s*)?(\d{5,12})\s*[[({]\s*(\d{3,7})\s*[)\]}]/i) ||
+                       raw.match(/(\d+)\s*[[({]\s*(\d+)\s*[)\]}]/);
   if (bracketMatch) {
     return {
       playerID: bracketMatch[1],
@@ -191,7 +190,6 @@ const TopUp = () => {
   };
 
   const [selectedGame, setSelectedGame] = useState(matchedGame);
-  const [isFavorite, setIsFavorite] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [autoDetectedMessage, setAutoDetectedMessage] = useState('');
@@ -995,7 +993,6 @@ const TopUp = () => {
                     <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 gap-2.5">
                       {filtered.map((pkg) => {
                         const isSelected = selectedProduct.productId === pkg.productId;
-                        const isPass = isPassItem(pkg);
 
                         return (
                           <div
