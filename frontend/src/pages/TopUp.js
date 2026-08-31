@@ -409,47 +409,41 @@ const TopUp = () => {
         let realName = null;
         let realCountry = 'Cambodia';
 
-        // 1. Try Backend API first
-        try {
-          const res = await topupAPI.checkAccount(pId, sId);
-          if (res.data?.username) {
-            realName = res.data.username;
-            realCountry = res.data.country || 'Cambodia';
-          }
-        } catch (apiErr) {
-          console.warn('Backend check failed, trying direct endpoint:', apiErr?.message);
-        }
+        // Fast parallel fetch with 2.5s race timeout
+        const fetchPromise = (async () => {
+          try {
+            const res = await topupAPI.checkAccount(pId, sId);
+            if (res.data?.username) {
+              return { name: res.data.username, country: res.data.country || 'Cambodia' };
+            }
+          } catch (e) {}
 
-        // 2. Direct real MLBB nickname fallback if backend was unavailable
-        if (!realName || realName.startsWith('Player_') || realName.startsWith('Player #')) {
           try {
             const directRes = await fetch(`https://api.isan.eu.org/nickname/ml?id=${pId}&server=${sId}`).then(r => r.json());
             if (directRes?.success && directRes?.name) {
-              realName = directRes.name;
-              realCountry = directRes.country || 'Cambodia';
+              return { name: directRes.name, country: directRes.country || 'Cambodia' };
             }
-          } catch (directErr) {
-            console.warn('Direct fetch fallback warning:', directErr?.message);
-          }
+          } catch (e) {}
+
+          return null;
+        })();
+
+        const timeoutPromise = new Promise(resolve => setTimeout(() => resolve(null), 2500));
+        const verifiedResult = await Promise.race([fetchPromise, timeoutPromise]);
+
+        if (verifiedResult?.name) {
+          realName = verifiedResult.name;
+          realCountry = verifiedResult.country;
         }
 
-        if (realName) {
-          setVerifiedAccount({
-            name: realName,
-            country: realCountry,
-            id: pId,
-            server: sId
-          });
-        } else {
-          setVerifiedAccount({
-            name: `Player #${pId}`,
-            country: 'Cambodia',
-            id: pId,
-            server: sId
-          });
-        }
+        setVerifiedAccount({
+          name: realName || `MLBB Player #${pId.slice(-4)}`,
+          country: realCountry,
+          id: pId,
+          server: sId
+        });
       } else {
-        await new Promise(r => setTimeout(r, 400));
+        await new Promise(r => setTimeout(r, 300));
         setVerifiedAccount({
           name: `${selectedGame.name} Player #${pId}`,
           country: 'Global',
@@ -458,6 +452,7 @@ const TopUp = () => {
         });
       }
     } catch (err) {
+      console.error('Verification error:', err);
       setVerifiedAccount({
         name: `Player #${pId}`,
         country: 'Cambodia',
