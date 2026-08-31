@@ -107,6 +107,48 @@ const GAME_PACKAGES_MAP = {
   ]
 };
 
+// Real Bakong KHQR EMVCo Spec & CRC16-CCITT Generator
+const crc16Ccitt = (data) => {
+  let crc = 0xFFFF;
+  for (let i = 0; i < data.length; i++) {
+    crc ^= (data.charCodeAt(i) << 8);
+    for (let j = 0; j < 8; j++) {
+      if ((crc & 0x8000) !== 0) {
+        crc = ((crc << 1) ^ 0x1021) & 0xFFFF;
+      } else {
+        crc = (crc << 1) & 0xFFFF;
+      }
+    }
+  }
+  return crc.toString(16).toUpperCase().padStart(4, '0');
+};
+
+const buildBakongKhqr = ({
+  accountId = 'deth_peak3@aclb',
+  merchantName = 'PuDeth Smart-PAY',
+  city = 'PHNOM PENH',
+  amount = 0.95,
+  currency = 'USD',
+  billNumber = 'MLBB000001'
+}) => {
+  const isKhr = currency === 'KHR';
+  const currCode = isKhr ? '116' : '840';
+  const amtStr = isKhr ? Math.round(amount).toString() : Number(amount).toFixed(2);
+
+  const tag29Val = `00${accountId.length.toString().padStart(2, '0')}${accountId}`;
+  const tag29 = `29${tag29Val.length.toString().padStart(2, '0')}${tag29Val}`;
+  const tag54 = `54${amtStr.length.toString().padStart(2, '0')}${amtStr}`;
+  const tag59 = `59${merchantName.length.toString().padStart(2, '0')}${merchantName}`;
+  const tag60 = `60${city.length.toString().padStart(2, '0')}${city}`;
+  
+  const storeLabel = 'Smart-PAY';
+  const tag62Val = `01${billNumber.length.toString().padStart(2, '0')}${billNumber}020901234567803${storeLabel.length.toString().padStart(2, '0')}${storeLabel}`;
+  const tag62 = `62${tag62Val.length.toString().padStart(2, '0')}${tag62Val}`;
+
+  const raw = `000201010212${tag29}520459995303${currCode}${tag54}5802KH${tag59}${tag60}${tag62}6304`;
+  return raw + crc16Ccitt(raw);
+};
+
 // Auto-extract Player ID and Server ID
 const parseMlbbId = (input) => {
   if (!input || typeof input !== 'string') {
@@ -1349,14 +1391,25 @@ const TopUp = () => {
                 {(() => {
                   const currentCur = paymentData?.currency || currency;
                   const isRiel = currentCur === 'KHR';
-                  const rielAmount = Math.round(selectedProduct.price * 4100);
-                  const qrFallback = isRiel
-                    ? `00020101021229370016A00000072703999901101225368571520454995303116540${rielAmount.toString().length}${rielAmount}5802KH5917PuDeth Smart-PAY6010Phnom Penh62210717ORD-${orderId}-KHR6304`
-                    : `00020101021229370016A000000727039999011012253685715204549953038405405${selectedProduct.price.toFixed(2)}5802KH5917PuDeth Smart-PAY6010Phnom Penh62210717ORD-${orderId}-USD6304`;
+                  const payAmount = isRiel ? Math.round(selectedProduct.price * 4100) : selectedProduct.price;
 
-                  const qrString = paymentData.khqrQRCode || paymentData.qrCode || paymentData.qr || qrFallback;
-                  const directQrImg = paymentData.qrImage || (paymentData.khqrQRImageUrl ? (paymentData.khqrQRImageUrl.startsWith('http') ? paymentData.khqrQRImageUrl : `http://localhost:5000${paymentData.khqrQRImageUrl}`) : null);
-                  const qrSrc = !qrImgError && directQrImg ? directQrImg : `https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=${encodeURIComponent(qrString)}`;
+                  const validQrString = paymentData.khqrQRCode || paymentData.qrCode || buildBakongKhqr({
+                    accountId: 'deth_peak3@aclb',
+                    merchantName: 'PuDeth Smart-PAY',
+                    city: 'PHNOM PENH',
+                    amount: payAmount,
+                    currency: currentCur,
+                    billNumber: paymentData.khqrBillNumber || `MLBB${orderId || 1}`
+                  });
+
+                  const khqrHost = process.env.REACT_APP_KHQR_API_URL || 'https://mlbb-khqr-api.onrender.com';
+                  const directQrImg = paymentData.khqrQRImageUrl?.startsWith('http')
+                    ? paymentData.khqrQRImageUrl
+                    : (paymentData.khqrMd5Hash ? `${khqrHost}/api/payment/qr/${paymentData.khqrMd5Hash}` : null);
+
+                  const qrSrc = !qrImgError && directQrImg
+                    ? directQrImg
+                    : `https://api.qrserver.com/v1/create-qr-code/?size=300x300&margin=10&data=${encodeURIComponent(validQrString)}`;
 
                   return (
                     <div className="relative flex flex-col items-center justify-center w-full">
