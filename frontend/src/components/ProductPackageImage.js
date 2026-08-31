@@ -36,9 +36,6 @@ export const ProductPackageImage = ({
   const isPass =
     pkg.isPass ||
     (pkg.name && (pkg.name.toLowerCase().includes('pass') || pkg.name.toLowerCase().includes('wdp') || pkg.name.toLowerCase().includes('weekly')));
-  const isLargeChest =
-    (pkg.diamondAmount && pkg.diamondAmount >= 1000) ||
-    (pkg.name && (pkg.name.toLowerCase().includes('chest') || pkg.name.toLowerCase().includes('box') || pkg.name.toLowerCase().includes('bundle') || pkg.name.toLowerCase().includes('whale')));
 
   // Size dimensions
   const dims =

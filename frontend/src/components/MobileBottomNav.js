@@ -43,8 +43,7 @@ const MobileBottomNav = () => {
   const search = location.search;
 
   const isHome = pathname === '/';
-  const isTopUp = pathname === '/topup' && !search.includes('tab=pass');
-  const isPass = pathname === '/topup' && search.includes('tab=pass');
+  const isTopUp = pathname === '/topup';
   const isSupport = pathname === '/support';
 
   return (

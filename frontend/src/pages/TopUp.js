@@ -357,6 +357,7 @@ const TopUp = () => {
         serverID: gameObj.id.startsWith('mlbb') ? '' : (prev.serverID || 'Global')
       }));
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [rawGameParam]);
 
   // Handle Game Switcher Click
@@ -479,7 +480,6 @@ const TopUp = () => {
   const currentMd5Ref = useRef(paymentData?.khqrMd5Hash || paymentData?.md5Hash);
   currentMd5Ref.current = paymentData?.khqrMd5Hash || paymentData?.md5Hash;
 
-  const [rateLimitedWarning, setRateLimitedWarning] = useState(false);
   const [instantVerifying, setInstantVerifying] = useState(false);
 
   const handleInstantVerify = async () => {
@@ -549,9 +549,6 @@ const TopUp = () => {
         try {
           const khqrRes = await khqrAPI.checkStatus(curMd5);
           const rawStatus = (khqrRes.data?.status || '').toUpperCase();
-          if (khqrRes.data?.rate_limited || (khqrRes.data?.warning && khqrRes.data.warning.includes('Limit'))) {
-            setRateLimitedWarning(true);
-          }
           if (rawStatus === 'PAID' || rawStatus === 'SUCCESS' || rawStatus === 'COMPLETED') {
             await ordersAPI.checkPayment(curOrderId, false);
             setPaymentPaid(true);

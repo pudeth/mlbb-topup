@@ -1,71 +1,11 @@
-import React, { useState } from 'react';
+import React from 'react';
 import { Link } from 'react-router-dom';
 import { useLanguage } from '../context/LanguageContext';
 import GameSelection from '../components/GameSelection';
 import EventBannerSlider from '../components/EventBannerSlider';
 
 const Home = () => {
-  const { t, language } = useLanguage();
-  const [activeFaq, setActiveFaq] = useState(null);
-
-  const faqs = {
-    en: [
-      {
-        q: "How fast will I receive my MLBB Diamonds?",
-        a: "Our automated system delivers diamonds directly to your Mobile Legends account within 10 to 30 seconds after your Bakong KHQR payment is confirmed."
-      },
-      {
-        q: "Do I need to give my MLBB account password?",
-        a: "Never! We only need your Player ID and Zone / Server ID. We will never ask for your password or Moonton login credentials."
-      },
-      {
-        q: "Which banking apps can I use to pay with KHQR?",
-        a: "You can pay using any Cambodian bank or mobile payment app supporting KHQR, including ABA Mobile, Wing Bank, ACLEDA, Canadia, TrueMoney, Chip Mong, and 30+ others."
-      },
-      {
-        q: "What should I do if I entered the wrong Player ID?",
-        a: "Our system includes real-time MLBB account verification that checks your username before payment. If you still have an issue, our 24/7 Telegram support team will help you immediately."
-      }
-    ],
-    km: [
-      {
-        q: "តើខ្ញុំនឹងទទួលបានគ្រាប់ពេជ្រ MLBB លឿនប៉ុណ្ណា?",
-        a: "ប្រព័ន្ធស្វ័យប្រវត្តិនឹងបញ្ជូនគ្រាប់ពេជ្រចូលទៅក្នុងគណនី Mobile Legends របស់អ្នកក្នុងរយៈពេលពី ១០ ទៅ ៣០ វិនាទី បន្ទាប់ពីការទូទាត់តាម Bakong KHQR ត្រូវបានបញ្ជាក់។"
-      },
-      {
-        q: "តើខ្ញុំត្រូវការផ្តល់លេខសម្ងាត់ (Password) នៃគណនី MLBB ដែរឬទេ?",
-        a: "មិនដែលត្រូវការទេ! យើងត្រូវការតែ Player ID និង Zone / Server ID របស់អ្នកប៉ុណ្ណោះ។ យើងនឹងមិនទាមទារលេខសម្ងាត់ ឬព័ត៌មាន Moonton របស់អ្នកជាដាច់ខាត។"
-      },
-      {
-        q: "តើខ្ញុំអាចប្រើកម្មវិធីធនាគារណាខ្លះដើម្បីទូទាត់តាម KHQR?",
-        a: "អ្នកអាចទូទាត់ប្រាក់ដោយប្រើធនាគារនៅកម្ពុជា ឬកម្មវិធីទូទាត់ប្រាក់តាមទូរស័ព្ទដែលគាំទ្រ KHQR ទាំងអស់ រួមមាន ABA Mobile, Wing, ACLEDA, Canadia, TrueMoney, Chip Mong និង 30+ ផ្សេងទៀត។"
-      },
-      {
-        q: "តើខ្ញុំត្រូវធ្វើដូចម្តេចប្រសិនបើខ្ញុំបញ្ចូល Player ID ខុស?",
-        a: "ប្រព័ន្ធរបស់យើងមានមុខងារផ្ទៀងផ្ទាត់គណនី MLBB ក្នុងពេលជាក់ស្តែងដើម្បីពិនិត្យឈ្មោះរបស់អ្នកមុនទូទាត់។ ប្រសិនបើមានបញ្ហា ក្រុមការងារ Telegram 24/7 របស់យើងនឹងជួយអ្នកភ្លាមៗ។"
-      }
-    ],
-    zh: [
-      {
-        q: "充值后多久能收到 MLBB 钻石？",
-        a: "我们的自动化系统将在您的 Bakong KHQR 扫码付款确认后的 10 至 30 秒内，直接将钻石发送至您的 Mobile Legends 游戏邮箱中。"
-      },
-      {
-        q: "我需要提供我的 MLBB 账号密码吗？",
-        a: "绝对不需要！我们仅需要您的玩家 ID (Player ID) 和区服 ID (Zone ID)。我们绝不会索取您的游戏密码或任何 Moonton 账号登录凭据。"
-      },
-      {
-        q: "我可以使用哪些手机银行 App 进行 KHQR 支付？",
-        a: "您可以使用柬埔寨所有支持 Bakong KHQR 的银行或电子钱包，包括 ABA Mobile、Wing 银行、ACLEDA、加华银行、TrueMoney、集茂银行等 30 多家金融机构。"
-      },
-      {
-        q: "如果我不小心填错了 Player ID 该怎么办？",
-        a: "系统在支付前具备实时核对游戏昵称功能。如果您在支付后仍需协助，我们的 24/7 Telegram 在线客服团队会随时为您处理。"
-      }
-    ]
-  };
-
-  const currentFaqs = faqs[language] || faqs.en;
+  const { t } = useLanguage();
 
   return (
     <div className="animate-fadeIn">
