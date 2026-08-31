@@ -8,6 +8,8 @@ services:
     plan: free
     region: singapore
     envVars:
+      - key: PORT
+        value: "5001"
       - key: DEMO_MODE
         value: "false"
       - key: MONGODB_URI
@@ -24,6 +26,10 @@ services:
     envVars:
       - key: ASPNETCORE_ENVIRONMENT
         value: Production
+      - key: ASPNETCORE_URLS
+        value: "http://0.0.0.0:10000"
+      - key: PORT
+        value: "10000"
       - key: MONGODB_URI
         value: "mongodb+srv://peakmao007_db_user:DNelqTteMX30a7PX@pudeth.olrum6s.mongodb.net/?appName=pudeth&retryWrites=true&w=majority"
       - key: KHQR__ApiUrl

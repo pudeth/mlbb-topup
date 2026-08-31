@@ -13,8 +13,7 @@ var builder = WebApplication.CreateBuilder(new WebApplicationOptions
     ContentRootPath = AppContext.BaseDirectory
 });
 
-// Configure dynamic port binding (Render cloud injects PORT, fallback to 5000)
-var port = Environment.GetEnvironmentVariable("PORT") ?? "5000";
+var port = Environment.GetEnvironmentVariable("PORT") ?? "10000";
 builder.WebHost.UseUrls($"http://0.0.0.0:{port}");
 
 builder.Configuration.Sources.Clear();
@@ -173,7 +172,7 @@ app.MapControllers();
 
 // Health check endpoints for Render
 app.MapGet("/", () => Results.Ok(new { message = "MLBB Top-Up Backend API is Running!", status = "healthy", timestamp = DateTime.UtcNow }));
-app.MapGet("/health", () => Results.Ok(new { status = "healthy", timestamp = DateTime.UtcNow }));
-
-Console.WriteLine($"[+] Application starting on port: {port}");
+Console.WriteLine($"[+] Application starting on http://0.0.0.0:{port}");
+app.Urls.Clear();
+app.Urls.Add($"http://0.0.0.0:{port}");
 app.Run();
