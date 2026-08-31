@@ -6,8 +6,18 @@ using MLBBTopUp.Core.Interfaces;
 using MLBBTopUp.Infrastructure.Data;
 using MLBBTopUp.Infrastructure.Services;
 using System.Text;
+var builder = WebApplication.CreateBuilder(new WebApplicationOptions
+{
+    Args = args,
+    ContentRootPath = AppContext.BaseDirectory
+});
 
-var builder = WebApplication.CreateBuilder(args);
+builder.Configuration.Sources.Clear();
+builder.Configuration
+    .SetBasePath(AppContext.BaseDirectory)
+    .AddJsonFile("appsettings.json", optional: true, reloadOnChange: false)
+    .AddJsonFile($"appsettings.{builder.Environment.EnvironmentName}.json", optional: true, reloadOnChange: false)
+    .AddEnvironmentVariables();
 
 // Add services to the container
 builder.Services.AddControllers();
