@@ -17,14 +17,12 @@ USER root
 WORKDIR /app
 COPY --from=build /app/publish .
 
-# Ensure writable data directory for SQLite database
+# Create writable data directory for SQLite database
 RUN mkdir -p /app/data && chmod -R 777 /app
 
 ENV ASPNETCORE_ENVIRONMENT=Production
 ENV DOTNET_USE_POLLING_FILE_WATCHER=true
 ENV DOTNET_RUNNING_IN_CONTAINER=true
-ENV ASPNETCORE_HTTP_PORTS=5000
 ENV ConnectionStrings__DefaultConnection="Data Source=/app/data/mlbbtopup.db"
-EXPOSE 5000
 
 ENTRYPOINT ["dotnet", "MLBBTopUp.API.dll"]

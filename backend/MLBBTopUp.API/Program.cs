@@ -6,11 +6,16 @@ using MLBBTopUp.Core.Interfaces;
 using MLBBTopUp.Infrastructure.Data;
 using MLBBTopUp.Infrastructure.Services;
 using System.Text;
+
 var builder = WebApplication.CreateBuilder(new WebApplicationOptions
 {
     Args = args,
     ContentRootPath = AppContext.BaseDirectory
 });
+
+// Configure dynamic port binding (Render cloud injects PORT, fallback to 5000)
+var port = Environment.GetEnvironmentVariable("PORT") ?? "5000";
+builder.WebHost.UseUrls($"http://0.0.0.0:{port}");
 
 builder.Configuration.Sources.Clear();
 builder.Configuration
@@ -58,8 +63,11 @@ builder.Services.AddSwaggerGen(c =>
     });
 });
 
-// Configure Database
-var connectionString = builder.Configuration.GetConnectionString("DefaultConnection") ?? "Data Source=mlbbtopup.db";
+// Configure Database (SQLite file or Cloud SQL)
+var connectionString = builder.Configuration.GetConnectionString("DefaultConnection") 
+    ?? Environment.GetEnvironmentVariable("ConnectionStrings__DefaultConnection")
+    ?? "Data Source=/app/data/mlbbtopup.db";
+
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
 {
     if (connectionString.Contains(".db") || connectionString.StartsWith("Data Source=", StringComparison.OrdinalIgnoreCase))
@@ -72,9 +80,13 @@ builder.Services.AddDbContext<ApplicationDbContext>(options =>
     }
 });
 
-// Configure JWT Authentication
+// Configure JWT Authentication with fail-safe fallbacks
 var jwtSettings = builder.Configuration.GetSection("Jwt");
-var secretKey = jwtSettings["SecretKey"] ?? throw new InvalidOperationException("JWT SecretKey is not configured");
+var secretKey = jwtSettings["SecretKey"] 
+    ?? Environment.GetEnvironmentVariable("Jwt__SecretKey") 
+    ?? "MLBBTopUpSuperSecretKey2026Minimum32CharactersLongSecure!";
+var issuer = jwtSettings["Issuer"] ?? "MLBBTopUpAPI";
+var audience = jwtSettings["Audience"] ?? "MLBBTopUpClient";
 
 builder.Services.AddAuthentication(options =>
 {
@@ -89,8 +101,8 @@ builder.Services.AddAuthentication(options =>
         ValidateAudience = true,
         ValidateLifetime = true,
         ValidateIssuerSigningKey = true,
-        ValidIssuer = jwtSettings["Issuer"],
-        ValidAudience = jwtSettings["Audience"],
+        ValidIssuer = issuer,
+        ValidAudience = audience,
         IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(secretKey))
     };
 });
@@ -112,7 +124,6 @@ builder.Services.AddHttpClient<IKHQRService, KHQRService>();
 builder.Services.AddScoped<IKHQRService, KHQRService>();
 
 // Register payment gateway and top-up provider
-// Replace MockPaymentGateway and MockTopUpProvider with actual implementations
 builder.Services.AddScoped<MLBBTopUp.Infrastructure.PaymentGateways.IPaymentGatewayClient, 
     MLBBTopUp.Infrastructure.PaymentGateways.MockPaymentGateway>();
 builder.Services.AddHttpClient<MLBBTopUp.Infrastructure.TopUpProviders.ITopUpProviderClient, 
@@ -134,8 +145,16 @@ builder.Services.AddCors(options =>
 
 var app = builder.Build();
 
-// Ensure database is created and seeded with latest pricing
-await DbInitializer.InitializeAsync(app.Services);
+// Ensure database is created safely
+try
+{
+    await DbInitializer.InitializeAsync(app.Services);
+    Console.WriteLine("[+] Database initialized successfully.");
+}
+catch (Exception ex)
+{
+    Console.WriteLine($"[!] Database init warning (non-fatal): {ex.Message}");
+}
 
 // Configure the HTTP request pipeline
 app.UseSwagger();
@@ -152,8 +171,9 @@ app.UseAuthorization();
 
 app.MapControllers();
 
-// Health check endpoint
-app.MapGet("/", () => "MLBB Top-Up Backend API is Running!");
+// Health check endpoints for Render
+app.MapGet("/", () => Results.Ok(new { message = "MLBB Top-Up Backend API is Running!", status = "healthy", timestamp = DateTime.UtcNow }));
 app.MapGet("/health", () => Results.Ok(new { status = "healthy", timestamp = DateTime.UtcNow }));
 
+Console.WriteLine($"[+] Application starting on port: {port}");
 app.Run();

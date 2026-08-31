@@ -28,4 +28,11 @@
     <ProjectReference Include="..\MLBBTopUp.Infrastructure\MLBBTopUp.Infrastructure.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <None Update="appsettings*.json">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      <CopyToPublishDirectory>Always</CopyToPublishDirectory>
+    </None>
+  </ItemGroup>
+
 </Project>
