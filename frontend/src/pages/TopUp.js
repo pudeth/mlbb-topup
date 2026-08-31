@@ -107,7 +107,7 @@ const GAME_PACKAGES_MAP = {
   ]
 };
 
-// Real Bakong KHQR EMVCo Spec & CRC16-CCITT Generator
+// Real Bakong KHQR EMVCo Spec & CRC16-CCITT Generator (NBC Standard)
 const crc16Ccitt = (data) => {
   let crc = 0xFFFF;
   for (let i = 0; i < data.length; i++) {
@@ -126,26 +126,46 @@ const crc16Ccitt = (data) => {
 const buildBakongKhqr = ({
   accountId = 'deth_peak3@aclb',
   merchantName = 'PuDeth Smart-PAY',
-  city = 'PHNOM PENH',
+  city = 'Phnom Penh',
   amount = 0.95,
   currency = 'USD',
-  billNumber = 'MLBB000001'
+  billNumber = 'MLBB000001',
+  phone = '85512345678',
+  storeLabel = 'Smart-PAY'
 }) => {
   const isKhr = currency === 'KHR';
   const currCode = isKhr ? '116' : '840';
   const amtStr = isKhr ? Math.round(amount).toString() : Number(amount).toFixed(2);
 
+  // Tag 29: Individual Account Information
   const tag29Val = `00${accountId.length.toString().padStart(2, '0')}${accountId}`;
   const tag29 = `29${tag29Val.length.toString().padStart(2, '0')}${tag29Val}`;
-  const tag54 = `54${amtStr.length.toString().padStart(2, '0')}${amtStr}`;
-  const tag59 = `59${merchantName.length.toString().padStart(2, '0')}${merchantName}`;
-  const tag60 = `60${city.length.toString().padStart(2, '0')}${city}`;
   
-  const storeLabel = 'Smart-PAY';
-  const tag62Val = `01${billNumber.length.toString().padStart(2, '0')}${billNumber}020901234567803${storeLabel.length.toString().padStart(2, '0')}${storeLabel}`;
+  // Tag 54: Amount
+  const tag54 = `54${amtStr.length.toString().padStart(2, '0')}${amtStr}`;
+  
+  // Tag 59: Merchant Name
+  const cleanName = merchantName.slice(0, 25);
+  const tag59 = `59${cleanName.length.toString().padStart(2, '0')}${cleanName}`;
+  
+  // Tag 60: Merchant City
+  const cleanCity = city.slice(0, 15);
+  const tag60 = `60${cleanCity.length.toString().padStart(2, '0')}${cleanCity}`;
+  
+  // Tag 62: Additional Data Field (03: store label, 02: mobile, 01: bill number)
+  const cleanStore = storeLabel.slice(0, 25);
+  const cleanPhone = phone.slice(0, 25);
+  const cleanBill = billNumber.slice(0, 25);
+  const tag62Val = `03${cleanStore.length.toString().padStart(2, '0')}${cleanStore}02${cleanPhone.length.toString().padStart(2, '0')}${cleanPhone}01${cleanBill.length.toString().padStart(2, '0')}${cleanBill}`;
   const tag62 = `62${tag62Val.length.toString().padStart(2, '0')}${tag62Val}`;
 
-  const raw = `000201010212${tag29}520459995303${currCode}${tag54}5802KH${tag59}${tag60}${tag62}6304`;
+  // Tag 99: Timestamp (00: created_ms, 01: expiry_ms 24h)
+  const nowMs = Date.now().toString();
+  const expMs = (Date.now() + 86400000).toString();
+  const tag99Val = `00${nowMs.length.toString().padStart(2, '0')}${nowMs}01${expMs.length.toString().padStart(2, '0')}${expMs}`;
+  const tag99 = `99${tag99Val.length.toString().padStart(2, '0')}${tag99Val}`;
+
+  const raw = `000201010212${tag29}520459995303${currCode}${tag54}5802KH${tag59}${tag60}${tag62}${tag99}6304`;
   return raw + crc16Ccitt(raw);
 };
 
