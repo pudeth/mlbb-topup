@@ -69,7 +69,7 @@ db_config = {
 mongo_payments = None
 try:
     from pymongo import MongoClient
-    mongo_uri = os.getenv('MONGODB_URI', 'mongodb+srv://peakmao007_db_user:DNelqTteMX30a7PX@pudeth.olrum6s.mongodb.net/?retryWrites=true&w=majority')
+    mongo_uri = os.getenv('MONGODB_URI', 'mongodb+srv://peakmao007_db_user:DNelqTteMX30a7PX@pudeth.olrum6s.mongodb.net/?appName=pudeth&retryWrites=true&w=majority')
     if mongo_uri:
         mongo_client = MongoClient(mongo_uri, serverSelectionTimeoutMS=5000)
         mongo_db = mongo_client.get_database('mlbbtopup')

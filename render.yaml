@@ -11,7 +11,7 @@ services:
       - key: DEMO_MODE
         value: "false"
       - key: MONGODB_URI
-        value: "mongodb+srv://peakmao007_db_user:DNelqTteMX30a7PX@pudeth.olrum6s.mongodb.net/?retryWrites=true&w=majority"
+        value: "mongodb+srv://peakmao007_db_user:DNelqTteMX30a7PX@pudeth.olrum6s.mongodb.net/?appName=pudeth&retryWrites=true&w=majority"
 
   # 2. ASP.NET Core 8 Web API Backend
   - type: web
@@ -25,7 +25,7 @@ services:
       - key: ASPNETCORE_ENVIRONMENT
         value: Production
       - key: MONGODB_URI
-        value: "mongodb+srv://peakmao007_db_user:DNelqTteMX30a7PX@pudeth.olrum6s.mongodb.net/?retryWrites=true&w=majority"
+        value: "mongodb+srv://peakmao007_db_user:DNelqTteMX30a7PX@pudeth.olrum6s.mongodb.net/?appName=pudeth&retryWrites=true&w=majority"
       - key: KHQR__ApiUrl
         fromService:
           type: web
