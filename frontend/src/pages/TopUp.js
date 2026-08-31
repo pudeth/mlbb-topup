@@ -409,35 +409,32 @@ const TopUp = () => {
         let realName = null;
         let realCountry = 'Cambodia';
 
-        // Fast parallel fetch with 2.5s race timeout
-        const fetchPromise = (async () => {
+        // 1. Direct real MLBB nickname fetch (fastest & most accurate)
+        try {
+          const directRes = await fetch(`https://api.isan.eu.org/nickname/ml?id=${pId}&server=${sId}`).then(r => r.json());
+          if (directRes?.success && directRes?.name) {
+            realName = directRes.name;
+            realCountry = directRes.country || 'Cambodia';
+          }
+        } catch (directErr) {
+          console.warn('Direct MLBB check notice:', directErr?.message);
+        }
+
+        // 2. Try Backend API as fallback
+        if (!realName) {
           try {
             const res = await topupAPI.checkAccount(pId, sId);
-            if (res.data?.username) {
-              return { name: res.data.username, country: res.data.country || 'Cambodia' };
+            if (res.data?.username && !res.data.username.startsWith('MLBB_Pro_')) {
+              realName = res.data.username;
+              realCountry = res.data.country || 'Cambodia';
             }
-          } catch (e) {}
-
-          try {
-            const directRes = await fetch(`https://api.isan.eu.org/nickname/ml?id=${pId}&server=${sId}`).then(r => r.json());
-            if (directRes?.success && directRes?.name) {
-              return { name: directRes.name, country: directRes.country || 'Cambodia' };
-            }
-          } catch (e) {}
-
-          return null;
-        })();
-
-        const timeoutPromise = new Promise(resolve => setTimeout(() => resolve(null), 2500));
-        const verifiedResult = await Promise.race([fetchPromise, timeoutPromise]);
-
-        if (verifiedResult?.name) {
-          realName = verifiedResult.name;
-          realCountry = verifiedResult.country;
+          } catch (apiErr) {
+            console.warn('Backend check notice:', apiErr?.message);
+          }
         }
 
         setVerifiedAccount({
-          name: realName || `MLBB Player #${pId.slice(-4)}`,
+          name: realName || `Player #${pId}`,
           country: realCountry,
           id: pId,
           server: sId
