@@ -1,0 +1,233 @@
+import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { useLanguage } from '../context/LanguageContext';
+import { getStoredGames } from '../services/gamesConfig';
+import { CambodiaFlagSvg } from './CambodiaFlagBadge';
+
+const GameSelection = () => {
+  const { t } = useLanguage();
+  const navigate = useNavigate();
+  const [games, setGames] = useState([]);
+  const [activeCategory, setActiveCategory] = useState('Service top-up');
+  const [searchQuery, setSearchQuery] = useState('');
+  const [favoritesOnly, setFavoritesOnly] = useState(false);
+
+  // Load games from persistent configuration
+  useEffect(() => {
+    const loaded = getStoredGames();
+    setGames(loaded);
+
+    // Listen for custom events if admin updates games live
+    const handleStorageChange = () => {
+      setGames(getStoredGames());
+    };
+    window.addEventListener('storage', handleStorageChange);
+    window.addEventListener('gamesConfigUpdated', handleStorageChange);
+
+    return () => {
+      window.removeEventListener('storage', handleStorageChange);
+      window.removeEventListener('gamesConfigUpdated', handleStorageChange);
+    };
+  }, []);
+
+  const categories = [
+    { id: 'Service top-up', label: t('tab_service_topup'), icon: '⚡' },
+    { id: 'Telegram stars', label: t('tab_telegram_stars'), icon: '✈️' },
+    { id: 'Steam Top-Up (CIS)', label: 'Steam (CIS)', icon: '💨' },
+    { id: 'Steam Gift Games', label: 'Steam Games', icon: '🎁' },
+    { id: 'Gift cards', label: 'Gift cards', icon: '💳' },
+    { id: 'ALL', label: t('tab_all_pkgs'), icon: '✨' },
+  ];
+
+  const filteredGames = games.filter((game) => {
+    if (favoritesOnly && !game.isPopular) return false;
+
+    const matchesCategory =
+      activeCategory === 'ALL' ||
+      game.category?.toLowerCase() === activeCategory.toLowerCase() ||
+      game.providerCategory?.toLowerCase() === activeCategory.toLowerCase();
+
+    const matchesSearch =
+      !searchQuery.trim() ||
+      game.name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      game.publisher?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      game.category?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      game.currency?.toLowerCase().includes(searchQuery.toLowerCase());
+
+    return matchesCategory && matchesSearch;
+  });
+
+  const handleGameClick = (game) => {
+    if (game.id.startsWith('mlbb') || game.id === 'mlbb') {
+      navigate('/topup');
+    } else {
+      navigate(game.route || '/topup');
+    }
+  };
+
+  return (
+    <section id="games-section" className="py-10 sm:py-14 max-w-7xl mx-auto px-3 sm:px-6 lg:px-8">
+      {/* Section Header with dynamic translation */}
+      <div className="mb-6 space-y-1">
+        <h2 className="text-2xl sm:text-4xl font-black text-white tracking-tight">
+          {t('catalog_title')}
+        </h2>
+        <p className="text-slate-400 text-xs sm:text-sm font-medium">
+          {t('catalog_sub')}
+        </p>
+      </div>
+
+      {/* Main Catalog Workspace with Category Bar & Search */}
+      <div className="bg-[#0B0F19]/90 border border-slate-800/90 rounded-3xl p-4 sm:p-6 shadow-2xl space-y-6">
+        {/* Search Bar & Favorites Toggle */}
+        <div className="flex flex-col sm:flex-row items-center justify-between gap-3">
+          <div className="w-full relative flex-1">
+            <span className="text-[10px] text-slate-400 font-bold uppercase tracking-wider block mb-1.5">
+              {t('catalog_search_label')}
+            </span>
+            <div className="relative">
+              <input
+                type="text"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                placeholder={t('catalog_search_placeholder')}
+                className="w-full bg-[#111728] border border-slate-700/80 rounded-2xl pl-10 pr-4 py-3 text-xs sm:text-sm text-white placeholder-slate-500 focus:outline-none focus:border-amber-400 focus:ring-1 focus:ring-amber-400 transition-all shadow-inner"
+              />
+              <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 text-sm">
+                🔍
+              </span>
+              {searchQuery && (
+                <button
+                  onClick={() => setSearchQuery('')}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-white text-xs font-bold"
+                >
+                  ✕
+                </button>
+              )}
+            </div>
+          </div>
+
+          <div className="shrink-0 w-full sm:w-auto pt-0 sm:pt-5">
+            <button
+              onClick={() => setFavoritesOnly(!favoritesOnly)}
+              className={`w-full sm:w-auto px-4 py-3 rounded-2xl border text-xs sm:text-sm font-bold flex items-center justify-center gap-2 transition-all ${
+                favoritesOnly
+                  ? 'bg-amber-500 text-black border-amber-400 font-black shadow-glow-gold'
+                  : 'bg-[#111728] hover:bg-[#182035] text-slate-300 border-slate-700/80'
+              }`}
+            >
+              <span>⭐</span>
+              <span>{t('tab_favorites')}</span>
+            </button>
+          </div>
+        </div>
+
+        {/* Category Filter Chips / Tabs */}
+        <div className="flex items-center gap-2 overflow-x-auto pb-2 scrollbar-none border-b border-slate-800/80">
+          {categories.map((cat) => (
+            <button
+              key={cat.id}
+              onClick={() => {
+                setActiveCategory(cat.id);
+                setFavoritesOnly(false);
+              }}
+              className={`px-4 py-2.5 rounded-xl text-xs font-bold whitespace-nowrap transition-all flex items-center gap-2 border ${
+                activeCategory === cat.id && !favoritesOnly
+                  ? 'bg-gradient-to-r from-amber-500 to-yellow-400 text-slate-950 border-amber-400 font-black shadow-glow-gold scale-[1.02]'
+                  : 'bg-[#111728]/80 hover:bg-[#182035] text-slate-300 border-slate-800 hover:border-slate-700'
+              }`}
+            >
+              <span>{cat.icon}</span>
+              <span>{cat.label}</span>
+            </button>
+          ))}
+        </div>
+
+        {/* Catalog Grid (FazerCards Visual Card Style) */}
+        {filteredGames.length === 0 ? (
+          <div className="text-center py-16 bg-[#111728]/40 rounded-3xl border border-slate-800 p-6 space-y-2">
+            <div className="text-4xl">🎮</div>
+            <h3 className="text-base font-bold text-white">No Products Found</h3>
+            <p className="text-xs text-slate-400">Try searching for a different game or select another category.</p>
+          </div>
+        ) : (
+          <div className="grid grid-cols-3 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-2.5 sm:gap-4">
+            {filteredGames.map((game) => {
+              const isMLBB = game.id.startsWith('mlbb');
+
+              return (
+                <div
+                  key={game.id}
+                  onClick={() => handleGameClick(game)}
+                  className="group relative rounded-2xl p-2 sm:p-2.5 bg-[#0B0F19] border border-slate-800/90 hover:border-purple-500/80 transition-all duration-300 hover:scale-[1.03] hover:shadow-[0_10px_25px_rgba(109,40,217,0.3)] flex flex-col justify-between items-center text-center space-y-2 cursor-pointer shadow-lg select-none"
+                >
+                  {/* Game Artwork Box with Rounded Corners */}
+                  <div className="relative aspect-square w-full rounded-2xl overflow-hidden bg-slate-950 border border-slate-800/90 shadow-inner">
+                    <img
+                      src={game.image}
+                      alt={game.name}
+                      onError={(e) => {
+                        e.target.onerror = null;
+                        e.target.src = game.localFallbackImage || '/mlbb-logo.png';
+                      }}
+                      className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                    />
+
+                    {/* Top Right Server Badge / Tag matching screenshot */}
+                    {(game.badge || game.flagTitle) && (
+                      <div className="absolute top-1 right-1 sm:top-1.5 sm:right-1.5">
+                        <span
+                          className={`inline-flex items-center gap-1 px-1.5 py-0.5 rounded-md text-[8px] sm:text-[9px] font-black uppercase tracking-wider shadow-md backdrop-blur-md ${
+                            game.badgeColor === 'gold' || isMLBB
+                              ? 'bg-amber-500 text-black border border-amber-400'
+                              : game.badgeColor === 'emerald'
+                              ? 'bg-emerald-500 text-white border border-emerald-400'
+                              : game.badgeColor === 'purple'
+                              ? 'bg-purple-600 text-white border border-purple-400'
+                              : 'bg-cyan-500 text-black border border-cyan-400'
+                          }`}
+                        >
+                          {game.flagImage ? (
+                            <span className="w-2.5 h-2.5 rounded-full overflow-hidden inline-block ring-1 ring-white/50 shrink-0">
+                              <img src={game.flagImage} alt="Flag" className="w-full h-full object-cover" />
+                            </span>
+                          ) : (game.badge?.includes('ខ្មែរ') || game.flagType === 'kh') ? (
+                            <span className="w-2.5 h-2.5 rounded-full overflow-hidden inline-block ring-1 ring-white/50 shrink-0">
+                              <CambodiaFlagSvg className="w-full h-full object-cover" />
+                            </span>
+                          ) : null}
+                          <span>{game.flagTitle || game.badge}</span>
+                        </span>
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Game Name Title */}
+                  <div className="w-full px-0.5">
+                    <h3 className="font-extrabold text-purple-300 group-hover:text-purple-100 text-[10px] sm:text-xs leading-snug uppercase tracking-wide truncate transition-colors text-center">
+                      {game.name}
+                    </h3>
+                  </div>
+
+                  {/* Purple Topup Pill Button matching reference screenshot */}
+                  <button
+                    type="button"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      handleGameClick(game);
+                    }}
+                    className="w-full py-1 sm:py-1.5 px-2 rounded-xl bg-gradient-to-r from-purple-700 via-purple-600 to-indigo-600 hover:from-purple-600 hover:to-indigo-500 active:scale-95 text-white font-black text-[10px] sm:text-xs shadow-md shadow-purple-950/60 transition-all flex items-center justify-center cursor-pointer"
+                  >
+                    {t('btn_topup_card')}
+                  </button>
+                </div>
+              );
+            })}
+          </div>
+        )}
+      </div>
+    </section>
+  );
+};
+
+export default GameSelection;

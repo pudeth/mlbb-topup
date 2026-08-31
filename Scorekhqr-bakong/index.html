@@ -1,0 +1,829 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bakong KHQR Payment</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+             
+            min-height: 100vh;
+            padding: 20px;
+            position: relative;
+            overflow-x: hidden;
+        }
+        
+         
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            display: flex;
+            gap: 30px;
+            align-items: flex-start;
+            transition: all 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+            position: relative;
+            z-index: 1;
+        }
+        
+        .container.split {
+            justify-content: center;
+        }
+        
+        .header-wrapper {
+            width: 100%;
+            text-align: center;
+            margin-bottom: 40px;
+            position: relative;
+            z-index: 1;
+        }
+        
+        h1 {
+            color: rgb(2, 0, 34);
+            text-align: center;
+            margin-bottom: 10px;
+            font-size: 2.5rem;
+            font-weight: 700;
+            width: 100%;
+            
+            letter-spacing: -0.5px;
+        }
+        
+        .subtitle {
+            color: rgba(255, 255, 255, 0.9);
+            font-size: 1rem;
+            font-weight: 400;
+        }
+        
+        .card {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            padding: 35px;
+           
+            margin-bottom: 20px;
+            transition: all 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+            flex: 1;
+            max-width: 420px;
+            position: relative;
+        }
+        
+        .card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 4px;
+             
+            border-radius: 20px 20px 0 0;
+        }
+        
+        .card.form-card {
+            transform: translateX(0);
+        }
+        
+        .container.split .card.form-card {
+            transform: translateX(0);
+        }
+        
+        h2 {
+            color: #1a202c;
+            margin-bottom: 20px;
+            font-size: 1.5rem;
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        h2::before {
+            content: '';
+            width: 6px;
+            height: 30px;
+            
+            border-radius: 3px;
+        }
+        
+        form {
+            display: flex;
+            flex-direction: column;
+            gap: 18px;
+        }
+        
+        .form-group {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+        
+        label {
+            color: #4a5568;
+            font-weight: 600;
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        
+        input, select {
+            padding: 14px 16px;
+            border: 2px solid #e2e8f0;
+            border-radius: 12px;
+            font-size: 1rem;
+            transition: all 0.3s ease;
+            background: white;
+            font-family: inherit;
+        }
+        
+        input:focus, select:focus {
+            outline: none;
+            border-color: #667eea;
+          
+            transform: translateY(-1px);
+        }
+        
+        input:hover, select:hover {
+            border-color: #cbd5e0;
+        }
+        
+        .btn-generate{
+            background: #1a202c;
+        }
+        .button-container {
+            display: flex;
+            gap: 12px;
+            margin-top: 10px;
+            transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        
+        button {
+            color: white;
+            border: none;
+            padding: 16px;
+            border-radius: 12px;
+            font-size: 1.05rem;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            flex: 1;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .btn-check {
+            background: #155724;
+            opacity: 0;
+            transform: scale(0.8) translateX(-20px);
+            pointer-events: none;
+        }
+        
+        .btn-check.show {
+            opacity: 1;
+            transform: scale(1) translateX(0);
+            pointer-events: auto;
+        }
+        
+        .button-container.split .btn-generate {
+            flex: 1;
+        }
+        
+        .button-container.split .btn-check {
+            flex: 1;
+            display: block !important;
+        }
+        
+        button:hover {
+            transform: translateY(-3px);
+        }
+        
+        .btn-check:hover {
+            transform: translateY(-3px) scale(1);
+        }
+        
+        button:active {
+            transform: translateY(-1px);
+        }
+        
+        .error {
+            background: linear-gradient(135deg, #fee 0%, #fdd 100%);
+            color: #c33;
+            padding: 14px 16px;
+            border-radius: 12px;
+            border-left: 4px solid #c33;
+            display: none;
+            margin-top: 15px;
+            font-weight: 500;
+            box-shadow: 0 4px 10px rgba(204, 51, 51, 0.1);
+        }
+        
+        #result {
+            opacity: 0;
+            transform: translateX(100px);
+            pointer-events: none;
+            position: absolute;
+            right: -650px;
+        }
+        
+        #result.show {
+            opacity: 1;
+            transform: translateX(0);
+            pointer-events: auto;
+            position: relative;
+            right: 0;
+            animation: slideInRight 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateY(-20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        
+        @keyframes slideInRight {
+            from {
+                opacity: 0;
+                transform: translateX(100px);
+            }
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+        
+        .qr-box {
+            text-align: center;
+            margin: 15px 0;
+            padding: 15px;
+            background: linear-gradient(135deg, #f8f9ff 0%, #f0f4ff 100%);
+            border-radius: 16px;
+            border: 2px dashed #cbd5e0;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .qr-box::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: radial-gradient(circle, rgba(102, 126, 234, 0.05) 0%, transparent 70%);
+            animation: pulse 3s ease-in-out infinite;
+        }
+        
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); opacity: 1; }
+            50% { transform: scale(1.1); opacity: 0.8; }
+        }
+        
+        #qr {
+            max-width: 200px;
+            height: auto;
+            border-radius: 12px;
+            box-shadow: 0 8px 20px rgba(0,0,0,0.1);
+            position: relative;
+            z-index: 1;
+            background: white;
+            padding: 8px;
+        }
+        
+        .info {
+            background: linear-gradient(135deg, #f7fafc 0%, #edf2f7 100%);
+            padding: 14px;
+            border-radius: 12px;
+            margin-bottom: 15px;
+            border: 1px solid #e2e8f0;
+        }
+        
+        .info > div {
+            display: flex;
+            justify-content: space-between;
+            padding: 8px 0;
+            border-bottom: 1px solid #e2e8f0;
+        }
+        
+        .info > div:last-child {
+            border-bottom: none;
+        }
+        
+        .info span:first-child {
+            color: #718096;
+            font-weight: 600;
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        
+        .info span:last-child {
+            color: #1a202c;
+            font-weight: 700;
+            font-size: 1rem;
+        }
+        
+        #status {
+            margin-top: 15px;
+            display: none;
+        }
+        
+        .status {
+            padding: 12px;
+            border-radius: 12px;
+            text-align: center;
+            font-weight: 700;
+            font-size: 0.95rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            animation: fadeIn 0.3s ease;
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; transform: scale(0.95); }
+            to { opacity: 1; transform: scale(1); }
+        }
+        
+        .status.paid {
+            background: linear-gradient(135deg, #d4edda 0%, #c3e6cb 100%);
+            color: #155724;
+            border: 2px solid #28a745;
+            box-shadow: 0 4px 15px rgba(40, 167, 69, 0.2);
+        }
+        
+        .status.unpaid {
+            background: linear-gradient(135deg, #fff3cd 0%, #ffeaa7 100%);
+            color: #856404;
+            border: 2px solid #ffc107;
+            box-shadow: 0 4px 15px rgba(255, 193, 7, 0.2);
+        }
+        
+        .icon {
+            display: inline-block;
+            margin-right: 8px;
+        }
+        
+        @media (max-width: 640px) {
+            h1 {
+                font-size: 1.75rem;
+            }
+            
+            .card {
+                padding: 25px;
+                max-width: 100%;
+            }
+            
+            h2 {
+                font-size: 1.35rem;
+            }
+            
+            .container {
+                flex-direction: column;
+            }
+            
+            .container.split {
+                flex-direction: column;
+            }
+            
+            #result {
+                position: relative;
+                right: 0;
+            }
+            
+            #result.show {
+                transform: translateY(0);
+            }
+        }
+        
+        @media (max-width: 1024px) {
+            .container {
+                flex-direction: column;
+                align-items: center;
+            }
+            
+            .container.split {
+                flex-direction: column;
+            }
+            
+            #result {
+                position: relative;
+                right: 0;
+            }
+            
+            .card {
+                max-width: 600px;
+                width: 100%;
+            }
+        }
+        
+        /* Notification Styles */
+        .notification-container {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            z-index: 9999;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            pointer-events: none;
+        }
+        
+        .notification {
+            background: white;
+            border-radius: 12px;
+            padding: 16px 24px;
+            min-width: 280px;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.15);
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            font-weight: 600;
+            font-size: 1rem;
+            opacity: 0;
+            transform: translateX(400px) scale(0.8);
+            transition: all 0.5s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+            pointer-events: auto;
+            cursor: pointer;
+            border: 2px solid transparent;
+        }
+        
+        .notification.show {
+            opacity: 1;
+            transform: translateX(0) scale(1);
+        }
+        
+        .notification.hide {
+            opacity: 0;
+            transform: translateX(400px) scale(0.8);
+        }
+        
+        .notification.unpaid {
+            background: linear-gradient(135deg, #fff3cd 0%, #ffeaa7 100%);
+            border-color: #ffc107;
+            color: #856404;
+        }
+        
+        .notification.paid {
+            background: linear-gradient(135deg, #d4edda 0%, #c3e6cb 100%);
+            border-color: #28a745;
+            color: #155724;
+        }
+        
+        .notification-icon {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.2rem;
+            flex-shrink: 0;
+            animation: pulse-icon 2s ease-in-out infinite;
+        }
+        
+        .notification.unpaid .notification-icon {
+            background: rgba(255, 193, 7, 0.3);
+        }
+        
+        .notification.paid .notification-icon {
+            background: rgba(40, 167, 69, 0.3);
+            animation: success-bounce 0.6s ease;
+        }
+        
+        @keyframes pulse-icon {
+            0%, 100% {
+                transform: scale(1);
+            }
+            50% {
+                transform: scale(1.1);
+            }
+        }
+        
+        @keyframes success-bounce {
+            0% {
+                transform: scale(0);
+            }
+            50% {
+                transform: scale(1.2);
+            }
+            100% {
+                transform: scale(1);
+            }
+        }
+        
+        .notification-content {
+            flex: 1;
+        }
+        
+        .notification-title {
+            font-weight: 700;
+            font-size: 1.05rem;
+            margin-bottom: 2px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        
+        .notification-message {
+            font-size: 0.85rem;
+            opacity: 0.8;
+            font-weight: 500;
+        }
+        
+        .notification-close {
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            opacity: 0.6;
+            font-size: 1.2rem;
+        }
+        
+        .notification-close:hover {
+            opacity: 1;
+            transform: rotate(90deg);
+        }
+        
+        .notification.unpaid .notification-close:hover {
+            background: rgba(255, 193, 7, 0.2);
+        }
+        
+        .notification.paid .notification-close:hover {
+            background: rgba(40, 167, 69, 0.2);
+        }
+        
+        @media (max-width: 640px) {
+            .notification-container {
+                top: 10px;
+                right: 10px;
+                left: 10px;
+            }
+            
+            .notification {
+                min-width: auto;
+                width: 100%;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Notification Container -->
+    <div class="notification-container" id="notificationContainer"></div>
+    
+    <div class="container" id="container">
+        <div class="card form-card">
+            <h2>Create Payment</h2>
+            <form id="form">
+                <div class="form-group">
+                    <label>Amount</label>
+                    <input type="number" id="amount" step="0.01" placeholder="Enter amount" required>
+                </div>
+                
+                <div class="form-group">
+                    <label>Currency</label>
+                    <select id="currency">
+                        <option value="USD">USD - US Dollar</option>
+                        <option value="KHR">KHR - Cambodian Riel</option>
+                    </select>
+                </div>
+                
+                <div class="form-group">
+                    <label>Phone (optional)</label>
+                    <input type="tel" id="phone" placeholder="+855 12 345 678">
+                </div>
+                
+                <div class="button-container">
+                    <button type="submit" id="generateBtn" class="btn-generate">Generate QR Code</button>
+                    <button type="button" id="checkBtn" class="btn-check" onclick="checkStatus(true)" style="display: none;">Check Payment</button>
+                </div>
+            </form>
+            <div class="error" id="error"></div>
+        </div>
+        
+        <div class="card" id="result">
+            <h2>Payment QR Code</h2>
+            <div class="qr-box">
+                <img id="qr" src="" alt="QR Code">
+            </div>
+            <div class="info">
+                <div><span>Bill Number:</span><span id="bill"></span></div>
+                <div><span>Amount:</span><span id="amt"></span></div>
+            </div>
+            <div id="status" style="display: none;"></div>
+        </div>
+    </div>
+    
+    <script>
+        const API = 'http://localhost:5000';
+        let hash = '';
+        let autoCheckInterval = null;
+        
+        document.getElementById('form').onsubmit = async (e) => {
+            e.preventDefault();
+            document.getElementById('error').style.display = 'none';
+            
+            try {
+                const res = await fetch(`${API}/api/payment/create`, {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({
+                        amount: parseFloat(document.getElementById('amount').value),
+                        currency: document.getElementById('currency').value,
+                        phone: document.getElementById('phone').value
+                    })
+                });
+                
+                const data = await res.json();
+                
+                if (data.success) {
+                    hash = data.md5_hash;
+                    document.getElementById('qr').src = `${API}${data.qr_image_url}`;
+                    document.getElementById('bill').textContent = data.bill_number;
+                    document.getElementById('amt').textContent = `${data.amount} ${data.currency}`;
+                    
+                    // Add split class to container for layout transition
+                    document.getElementById('container').classList.add('split');
+                    
+                    // Show result with smooth transition
+                    setTimeout(() => {
+                        document.getElementById('result').classList.add('show');
+                    }, 100);
+                    
+                    document.getElementById('status').innerHTML = '';
+                    
+                    // Show check button with animation
+                    const buttonContainer = document.querySelector('.button-container');
+                    const checkBtn = document.getElementById('checkBtn');
+                    
+                    buttonContainer.classList.add('split');
+                    checkBtn.style.display = 'block';
+                    
+                    setTimeout(() => {
+                        checkBtn.classList.add('show');
+                    }, 100);
+                    
+                    // Start auto-checking payment status
+                    startAutoCheck();
+                } else {
+                    throw new Error(data.error || 'Failed');
+                }
+            } catch (err) {
+                document.getElementById('error').textContent = err.message;
+                document.getElementById('error').style.display = 'block';
+            }
+        };
+        
+        let lastStatus = null;
+        
+        async function checkStatus(forceNotification = false) {
+            if (!hash) return;
+            try {
+                const res = await fetch(`${API}/api/payment/status/${hash}`);
+                const data = await res.json();
+                
+                // Check if there's an error from the API
+                if (data.error) {
+                    console.error('API Error:', data.error);
+                    
+                    // If it's a token error (401), stop auto-checking
+                    if (res.status === 401) {
+                        console.log('Stopping auto-check due to token error');
+                        stopAutoCheck();
+                        
+                        // Show a warning message
+                        document.getElementById('status').innerHTML = 
+                            `<div class="status unpaid"><span class="icon">⚠</span>API Token Issue - Check .env file</div>`;
+                        document.getElementById('status').style.display = 'block';
+                        return null;
+                    }
+                    
+                    // For other errors, just log and continue (might be temporary)
+                    return null;
+                }
+                
+                // Check for warnings (rate limit, temporary issues)
+                if (data.warning) {
+                    console.warn('API Warning:', data.warning);
+                    // Continue checking, don't show error to user
+                }
+                
+                // Validate that status exists
+                if (!data || !data.status) {
+                    console.error('Invalid response from API:', data);
+                    return null;
+                }
+                
+                const cls = data.status === 'PAID' ? 'paid' : 'unpaid';
+                const icon = data.status === 'PAID' ? '✓' : '⏳';
+                document.getElementById('status').innerHTML = 
+                    `<div class="status ${cls}"><span class="icon">${icon}</span>${data.status}</div>`;
+                document.getElementById('status').style.display = 'block';
+                
+                // Show notification if status changed OR if manually triggered
+                if (lastStatus !== data.status || forceNotification) {
+                    showNotification(data.status);
+                    lastStatus = data.status;
+                }
+                
+                // Stop auto-checking if payment is complete
+                if (data.status === 'PAID') {
+                    stopAutoCheck();
+                    console.log('✓ Payment confirmed as PAID!');
+                }
+                
+                return data.status;
+            } catch (err) {
+                console.error('Error checking status:', err);
+                return null;
+            }
+        }
+        
+        function showNotification(status) {
+            const container = document.getElementById('notificationContainer');
+            
+            // Safety check for undefined status
+            if (!status) {
+                console.error('Status is undefined');
+                return;
+            }
+            
+            const notification = document.createElement('div');
+            notification.className = `notification ${status.toLowerCase()}`;
+            
+            const icon = status === 'PAID' ? '✓' : '⏳';
+            const title = status === 'PAID' ? 'Payment Received!' : 'Awaiting Payment';
+            const message = status === 'PAID' ? 'Transaction completed successfully' : 'Waiting for customer payment';
+            
+            notification.innerHTML = `
+                <div class="notification-icon">${icon}</div>
+                <div class="notification-content">
+                    <div class="notification-title">${title}</div>
+                    <div class="notification-message">${message}</div>
+                </div>
+                <div class="notification-close" onclick="closeNotification(this)">×</div>
+            `;
+            
+            container.appendChild(notification);
+            
+            // Trigger animation
+            setTimeout(() => {
+                notification.classList.add('show');
+            }, 10);
+            
+            // Auto-remove after 5 seconds
+            setTimeout(() => {
+                closeNotification(notification.querySelector('.notification-close'));
+            }, 5000);
+        }
+        
+        function closeNotification(closeBtn) {
+            const notification = closeBtn.parentElement;
+            notification.classList.remove('show');
+            notification.classList.add('hide');
+            
+            setTimeout(() => {
+                notification.remove();
+            }, 500);
+        }
+        
+        function startAutoCheck() {
+            // Clear any existing interval
+            stopAutoCheck();
+            
+            // Check immediately
+            checkStatus();
+            
+            // Then check every 3 seconds
+            autoCheckInterval = setInterval(checkStatus, 3000);
+            
+            console.log('Auto-check started: checking every 3 seconds');
+        }
+        
+        function stopAutoCheck() {
+            if (autoCheckInterval) {
+                clearInterval(autoCheckInterval);
+                autoCheckInterval = null;
+                console.log('Auto-check stopped');
+            }
+        }
+        
+        // Clean up interval when page is closed
+        window.addEventListener('beforeunload', stopAutoCheck);
+    </script>
+</body>
+</html>

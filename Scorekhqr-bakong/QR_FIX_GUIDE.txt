@@ -1,0 +1,112 @@
+================================================================================
+    QR CODE NOT SHOWING - QUICK FIX
+================================================================================
+
+PROBLEM:
+--------
+The QR code image is not displaying in the browser.
+This is likely due to missing Python image libraries.
+
+
+SOLUTION 1: Install Missing Dependencies (RECOMMENDED)
+--------------------------------------------------------
+
+1. Stop the running servers (close both API and Web server windows)
+
+2. Double-click:  install_dependencies.bat
+
+3. Restart the servers: start_all.bat
+
+
+SOLUTION 2: Manual Installation
+--------------------------------
+
+1. Stop the servers
+
+2. Open Command Prompt or PowerShell
+
+3. Navigate to project folder:
+   cd "d:\BIU2 Y2_S2\Bong Store System\E-Lerning"
+
+4. Activate virtual environment:
+   venv\Scripts\activate
+
+5. Install dependencies:
+   pip install --upgrade pillow qrcode[pil]
+
+6. Restart servers:
+   python api.py (in one window)
+   python serve_web.py (in another window)
+
+
+SOLUTION 3: Test QR Generation
+-------------------------------
+
+To see detailed error messages:
+
+1. Activate virtual environment:
+   venv\Scripts\activate
+
+2. Run test:
+   python test_qr.py
+
+This will show exactly what's missing.
+
+
+COMMON ERRORS & FIXES:
+----------------------
+
+Error: "No module named 'PIL'"
+Fix: pip install pillow
+
+Error: "No module named 'qrcode'"
+Fix: pip install qrcode[pil]
+
+Error: "Database connection failed"
+Fix: Make sure MySQL is running and credentials in .env are correct
+
+Error: "Bakong API error"  
+Fix: Check your BAKONG_TOKEN in .env file
+
+
+VERIFY FIX:
+-----------
+
+After installing dependencies:
+
+1. Start the servers: start_all.bat
+
+2. Open browser: http://localhost:8080
+
+3. Create a payment with amount: 10 USD
+
+4. You should see the QR code image displayed
+
+
+STILL NOT WORKING?
+------------------
+
+1. Check the API server console for error messages
+
+2. Check browser console (F12) for error messages
+
+3. Run: python test_qr.py
+   to see detailed diagnostics
+
+4. Make sure you have:
+   - Python installed correctly
+   - Virtual environment activated
+   - All dependencies installed
+   - MySQL running
+   - Correct .env configuration
+
+
+NEED MORE HELP?
+---------------
+
+Check these files:
+- INSTALL_GUIDE.md (installation guide)
+- README.md (project documentation)
+- FIXES_APPLIED.md (list of all fixes)
+
+================================================================================

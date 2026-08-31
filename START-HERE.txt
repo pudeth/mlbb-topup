@@ -1,0 +1,182 @@
+
+  ╔══════════════════════════════════════════════════════════════╗
+  ║                                                              ║
+  ║          🎮 MLBB TOP-UP APPLICATION 🎮                       ║
+  ║                                                              ║
+  ║                    👆 START HERE 👆                          ║
+  ║                                                              ║
+  ╚══════════════════════════════════════════════════════════════╝
+
+
+  ┌────────────────────────────────────────────────────────────┐
+  │  📋 STEP 1: CHOOSE YOUR METHOD                             │
+  └────────────────────────────────────────────────────────────┘
+
+      🖱️  EASY WAY (Recommended):
+      
+          Double-click → menu.bat
+          
+          (Interactive menu with all options)
+
+
+      ⌨️  MANUAL WAY:
+      
+          Double-click → start.bat
+          
+          (Directly starts all services)
+
+
+  ┌────────────────────────────────────────────────────────────┐
+  │  🚀 STEP 2: FIRST TIME SETUP                               │
+  └────────────────────────────────────────────────────────────┘
+
+      If this is your FIRST TIME running:
+      
+          1. Double-click → install.bat
+             (Wait 3-5 minutes for installation)
+          
+          2. Double-click → start.bat
+             (3 windows will open)
+          
+          3. Open browser → http://localhost:3001
+
+
+  ┌────────────────────────────────────────────────────────────┐
+  │  ⚡ STEP 3: DAILY USAGE                                    │
+  └────────────────────────────────────────────────────────────┘
+
+      Start working:    Double-click → start.bat
+      
+      Stop working:     Double-click → stop.bat
+      
+      Restart:          Double-click → restart.bat
+      
+      Check status:     Double-click → status.bat
+
+
+  ┌────────────────────────────────────────────────────────────┐
+  │  🌐 STEP 4: OPEN APPLICATION                               │
+  └────────────────────────────────────────────────────────────┘
+
+      After starting services:
+      
+          Browser → http://localhost:3001
+          
+          ✓ No login required
+          ✓ Click "Top Up Now"
+          ✓ Enter Player ID
+          ✓ Select package
+          ✓ Pay with KHQR
+
+
+  ┌────────────────────────────────────────────────────────────┐
+  │  📦 AVAILABLE COMMANDS                                     │
+  └────────────────────────────────────────────────────────────┘
+
+      menu.bat       → Interactive menu (ALL OPTIONS)
+      start.bat      → Start all services
+      stop.bat       → Stop all services
+      restart.bat    → Restart services
+      status.bat     → Check what's running
+      install.bat    → Install dependencies (first time)
+      build.bat      → Build for production
+
+
+  ┌────────────────────────────────────────────────────────────┐
+  │  📚 DOCUMENTATION FILES                                    │
+  └────────────────────────────────────────────────────────────┘
+
+      QUICK-START.txt          → Quick reference guide (root)
+      START-HERE.txt           → This file (root)
+      README.md                → Project overview (root)
+      
+      docs/HOW-TO-USE.md       → Complete user guide
+      docs/README-COMMANDS.md  → Command documentation
+      docs/GUEST-CHECKOUT-GUIDE.md → Guest checkout docs
+      docs/                    → All other documentation
+
+
+  ┌────────────────────────────────────────────────────────────┐
+  │  🎯 WHAT YOU'LL SEE                                        │
+  └────────────────────────────────────────────────────────────┘
+
+      When you run start.bat, 3 windows open:
+      
+      ┌─────────────────────────────────────┐
+      │ MLBB Backend API                    │  ← Backend (.NET)
+      │ Now listening on: http://localhost  │
+      └─────────────────────────────────────┘
+      
+      ┌─────────────────────────────────────┐
+      │ KHQR Bakong API                     │  ← Payment API
+      │ Running on http://localhost:5000    │
+      └─────────────────────────────────────┘
+      
+      ┌─────────────────────────────────────┐
+      │ MLBB Frontend                       │  ← React App
+      │ Local: http://localhost:3001        │
+      └─────────────────────────────────────┘
+
+      ⚠️  Keep all 3 windows open while working!
+
+
+  ┌────────────────────────────────────────────────────────────┐
+  │  ✅ VERIFY IT'S WORKING                                    │
+  └────────────────────────────────────────────────────────────┘
+
+      Open these URLs in browser:
+      
+      ✓ http://localhost:3001        → Homepage loads
+      ✓ http://localhost:5000/swagger → API docs load
+      
+      In the app:
+      
+      ✓ Navigation shows: Home | Top Up | Support
+      ✓ No "Login" or "Register" buttons
+      ✓ Can click "Top Up Now" without login
+
+
+  ┌────────────────────────────────────────────────────────────┐
+  │  🆘 TROUBLESHOOTING                                        │
+  └────────────────────────────────────────────────────────────┘
+
+      Something not working?
+      
+      1. Double-click → stop.bat
+      2. Wait 5 seconds
+      3. Double-click → start.bat
+      
+      Still not working?
+      
+      1. Open → menu.bat
+      2. Select option [4] Check Status
+      3. See which services are running
+
+
+  ┌────────────────────────────────────────────────────────────┐
+  │  💡 PRO TIPS                                               │
+  └────────────────────────────────────────────────────────────┘
+
+      ► Use menu.bat for easiest experience
+      ► Keep the 3 service windows open
+      ► Use stop.bat before shutting down PC
+      ► Check status.bat if something seems wrong
+      ► Read HOW-TO-USE.md for complete guide
+
+
+  ┌────────────────────────────────────────────────────────────┐
+  │  🎉 YOU'RE READY!                                          │
+  └────────────────────────────────────────────────────────────┘
+
+      Next step: Double-click → menu.bat
+
+      OR
+
+      Next step: Double-click → start.bat
+
+
+  ═══════════════════════════════════════════════════════════════
+
+           Made with ❤️ for MLBB Top-Up Services
+
+  ═══════════════════════════════════════════════════════════════

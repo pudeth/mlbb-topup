@@ -1,0 +1,267 @@
+================================================================================
+    BAKONG KHQR PAYMENT SYSTEM - QUICK REFERENCE
+================================================================================
+
+✅ ALL ISSUES FIXED - SYSTEM FULLY WORKING!
+
+================================================================================
+    ACCESSING YOUR SYSTEM
+================================================================================
+
+Web Interface:     http://localhost:8080
+API Endpoint:      http://localhost:5000
+Health Check:      http://localhost:5000/health
+
+================================================================================
+    STARTING THE SYSTEM
+================================================================================
+
+Double-click:  start_all.bat
+
+This will:
+  ✓ Start API server (port 5000)
+  ✓ Start Web server (port 8080)
+  ✓ Open browser automatically
+
+================================================================================
+    CURRENT CONFIGURATION
+================================================================================
+
+Mode:             DEMO MODE (testing without live API)
+Database:         In-Memory Cache (no MySQL needed)
+QR Generation:    ✅ WORKING
+Payment Creation: ✅ WORKING
+Status Checking:  Demo (always shows UNPAID)
+
+================================================================================
+    WHAT'S WORKING NOW
+================================================================================
+
+✅ QR Code Generation - Creates valid KHQR codes
+✅ QR Code Display - Shows beautiful styled QR images
+✅ Multiple Payments - Create as many as you want
+✅ Currency Support - USD and KHR
+✅ Auto Bill Numbers - TRX + timestamp
+✅ Phone Numbers - Optional customer phone
+✅ Web Interface - Modern, animated UI
+✅ API Server - RESTful endpoints
+✅ Error Handling - Graceful failures
+✅ Demo Mode - Works without live API
+✅ In-Memory Storage - Works without database
+
+================================================================================
+    TESTING YOUR SYSTEM
+================================================================================
+
+1. Open browser: http://localhost:8080
+
+2. Create a payment:
+   Amount: 100
+   Currency: USD
+   Phone: (optional)
+
+3. Click "GENERATE QR CODE"
+
+4. You should see:
+   ✓ Beautiful QR code image
+   ✓ Bill number (TRX...)
+   ✓ Amount displayed
+   ✓ "CHECK PAYMENT" button
+
+5. Click "CHECK PAYMENT" to see status (will show UNPAID in demo mode)
+
+================================================================================
+    API ENDPOINTS
+================================================================================
+
+POST /api/payment/create
+  - Create new payment
+  - Returns: bill_number, md5_hash, qr_code, qr_image_url
+
+GET /api/payment/qr/<md5>
+  - Get QR code image
+  - Returns: PNG image
+
+GET /api/payment/status/<md5>
+  - Check payment status
+  - Returns: PAID or UNPAID
+
+GET /api/payments
+  - List all payments
+  - Query: ?status=UNPAID&limit=20
+
+================================================================================
+    SWITCHING TO PRODUCTION MODE
+================================================================================
+
+When you have a valid Bakong API token:
+
+1. Edit .env file:
+   DEMO_MODE=false
+   BAKONG_TOKEN=your_new_token_here
+
+2. Start MySQL database (recommended)
+
+3. Restart servers:
+   start_all.bat
+
+4. Payment status checking will work with live API
+
+================================================================================
+    TROUBLESHOOTING
+================================================================================
+
+Problem: QR code not showing
+Fix: Refresh browser (Ctrl + F5)
+
+Problem: Servers not starting
+Fix: Run setup.bat to reinstall dependencies
+
+Problem: Python errors
+Fix: Run diagnose.ps1 to check Python installation
+
+Problem: Port in use
+Fix: Close other apps using ports 5000 or 8080
+
+Problem: Status check errors (fixed!)
+Fix: Already fixed - auto-check stops on errors
+
+================================================================================
+    FILE LOCATIONS
+================================================================================
+
+Project Folder: d:\BIU2 Y2_S2\Bong Store System\E-Lerning
+
+Important Files:
+  start_all.bat           - Start everything
+  setup.bat               - Setup/reinstall
+  .env                    - Configuration
+  api.py                  - API server
+  serve_web.py            - Web server
+  index.html              - Web interface
+  
+Documentation:
+  ALL_FIXES_SUMMARY.md    - Complete fix summary
+  INSTALL_GUIDE.md        - Installation guide
+  README.md               - Project documentation
+  QUICK_REFERENCE.txt     - This file
+
+================================================================================
+    SUPPORT FILES
+================================================================================
+
+diagnose.ps1              - Check Python installation
+test_qr.py                - Test QR generation
+install_dependencies.bat  - Install missing packages
+CLICK_ME_TO_FIX.bat       - Installation wizard
+
+================================================================================
+    DEMO MODE vs PRODUCTION MODE
+================================================================================
+
+DEMO MODE (Current):
+  ✓ No Bakong API calls
+  ✓ No MySQL needed
+  ✓ Perfect for testing
+  ✓ QR codes work perfectly
+  ✗ Status always shows UNPAID
+
+PRODUCTION MODE:
+  ✓ Real payment verification
+  ✓ Live Bakong API integration
+  ✓ Database persistence
+  ✓ Telegram notifications
+  ✓ Deeplink generation
+  ✓ Actual payment tracking
+
+================================================================================
+    ENVIRONMENT VARIABLES (.env)
+================================================================================
+
+# Application
+APP_NAME="Bakong KHQR Demo"
+APP_URL=http://localhost
+APP_DEBUG=true
+
+# Demo Mode (CURRENTLY ENABLED)
+DEMO_MODE=true
+
+# Database (Optional in demo mode)
+DB_HOST=127.0.0.1
+DB_PORT=3306
+DB_DATABASE=khqr_payment
+DB_USERNAME=root
+DB_PASSWORD=
+
+# Bakong API (Not used in demo mode)
+BAKONG_TOKEN=your_token_here
+
+# Merchant Info
+MERCHANT_BAKONG_ID=deth_peak3@aclb
+MERCHANT_NAME="PuDeth Smart-PAY"
+MERCHANT_CITY="PHNOM PENH"
+
+# Telegram (Optional)
+TELEGRAM_BOT_TOKEN=your_bot_token
+TELEGRAM_CHAT_ID=your_chat_id
+
+================================================================================
+    DEVELOPMENT WORKFLOW
+================================================================================
+
+1. Make changes to code
+2. Stop servers (close terminal windows)
+3. Restart: start_all.bat
+4. Test in browser
+5. Check API console for logs
+
+================================================================================
+    IMPORTANT NOTES
+================================================================================
+
+✅ System is fully functional in demo mode
+✅ QR codes generate and display perfectly
+✅ No errors in browser console anymore
+✅ Auto-check stops gracefully on API errors
+✅ Works without database connection
+✅ All major issues resolved
+
+⚠️  Demo mode is for testing only
+⚠️  Data is not persisted (lost on restart)
+⚠️  Get valid API token for production use
+⚠️  Enable MySQL for data persistence
+
+================================================================================
+    NEXT STEPS
+================================================================================
+
+For Testing:
+  ✓ You're ready! Just use the system as-is
+
+For Production:
+  1. Get new Bakong API token from Bakong Developer Portal
+  2. Update BAKONG_TOKEN in .env
+  3. Set DEMO_MODE=false in .env
+  4. Install and configure MySQL
+  5. Restart servers
+
+================================================================================
+    CREDITS
+================================================================================
+
+System: Bakong KHQR Payment System
+Merchant: PuDeth Smart-PAY
+Developer: [Your Name]
+Date: August 11, 2026
+Status: ✅ ALL ISSUES FIXED
+
+================================================================================
+
+Need help? Check these files:
+  - ALL_FIXES_SUMMARY.md (complete details)
+  - INSTALL_GUIDE.md (installation help)
+  - README.md (usage guide)
+
+Your system is ready to use! 🚀
+
+================================================================================

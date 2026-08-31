@@ -1,0 +1,71 @@
+╔════════════════════════════════════════════════════════════════╗
+║                                                                ║
+║             MLBB TOP-UP APPLICATION - QUICK START             ║
+║                                                                ║
+╚════════════════════════════════════════════════════════════════╝
+
+📋 AVAILABLE COMMANDS:
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+  menu.bat          → Interactive menu with all options
+  start.bat         → Start all services
+  stop.bat          → Stop all services
+  restart.bat       → Restart all services
+  status.bat        → Check which services are running
+  install.bat       → Install all dependencies (first time)
+  build.bat         → Build for production
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+🚀 FIRST TIME SETUP:
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+  1. Double-click: install.bat
+     (Installs all dependencies - takes a few minutes)
+
+  2. Double-click: start.bat
+     (Starts Backend, KHQR API, and Frontend)
+
+  3. Open browser: http://localhost:3001
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+🌐 SERVICE URLS:
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+  Frontend:         http://localhost:3001
+  Backend API:      http://localhost:5000
+  KHQR API:         http://localhost:5000
+  Swagger Docs:     http://localhost:5000/swagger
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+✨ DAILY USAGE:
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+  Start Work:       Double-click start.bat
+  Stop Work:        Double-click stop.bat
+  Check Status:     Double-click status.bat
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+📖 FEATURES:
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+  ✓ Guest checkout (no login required)
+  ✓ KHQR payment with QR code display
+  ✓ Auto-open banking app via deep link
+  ✓ Real-time account verification
+  ✓ Auto-detect Player ID and Server ID format
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+❓ NEED HELP?
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+  Read: README-COMMANDS.md (detailed documentation)
+  Or run: menu.bat (interactive menu)
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+Made with ❤️ for MLBB Top-Up Services

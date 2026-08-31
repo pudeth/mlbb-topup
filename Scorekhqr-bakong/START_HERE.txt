@@ -1,0 +1,115 @@
+================================================================================
+    BAKONG KHQR PAYMENT SYSTEM - START HERE
+================================================================================
+
+⚠️  ISSUE DETECTED: Python is not properly installed on your system!
+
+You have Windows Store Python shortcuts that don't work.
+
+================================================================================
+    QUICK FIX (5 minutes)
+================================================================================
+
+STEP 1: Remove Fake Python Shortcuts
+-------------------------------------
+1. Press Windows Key + I (open Settings)
+2. Click on "Apps"
+3. Click on "App execution aliases" (or search for it)
+4. Find "python.exe" - Turn it OFF
+5. Find "python3.exe" - Turn it OFF
+
+
+STEP 2: Install Real Python
+----------------------------
+1. Open your web browser
+2. Go to: https://www.python.org/downloads/
+3. Click the big yellow "Download Python 3.xx" button
+4. Run the downloaded installer
+5. ⚠️  IMPORTANT: CHECK the box "Add Python to PATH" ✓
+6. Click "Install Now"
+7. Wait for it to finish
+8. Click "Close"
+
+
+STEP 3: Verify Python Works
+----------------------------
+1. CLOSE this window
+2. Open a NEW PowerShell or Command Prompt
+3. Type: python --version
+4. You should see: Python 3.x.x
+
+   If you see an error, go back to Step 1.
+
+
+STEP 4: Setup This Project
+---------------------------
+Double-click one of these files:
+   
+   → setup.bat        (for Command Prompt)
+   → setup.ps1        (for PowerShell)
+
+This will:
+   ✓ Create a virtual environment
+   ✓ Install all required packages
+   ✓ Prepare the project
+
+
+STEP 5: Configure Your Settings
+--------------------------------
+1. Open the file: .env
+2. Update these settings:
+   
+   DB_PASSWORD=your_mysql_password
+   BAKONG_TOKEN=your_bakong_api_token
+   MERCHANT_BAKONG_ID=your_bakong_id
+
+
+STEP 6: Start the Application
+------------------------------
+Double-click: start_all.bat
+
+This will:
+   ✓ Start API server (port 5000)
+   ✓ Start Web server (port 8080)
+   ✓ Open your browser automatically
+
+
+================================================================================
+    NEED HELP?
+================================================================================
+
+Problem: Python still not working
+Solution: Run diagnose.ps1 to check what's wrong
+
+Problem: Database connection error
+Solution: Make sure MySQL is running and check .env settings
+
+Problem: Port already in use
+Solution: Close other apps using ports 5000 or 8080
+
+Problem: Module not found
+Solution: Run setup.bat again
+
+For detailed help, read: INSTALL_GUIDE.md
+
+================================================================================
+    QUICK COMMANDS
+================================================================================
+
+Check if Python is working:
+   python --version
+
+Run diagnostics:
+   powershell -ExecutionPolicy Bypass -File diagnose.ps1
+
+Setup project:
+   setup.bat
+
+Start application:
+   start_all.bat
+
+Manual start (if needed):
+   venv\Scripts\activate
+   python api.py
+
+================================================================================

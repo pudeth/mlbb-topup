@@ -1,0 +1,47 @@
+version: '3.8'
+
+services:
+  khqr-api:
+    build:
+      context: ./Scorekhqr-bakong
+      dockerfile: Dockerfile
+    container_name: mlbb-khqr-api
+    restart: unless-stopped
+    ports:
+      - "5001:5001"
+    environment:
+      - PORT=5001
+
+  backend-api:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: mlbb-backend-api
+    restart: unless-stopped
+    ports:
+      - "5000:5000"
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Production
+      - ASPNETCORE_URLS=http://+:5000
+      - KHQR__ApiUrl=http://khqr-api:5001
+      - ConnectionStrings__DefaultConnection=Data Source=/app/data/mlbbtopup.db
+    volumes:
+      - mlbb_db_data:/app/data
+    depends_on:
+      - khqr-api
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+      args:
+        - REACT_APP_API_URL=http://localhost:5000/api
+    container_name: mlbb-frontend
+    restart: unless-stopped
+    ports:
+      - "3001:80"
+    depends_on:
+      - backend-api
+
+volumes:
+  mlbb_db_data:

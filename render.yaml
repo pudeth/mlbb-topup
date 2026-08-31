@@ -1,0 +1,31 @@
+services:
+  # 1. KHQR Bakong Python Microservice
+  - type: web
+    name: mlbb-khqr-api
+    runtime: docker
+    dockerContext: ./Scorekhqr-bakong
+    dockerfilePath: ./Scorekhqr-bakong/Dockerfile
+    plan: free
+    region: singapore
+    envVars:
+      - key: PORT
+        value: "5001"
+      - key: DEMO_MODE
+        value: "false"
+
+  # 2. ASP.NET Core 8 Web API Backend
+  - type: web
+    name: mlbb-backend-api
+    runtime: docker
+    dockerContext: ./backend
+    dockerfilePath: ./backend/Dockerfile
+    plan: free
+    region: singapore
+    envVars:
+      - key: ASPNETCORE_ENVIRONMENT
+        value: Production
+      - key: KHQR__ApiUrl
+        fromService:
+          type: web
+          name: mlbb-khqr-api
+          property: host
