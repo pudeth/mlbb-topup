@@ -1017,42 +1017,54 @@ const PRICING_GAMES = [
     setGameModalOpen(true);
   };
 
-  const handleGameFlagUpload = (e) => {
+  const handleGameFlagUpload = async (e) => {
     const file = e.target.files?.[0];
     if (!file) return;
 
-    if (file.size > 2 * 1024 * 1024) {
-      showToast('error', 'Flag file size must be less than 2MB');
+    if (file.size > 10 * 1024 * 1024) {
+      showToast('error', 'Flag image size must be less than 10MB');
       return;
     }
 
-    const reader = new FileReader();
-    reader.onload = () => {
-      setGameFormData((prev) => ({
-        ...prev,
-        flagType: 'custom',
-        flagImage: reader.result,
-      }));
-      showToast('success', 'Custom flag image loaded!');
-    };
-    reader.readAsDataURL(file);
+    showToast('info', '☁️ Uploading flag image to Cloudinary "logo-game" folder...');
+    try {
+      const res = await uploadToCloudinary(file, 'logo-game');
+      if (res.url) {
+        setGameFormData((prev) => ({
+          ...prev,
+          flagType: 'custom',
+          flagImage: res.url,
+        }));
+        showToast('success', res.isCloudinary ? '✅ Flag uploaded to Cloudinary "logo-game" folder!' : '✅ Custom flag loaded!');
+      } else {
+        showToast('error', res.error || 'Failed to upload flag.');
+      }
+    } catch (err) {
+      showToast('error', err?.message || 'Flag upload failed');
+    }
   };
 
-  const handleGameImageUpload = (e) => {
-    const file = e.target.files[0];
+  const handleGameImageUpload = async (e) => {
+    const file = e.target.files?.[0];
     if (!file) return;
 
-    if (file.size > 5 * 1024 * 1024) {
-      showToast('error', 'Image file is too large (Maximum size is 5MB)');
+    if (file.size > 10 * 1024 * 1024) {
+      showToast('error', 'Game logo size must be less than 10MB');
       return;
     }
 
-    const reader = new FileReader();
-    reader.onload = () => {
-      setGameFormData((prev) => ({ ...prev, image: reader.result }));
-      showToast('success', 'Image preview loaded! Click "Save Game" to apply.');
-    };
-    reader.readAsDataURL(file);
+    showToast('info', '☁️ Uploading game logo to Cloudinary "logo-game" folder...');
+    try {
+      const res = await uploadToCloudinary(file, 'logo-game');
+      if (res.url) {
+        setGameFormData((prev) => ({ ...prev, image: res.url }));
+        showToast('success', res.isCloudinary ? '✅ Game logo uploaded to Cloudinary "logo-game" folder!' : '✅ Game logo preview updated!');
+      } else {
+        showToast('error', res.error || 'Failed to upload game logo.');
+      }
+    } catch (err) {
+      showToast('error', err?.message || 'Game logo upload failed');
+    }
   };
 
   const handleSaveGame = (e) => {
