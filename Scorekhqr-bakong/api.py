@@ -596,6 +596,34 @@ def payment_callback():
     except Exception as e:
         return jsonify({'error': str(e)}), 500
 
+@app.route('/api/branding', methods=['GET', 'POST', 'PUT'])
+def handle_branding():
+    """Fetch or update store branding persisted in MongoDB Atlas settings collection"""
+    if request.method == 'GET':
+        if mongo_db is not None:
+            try:
+                branding_doc = mongo_db.settings.find_one({'type': 'store_branding'})
+                if branding_doc:
+                    branding_doc.pop('_id', None)
+                    return jsonify({'success': True, 'branding': branding_doc.get('data')})
+            except Exception as e:
+                print(f"[-] MongoDB branding fetch error: {e}")
+        return jsonify({'success': True, 'branding': None})
+    
+    if request.method in ['POST', 'PUT']:
+        try:
+            data = request.get_json() or {}
+            if mongo_db is not None:
+                mongo_db.settings.update_one(
+                    {'type': 'store_branding'},
+                    {'$set': {'type': 'store_branding', 'data': data, 'updated_at': datetime.utcnow().isoformat()}},
+                    upsert=True
+                )
+                print("[+] Saved branding to MongoDB Atlas settings collection!")
+            return jsonify({'success': True, 'branding': data})
+        except Exception as e:
+            return jsonify({'success': False, 'error': str(e)}), 500
+
 @app.route('/api/config', methods=['GET'])
 def get_current_config():
     """Get active Bakong KHQR configuration"""
