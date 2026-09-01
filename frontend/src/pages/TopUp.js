@@ -373,20 +373,7 @@ const TopUp = () => {
   const [switchingCurrency, setSwitchingCurrency] = useState(false);
   const [timeLeft, setTimeLeft] = useState(300); // 5-minute (300 seconds) countdown
   const [productCategoryTab, setProductCategoryTab] = useState('all'); // 'all', 'passes', 'diamonds'
-  const [layoutMode, setLayoutMode] = useState(() => {
-    try {
-      return localStorage.getItem('mlbb_topup_layout_mode') || 'grid';
-    } catch (e) {
-      return 'grid';
-    }
-  });
-
-  const handleSetLayoutMode = (mode) => {
-    setLayoutMode(mode);
-    try {
-      localStorage.setItem('mlbb_topup_layout_mode', mode);
-    } catch (e) {}
-  };
+  const [layoutMode, setLayoutMode] = useState('tiles'); // 'list', 'tiles', 'grid'
   const checkoutSectionRef = useRef(null);
 
   const handleSwitchCurrency = async (newCurr) => {
@@ -1219,7 +1206,7 @@ const TopUp = () => {
               <div className="flex items-center gap-1 p-0.5 bg-slate-950 rounded-xl border border-slate-800">
                 <button
                   type="button"
-                  onClick={() => handleSetLayoutMode('tiles')}
+                  onClick={() => setLayoutMode('tiles')}
                   className={`py-1 px-2.5 rounded-lg text-xs font-bold flex items-center gap-1 transition-all cursor-pointer ${
                     layoutMode === 'tiles'
                       ? 'bg-slate-800 text-cyan-300 border border-slate-700 shadow-sm'
@@ -1233,7 +1220,7 @@ const TopUp = () => {
 
                 <button
                   type="button"
-                  onClick={() => handleSetLayoutMode('grid')}
+                  onClick={() => setLayoutMode('grid')}
                   className={`py-1 px-2.5 rounded-lg text-xs font-bold flex items-center gap-1 transition-all cursor-pointer ${
                     layoutMode === 'grid'
                       ? 'bg-slate-800 text-cyan-300 border border-slate-700 shadow-sm'
@@ -1247,7 +1234,7 @@ const TopUp = () => {
 
                 <button
                   type="button"
-                  onClick={() => handleSetLayoutMode('list')}
+                  onClick={() => setLayoutMode('list')}
                   className={`py-1 px-2.5 rounded-lg text-xs font-bold flex items-center gap-1 transition-all cursor-pointer ${
                     layoutMode === 'list'
                       ? 'bg-slate-800 text-cyan-300 border border-slate-700 shadow-sm'

@@ -2384,78 +2384,86 @@ const PRICING_GAMES = [
               </div>
             </div>
 
-            {/* Games Grid - Compact & Easy to Use Layout */}
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4">
+            {/* Games Grid (Compact Layout matching reference mockup) */}
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
               {gamesList.map((game) => {
+                const isMLBB = game.id === 'mlbb' || game.id.startsWith('mlbb');
+                const isOpened = game.status === 'Active';
+                const isPaused = game.status === 'Paused';
+                const isClosed = game.status === 'Closed';
+
                 return (
                   <div
                     key={game.id}
-                    className="p-3 sm:p-3.5 rounded-2xl bg-[#0B0F19] border border-slate-800/90 hover:border-slate-700 transition-all flex flex-col justify-between space-y-2.5 shadow-lg relative group"
+                    className="p-3.5 sm:p-4 rounded-2xl bg-[#0B0F19] border border-slate-800/90 hover:border-slate-700 transition-all flex flex-col justify-between space-y-3 shadow-xl relative select-none"
                   >
-                    {/* Top Header: Badge Tag + Compact Status Segmented Switcher */}
+                    {/* Top Row: Badge Pill (Left) & Segmented Status Pill (Right) */}
                     <div className="flex items-center justify-between gap-2">
-                      <div className="flex items-center gap-1.5 min-w-0">
-                        <span
-                          className={`text-[9px] font-black px-2 py-0.5 rounded-md uppercase tracking-wider truncate shrink-0 ${
-                            game.badgeColor === 'gold' || game.id === 'mlbb'
-                              ? 'bg-amber-400 text-slate-950 font-black'
-                              : game.badgeColor === 'emerald'
-                              ? 'bg-emerald-500 text-white'
-                              : game.badgeColor === 'purple'
-                              ? 'bg-purple-500 text-white'
-                              : 'bg-cyan-500 text-slate-950 font-black'
-                          }`}
-                        >
-                          {game.badge || 'Official'}
-                        </span>
-                        <span className="text-[10px] text-slate-400 font-semibold truncate hidden sm:inline">{game.category}</span>
-                      </div>
+                      {/* Left: Colorful Badge Pill */}
+                      <span
+                        className={`inline-flex items-center gap-1 px-2.5 py-0.5 rounded-md text-[9px] font-black uppercase tracking-wider shadow-sm ${
+                          game.badgeColor === 'gold' || isMLBB
+                            ? 'bg-amber-400 text-slate-950 font-black'
+                            : game.badgeColor === 'purple'
+                            ? 'bg-purple-600 text-white font-bold'
+                            : game.badgeColor === 'emerald'
+                            ? 'bg-emerald-500 text-white font-bold'
+                            : 'bg-cyan-500 text-slate-950 font-black'
+                        }`}
+                      >
+                        {game.badge || 'Official'}
+                      </span>
 
-                      {/* 1-Click Compact Status Selector */}
-                      <div className="flex items-center gap-0.5 bg-slate-950 p-0.5 rounded-lg border border-slate-800 shrink-0">
+                      {/* Right: Segmented Status Controller Pill */}
+                      <div className="inline-flex items-center gap-0.5 bg-[#080C15] p-0.5 rounded-lg border border-slate-800 text-[10px] font-bold">
+                        {/* Open Button */}
                         <button
                           type="button"
                           onClick={() => handleSetGameStatus(game.id, 'Active')}
-                          className={`px-2 py-1 text-[10px] font-black rounded-md transition-all cursor-pointer ${
-                            game.status === 'Active'
-                              ? 'bg-emerald-500 text-slate-950 shadow-sm'
+                          className={`px-2 py-0.5 rounded-md transition-all flex items-center gap-1 cursor-pointer ${
+                            isOpened
+                              ? 'bg-[#00E599] text-[#062419] font-black shadow-sm'
                               : 'text-slate-400 hover:text-emerald-300'
                           }`}
-                          title="Open Top-Up"
                         >
-                          🟢 Open
+                          <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 inline-block" />
+                          <span>Open</span>
                         </button>
+
+                        {/* Pause Button */}
                         <button
                           type="button"
                           onClick={() => handleSetGameStatus(game.id, 'Paused')}
-                          className={`px-2 py-1 text-[10px] font-black rounded-md transition-all cursor-pointer ${
-                            game.status === 'Paused'
-                              ? 'bg-amber-500 text-slate-950 shadow-sm'
-                              : 'text-slate-400 hover:text-amber-300'
+                          className={`px-2 py-0.5 rounded-md transition-all flex items-center gap-1 cursor-pointer ${
+                            isPaused
+                              ? 'bg-blue-600 text-white font-black shadow-sm'
+                              : 'text-slate-400 hover:text-blue-300'
                           }`}
-                          title="Pause Top-Up"
                         >
-                          ⏸️ Pause
+                          <span className="w-1.5 h-1.5 rounded-full bg-blue-400 inline-block" />
+                          <span>Pause</span>
                         </button>
+
+                        {/* Close Button */}
                         <button
                           type="button"
                           onClick={() => handleSetGameStatus(game.id, 'Closed')}
-                          className={`px-2 py-1 text-[10px] font-black rounded-md transition-all cursor-pointer ${
-                            game.status === 'Closed'
-                              ? 'bg-rose-600 text-white shadow-sm'
+                          className={`px-2 py-0.5 rounded-md transition-all flex items-center gap-1 cursor-pointer ${
+                            isClosed
+                              ? 'bg-rose-600 text-white font-black shadow-sm'
                               : 'text-slate-400 hover:text-rose-300'
                           }`}
-                          title="Close Top-Up"
                         >
-                          🔴 Close
+                          <span className="w-1.5 h-1.5 rounded-full bg-rose-400 inline-block" />
+                          <span>Close</span>
                         </button>
                       </div>
                     </div>
 
-                    {/* Middle Row: Compact Artwork + Game Details */}
-                    <div className="flex items-center gap-3 min-w-0">
-                      {/* Logo Thumbnail with Quick Edit Overlay */}
-                      <div className="relative w-14 h-14 min-w-[56px] min-h-[56px] max-w-[56px] max-h-[56px] rounded-xl overflow-hidden bg-slate-950 border border-amber-400/60 shadow-md shrink-0">
+                    {/* Middle Section: Image Thumbnail & Details */}
+                    <div className="flex items-center gap-3.5">
+                      {/* Logo Icon with Rounded Box */}
+                      <div className="relative w-14 h-14 sm:w-16 sm:h-16 rounded-xl overflow-hidden bg-slate-950 border border-slate-800 shadow-inner shrink-0 group">
                         <img
                           src={game.image}
                           alt={game.name}
@@ -2463,48 +2471,50 @@ const PRICING_GAMES = [
                             e.target.onerror = null;
                             e.target.src = '/mlbb-logo.png';
                           }}
-                          className="w-full h-full object-cover object-center block"
+                          className="w-full h-full object-cover"
                         />
                         <div
                           onClick={() => handleOpenGameModal(game)}
-                          className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center cursor-pointer text-amber-300 font-black text-[10px]"
+                          className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center cursor-pointer text-amber-300 font-bold text-[9px]"
                           title="Change Logo"
                         >
-                          📷
+                          📷 Change
                         </div>
                       </div>
 
-                      {/* Details */}
-                      <div className="flex-1 min-w-0">
-                        <h3 className="font-extrabold text-white text-xs sm:text-sm truncate">
+                      {/* Info lines */}
+                      <div className="min-w-0 flex-1 space-y-0.5">
+                        <h4 className="font-black text-white text-xs sm:text-sm uppercase tracking-wide truncate">
                           {game.name}
-                        </h3>
-                        <div className="flex items-center gap-2 text-[10px] sm:text-[11px] text-slate-400 truncate mt-0.5">
-                          <span>{game.publisher || 'Moonton'}</span>
-                          <span>•</span>
-                          <span className="text-amber-300 font-semibold truncate">{game.currency || 'Diamonds'}</span>
+                        </h4>
+                        <div className="text-[11px] text-slate-400 flex items-center gap-1.5 truncate">
+                          <span>{game.publisher || 'Game'}</span>
+                          <span className="text-slate-600 font-black">•</span>
+                          <span className="text-amber-400 font-bold">{game.currency || 'Diamonds'}</span>
                         </div>
-                        <div className="text-[10px] text-cyan-400 font-medium truncate mt-0.5">
-                          ⚡ {game.deliveryTime || '10 - 30s'}
+                        <div className="text-[11px] text-cyan-400 font-bold flex items-center gap-1">
+                          <span>⚡</span>
+                          <span>{game.deliveryTime || '10 - 30s'}</span>
                         </div>
                       </div>
                     </div>
 
-                    {/* Bottom Actions: Compact Slim Buttons */}
-                    <div className="pt-2 border-t border-slate-800/80 grid grid-cols-2 gap-2">
+                    {/* Bottom Row: 2 Compact Horizontal Action Buttons */}
+                    <div className="grid grid-cols-2 gap-2 pt-1">
                       <button
                         type="button"
                         onClick={() => handleOpenGameModal(game)}
-                        className="py-1.5 px-2.5 rounded-lg bg-amber-500/10 hover:bg-amber-500/20 border border-amber-500/30 text-amber-300 text-[11px] font-bold transition-all flex items-center justify-center gap-1 cursor-pointer"
+                        className="py-1.5 px-3 rounded-xl bg-[#18181B]/80 hover:bg-[#27272A] border border-[#78350F]/70 text-[#FDE68A] text-xs font-bold transition-all flex items-center justify-center gap-1.5 cursor-pointer shadow-sm"
                       >
                         <span>✏️</span>
                         <span>Edit Info</span>
                       </button>
+
                       {game.id !== 'mlbb' ? (
                         <button
                           type="button"
                           onClick={() => handleDeleteGame(game.id)}
-                          className="py-1.5 px-2.5 rounded-lg bg-rose-950/30 hover:bg-rose-900/50 border border-rose-500/30 text-rose-300 text-[11px] font-bold transition-all flex items-center justify-center gap-1 cursor-pointer"
+                          className="py-1.5 px-3 rounded-xl bg-[#18181B]/80 hover:bg-[#27272A] border border-[#881337]/70 text-[#FDA4AF] text-xs font-bold transition-all flex items-center justify-center gap-1.5 cursor-pointer shadow-sm"
                         >
                           <span>🗑️</span>
                           <span>Delete</span>
@@ -2513,7 +2523,7 @@ const PRICING_GAMES = [
                         <Link
                           to="/"
                           target="_blank"
-                          className="py-1.5 px-2.5 rounded-lg bg-cyan-950/30 hover:bg-cyan-900/50 border border-cyan-500/30 text-cyan-300 text-[11px] font-bold transition-all flex items-center justify-center gap-1 cursor-pointer"
+                          className="py-1.5 px-3 rounded-xl bg-[#18181B]/80 hover:bg-[#27272A] border border-[#0E7490]/70 text-[#67E8F9] text-xs font-bold transition-all flex items-center justify-center gap-1.5 cursor-pointer shadow-sm"
                         >
                           <span>👁️</span>
                           <span>View on Home</span>
