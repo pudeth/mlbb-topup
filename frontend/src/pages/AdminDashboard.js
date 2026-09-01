@@ -288,6 +288,8 @@ const PRICING_GAMES = [
   });
   const [bannerModalOpen, setBannerModalOpen] = useState(false);
   const [editingBanner, setEditingBanner] = useState(null);
+  const [uploadingBannerImage, setUploadingBannerImage] = useState(false);
+  const [showBannerCloudinaryConfig, setShowBannerCloudinaryConfig] = useState(false);
   const [bannerFormData, setBannerFormData] = useState({
     tag: '🔥 SPECIAL EVENT',
     title: '',
@@ -401,11 +403,51 @@ const PRICING_GAMES = [
       showToast('error', 'Image size should be under 10MB.');
       return;
     }
-    showToast('info', 'Uploading banner to Cloudinary CDN...');
-    const res = await uploadToCloudinary(file, 'event_banners');
-    if (res.url) {
-      setBannerFormData(prev => ({ ...prev, image: res.url }));
-      showToast('success', res.isFallback ? 'Banner loaded locally!' : 'Banner uploaded to Cloudinary CDN!');
+    setUploadingBannerImage(true);
+    showToast('info', '☁️ Uploading banner to Cloudinary CDN (event_banners)...');
+    try {
+      const res = await uploadToCloudinary(file, 'event_banners');
+      if (res.url) {
+        setBannerFormData(prev => ({ ...prev, image: res.url }));
+        if (res.isCloudinary) {
+          showToast('success', '✅ Banner uploaded to Cloudinary CDN successfully!');
+        } else {
+          showToast('success', '✅ Banner image loaded and preview updated!');
+        }
+      } else {
+        showToast('error', res.error || 'Failed to process banner image.');
+      }
+    } catch (err) {
+      showToast('error', err?.message || 'Banner upload failed');
+    } finally {
+      setUploadingBannerImage(false);
+      e.target.value = '';
+    }
+  };
+
+  const handleQuickChangeBannerImage = async (bannerId, e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+    if (file.size > 10 * 1024 * 1024) {
+      showToast('error', 'Image size should be under 10MB.');
+      return;
+    }
+    showToast('info', '☁️ Uploading new banner artwork to Cloudinary CDN...');
+    try {
+      const res = await uploadToCloudinary(file, 'event_banners');
+      if (res.url) {
+        const updated = eventBanners.map(b => b.id === bannerId ? { ...b, image: res.url } : b);
+        setEventBanners(updated);
+        localStorage.setItem('admin_event_banners', JSON.stringify(updated));
+        window.dispatchEvent(new Event('eventBannersUpdated'));
+        showToast('success', res.isCloudinary ? '✅ Banner artwork updated on Cloudinary CDN & saved!' : '✅ Banner image updated and saved!');
+      } else {
+        showToast('error', res.error || 'Failed to upload image.');
+      }
+    } catch (err) {
+      showToast('error', err?.message || 'Banner upload failed');
+    } finally {
+      e.target.value = '';
     }
   };
 
@@ -2327,7 +2369,7 @@ const PRICING_GAMES = [
                   <span>🎨</span> Event Banners & Game Promotions
                 </h2>
                 <p className="text-xs sm:text-sm text-slate-400 mt-1">
-                  Upload promotional artwork, configure game event announcements, customize CTA buttons & links.
+                  Upload promotional artwork to Cloudinary CDN, configure game event announcements, customize CTA buttons & links.
                 </p>
               </div>
 
@@ -2339,6 +2381,20 @@ const PRICING_GAMES = [
                 >
                   <span>➕</span>
                   <span>Add New Event Banner</span>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => setShowBannerCloudinaryConfig(!showBannerCloudinaryConfig)}
+                  className={`px-3.5 py-2.5 rounded-xl border text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer ${
+                    showBannerCloudinaryConfig
+                      ? 'bg-cyan-500/20 text-cyan-300 border-cyan-400'
+                      : 'bg-[#111728] hover:bg-[#182035] text-cyan-400 border-cyan-500/40'
+                  }`}
+                  title="Configure Cloudinary Image Upload Settings"
+                >
+                  <span>☁️</span>
+                  <span>{showBannerCloudinaryConfig ? 'Hide Cloudinary Settings' : 'Cloudinary Settings'}</span>
                 </button>
 
                 <button
@@ -2363,6 +2419,66 @@ const PRICING_GAMES = [
               </div>
             </div>
 
+            {/* Cloudinary Settings Drawer */}
+            {showBannerCloudinaryConfig && (
+              <div className="p-4 sm:p-5 rounded-3xl bg-[#0B132B] border-2 border-cyan-500/50 space-y-3 shadow-2xl animate-fadeIn">
+                <div className="flex items-center justify-between border-b border-slate-800 pb-2.5">
+                  <div className="flex items-center gap-2 text-cyan-300 font-black text-sm">
+                    <span>☁️</span>
+                    <span>Cloudinary CDN Direct Image Upload Settings</span>
+                  </div>
+                  <span className="text-[10px] text-slate-400">
+                    Uploaded images are hosted globally with instant high-speed CDN delivery
+                  </span>
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
+                  <div>
+                    <label className="block text-slate-300 font-bold mb-1">Cloudinary Cloud Name</label>
+                    <input
+                      type="text"
+                      value={cloudinaryConfigState.cloudName}
+                      onChange={(e) => {
+                        const next = { ...cloudinaryConfigState, cloudName: e.target.value };
+                        setCloudinaryConfigState(next);
+                        saveCloudinaryConfig(next);
+                      }}
+                      placeholder="e.g. dpz7vpmf8"
+                      className="input w-full text-xs py-2 rounded-xl font-mono text-cyan-300"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-slate-300 font-bold mb-1">Upload Preset (Unsigned)</label>
+                    <input
+                      type="text"
+                      value={cloudinaryConfigState.uploadPreset}
+                      onChange={(e) => {
+                        const next = { ...cloudinaryConfigState, uploadPreset: e.target.value };
+                        setCloudinaryConfigState(next);
+                        saveCloudinaryConfig(next);
+                      }}
+                      placeholder="e.g. mlbb_topup"
+                      className="input w-full text-xs py-2 rounded-xl font-mono text-amber-300"
+                    />
+                  </div>
+                </div>
+
+                <div className="flex items-center justify-between pt-1 text-[11px] text-slate-400">
+                  <span>Folder destination: <strong className="text-white font-mono">event_banners</strong></span>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      saveCloudinaryConfig(cloudinaryConfigState);
+                      showToast('success', '✅ Cloudinary settings saved!');
+                    }}
+                    className="px-3 py-1 rounded-lg bg-cyan-500 hover:bg-cyan-400 text-black font-black text-xs cursor-pointer shadow-md"
+                  >
+                    Save Settings
+                  </button>
+                </div>
+              </div>
+            )}
+
             {/* Quick Stats & Live Preview Banner Card */}
             <div className="p-4 sm:p-5 rounded-3xl bg-[#0B0F19] border border-slate-800 space-y-3 shadow-xl">
               <div className="flex items-center justify-between">
@@ -2382,6 +2498,7 @@ const PRICING_GAMES = [
             <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
               {eventBanners.map((banner, index) => {
                 const isActive = banner.status === 'Active';
+                const isCloudinary = banner.image?.includes('cloudinary.com');
 
                 return (
                   <div
@@ -2397,6 +2514,11 @@ const PRICING_GAMES = [
                       </span>
 
                       <div className="flex items-center gap-2">
+                        {isCloudinary && (
+                          <span className="px-2 py-0.5 rounded-full text-[9px] font-mono font-bold bg-cyan-500/20 text-cyan-300 border border-cyan-500/40">
+                            ☁️ Cloudinary CDN
+                          </span>
+                        )}
                         <button
                           type="button"
                           onClick={() => handleToggleBannerStatus(banner.id)}
@@ -2413,7 +2535,7 @@ const PRICING_GAMES = [
 
                     {/* Image Preview & Info */}
                     <div className="space-y-3">
-                      <div className="relative aspect-[21/9] w-full rounded-2xl overflow-hidden bg-slate-950 border border-slate-800">
+                      <div className="relative aspect-[21/9] w-full rounded-2xl overflow-hidden bg-slate-950 border border-slate-800 group/img">
                         <img
                           src={banner.image}
                           alt={banner.title}
@@ -2424,6 +2546,21 @@ const PRICING_GAMES = [
                           className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
                         />
                         <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent pointer-events-none" />
+                        
+                        {/* Quick Hover Overlay to Change Image with Cloudinary */}
+                        <div className="absolute inset-0 bg-black/60 opacity-0 group-hover/img:opacity-100 transition-opacity flex items-center justify-center gap-2">
+                          <label className="px-3 py-1.5 rounded-xl bg-cyan-500 hover:bg-cyan-400 text-slate-950 font-black text-xs shadow-lg flex items-center gap-1.5 cursor-pointer transform scale-95 hover:scale-105 transition-all">
+                            <span>☁️</span>
+                            <span>Change Image (Cloudinary)</span>
+                            <input
+                              type="file"
+                              accept="image/*"
+                              onChange={(e) => handleQuickChangeBannerImage(banner.id, e)}
+                              className="hidden"
+                            />
+                          </label>
+                        </div>
+
                         <div className="absolute bottom-2 left-3 right-3 text-white text-xs font-bold truncate">
                           {banner.title}
                         </div>
@@ -2444,20 +2581,32 @@ const PRICING_GAMES = [
                       </div>
                     </div>
 
-                    {/* Bottom Actions */}
-                    <div className="pt-3 border-t border-slate-800 grid grid-cols-2 gap-2">
+                    {/* Bottom Actions with Quick Cloudinary Change Button */}
+                    <div className="pt-3 border-t border-slate-800 grid grid-cols-3 gap-2">
                       <button
                         type="button"
                         onClick={() => handleOpenEditBannerModal(banner)}
-                        className="py-2 px-3 rounded-xl bg-amber-500/15 hover:bg-amber-500/25 border border-amber-500/30 text-amber-300 text-xs font-bold transition-all flex items-center justify-center gap-1.5 cursor-pointer"
+                        className="py-2 px-2 rounded-xl bg-amber-500/15 hover:bg-amber-500/25 border border-amber-500/30 text-amber-300 text-xs font-bold transition-all flex items-center justify-center gap-1 cursor-pointer"
                       >
                         <span>✏️</span>
-                        <span>Edit Image & Info</span>
+                        <span>Edit</span>
                       </button>
+
+                      <label className="py-2 px-2 rounded-xl bg-cyan-500/15 hover:bg-cyan-500/25 border border-cyan-500/30 text-cyan-300 text-xs font-bold transition-all flex items-center justify-center gap-1 cursor-pointer truncate">
+                        <span>☁️</span>
+                        <span>Upload New</span>
+                        <input
+                          type="file"
+                          accept="image/*"
+                          onChange={(e) => handleQuickChangeBannerImage(banner.id, e)}
+                          className="hidden"
+                        />
+                      </label>
+
                       <button
                         type="button"
                         onClick={() => handleDeleteBanner(banner.id)}
-                        className="py-2 px-3 rounded-xl bg-rose-950/40 hover:bg-rose-900/60 border border-rose-500/30 text-rose-300 text-xs font-bold transition-all flex items-center justify-center gap-1.5 cursor-pointer"
+                        className="py-2 px-2 rounded-xl bg-rose-950/40 hover:bg-rose-900/60 border border-rose-500/30 text-rose-300 text-xs font-bold transition-all flex items-center justify-center gap-1 cursor-pointer"
                       >
                         <span>🗑️</span>
                         <span>Delete</span>
@@ -6330,17 +6479,20 @@ const PRICING_GAMES = [
                 />
               </div>
 
-              {/* Image URL & Upload */}
-              <div className="space-y-2">
+              {/* Image URL & Cloudinary Upload */}
+              <div className="space-y-2.5 p-3.5 rounded-2xl bg-slate-950/80 border border-slate-800">
                 <div className="flex items-center justify-between">
-                  <label className="block text-slate-400 font-semibold">
-                    Banner Artwork Image <span className="text-rose-400">*</span>
+                  <label className="block text-slate-300 font-bold flex items-center gap-1.5">
+                    <span>☁️</span>
+                    <span>Banner Artwork Image (Cloudinary CDN)</span>
+                    <span className="text-rose-400">*</span>
                   </label>
                   <span className="text-[10px] text-amber-400 font-mono font-bold bg-amber-400/10 px-2 py-0.5 rounded-lg border border-amber-400/30">
-                    📐 Recommended: 1200 × 500 px (21:9)
+                    📐 1200 × 500 px (21:9)
                   </span>
                 </div>
 
+                {/* Cloudinary Upload Action Area */}
                 <div className="grid grid-cols-1 sm:grid-cols-12 gap-2">
                   <div className="sm:col-span-8">
                     <input
@@ -6349,15 +6501,30 @@ const PRICING_GAMES = [
                       value={bannerFormData.image}
                       onChange={(e) => setBannerFormData({ ...bannerFormData, image: e.target.value })}
                       className="input w-full text-xs py-2 rounded-xl font-mono text-cyan-300"
-                      placeholder="https://images.unsplash.com/... or upload below"
+                      placeholder="https://res.cloudinary.com/... or click Upload"
                     />
                   </div>
                   <div className="sm:col-span-4">
-                    <label className="w-full py-2 px-3 rounded-xl bg-slate-800 hover:bg-slate-700 border border-slate-600 text-slate-200 text-xs font-bold flex items-center justify-center gap-1 cursor-pointer transition-all shadow-md">
-                      <span>📁 Upload</span>
+                    <label className={`w-full py-2 px-3 rounded-xl border text-xs font-bold flex items-center justify-center gap-1.5 cursor-pointer transition-all shadow-md ${
+                      uploadingBannerImage
+                        ? 'bg-cyan-950 border-cyan-500 text-cyan-300 opacity-80 cursor-wait'
+                        : 'bg-gradient-to-r from-cyan-600 to-blue-600 hover:from-cyan-500 hover:to-blue-500 border-cyan-400/50 text-white hover:scale-[1.02] active:scale-95'
+                    }`}>
+                      {uploadingBannerImage ? (
+                        <>
+                          <div className="w-3.5 h-3.5 border-2 border-cyan-400 border-t-transparent rounded-full animate-spin" />
+                          <span>Uploading...</span>
+                        </>
+                      ) : (
+                        <>
+                          <span>☁️</span>
+                          <span>Upload to Cloudinary</span>
+                        </>
+                      )}
                       <input
                         type="file"
                         accept="image/*"
+                        disabled={uploadingBannerImage}
                         onChange={handleBannerImageUpload}
                         className="hidden"
                       />
@@ -6365,13 +6532,54 @@ const PRICING_GAMES = [
                   </div>
                 </div>
 
-                <div className="p-2.5 rounded-xl bg-slate-950/80 border border-slate-800 text-[10px] text-slate-400 space-y-1">
-                  <div className="flex items-center gap-1 text-cyan-300 font-bold">
-                    <span>💡</span> <span>Artwork Guidelines & Reference:</span>
+                {/* Quick Presets / Wallpaper Gallery */}
+                <div className="space-y-1.5 pt-1">
+                  <span className="text-[10px] text-slate-400 font-bold block uppercase tracking-wider">
+                    Or Select High-Resolution Gaming Artwork:
+                  </span>
+                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-1.5">
+                    {[
+                      {
+                        name: 'MLBB 515 ALLSTAR',
+                        url: 'https://images.unsplash.com/photo-1542751371-adc38448a05e?auto=format&fit=crop&w=1200&q=80',
+                        badge: 'ALLSTAR 2026'
+                      },
+                      {
+                        name: 'Starlight & Twilight',
+                        url: 'https://images.unsplash.com/photo-1511512578047-dfb367046420?auto=format&fit=crop&w=1200&q=80',
+                        badge: 'VIP PASS'
+                      },
+                      {
+                        name: 'PUBG UC Mega Season',
+                        url: 'https://images.unsplash.com/photo-1538481199705-c710c4e965fc?auto=format&fit=crop&w=1200&q=80',
+                        badge: 'ROYALE PASS'
+                      },
+                      {
+                        name: 'Free Fire Booyah Pass',
+                        url: 'https://images.unsplash.com/photo-1579373903781-fd5c0c30c4cd?auto=format&fit=crop&w=1200&q=80',
+                        badge: 'BOOYAH PASS'
+                      }
+                    ].map((sample) => (
+                      <button
+                        key={sample.name}
+                        type="button"
+                        onClick={() => setBannerFormData({ ...bannerFormData, image: sample.url })}
+                        className={`p-1.5 rounded-xl border text-[10px] text-left transition-all truncate flex items-center gap-1 cursor-pointer ${
+                          bannerFormData.image === sample.url
+                            ? 'bg-cyan-500/20 border-cyan-400 text-cyan-300 font-bold'
+                            : 'bg-slate-900/80 border-slate-800 text-slate-400 hover:text-white hover:border-slate-700'
+                        }`}
+                      >
+                        <span className="text-[11px]">🎮</span>
+                        <span className="truncate">{sample.name}</span>
+                      </button>
+                    ))}
                   </div>
-                  <p>• <strong>Optimal Size:</strong> <span className="text-white font-mono">1200 × 500 px</span> or <span className="text-white font-mono">1920 × 800 px</span> (Ultrawide 21:9 aspect ratio).</p>
-                  <p>• <strong>Safe Area:</strong> Place main character artwork towards the <strong>center & right</strong> side so left-aligned text is readable.</p>
-                  <p>• <strong>Formats:</strong> JPG, PNG, WebP (under 3MB).</p>
+                </div>
+
+                <div className="p-2 rounded-xl bg-slate-900 border border-slate-800/80 text-[10px] text-slate-400 flex items-center justify-between">
+                  <span>Cloudinary destination: <strong className="text-cyan-300 font-mono">event_banners</strong></span>
+                  <span className="text-slate-500">Max size: 10MB (JPG, PNG, WebP)</span>
                 </div>
               </div>
 
