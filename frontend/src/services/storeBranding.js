@@ -7,7 +7,7 @@ export const DEFAULT_BRANDING = {
   tagline: 'Official Diamond Hub',
   logoType: 'image', // 'emoji' or 'image'
   logoEmoji: '💎',
-  logoImage: 'https://res.cloudinary.com/dpz7vpmf8/image/upload/profile-photos/a1kiv9bhqlqrp4rasfo2.jpg',
+  logoImage: 'https://res.cloudinary.com/dpz7vpmf8/image/upload/v1788238437/profile-photos/tin_topup_official_logo.png',
   badgeText: 'PRO',
   adminBadgeText: 'ADMIN',
   versionText: 'Enterprise Hub v2.5',
