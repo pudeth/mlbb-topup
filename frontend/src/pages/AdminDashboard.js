@@ -5432,11 +5432,11 @@ const PRICING_GAMES = [
                       <button
                         type="button"
                         onClick={() => {
-                          const url = 'https://res.cloudinary.com/dpz7vpmf8/image/upload/v1786238941/profile-photos/xn3pwtlmzkexce7nojx5.jpg';
+                          const url = 'https://res.cloudinary.com/dpz7vpmf8/image/upload/profile-photos/a1kiv9bhqlqrp4rasfo2.jpg';
                           const updated = { ...storeBrandingForm, logoType: 'image', logoImage: url };
                           setStoreBrandingForm(updated);
                           updateBranding(updated);
-                          showToast('success', '✅ Cloudinary CDN Profile applied & saved!');
+                          showToast('success', '✅ Cloudinary Profile Photo applied & saved!');
                         }}
                         className={`p-2.5 rounded-xl border text-left flex items-center gap-3 transition-all cursor-pointer ${
                           storeBrandingForm.logoImage?.includes('cloudinary.com')
@@ -5446,7 +5446,7 @@ const PRICING_GAMES = [
                       >
                         <div className="w-11 h-11 rounded-lg overflow-hidden shrink-0 flex items-center justify-center bg-slate-950/60 p-0.5">
                           <img
-                            src="https://res.cloudinary.com/dpz7vpmf8/image/upload/v1786238941/profile-photos/xn3pwtlmzkexce7nojx5.jpg"
+                            src="https://res.cloudinary.com/dpz7vpmf8/image/upload/profile-photos/a1kiv9bhqlqrp4rasfo2.jpg"
                             alt="Cloudinary"
                             className="w-full h-full object-contain"
                           />

@@ -7,7 +7,7 @@ export const DEFAULT_BRANDING = {
   tagline: 'Official Diamond Hub',
   logoType: 'image', // 'emoji' or 'image'
   logoEmoji: '💎',
-  logoImage: 'https://res.cloudinary.com/dpz7vpmf8/image/upload/v1786238941/profile-photos/xn3pwtlmzkexce7nojx5.jpg',
+  logoImage: 'https://res.cloudinary.com/dpz7vpmf8/image/upload/profile-photos/a1kiv9bhqlqrp4rasfo2.jpg',
   badgeText: 'PRO',
   adminBadgeText: 'ADMIN',
   versionText: 'Enterprise Hub v2.5',
@@ -28,7 +28,7 @@ export const getStoreBranding = () => {
       const parsed = JSON.parse(cached);
       const merged = { ...DEFAULT_BRANDING, ...parsed };
       // If cached had legacy default values without image, use new Cloudinary defaults
-      if (!merged.logoImage || merged.storeName === 'MLBB TOPUP' || merged.logoImage === '/profile.jpg') {
+      if (!merged.logoImage || merged.storeName === 'MLBB TOPUP' || merged.logoImage.includes('xn3pwtlmzkexce7nojx5')) {
         merged.logoImage = DEFAULT_BRANDING.logoImage;
         merged.logoType = DEFAULT_BRANDING.logoType;
         merged.storeName = DEFAULT_BRANDING.storeName;
