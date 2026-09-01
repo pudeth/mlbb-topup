@@ -9,7 +9,6 @@ const GameSelection = () => {
   const navigate = useNavigate();
   const [games, setGames] = useState([]);
   const [masterStatus, setMasterStatus] = useState(getMasterTopupStatus);
-  const [pausedModalGame, setPausedModalGame] = useState(null);
   const [activeCategory, setActiveCategory] = useState('Service top-up');
   const [searchQuery, setSearchQuery] = useState('');
   const [favoritesOnly, setFavoritesOnly] = useState(false);
@@ -64,14 +63,11 @@ const GameSelection = () => {
   });
 
   const handleGameClick = (game) => {
-    const isMasterPaused = masterStatus.status && masterStatus.status !== 'Active';
+    const isMasterPaused = masterStatus?.status && masterStatus.status !== 'Active';
     const isGamePaused = game.status && game.status !== 'Active';
 
+    // Completely locked - user cannot press when it's closed or paused
     if (isMasterPaused || isGamePaused) {
-      const reason = isMasterPaused 
-        ? (masterStatus.notice || 'Store Top-Up is temporarily paused for system maintenance by Admin.')
-        : (game.status === 'Closed' ? `Top-Up for "${game.name}" is currently closed by Admin.` : `Top-Up for "${game.name}" is temporarily paused by Admin for maintenance.`);
-      setPausedModalGame({ ...game, pauseReason: reason, pausedStatus: isMasterPaused ? masterStatus.status : (game.status || 'Paused') });
       return;
     }
 
@@ -194,11 +190,11 @@ const GameSelection = () => {
               return (
                 <div
                   key={game.id}
-                  onClick={() => handleGameClick(game)}
-                  className={`group relative rounded-2xl p-2 sm:p-2.5 bg-[#0B0F19] border transition-all duration-300 flex flex-col justify-between items-center text-center space-y-2 cursor-pointer shadow-lg select-none ${
+                  onClick={isInactive ? (e) => { e.preventDefault(); e.stopPropagation(); } : () => handleGameClick(game)}
+                  className={`group relative rounded-2xl p-2 sm:p-2.5 bg-[#0B0F19] border transition-all duration-300 flex flex-col justify-between items-center text-center space-y-2 select-none ${
                     isInactive
-                      ? 'border-slate-800/60 opacity-80 hover:opacity-100 hover:border-amber-500/50'
-                      : 'border-slate-800/90 hover:border-purple-500/80 hover:scale-[1.03] hover:shadow-[0_10px_25px_rgba(109,40,217,0.3)]'
+                      ? 'border-slate-800/50 opacity-60 cursor-not-allowed grayscale-[40%]'
+                      : 'border-slate-800/90 hover:border-purple-500/80 hover:scale-[1.03] hover:shadow-[0_10px_25px_rgba(109,40,217,0.3)] cursor-pointer shadow-lg'
                   }`}
                 >
                   {/* Game Artwork Box with Rounded Corners */}
@@ -211,7 +207,7 @@ const GameSelection = () => {
                         e.target.src = game.localFallbackImage || '/mlbb-logo.png';
                       }}
                       className={`w-full h-full object-cover transition-transform duration-500 ${
-                        isInactive ? 'grayscale-[30%]' : 'group-hover:scale-105'
+                        isInactive ? '' : 'group-hover:scale-105'
                       }`}
                     />
 
@@ -221,7 +217,7 @@ const GameSelection = () => {
                         <span
                           className={`inline-flex items-center gap-1 px-1.5 py-0.5 rounded-md text-[8px] sm:text-[9px] font-black uppercase tracking-wider shadow-md backdrop-blur-md ${
                             effectiveStatus === 'Closed'
-                              ? 'bg-rose-500 text-white border border-rose-400'
+                              ? 'bg-rose-600 text-white border border-rose-500'
                               : effectiveStatus === 'Maintenance'
                               ? 'bg-purple-600 text-white border border-purple-400'
                               : effectiveStatus === 'Coming Soon'
@@ -237,7 +233,7 @@ const GameSelection = () => {
                         <span
                           className={`inline-flex items-center gap-1 px-1.5 py-0.5 rounded-md text-[8px] sm:text-[9px] font-black uppercase tracking-wider shadow-md backdrop-blur-md ${
                             game.badgeColor === 'gold' || isMLBB
-                              ? 'bg-amber-500 text-black border border-amber-400'
+                              ? 'bg-amber-400 text-black border border-amber-300'
                               : game.badgeColor === 'emerald'
                               ? 'bg-emerald-500 text-white border border-emerald-400'
                               : game.badgeColor === 'purple'
@@ -267,23 +263,26 @@ const GameSelection = () => {
                     </h3>
                   </div>
 
-                  {/* Action Pill Button */}
+                  {/* Action Pill Button - Disabled and Unclickable when Closed/Paused */}
                   <button
                     type="button"
+                    disabled={isInactive}
                     onClick={(e) => {
                       e.stopPropagation();
-                      handleGameClick(game);
+                      if (!isInactive) {
+                        handleGameClick(game);
+                      }
                     }}
-                    className={`w-full py-1 sm:py-1.5 px-2 rounded-xl font-black text-[10px] sm:text-xs shadow-md transition-all flex items-center justify-center cursor-pointer ${
+                    className={`w-full py-1 sm:py-1.5 px-2 rounded-xl font-black text-[10px] sm:text-xs shadow-md transition-all flex items-center justify-center ${
                       isInactive
                         ? effectiveStatus === 'Closed'
-                          ? 'bg-rose-500/20 text-rose-300 border border-rose-500/40 hover:bg-rose-500/30'
+                          ? 'bg-rose-950/40 text-rose-300/80 border border-rose-900/60 cursor-not-allowed pointer-events-none'
                           : effectiveStatus === 'Maintenance'
-                          ? 'bg-purple-600/20 text-purple-300 border border-purple-500/40 hover:bg-purple-600/30'
+                          ? 'bg-purple-950/40 text-purple-300/80 border border-purple-900/60 cursor-not-allowed pointer-events-none'
                           : effectiveStatus === 'Coming Soon'
-                          ? 'bg-slate-800 text-slate-400 border border-slate-700'
-                          : 'bg-amber-500/20 text-amber-300 border border-amber-500/40 hover:bg-amber-500/30'
-                        : 'bg-gradient-to-r from-purple-700 via-purple-600 to-indigo-600 hover:from-purple-600 hover:to-indigo-500 active:scale-95 text-white shadow-purple-950/60'
+                          ? 'bg-slate-900 text-slate-500 border border-slate-800 cursor-not-allowed pointer-events-none'
+                          : 'bg-amber-950/40 text-amber-300/80 border border-amber-900/60 cursor-not-allowed pointer-events-none'
+                        : 'bg-gradient-to-r from-purple-700 via-purple-600 to-indigo-600 hover:from-purple-600 hover:to-indigo-500 active:scale-95 text-white shadow-purple-950/60 cursor-pointer'
                     }`}
                   >
                     {isInactive
@@ -302,39 +301,6 @@ const GameSelection = () => {
           </div>
         )}
       </div>
-
-      {/* Paused / Closed Game Modal Dialog */}
-      {pausedModalGame && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm animate-fadeIn">
-          <div className="bg-[#0D121F] border border-amber-500/40 rounded-3xl p-6 max-w-sm w-full space-y-4 shadow-2xl text-center relative animate-scaleUp">
-            <div className="w-16 h-16 mx-auto rounded-2xl bg-amber-500/10 border border-amber-500/30 flex items-center justify-center text-3xl">
-              {pausedModalGame.pausedStatus === 'Closed' ? '🔴' : pausedModalGame.pausedStatus === 'Maintenance' ? '🛠️' : '⏸️'}
-            </div>
-
-            <div className="space-y-1.5">
-              <h3 className="text-base sm:text-lg font-black text-white">
-                {pausedModalGame.name}
-              </h3>
-              <p className="text-xs text-amber-300 font-bold uppercase tracking-wider">
-                {pausedModalGame.pausedStatus === 'Closed' ? 'Top-Up Temporarily Closed' : 'Top-Up Temporarily Paused'}
-              </p>
-              <p className="text-xs text-slate-300 mt-2 leading-relaxed bg-slate-900/80 p-3 rounded-xl border border-slate-800">
-                {pausedModalGame.pauseReason}
-              </p>
-            </div>
-
-            <div className="pt-2 flex gap-2">
-              <button
-                type="button"
-                onClick={() => setPausedModalGame(null)}
-                className="w-full py-2.5 rounded-xl bg-gradient-to-r from-amber-500 to-yellow-400 text-slate-950 font-black text-xs hover:opacity-90 transition-all cursor-pointer"
-              >
-                Understood / Close
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
     </section>
   );
 };
