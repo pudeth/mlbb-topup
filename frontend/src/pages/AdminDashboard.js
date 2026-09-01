@@ -7,6 +7,7 @@ import { useStoreBranding } from '../services/storeBranding';
 import { DEFAULT_EVENT_BANNERS } from '../components/EventBannerSlider';
 import { CambodiaFlagSvg, CambodiaFlagFrame, CambodiaCornerBadge } from '../components/CambodiaFlagBadge';
 import ProductPackageImage from '../components/ProductPackageImage';
+import { uploadToCloudinary, getCloudinaryConfig, saveCloudinaryConfig } from '../services/cloudinary';
 
 const AdminDashboard = () => {
 
@@ -389,18 +390,19 @@ const PRICING_GAMES = [
     showToast('success', 'Event banners reset to default promotional banners!');
   };
 
-  const handleBannerImageUpload = (e) => {
+  const handleBannerImageUpload = async (e) => {
     const file = e.target.files[0];
     if (!file) return;
-    if (file.size > 3 * 1024 * 1024) {
-      showToast('error', 'Image size should be under 3MB.');
+    if (file.size > 10 * 1024 * 1024) {
+      showToast('error', 'Image size should be under 10MB.');
       return;
     }
-    const reader = new FileReader();
-    reader.onload = (uploadEvent) => {
-      setBannerFormData(prev => ({ ...prev, image: uploadEvent.target.result }));
-    };
-    reader.readAsDataURL(file);
+    showToast('info', 'Uploading banner to Cloudinary CDN...');
+    const res = await uploadToCloudinary(file, 'event_banners');
+    if (res.url) {
+      setBannerFormData(prev => ({ ...prev, image: res.url }));
+      showToast('success', res.isFallback ? 'Banner loaded locally!' : 'Banner uploaded to Cloudinary CDN!');
+    }
   };
 
   const handleQuickSwitchProvider = async (targetProvider) => {
@@ -832,24 +834,24 @@ const PRICING_GAMES = [
     setProductModalOpen(true);
   };
 
-  const handleProductImageUpload = (e) => {
+  const handleProductImageUpload = async (e) => {
     const file = e.target.files?.[0];
     if (!file) return;
 
-    if (file.size > 5 * 1024 * 1024) {
-      showToast('error', 'Product image must be less than 5MB');
+    if (file.size > 10 * 1024 * 1024) {
+      showToast('error', 'Product image must be less than 10MB');
       return;
     }
 
-    const reader = new FileReader();
-    reader.onload = () => {
+    showToast('info', 'Uploading package image to Cloudinary CDN...');
+    const res = await uploadToCloudinary(file, 'product_packages');
+    if (res.url) {
       setProductFormData((prev) => ({
         ...prev,
-        customImage: reader.result,
+        customImage: res.url,
       }));
-      showToast('success', 'Custom package image loaded!');
-    };
-    reader.readAsDataURL(file);
+      showToast('success', res.isFallback ? 'Custom package image loaded!' : 'Package image uploaded to Cloudinary CDN!');
+    }
   };
 
   const handleSyncOfficialPackages = async () => {
@@ -1088,25 +1090,25 @@ const PRICING_GAMES = [
     setStoreLogoModalOpen(true);
   };
 
-  const handleStoreLogoFileUpload = (e) => {
+  const handleStoreLogoFileUpload = async (e) => {
     const file = e.target.files?.[0];
     if (!file) return;
 
-    if (file.size > 3 * 1024 * 1024) {
-      showToast('error', 'Image size must be less than 3MB');
+    if (file.size > 10 * 1024 * 1024) {
+      showToast('error', 'Image size must be less than 10MB');
       return;
     }
 
-    const reader = new FileReader();
-    reader.onload = (event) => {
+    showToast('info', 'Uploading logo to Cloudinary CDN...');
+    const res = await uploadToCloudinary(file, 'store_branding');
+    if (res.url) {
       setStoreBrandingForm((prev) => ({
         ...prev,
         logoType: 'image',
-        logoImage: event.target.result,
+        logoImage: res.url,
       }));
-      showToast('info', 'Store logo image loaded. Click "Save Store Branding" to apply.');
-    };
-    reader.readAsDataURL(file);
+      showToast('success', res.isFallback ? 'Store logo loaded locally! Click "Save Store Logo" to apply.' : 'Store logo uploaded to Cloudinary CDN!');
+    }
   };
 
   const handleSaveStoreBranding = (e) => {
