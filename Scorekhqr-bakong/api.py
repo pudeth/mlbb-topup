@@ -625,6 +625,65 @@ def handle_branding():
         except Exception as e:
             return jsonify({'success': False, 'error': str(e)}), 500
 
+@app.route('/api/games', methods=['GET', 'POST', 'PUT'])
+@app.route('/api/admin/games', methods=['GET', 'POST', 'PUT'])
+def handle_games_config():
+    """Fetch or update store games catalog & status persisted in MongoDB Atlas settings collection"""
+    if request.method == 'GET':
+        if mongo_db is not None:
+            try:
+                doc = mongo_db.settings.find_one({'type': 'store_games_config'})
+                if doc:
+                    doc.pop('_id', None)
+                    return jsonify({'success': True, 'games': doc.get('data')})
+            except Exception as e:
+                print(f"[-] MongoDB games fetch error: {e}")
+        return jsonify({'success': True, 'games': None})
+    
+    if request.method in ['POST', 'PUT']:
+        try:
+            data = request.get_json() or {}
+            games_payload = data.get('games') if isinstance(data, dict) and 'games' in data else data
+            if mongo_db is not None:
+                mongo_db.settings.update_one(
+                    {'type': 'store_games_config'},
+                    {'$set': {'type': 'store_games_config', 'data': games_payload, 'updated_at': datetime.utcnow().isoformat()}},
+                    upsert=True
+                )
+                print("[+] Saved games config & statuses to MongoDB Atlas settings collection!")
+            return jsonify({'success': True, 'games': games_payload})
+        except Exception as e:
+            return jsonify({'success': False, 'error': str(e)}), 500
+
+@app.route('/api/master-status', methods=['GET', 'POST', 'PUT'])
+@app.route('/api/admin/master-status', methods=['GET', 'POST', 'PUT'])
+def handle_master_status():
+    """Fetch or update master top-up status persisted in MongoDB Atlas settings collection"""
+    if request.method == 'GET':
+        if mongo_db is not None:
+            try:
+                doc = mongo_db.settings.find_one({'type': 'store_master_status'})
+                if doc:
+                    doc.pop('_id', None)
+                    return jsonify({'success': True, 'masterStatus': doc.get('data')})
+            except Exception as e:
+                print(f"[-] MongoDB master status fetch error: {e}")
+        return jsonify({'success': True, 'masterStatus': None})
+    
+    if request.method in ['POST', 'PUT']:
+        try:
+            data = request.get_json() or {}
+            if mongo_db is not None:
+                mongo_db.settings.update_one(
+                    {'type': 'store_master_status'},
+                    {'$set': {'type': 'store_master_status', 'data': data, 'updated_at': datetime.utcnow().isoformat()}},
+                    upsert=True
+                )
+                print("[+] Saved master top-up status to MongoDB Atlas settings collection!")
+            return jsonify({'success': True, 'masterStatus': data})
+        except Exception as e:
+            return jsonify({'success': False, 'error': str(e)}), 500
+
 @app.route('/api/config', methods=['GET'])
 def get_current_config():
     """Get active Bakong KHQR configuration"""

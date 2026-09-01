@@ -2,7 +2,7 @@ import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { adminAPI, bakongAPI } from '../services/api';
-import { getStoredGames, saveStoredGames, resetToDefaultGames, getMasterTopupStatus, saveMasterTopupStatus } from '../services/gamesConfig';
+import { getStoredGames, saveStoredGames, resetToDefaultGames, getMasterTopupStatus, saveMasterTopupStatus, fetchStoredGames, fetchMasterTopupStatus } from '../services/gamesConfig';
 import { useStoreBranding } from '../services/storeBranding';
 import { DEFAULT_EVENT_BANNERS } from '../components/EventBannerSlider';
 import { CambodiaFlagSvg, CambodiaFlagFrame, CambodiaCornerBadge } from '../components/CambodiaFlagBadge';
@@ -718,6 +718,15 @@ const PRICING_GAMES = [
 
   useEffect(() => {
     loadData();
+    fetchStoredGames().then((cloudGames) => {
+      if (cloudGames && Array.isArray(cloudGames)) setGamesList(cloudGames);
+    });
+    fetchMasterTopupStatus().then((cloudStatus) => {
+      if (cloudStatus) {
+        setMasterTopupStatus(cloudStatus);
+        setCustomNoticeText(cloudStatus.notice || 'Top-Ups are temporarily paused by Admin for maintenance. Please check back shortly!');
+      }
+    });
   }, [loadData]);
 
   // Real-Time Auto-Refresh interval (4s live background polling)

@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useLanguage } from '../context/LanguageContext';
-import { getStoredGames, getMasterTopupStatus } from '../services/gamesConfig';
+import { getStoredGames, getMasterTopupStatus, fetchStoredGames, fetchMasterTopupStatus } from '../services/gamesConfig';
 import { CambodiaFlagSvg } from './CambodiaFlagBadge';
 
 const GameSelection = () => {
@@ -13,11 +13,23 @@ const GameSelection = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const [favoritesOnly, setFavoritesOnly] = useState(false);
 
-  // Load games from persistent configuration
+  // Load games from persistent configuration and sync with MongoDB Atlas
   useEffect(() => {
     const loaded = getStoredGames();
     setGames(loaded);
     setMasterStatus(getMasterTopupStatus());
+
+    // Fetch latest cloud state from MongoDB Atlas
+    fetchStoredGames().then((cloudGames) => {
+      if (cloudGames && Array.isArray(cloudGames)) {
+        setGames(cloudGames);
+      }
+    });
+    fetchMasterTopupStatus().then((cloudStatus) => {
+      if (cloudStatus) {
+        setMasterStatus(cloudStatus);
+      }
+    });
 
     // Listen for custom events if admin updates games live
     const handleStorageChange = () => {
