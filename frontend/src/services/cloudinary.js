@@ -69,26 +69,14 @@ export const uploadToCloudinary = async (file, folder = 'profile-photos') => {
       height: data.height,
     };
   } catch (error) {
-    console.warn('Cloudinary upload notice:', error.message);
-    
-    // Fallback: If Cloudinary fails or is not configured yet, use local base64 data URL
-    if (file instanceof File || file instanceof Blob) {
-      const dataUrl = await new Promise((resolve) => {
-        const reader = new FileReader();
-        reader.onload = () => resolve(reader.result);
-        reader.readAsDataURL(file);
-      });
-      return {
-        success: true,
-        url: dataUrl,
-        isFallback: true,
-        warning: error.message,
-      };
+    console.warn('Cloudinary upload error:', error.message);
+    let msg = error.message;
+    if (msg.includes('whitelisted for unsigned') || msg.includes('not found')) {
+      msg = 'Upload Preset required: In your Cloudinary Settings -> Upload, click "Add upload preset" and set Signing Mode to "Unsigned".';
     }
-
     return {
       success: false,
-      error: error.message,
+      error: msg,
     };
   }
 };

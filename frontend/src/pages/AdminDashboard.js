@@ -1105,8 +1105,8 @@ const PRICING_GAMES = [
     setIsUploadingLogo(true);
     showToast('info', '☁️ Uploading logo directly to Cloudinary CDN...');
     try {
-      const res = await uploadToCloudinary(file, 'store_branding');
-      if (res.url) {
+      const res = await uploadToCloudinary(file, 'profile-photos');
+      if (res.success && res.url) {
         const updatedForm = {
           ...storeBrandingForm,
           logoType: 'image',
@@ -1115,7 +1115,9 @@ const PRICING_GAMES = [
         setStoreBrandingForm(updatedForm);
         // Automatically save to database & local state
         updateBranding(updatedForm);
-        showToast('success', res.isFallback ? '✅ Logo loaded & auto-saved to database!' : '✅ Uploaded to Cloudinary CDN & saved to Database!');
+        showToast('success', '✅ Logo uploaded to Cloudinary CDN & saved to Database!');
+      } else {
+        showToast('error', res.error || 'Cloudinary upload failed. Check your Upload Preset.');
       }
     } catch (err) {
       showToast('error', 'Failed to upload image: ' + err.message);
@@ -5481,6 +5483,36 @@ const PRICING_GAMES = [
                       className="input w-full text-xs py-2 rounded-xl"
                       placeholder="https://res.cloudinary.com/.../logo.png"
                     />
+                  </div>
+
+                  {/* Quick Preset Buttons */}
+                  <div className="flex flex-wrap gap-2 pt-1">
+                    <button
+                      type="button"
+                      onClick={() => {
+                        const url = 'https://res.cloudinary.com/dpz7vpmf8/image/upload/v1786238941/profile-photos/xn3pwtlmzkexce7nojx5.jpg';
+                        setStoreBrandingForm({ ...storeBrandingForm, logoType: 'image', logoImage: url });
+                        updateBranding({ ...storeBrandingForm, logoType: 'image', logoImage: url });
+                        showToast('success', '✅ Cloudinary CDN URL applied & saved to Database!');
+                      }}
+                      className="px-2.5 py-1.5 rounded-lg bg-cyan-500/10 hover:bg-cyan-500/20 text-cyan-300 border border-cyan-500/30 text-[11px] font-bold transition-all flex items-center gap-1 cursor-pointer"
+                    >
+                      <span>☁️</span>
+                      <span>Use Cloudinary CDN URL</span>
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        const url = '/tin-logo.png';
+                        setStoreBrandingForm({ ...storeBrandingForm, logoType: 'image', logoImage: url });
+                        updateBranding({ ...storeBrandingForm, logoType: 'image', logoImage: url });
+                        showToast('success', '✅ Tin-TOPUP PNG Logo applied & saved to Database!');
+                      }}
+                      className="px-2.5 py-1.5 rounded-lg bg-amber-500/10 hover:bg-amber-500/20 text-amber-300 border border-amber-500/30 text-[11px] font-bold transition-all flex items-center gap-1 cursor-pointer"
+                    >
+                      <span>🖼️</span>
+                      <span>Use Tin-TOPUP Logo PNG</span>
+                    </button>
                   </div>
                 </div>
               )}
