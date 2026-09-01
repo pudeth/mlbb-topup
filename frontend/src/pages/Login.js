@@ -61,15 +61,15 @@ const Login = () => {
       {/* Full-Display Executive Admin Portal Card */}
       <div className="max-w-5xl w-full grid grid-cols-1 lg:grid-cols-12 rounded-3xl border border-slate-800/90 bg-[#0B0F19]/95 backdrop-blur-2xl shadow-2xl relative z-10 overflow-hidden">
         
-        {/* Left Side: System Showcase & Branding (Full Display Panel) */}
-        <div className="lg:col-span-5 bg-gradient-to-br from-slate-950 via-[#0d1424] to-[#07090E] p-8 sm:p-10 flex flex-col justify-between border-b lg:border-b-0 lg:border-r border-slate-800/80 relative">
+        {/* Left Side: System Showcase & Branding (Full Display on Desktop, Clean Logo on Mobile) */}
+        <div className="lg:col-span-5 bg-gradient-to-br from-slate-950 via-[#0d1424] to-[#07090E] p-5 sm:p-6 lg:p-10 flex flex-col justify-between border-b lg:border-b-0 lg:border-r border-slate-800/80 relative">
           {/* Subtle accent glow */}
           <div className="absolute top-0 right-0 w-48 h-48 bg-amber-500/10 rounded-full blur-3xl pointer-events-none" />
 
           {/* Top Logo & Title */}
-          <div className="space-y-6 relative z-10">
+          <div className="space-y-6 relative z-10 w-full flex flex-col items-center lg:items-start text-center lg:text-left">
             <Link to="/" className="inline-flex items-center gap-3.5 group">
-              <div className="h-14 w-14 rounded-2xl bg-slate-900 border border-slate-700/60 p-2 flex items-center justify-center shrink-0 group-hover:scale-105 transition-transform shadow-md">
+              <div className="h-12 w-12 sm:h-14 sm:w-14 rounded-2xl bg-slate-900 border border-slate-700/60 p-2 flex items-center justify-center shrink-0 group-hover:scale-105 transition-transform shadow-md">
                 <img
                   src={branding.logoImage || '/tin-logo.png'}
                   alt={branding.storeName || 'Tin-Topup'}
@@ -80,9 +80,9 @@ const Login = () => {
                   }}
                 />
               </div>
-              <div>
+              <div className="text-left">
                 <div className="flex items-center gap-2">
-                  <span className="text-2xl font-black tracking-wider text-white group-hover:text-amber-400 transition-colors">
+                  <span className="text-xl sm:text-2xl font-black tracking-wider text-white group-hover:text-amber-400 transition-colors">
                     {branding.storeName || 'Tin-Topup'}
                   </span>
                   <span className="bg-amber-400 text-slate-950 text-[10px] font-black px-2 py-0.5 rounded uppercase tracking-wider">
@@ -90,13 +90,13 @@ const Login = () => {
                   </span>
                 </div>
                 <p className="text-xs text-slate-400 font-semibold tracking-wide">
-                  {branding.tagline || 'Official Management Hub'}
+                  {branding.tagline || 'Official Diamond Hub'}
                 </p>
               </div>
             </Link>
 
-            {/* System Status Indicators */}
-            <div className="space-y-2.5 pt-2">
+            {/* System Status Indicators (Hidden on Mobile, Visible on Desktop) */}
+            <div className="hidden lg:block space-y-2.5 pt-2 w-full">
               <div className="text-[11px] font-bold uppercase tracking-wider text-slate-400 flex items-center gap-1.5">
                 <span>⚡</span>
                 <span>System Architecture Status</span>
@@ -129,8 +129,8 @@ const Login = () => {
             </div>
           </div>
 
-          {/* Bottom Security Assurance */}
-          <div className="pt-8 text-xs text-slate-400 relative z-10 flex items-center gap-2">
+          {/* Bottom Security Assurance (Hidden on Mobile, Visible on Desktop) */}
+          <div className="hidden lg:flex pt-8 text-xs text-slate-400 relative z-10 items-center gap-2">
             <span className="text-base">🛡️</span>
             <span>Restricted Administrator Access. Enterprise Hub v2.5.</span>
           </div>
