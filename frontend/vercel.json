@@ -2,8 +2,13 @@
   "buildCommand": "DISABLE_ESLINT_PLUGIN=true CI=false npm run build",
   "rewrites": [
     {
+      "source": "/api/khqr/:path*",
+      "destination": "https://mlbb-khqr-api.onrender.com/api/:path*"
+    },
+    {
       "source": "/(.*)",
       "destination": "/index.html"
     }
   ]
 }
+

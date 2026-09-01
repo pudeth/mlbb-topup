@@ -455,12 +455,11 @@ const getApiUrls = () => {
   if (typeof window !== 'undefined' && (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1')) {
     return ['http://localhost:5001/api', 'http://localhost:5000/api/admin'];
   }
-  const urls = [];
-  if (process.env.REACT_APP_KHQR_API_URL) urls.push(`${process.env.REACT_APP_KHQR_API_URL}/api`);
-  if (process.env.REACT_APP_API_URL) urls.push(`${process.env.REACT_APP_API_URL}/admin`);
-  urls.push('https://mlbb-khqr-api.onrender.com/api');
-  urls.push('https://mlbb-backend-api.onrender.com/api/admin');
-  return [...new Set(urls)];
+  // In production, use the Vercel proxy path (/api/khqr → Render backend)
+  // This is a same-origin request so CORS never applies
+  const urls = ['/api/khqr'];
+  if (process.env.REACT_APP_KHQR_API_URL) urls.unshift(`${process.env.REACT_APP_KHQR_API_URL}/api`);
+  return urls;
 };
 
 export const getStoredGames = () => {
