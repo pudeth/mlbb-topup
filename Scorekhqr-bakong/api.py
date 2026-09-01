@@ -290,16 +290,25 @@ last_check_cache = {}
 
 @app.route('/api/payment/status/<md5>', methods=['GET'])
 def check_status(md5):
-    """Check payment status with rate-limit protection and smart caching"""
+    """Check payment status — checks cache/DB first, then Bakong API (throttled to 1 per 30s)"""
     try:
-        # 1. Check in-memory cache first
+        # 1. Check in-memory cache first (fastest path)
         if md5 in qr_cache and qr_cache[md5].get('status') == 'PAID':
-            return jsonify({
-                'md5_hash': md5,
-                'status': 'PAID'
-            })
+            return jsonify({'md5_hash': md5, 'status': 'PAID'})
 
-        # 2. Check database if connected
+        # 2. Check MongoDB Atlas payments collection
+        if mongo_payments is not None:
+            try:
+                doc = mongo_payments.find_one({'md5_hash': md5})
+                if doc and doc.get('status') == 'PAID':
+                    if md5 not in qr_cache:
+                        qr_cache[md5] = {}
+                    qr_cache[md5]['status'] = 'PAID'
+                    return jsonify({'md5_hash': md5, 'status': 'PAID'})
+            except Exception as mongo_e:
+                print(f"MongoDB check error: {mongo_e}")
+
+        # 3. Check MySQL database if connected
         conn = get_db_connection()
         if conn:
             try:
@@ -307,30 +316,19 @@ def check_status(md5):
                 cursor.execute("SELECT status FROM payments WHERE md5_hash = %s", (md5,))
                 row = cursor.fetchone()
                 if row and row[0] == 'PAID':
-                    if md5 in qr_cache:
-                        qr_cache[md5]['status'] = 'PAID'
-                    return jsonify({
-                        'md5_hash': md5,
-                        'status': 'PAID'
-                    })
+                    if md5 not in qr_cache:
+                        qr_cache[md5] = {}
+                    qr_cache[md5]['status'] = 'PAID'
+                    return jsonify({'md5_hash': md5, 'status': 'PAID'})
             except Exception as db_e:
                 print(f"DB check error: {db_e}")
             finally:
                 conn.close()
 
-        # Check if in demo mode
-        demo_mode = os.getenv('DEMO_MODE', 'false').lower() == 'true'
-        if demo_mode:
-            return jsonify({
-                'md5_hash': md5,
-                'status': qr_cache.get(md5, {}).get('status', 'UNPAID'),
-                'demo': True
-            })
-
-        # Throttle Bakong NBC API checks: at most once every 6 seconds per MD5 to preserve 100/day limit
+        # 4. Throttle Bakong NBC API: at most once per 30s per MD5 to avoid rate limits
         now_ts = datetime.now().timestamp()
         last_check = last_check_cache.get(md5, 0)
-        if (now_ts - last_check) < 6.0:
+        if (now_ts - last_check) < 30.0:
             return jsonify({
                 'md5_hash': md5,
                 'status': qr_cache.get(md5, {}).get('status', 'UNPAID'),
@@ -339,7 +337,7 @@ def check_status(md5):
 
         last_check_cache[md5] = now_ts
 
-        # Try to check with Bakong API
+        # 5. Call real Bakong NBC API
         status = "UNPAID"
         try:
             print(f"Checking Bakong API for MD5: {md5}")
@@ -351,11 +349,8 @@ def check_status(md5):
             print(f"[+] Bakong status for {md5}: {status}")
         except Exception as api_error:
             error_msg = str(api_error)
-            print(f"[-] Bakong API notice: {error_msg}")
-            
-            # Rate limit or temporary error - return current status with warning
+            print(f"[-] Bakong API rate-limit/error: {error_msg}")
             is_rate_limit = "limit" in error_msg.lower() or "exceeded" in error_msg.lower() or "17" in error_msg
-            
             return jsonify({
                 'md5_hash': md5,
                 'status': qr_cache.get(md5, {}).get('status', 'UNPAID'),
@@ -363,10 +358,9 @@ def check_status(md5):
                 'rate_limited': is_rate_limit
             })
 
-
-        # Update MongoDB Atlas, database and cache if paid
+        # 6. Update all stores if PAID
         if status == "PAID":
-            print(f"[+] Payment is PAID! Updating records...")
+            print(f"[+] Payment PAID! Updating records for {md5}...")
             if md5 not in qr_cache:
                 qr_cache[md5] = {}
             qr_cache[md5]['status'] = 'PAID'
@@ -376,9 +370,10 @@ def check_status(md5):
                 try:
                     mongo_payments.update_one(
                         {'md5_hash': md5},
-                        {'$set': {'status': 'PAID', 'paid_at': datetime.now().isoformat()}}
+                        {'$set': {'status': 'PAID', 'paid_at': datetime.now().isoformat()}},
+                        upsert=True
                     )
-                    print(f"[+] Updated status to PAID in MongoDB Atlas: {md5}")
+                    print(f"[+] Updated PAID in MongoDB Atlas: {md5}")
                 except Exception as e:
                     print(f"[-] MongoDB update error: {e}")
 
@@ -386,22 +381,80 @@ def check_status(md5):
             if conn:
                 try:
                     cursor = conn.cursor()
-                    cursor.execute("""
-                        UPDATE payments 
-                        SET status = 'PAID', paid_at = NOW()
-                        WHERE md5_hash = %s AND status = 'UNPAID'
-                    """, (md5,))
+                    cursor.execute(
+                        "UPDATE payments SET status='PAID', paid_at=NOW() WHERE md5_hash=%s AND status='UNPAID'",
+                        (md5,)
+                    )
                     conn.commit()
                 finally:
                     conn.close()
 
-        return jsonify({
-            'md5_hash': md5,
-            'status': status
-        })
-        
+        return jsonify({'md5_hash': md5, 'status': status})
+
     except Exception as e:
         print(f"[-] Error in check_status: {e}")
+        return jsonify({'md5_hash': md5, 'status': 'UNPAID', 'error': str(e)})
+
+
+@app.route('/api/payment/force-check/<md5>', methods=['GET'])
+def force_check_status(md5):
+    """Force-check payment status bypassing the throttle — called when user says 'I have paid'"""
+    try:
+        # Always check cache/DB first
+        if md5 in qr_cache and qr_cache[md5].get('status') == 'PAID':
+            return jsonify({'md5_hash': md5, 'status': 'PAID'})
+
+        if mongo_payments is not None:
+            try:
+                doc = mongo_payments.find_one({'md5_hash': md5})
+                if doc and doc.get('status') == 'PAID':
+                    if md5 not in qr_cache:
+                        qr_cache[md5] = {}
+                    qr_cache[md5]['status'] = 'PAID'
+                    return jsonify({'md5_hash': md5, 'status': 'PAID'})
+            except Exception as mongo_e:
+                print(f"MongoDB force-check error: {mongo_e}")
+
+        # Force a fresh Bakong API call (bypass throttle)
+        last_check_cache[md5] = 0  # Reset throttle
+        status = "UNPAID"
+        try:
+            print(f"[FORCE] Checking Bakong API for MD5: {md5}")
+            raw_st = khqr.check_payment(md5)
+            if str(raw_st).strip().upper() in ["PAID", "SUCCESS", "COMPLETED"]:
+                status = "PAID"
+            print(f"[FORCE] Bakong status for {md5}: {status}")
+        except Exception as api_error:
+            error_msg = str(api_error)
+            print(f"[-] Force-check Bakong error: {error_msg}")
+            is_rate_limit = "limit" in error_msg.lower() or "exceeded" in error_msg.lower() or "17" in error_msg
+            return jsonify({
+                'md5_hash': md5,
+                'status': 'UNPAID',
+                'rate_limited': is_rate_limit,
+                'warning': error_msg
+            })
+
+        if status == "PAID":
+            if md5 not in qr_cache:
+                qr_cache[md5] = {}
+            qr_cache[md5]['status'] = 'PAID'
+            if mongo_payments is not None:
+                try:
+                    mongo_payments.update_one(
+                        {'md5_hash': md5},
+                        {'$set': {'status': 'PAID', 'paid_at': datetime.now().isoformat()}},
+                        upsert=True
+                    )
+                except Exception:
+                    pass
+
+        return jsonify({'md5_hash': md5, 'status': status})
+
+    except Exception as e:
+        return jsonify({'md5_hash': md5, 'status': 'UNPAID', 'error': str(e)})
+
+
         import traceback
         traceback.print_exc()
         return jsonify({

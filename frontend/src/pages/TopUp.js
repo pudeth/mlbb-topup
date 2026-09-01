@@ -743,6 +743,51 @@ const TopUp = () => {
     return false;
   }, [formData.playerID, formData.serverID, selectedProduct.name]);
 
+  // Force-check: called when user clicks "I Have Paid" — bypasses throttle
+  const [forceChecking, setForceChecking] = useState(false);
+  const [forceCheckMsg, setForceCheckMsg] = useState('');
+
+  const handleForceCheck = useCallback(async () => {
+    const curMd5 = currentMd5Ref.current;
+    const curOrderId = currentOrderIdRef.current;
+    if (!curMd5 || paymentPaidRef.current || qrExpiredRef.current) return;
+    setForceChecking(true);
+    setForceCheckMsg('Verifying with Bakong...');
+    try {
+      const isLocal = typeof window !== 'undefined' && (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1');
+      const ep = isLocal
+        ? `http://localhost:5001/api/payment/force-check/${curMd5}`
+        : `/api/khqr/payment/force-check/${curMd5}`;
+      const r = await fetch(ep).then(res => res.json());
+      const raw = (r?.status || '').toUpperCase();
+      if (raw === 'PAID' || raw === 'SUCCESS' || raw === 'COMPLETED') {
+        setForceCheckMsg('✅ Payment confirmed!');
+        await ordersAPI.checkPayment(curOrderId, true);
+        // Trigger success screen
+        const triggerPaid = async () => {
+          setProcessingStep(1);
+          setTimeout(() => setProcessingStep(2), 600);
+          setTimeout(() => setProcessingStep(3), 1200);
+          setTimeout(() => {
+            setPaymentPaid(true);
+            paymentPaidRef.current = true;
+            setProcessingStep(0);
+          }, 1800);
+        };
+        await triggerPaid();
+      } else if (r?.rate_limited) {
+        setForceCheckMsg('⚠️ Bakong API busy. Please wait 30s and try again.');
+      } else {
+        setForceCheckMsg('❌ Payment not found yet. Please wait and try again.');
+      }
+    } catch (e) {
+      setForceCheckMsg('❌ Check failed. Please try again.');
+    } finally {
+      setForceChecking(false);
+      setTimeout(() => setForceCheckMsg(''), 4000);
+    }
+  }, []);
+
 
   // Automatic Real-Time Polling Interval (Every 2 seconds)
   useEffect(() => {
@@ -1760,7 +1805,7 @@ const TopUp = () => {
               </div>
             )}
 
-            {/* Live Real-Time 2-Second Auto-Tracking Status Card & Instant Complete */}
+            {/* Live Real-Time Auto-Tracking Status Card & "I Have Paid" button */}
             {processingStep === 0 && (
               <div className="space-y-1.5 pt-1.5 border-t border-slate-800">
                 <div className="w-full py-1.5 px-3 rounded-2xl bg-gradient-to-r from-emerald-950/70 via-slate-900/90 to-teal-950/70 border border-emerald-500/40 text-white shadow-lg flex items-center justify-between gap-2">
@@ -1781,15 +1826,49 @@ const TopUp = () => {
                   
                   <div className="flex items-center gap-1 shrink-0 px-2 py-0.5 rounded-lg bg-emerald-500/15 border border-emerald-500/30">
                     <div className="w-2 h-2 border-2 border-emerald-400 border-t-transparent rounded-full animate-spin" />
-                    <span className="text-[9px] font-mono font-bold text-emerald-300">2s Live</span>
+                    <span className="text-[9px] font-mono font-bold text-emerald-300">Live</span>
                   </div>
                 </div>
 
+                {/* I Have Paid button */}
+                <button
+                  onClick={handleForceCheck}
+                  disabled={forceChecking}
+                  className={`w-full py-2 px-3 rounded-xl font-black text-xs tracking-wider uppercase transition-all flex items-center justify-center gap-2 shadow-lg ${
+                    forceChecking
+                      ? 'bg-amber-500/20 text-amber-400 border border-amber-500/30 cursor-wait'
+                      : 'bg-gradient-to-r from-amber-500 to-orange-500 text-black border-0 hover:opacity-90 active:scale-[0.98] cursor-pointer'
+                  }`}
+                >
+                  {forceChecking ? (
+                    <>
+                      <span className="w-3 h-3 border-2 border-amber-400 border-t-transparent rounded-full animate-spin" />
+                      <span>Verifying with Bakong...</span>
+                    </>
+                  ) : (
+                    <>
+                      <span>✅</span>
+                      <span>I Have Paid — Verify Now</span>
+                    </>
+                  )}
+                </button>
+
+                {forceCheckMsg && (
+                  <p className={`text-center text-[11px] font-bold py-1 rounded-lg ${
+                    forceCheckMsg.includes('✅') ? 'text-emerald-400 bg-emerald-950/40' :
+                    forceCheckMsg.includes('⚠️') ? 'text-amber-400 bg-amber-950/40' :
+                    'text-rose-400 bg-rose-950/40'
+                  }`}>
+                    {forceCheckMsg}
+                  </p>
+                )}
+
                 <p className="text-[10px] text-center text-slate-300 leading-normal">
-                  Scan with any Cambodian Banking App. Once paid, the screen will automatically verify & deliver your diamonds.
+                  Scan with any Cambodian Banking App. After paying, tap <strong className="text-amber-400">I Have Paid</strong> to verify instantly.
                 </p>
               </div>
             )}
+
           </div>
         </div>
       )}
