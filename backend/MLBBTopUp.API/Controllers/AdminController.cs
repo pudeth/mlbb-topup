@@ -29,6 +29,48 @@ public class AdminController : BaseController
         _context = context;
     }
 
+    private static object _storeBranding = new
+    {
+        storeName = "Tin-Topup",
+        storeNameHighlight = "PRO",
+        tagline = "Official Diamond Hub",
+        logoType = "image",
+        logoEmoji = "💎",
+        logoImage = "/profile.jpg",
+        badgeText = "PRO",
+        adminBadgeText = "ADMIN",
+        versionText = "Enterprise Hub v2.5",
+        themeColor = "amber",
+        facebookPage = "https://www.facebook.com/share/1LaL3TxfWD/?mibextid=wwXIfr",
+        facebookPageName = "Official Facebook Page",
+        telegramUrl = "https://t.me/Peak_Deth",
+        telegramUsername = "@Peak_Deth"
+    };
+
+    /// <summary>
+    /// Get Store Branding settings (Public)
+    /// </summary>
+    [HttpGet("branding")]
+    [AllowAnonymous]
+    public IActionResult GetBranding()
+    {
+        return Ok(new { success = true, branding = _storeBranding });
+    }
+
+    /// <summary>
+    /// Update Store Branding settings
+    /// </summary>
+    [HttpPost("branding")]
+    [HttpPut("branding")]
+    public IActionResult UpdateBranding([FromBody] object data)
+    {
+        if (data != null)
+        {
+            _storeBranding = data;
+        }
+        return Ok(new { success = true, branding = _storeBranding });
+    }
+
     /// <summary>
     /// Get all orders
     /// </summary>

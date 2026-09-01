@@ -49,6 +49,15 @@ export const saveStoreBranding = (newBranding) => {
     if (typeof window !== 'undefined') {
       window.dispatchEvent(new CustomEvent(EVENT_NAME, { detail: updated }));
     }
+    // Asynchronously sync to backend / MongoDB Atlas
+    try {
+      const apiUrl = process.env.REACT_APP_API_URL || (typeof window !== 'undefined' && window.location.hostname !== 'localhost' ? 'https://mlbb-backend-api.onrender.com/api' : 'http://localhost:5000/api');
+      fetch(`${apiUrl}/admin/branding`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(updated),
+      }).catch(() => {});
+    } catch (_) {}
     return updated;
   } catch (err) {
     console.warn('Error saving store branding:', err);
@@ -62,6 +71,7 @@ export const resetStoreBranding = () => {
     if (typeof window !== 'undefined') {
       window.dispatchEvent(new CustomEvent(EVENT_NAME, { detail: DEFAULT_BRANDING }));
     }
+    return DEFAULT_BRANDING;
   } catch (err) {
     console.warn('Error resetting store branding:', err);
   }
@@ -73,6 +83,22 @@ export const useStoreBranding = () => {
   const [branding, setBranding] = useState(getStoreBranding);
 
   useEffect(() => {
+    // 1. Fetch remote branding from backend / MongoDB Atlas on initial load
+    const fetchRemoteBranding = async () => {
+      try {
+        const apiUrl = process.env.REACT_APP_API_URL || (typeof window !== 'undefined' && window.location.hostname !== 'localhost' ? 'https://mlbb-backend-api.onrender.com/api' : 'http://localhost:5000/api');
+        const res = await fetch(`${apiUrl}/admin/branding`);
+        if (res.ok) {
+          const json = await res.json();
+          if (json?.branding) {
+            saveStoreBranding(json.branding);
+          }
+        }
+      } catch (_) {}
+    };
+
+    fetchRemoteBranding();
+
     const handleUpdate = (e) => {
       if (e.detail) {
         setBranding(e.detail);
