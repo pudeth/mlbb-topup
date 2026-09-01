@@ -482,10 +482,7 @@ export const fetchStoredGames = async () => {
   const urls = getApiUrls();
   for (const base of urls) {
     try {
-      const res = await fetch(`${base}/games?_t=${Date.now()}`, {
-        cache: 'no-store',
-        headers: { 'Cache-Control': 'no-cache', 'Pragma': 'no-cache' }
-      });
+      const res = await fetch(`${base}/games?_t=${Date.now()}`);
       if (res.ok) {
         const data = await res.json();
         if (data?.success && Array.isArray(data.games) && data.games.length > 0) {
@@ -559,10 +556,7 @@ export const fetchMasterTopupStatus = async () => {
   const urls = getApiUrls();
   for (const base of urls) {
     try {
-      const res = await fetch(`${base}/master-status?_t=${Date.now()}`, {
-        cache: 'no-store',
-        headers: { 'Cache-Control': 'no-cache', 'Pragma': 'no-cache' }
-      });
+      const res = await fetch(`${base}/master-status?_t=${Date.now()}`);
       if (res.ok) {
         const data = await res.json();
         if (data?.success && data.masterStatus) {
