@@ -176,6 +176,10 @@ def check_mlbb_account():
         'server': server_id
     })
 
+@app.route('/favicon.ico')
+def favicon():
+    return '', 204
+
 @app.route('/')
 def index():
     """API home"""
