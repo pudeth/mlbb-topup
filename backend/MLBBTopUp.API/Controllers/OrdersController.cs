@@ -165,6 +165,30 @@ public class OrdersController : BaseController
         else
         {
             isPaid = await _paymentService.VerifyPaymentAsync(id);
+
+            // Fallback for user confirmation when external API hits rate limits
+            if (!isPaid && manualConfirm)
+            {
+                await _orderService.UpdateOrderPaymentStatusAsync(id, "Paid");
+                isPaid = true;
+
+                if (order.TopupStatus == "Pending")
+                {
+                    try
+                    {
+                        await _topUpService.ProcessTopUpAsync(
+                            order.OrderId,
+                            order.PlayerID,
+                            order.ServerID,
+                            order.DiamondAmount
+                        );
+                    }
+                    catch (Exception ex)
+                    {
+                        Console.WriteLine($"Error processing topup for order {id}: {ex.Message}");
+                    }
+                }
+            }
         }
 
         var updatedOrder = await _orderService.GetOrderByIdAsync(id);

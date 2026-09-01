@@ -762,7 +762,7 @@ const TopUp = () => {
       const raw = (r?.status || '').toUpperCase();
       if (raw === 'PAID' || raw === 'SUCCESS' || raw === 'COMPLETED') {
         setForceCheckMsg('✅ Real Payment Confirmed on Bakong!');
-        await ordersAPI.checkPayment(curOrderId);
+        await ordersAPI.checkPayment(curOrderId, true);
         // Trigger success screen
         const triggerPaid = async () => {
           setProcessingStep(1);
@@ -789,7 +789,7 @@ const TopUp = () => {
   }, []);
 
 
-  // Automatic Real-Time Polling Interval (Every 2 seconds)
+  // Automatic Real-Time Polling Interval (Every 6 seconds to prevent Bakong 100/day rate-limit)
   useEffect(() => {
     // Do NOT start or continue polling if QR has expired or payment is done
     if (!orderId || paymentPaid || qrExpired) return;
@@ -797,14 +797,14 @@ const TopUp = () => {
     // Initial check right after order creation
     checkPaymentStatus();
 
-    // Poll every 2 seconds until payment is detected, QR expires, or component unmounts
+    // Poll every 6 seconds until payment is detected, QR expires, or component unmounts
     const interval = setInterval(() => {
       if (!paymentPaidRef.current && !qrExpiredRef.current) {
         checkPaymentStatus();
       } else {
         clearInterval(interval);
       }
-    }, 2000);
+    }, 6000);
 
     return () => clearInterval(interval);
   }, [orderId, paymentPaid, qrExpired, checkPaymentStatus]);
