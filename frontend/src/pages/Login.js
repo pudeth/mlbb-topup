@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { useStoreBranding } from '../services/storeBranding';
@@ -6,11 +6,11 @@ import { useStoreBranding } from '../services/storeBranding';
 const Login = () => {
   const navigate = useNavigate();
   const location = useLocation();
-  const { login } = useAuth();
+  const { login, isAuthenticated, isAdmin } = useAuth();
   const { branding } = useStoreBranding();
 
   const [formData, setFormData] = useState({
-    email: '',
+    email: 'admin@mlbbtopup.com',
     password: '',
   });
   const [showPassword, setShowPassword] = useState(false);
@@ -18,7 +18,14 @@ const Login = () => {
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
 
-  const from = location.state?.from || '/';
+  const from = location.state?.from || '/admin';
+
+  // If already logged in as Admin, redirect directly to admin dashboard
+  useEffect(() => {
+    if (isAuthenticated && isAdmin && isAdmin()) {
+      navigate('/admin', { replace: true });
+    }
+  }, [isAuthenticated, isAdmin, navigate]);
 
   const handleChange = (e) => {
     setFormData({
@@ -28,8 +35,11 @@ const Login = () => {
     setError('');
   };
 
-  const handleQuickFill = (email, password) => {
-    setFormData({ email, password });
+  const handleQuickFillAdmin = () => {
+    setFormData({
+      email: 'admin@mlbbtopup.com',
+      password: 'Admin@123',
+    });
     setError('');
   };
 
@@ -43,67 +53,116 @@ const Login = () => {
     if (result.success) {
       navigate(from, { replace: true });
     } else {
-      setError(result.error || 'Invalid email or password. Please try again.');
+      setError(result.error || 'Invalid administrator credentials. Please try again.');
     }
 
     setLoading(false);
   };
 
   return (
-    <div className="min-h-[calc(100vh-5rem)] flex items-center justify-center bg-[#07090E] text-slate-100 py-6 sm:py-10 px-4 sm:px-6 relative overflow-hidden">
-      {/* Background Ambient Glows */}
-      <div className="fixed top-1/3 left-1/4 w-96 h-96 bg-amber-500/[0.08] rounded-full blur-[140px] pointer-events-none" />
-      <div className="fixed bottom-1/3 right-1/4 w-96 h-96 bg-cyan-500/[0.08] rounded-full blur-[140px] pointer-events-none" />
-      <div className="fixed inset-0 bg-gaming-grid pointer-events-none opacity-25" />
+    <div className="min-h-[calc(100vh-38px)] w-full flex items-center justify-center bg-[#07090E] text-slate-100 p-4 sm:p-6 md:p-10 relative overflow-hidden">
+      {/* Ambient background glows */}
+      <div className="fixed top-1/4 left-1/4 w-[500px] h-[500px] bg-amber-500/[0.07] rounded-full blur-[160px] pointer-events-none" />
+      <div className="fixed bottom-1/4 right-1/4 w-[500px] h-[500px] bg-cyan-500/[0.07] rounded-full blur-[160px] pointer-events-none" />
+      <div className="fixed inset-0 bg-gaming-grid pointer-events-none opacity-30" />
 
-      <div className="max-w-md w-full relative z-10 space-y-5 my-auto">
+      {/* Full-Display Executive Admin Portal Card */}
+      <div className="max-w-5xl w-full grid grid-cols-1 lg:grid-cols-12 rounded-3xl border border-slate-800/90 bg-[#0B0F19]/95 backdrop-blur-2xl shadow-2xl relative z-10 overflow-hidden">
         
-        {/* Brand Header */}
-        <div className="text-center space-y-2.5">
-          <Link to="/" className="inline-flex items-center gap-3 group">
-            <div className="h-12 w-12 flex items-center justify-center shrink-0 group-hover:scale-105 transition-all">
-              <img
-                src={branding.logoImage || '/tin-logo.png'}
-                alt={branding.storeName || 'Tin-TopUp'}
-                className="w-full h-full object-contain drop-shadow-md"
-                onError={(e) => {
-                  e.target.onerror = null;
-                  e.target.src = '/tin-logo.png';
-                }}
-              />
-            </div>
-            <div className="text-left">
-              <div className="flex items-center gap-1.5">
-                <span className="text-xl font-black tracking-wider text-white">
-                  {branding.storeName || 'Tin-TopUp'}
-                </span>
-                {branding.badgeText && (
-                  <span className="bg-gradient-to-r from-cyan-500 to-blue-500 text-slate-950 text-[9px] font-black px-1.5 py-0.5 rounded tracking-widest uppercase">
-                    {branding.badgeText}
-                  </span>
-                )}
-              </div>
-              <p className="text-[10px] text-slate-400 font-semibold tracking-wide uppercase">
-                {branding.tagline || 'Official Diamond Hub'}
-              </p>
-            </div>
-          </Link>
+        {/* Left Side: System Showcase & Branding (Full Display Panel) */}
+        <div className="lg:col-span-5 bg-gradient-to-br from-slate-950 via-[#0d1424] to-[#07090E] p-8 sm:p-10 flex flex-col justify-between border-b lg:border-b-0 lg:border-r border-slate-800/80 relative">
+          {/* Subtle accent glow */}
+          <div className="absolute top-0 right-0 w-48 h-48 bg-amber-500/10 rounded-full blur-3xl pointer-events-none" />
 
-          <h2 className="text-2xl sm:text-3xl font-black text-white tracking-tight pt-1">
-            Welcome Back
-          </h2>
-          <p className="text-xs text-slate-400 max-w-sm mx-auto">
-            Sign in to track orders, manage reseller credits & instant top-ups
-          </p>
+          {/* Top Logo & Title */}
+          <div className="space-y-6 relative z-10">
+            <Link to="/" className="inline-flex items-center gap-3.5 group">
+              <div className="h-14 w-14 rounded-2xl bg-slate-900 border border-slate-700/60 p-2 flex items-center justify-center shrink-0 group-hover:scale-105 transition-transform shadow-md">
+                <img
+                  src={branding.logoImage || '/tin-logo.png'}
+                  alt={branding.storeName || 'Tin-Topup'}
+                  className="w-full h-full object-contain"
+                  onError={(e) => {
+                    e.target.onerror = null;
+                    e.target.src = '/tin-logo.png';
+                  }}
+                />
+              </div>
+              <div>
+                <div className="flex items-center gap-2">
+                  <span className="text-2xl font-black tracking-wider text-white group-hover:text-amber-400 transition-colors">
+                    {branding.storeName || 'Tin-Topup'}
+                  </span>
+                  <span className="bg-amber-400 text-slate-950 text-[10px] font-black px-2 py-0.5 rounded uppercase tracking-wider">
+                    ADMIN
+                  </span>
+                </div>
+                <p className="text-xs text-slate-400 font-semibold tracking-wide">
+                  {branding.tagline || 'Official Management Hub'}
+                </p>
+              </div>
+            </Link>
+
+            {/* System Status Indicators */}
+            <div className="space-y-2.5 pt-2">
+              <div className="text-[11px] font-bold uppercase tracking-wider text-slate-400 flex items-center gap-1.5">
+                <span>⚡</span>
+                <span>System Architecture Status</span>
+              </div>
+              <div className="space-y-2">
+                <div className="flex items-center justify-between p-3 rounded-xl bg-slate-900/80 border border-slate-800/80">
+                  <div className="flex items-center gap-2.5">
+                    <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
+                    <span className="text-xs font-bold text-white">Core Dispatch Engine</span>
+                  </div>
+                  <span className="text-[10px] text-emerald-400 font-mono font-bold bg-emerald-500/10 px-2 py-0.5 rounded border border-emerald-500/20">OPERATIONAL</span>
+                </div>
+
+                <div className="flex items-center justify-between p-3 rounded-xl bg-slate-900/80 border border-slate-800/80">
+                  <div className="flex items-center gap-2.5">
+                    <span className="w-2 h-2 rounded-full bg-cyan-400 animate-pulse" />
+                    <span className="text-xs font-bold text-white">Bakong KHQR Gateway</span>
+                  </div>
+                  <span className="text-[10px] text-cyan-400 font-mono font-bold bg-cyan-500/10 px-2 py-0.5 rounded border border-cyan-500/20">0% FEE LIVE</span>
+                </div>
+
+                <div className="flex items-center justify-between p-3 rounded-xl bg-slate-900/80 border border-slate-800/80">
+                  <div className="flex items-center gap-2.5">
+                    <span className="w-2 h-2 rounded-full bg-amber-400" />
+                    <span className="text-xs font-bold text-white">Auto Top-Up Bot</span>
+                  </div>
+                  <span className="text-[10px] text-amber-400 font-mono font-bold bg-amber-500/10 px-2 py-0.5 rounded border border-amber-500/20">10-SEC READY</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Bottom Security Assurance */}
+          <div className="pt-8 text-xs text-slate-400 relative z-10 flex items-center gap-2">
+            <span className="text-base">🛡️</span>
+            <span>Restricted Administrator Access. Enterprise Hub v2.5.</span>
+          </div>
         </div>
 
-        {/* Login Card Container */}
-        <div className="bg-[#0B0F19]/95 backdrop-blur-2xl border border-slate-800 border-t-2 border-t-amber-500/60 rounded-3xl p-6 sm:p-8 shadow-[0_20px_60px_rgba(0,0,0,0.8)] space-y-5 animate-scaleUp">
-          
+        {/* Right Side: Admin Authentication Form */}
+        <div className="lg:col-span-7 p-8 sm:p-12 flex flex-col justify-center space-y-6">
+          <div>
+            <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-lg bg-amber-400/10 border border-amber-400/30 text-amber-400 text-xs font-bold uppercase tracking-wider mb-2.5">
+              <span>👑</span>
+              <span>Admin Authentication Portal</span>
+            </div>
+            <h2 className="text-2xl sm:text-3xl font-black text-white tracking-tight">
+              Sign In to Admin Hub
+            </h2>
+            <p className="text-xs sm:text-sm text-slate-400 mt-1">
+              Authorized access only. Enter administrative credentials to manage store operations.
+            </p>
+          </div>
+
           {/* Error Message */}
           {error && (
-            <div className="p-3.5 rounded-2xl bg-rose-950/80 border border-rose-500/50 text-rose-200 text-xs flex items-center gap-2.5 shadow-md animate-fadeIn">
-              <span className="text-lg shrink-0">⚠️</span>
+            <div className="p-3.5 rounded-xl bg-rose-950/80 border border-rose-500/50 text-rose-200 text-xs flex items-center gap-2.5 animate-fadeIn">
+              <span className="text-base shrink-0">⚠️</span>
               <div className="flex-1 font-semibold">{error}</div>
             </div>
           )}
@@ -112,10 +171,10 @@ const Login = () => {
             {/* Email Field */}
             <div>
               <label htmlFor="email" className="block text-xs font-bold text-slate-300 mb-1.5 uppercase tracking-wider">
-                Email Address <span className="text-amber-400">*</span>
+                Admin Email <span className="text-amber-400">*</span>
               </label>
               <div className="relative">
-                <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-500 text-sm">
+                <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400 text-sm">
                   ✉️
                 </div>
                 <input
@@ -126,7 +185,7 @@ const Login = () => {
                   required
                   value={formData.email}
                   onChange={handleChange}
-                  className="w-full bg-[#111728] border border-slate-700/80 focus:border-amber-400 focus:ring-1 focus:ring-amber-400 text-white placeholder-slate-500 text-xs sm:text-sm rounded-xl pl-10 pr-4 py-3 transition-all outline-none"
+                  className="w-full bg-[#111728] border border-slate-700/80 focus:border-amber-400 focus:ring-1 focus:ring-amber-400 text-white placeholder-slate-500 text-sm rounded-xl pl-10 pr-4 py-3 transition-all outline-none"
                   placeholder="admin@mlbbtopup.com"
                 />
               </div>
@@ -138,7 +197,7 @@ const Login = () => {
                 Password <span className="text-amber-400">*</span>
               </label>
               <div className="relative">
-                <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-500 text-sm">
+                <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400 text-sm">
                   🔑
                 </div>
                 <input
@@ -149,13 +208,13 @@ const Login = () => {
                   required
                   value={formData.password}
                   onChange={handleChange}
-                  className="w-full bg-[#111728] border border-slate-700/80 focus:border-amber-400 focus:ring-1 focus:ring-amber-400 text-white placeholder-slate-500 text-xs sm:text-sm rounded-xl pl-10 pr-11 py-3 transition-all outline-none"
-                  placeholder="Enter your password"
+                  className="w-full bg-[#111728] border border-slate-700/80 focus:border-amber-400 focus:ring-1 focus:ring-amber-400 text-white placeholder-slate-500 text-sm rounded-xl pl-10 pr-11 py-3 transition-all outline-none"
+                  placeholder="Enter administrator password"
                 />
                 <button
                   type="button"
                   onClick={() => setShowPassword(!showPassword)}
-                  className="absolute inset-y-0 right-0 pr-3.5 flex items-center text-slate-400 hover:text-white text-xs transition-colors"
+                  className="absolute inset-y-0 right-0 pr-3.5 flex items-center text-slate-400 hover:text-white text-xs transition-colors cursor-pointer"
                   aria-label="Toggle password visibility"
                 >
                   {showPassword ? '🙈' : '👁️'}
@@ -163,26 +222,19 @@ const Login = () => {
               </div>
             </div>
 
-            {/* Remember Me & Forgot Password */}
+            {/* Remember Me */}
             <div className="flex items-center justify-between pt-1">
               <label className="flex items-center gap-2 cursor-pointer select-none">
                 <input
                   type="checkbox"
                   checked={rememberMe}
                   onChange={(e) => setRememberMe(e.target.checked)}
-                  className="w-4 h-4 rounded bg-[#111728] border-slate-700 text-amber-500 focus:ring-amber-500 focus:ring-offset-slate-900 cursor-pointer accent-amber-500"
+                  className="w-4 h-4 rounded bg-[#111728] border-slate-700 text-amber-500 focus:ring-amber-500 cursor-pointer accent-amber-500"
                 />
                 <span className="text-xs font-medium text-slate-400 hover:text-slate-300">
-                  Remember me
+                  Keep administrator session active
                 </span>
               </label>
-
-              <Link
-                to="/support"
-                className="text-xs font-bold text-amber-400 hover:text-amber-300 transition-colors"
-              >
-                Forgot password?
-              </Link>
             </div>
 
             {/* Submit Button */}
@@ -190,68 +242,46 @@ const Login = () => {
               <button
                 type="submit"
                 disabled={loading}
-                className="w-full py-3.5 px-4 rounded-xl bg-gradient-to-r from-amber-500 to-yellow-400 hover:from-amber-400 hover:to-yellow-300 text-slate-950 font-black text-sm uppercase tracking-wider shadow-glow-gold hover:scale-[1.01] active:scale-[0.98] transition-all disabled:opacity-60 flex items-center justify-center gap-2"
+                className="w-full py-3.5 px-4 rounded-xl bg-gradient-to-r from-amber-400 via-amber-400 to-yellow-400 hover:from-amber-300 hover:to-yellow-300 text-slate-950 font-black text-sm uppercase tracking-wider hover:scale-[1.01] active:scale-[0.98] transition-all disabled:opacity-60 flex items-center justify-center gap-2 cursor-pointer"
               >
                 {loading ? (
                   <>
                     <span className="w-4 h-4 border-2 border-slate-950 border-t-transparent rounded-full animate-spin" />
-                    <span>Authenticating...</span>
+                    <span>Authenticating Admin...</span>
                   </>
                 ) : (
                   <>
                     <span>⚡</span>
-                    <span>Sign In to Account</span>
+                    <span>Sign In to Admin Dashboard</span>
                   </>
                 )}
               </button>
             </div>
 
-            {/* Quick Demo Credentials Autofill */}
+            {/* 1-Click Admin Quick Fill */}
             <div className="pt-3 border-t border-slate-800/80">
-              <div className="text-[10px] text-slate-400 uppercase tracking-wider font-bold mb-2 text-center">
-                Quick Fill Test Credentials
-              </div>
-              <div className="grid grid-cols-2 gap-2">
-                <button
-                  type="button"
-                  onClick={() => handleQuickFill('admin@mlbbtopup.com', 'Admin@123')}
-                  className="px-2.5 py-1.5 rounded-lg bg-amber-500/10 hover:bg-amber-500/20 text-amber-300 border border-amber-500/30 text-[11px] font-bold transition-all text-center"
-                >
-                  👑 Admin Login
-                </button>
-                <button
-                  type="button"
-                  onClick={() => handleQuickFill('customer@mlbbtopup.com', 'Customer@123')}
-                  className="px-2.5 py-1.5 rounded-lg bg-cyan-500/10 hover:bg-cyan-500/20 text-cyan-300 border border-cyan-500/30 text-[11px] font-bold transition-all text-center"
-                >
-                  👤 Customer Login
-                </button>
-              </div>
+              <button
+                type="button"
+                onClick={handleQuickFillAdmin}
+                className="w-full py-2 px-3 rounded-xl bg-amber-500/10 hover:bg-amber-500/20 text-amber-300 border border-amber-500/30 text-xs font-bold transition-all flex items-center justify-center gap-2 cursor-pointer"
+              >
+                <span>👑</span>
+                <span>1-Click Auto-Fill Admin Credentials</span>
+              </button>
             </div>
           </form>
 
-          {/* Create Account Link */}
-          <div className="text-center pt-2 border-t border-slate-800/60 text-xs text-slate-400">
-            Don't have an account yet?{' '}
-            <Link
-              to="/register"
-              className="font-bold text-amber-400 hover:text-amber-300 transition-colors ml-1"
-            >
-              Create Account →
+          {/* Return link */}
+          <div className="flex items-center justify-between text-xs text-slate-400 pt-2 border-t border-slate-800/60">
+            <div className="flex items-center gap-1.5">
+              <span>🔒</span>
+              <span>256-Bit SSL Encrypted Session</span>
+            </div>
+            <Link to="/" className="text-slate-400 hover:text-amber-400 transition-colors font-medium flex items-center gap-1">
+              <span>←</span>
+              <span>Return to Storefront</span>
             </Link>
           </div>
-        </div>
-
-        {/* Security & Trust Footer */}
-        <div className="flex items-center justify-center gap-4 text-[11px] text-slate-400 text-center">
-          <div className="flex items-center gap-1.5">
-            <span>🔒</span>
-            <span>256-Bit SSL Encrypted</span>
-          </div>
-          <span>•</span>
-          <Link to="/" className="text-slate-400 hover:text-amber-400 transition-colors">
-            ← Return to Storefront
-          </Link>
         </div>
       </div>
     </div>
@@ -259,4 +289,3 @@ const Login = () => {
 };
 
 export default Login;
-
