@@ -13,23 +13,41 @@ const GameSelection = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const [favoritesOnly, setFavoritesOnly] = useState(false);
 
-  // Load games from persistent configuration and sync with MongoDB Atlas
+  // Load games from persistent configuration and live sync with MongoDB Atlas
   useEffect(() => {
     const loaded = getStoredGames();
     setGames(loaded);
     setMasterStatus(getMasterTopupStatus());
 
-    // Fetch latest cloud state from MongoDB Atlas
-    fetchStoredGames().then((cloudGames) => {
-      if (cloudGames && Array.isArray(cloudGames)) {
-        setGames(cloudGames);
+    const syncCloudData = async () => {
+      try {
+        const [cloudGames, cloudStatus] = await Promise.all([
+          fetchStoredGames(),
+          fetchMasterTopupStatus()
+        ]);
+        if (cloudGames && Array.isArray(cloudGames)) {
+          setGames(cloudGames);
+        }
+        if (cloudStatus) {
+          setMasterStatus(cloudStatus);
+        }
+      } catch (err) {}
+    };
+
+    // Immediate initial sync
+    syncCloudData();
+
+    // 2.5s Real-Time Background polling across all mobile devices
+    const interval = setInterval(syncCloudData, 2500);
+
+    // Sync immediately when mobile user switches back to browser tab
+    const handleVisibility = () => {
+      if (document.visibilityState === 'visible') {
+        syncCloudData();
       }
-    });
-    fetchMasterTopupStatus().then((cloudStatus) => {
-      if (cloudStatus) {
-        setMasterStatus(cloudStatus);
-      }
-    });
+    };
+    document.addEventListener('visibilitychange', handleVisibility);
+    window.addEventListener('focus', syncCloudData);
 
     // Listen for custom events if admin updates games live
     const handleStorageChange = () => {
@@ -41,6 +59,9 @@ const GameSelection = () => {
     window.addEventListener('masterTopupStatusUpdated', handleStorageChange);
 
     return () => {
+      clearInterval(interval);
+      document.removeEventListener('visibilitychange', handleVisibility);
+      window.removeEventListener('focus', syncCloudData);
       window.removeEventListener('storage', handleStorageChange);
       window.removeEventListener('gamesConfigUpdated', handleStorageChange);
       window.removeEventListener('masterTopupStatusUpdated', handleStorageChange);

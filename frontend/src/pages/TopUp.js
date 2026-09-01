@@ -3,7 +3,7 @@ import { useSearchParams, useNavigate, Link } from 'react-router-dom';
 import { QRCodeSVG } from 'qrcode.react';
 import { useLanguage } from '../context/LanguageContext';
 import { ordersAPI, paymentsAPI, topupAPI, khqrAPI } from '../services/api';
-import { getStoredGames, getMasterTopupStatus } from '../services/gamesConfig';
+import { getStoredGames, getMasterTopupStatus, fetchStoredGames, fetchMasterTopupStatus } from '../services/gamesConfig';
 import { CambodiaFlagFrame } from '../components/CambodiaFlagBadge';
 import ProductPackageImage from '../components/ProductPackageImage';
 
@@ -266,9 +266,41 @@ const TopUp = () => {
       const updatedMatched = updatedAll.find(g => g.id === rawGameParam || g.id.startsWith(rawGameParam)) || updatedAll[0];
       if (updatedMatched) setSelectedGame(updatedMatched);
     };
+
+    const syncCloudData = async () => {
+      try {
+        const [cloudGames, cloudStatus] = await Promise.all([
+          fetchStoredGames(),
+          fetchMasterTopupStatus()
+        ]);
+        if (cloudStatus) setMasterStatus(cloudStatus);
+        if (cloudGames && Array.isArray(cloudGames)) {
+          const updatedMatched = cloudGames.find(g => g.id === rawGameParam || g.id.startsWith(rawGameParam)) || cloudGames[0];
+          if (updatedMatched) setSelectedGame(updatedMatched);
+        }
+      } catch (err) {}
+    };
+
+    // Immediate initial sync
+    syncCloudData();
+
+    // 2.5s Real-Time Background polling across all mobile devices
+    const interval = setInterval(syncCloudData, 2500);
+
+    const handleVisibility = () => {
+      if (document.visibilityState === 'visible') {
+        syncCloudData();
+      }
+    };
+    document.addEventListener('visibilitychange', handleVisibility);
+    window.addEventListener('focus', syncCloudData);
+
     window.addEventListener('gamesConfigUpdated', handleStatusSync);
     window.addEventListener('masterTopupStatusUpdated', handleStatusSync);
     return () => {
+      clearInterval(interval);
+      document.removeEventListener('visibilitychange', handleVisibility);
+      window.removeEventListener('focus', syncCloudData);
       window.removeEventListener('gamesConfigUpdated', handleStatusSync);
       window.removeEventListener('masterTopupStatusUpdated', handleStatusSync);
     };
