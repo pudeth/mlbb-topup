@@ -597,6 +597,7 @@ def payment_callback():
         return jsonify({'error': str(e)}), 500
 
 @app.route('/api/branding', methods=['GET', 'POST', 'PUT'])
+@app.route('/api/admin/branding', methods=['GET', 'POST', 'PUT'])
 def handle_branding():
     """Fetch or update store branding persisted in MongoDB Atlas settings collection"""
     if request.method == 'GET':

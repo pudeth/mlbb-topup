@@ -52,9 +52,14 @@ export const saveStoreBranding = (newBranding) => {
     // Asynchronously sync to backend / MongoDB Atlas
     try {
       const apiUrl = process.env.REACT_APP_API_URL || (typeof window !== 'undefined' && window.location.hostname !== 'localhost' ? 'https://mlbb-backend-api.onrender.com/api' : 'http://localhost:5000/api');
+      const token = typeof localStorage !== 'undefined' ? (localStorage.getItem('token') || localStorage.getItem('auth_token') || localStorage.getItem('access_token')) : null;
+      const headers = { 'Content-Type': 'application/json' };
+      if (token) {
+        headers['Authorization'] = `Bearer ${token}`;
+      }
       fetch(`${apiUrl}/admin/branding`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers,
         body: JSON.stringify(updated),
       }).catch(() => {});
     } catch (_) {}
