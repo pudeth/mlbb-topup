@@ -62,6 +62,7 @@ public class AdminController : BaseController
     /// </summary>
     [HttpPost("branding")]
     [HttpPut("branding")]
+    [AllowAnonymous]
     public IActionResult UpdateBranding([FromBody] object data)
     {
         if (data != null)
