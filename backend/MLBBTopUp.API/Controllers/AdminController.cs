@@ -36,7 +36,7 @@ public class AdminController : BaseController
         tagline = "Official Diamond Hub",
         logoType = "image",
         logoEmoji = "💎",
-        logoImage = "/profile.jpg",
+        logoImage = "/tin-logo.png",
         badgeText = "PRO",
         adminBadgeText = "ADMIN",
         versionText = "Enterprise Hub v2.5",

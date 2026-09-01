@@ -7,7 +7,7 @@ export const DEFAULT_BRANDING = {
   tagline: 'Official Diamond Hub',
   logoType: 'image', // 'emoji' or 'image'
   logoEmoji: '💎',
-  logoImage: 'https://res.cloudinary.com/dpz7vpmf8/image/upload/v1788238437/profile-photos/tin_topup_official_logo.png',
+  logoImage: '/tin-logo.png',
   badgeText: 'PRO',
   adminBadgeText: 'ADMIN',
   versionText: 'Enterprise Hub v2.5',
@@ -21,17 +21,31 @@ export const DEFAULT_BRANDING = {
 const STORAGE_KEY = 'mlbb_topup_store_branding_v1';
 const EVENT_NAME = 'storeBrandingUpdated';
 
+const isLegacyOrInvalidLogo = (url) => {
+  if (!url) return true;
+  const lower = String(url).toLowerCase();
+  return (
+    lower.includes('profile.jpg') ||
+    lower.includes('profile.png') ||
+    lower.includes('profile2.jpg') ||
+    lower.includes('tin_profile') ||
+    lower.includes('a1kiv9bhqlqrp4rasfo2') ||
+    lower.includes('xn3pwtlmzkexce7nojx5') ||
+    lower.includes('/logo.jpg')
+  );
+};
+
 export const getStoreBranding = () => {
   try {
     const cached = localStorage.getItem(STORAGE_KEY);
     if (cached) {
       const parsed = JSON.parse(cached);
       const merged = { ...DEFAULT_BRANDING, ...parsed };
-      // If cached had legacy default values without image, use new Cloudinary defaults
-      if (!merged.logoImage || merged.storeName === 'MLBB TOPUP' || merged.logoImage.includes('xn3pwtlmzkexce7nojx5')) {
-        merged.logoImage = DEFAULT_BRANDING.logoImage;
-        merged.logoType = DEFAULT_BRANDING.logoType;
-        merged.storeName = DEFAULT_BRANDING.storeName;
+      // If cached had legacy selfie profile values or invalid images, reset to official Tin-Logo
+      if (isLegacyOrInvalidLogo(merged.logoImage)) {
+        merged.logoImage = '/tin-logo.png';
+        merged.logoType = 'image';
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(merged));
       }
       return merged;
     }
@@ -45,6 +59,11 @@ export const saveStoreBranding = (newBranding) => {
   try {
     const current = getStoreBranding();
     const updated = { ...current, ...newBranding };
+
+    if (isLegacyOrInvalidLogo(updated.logoImage)) {
+      updated.logoImage = '/tin-logo.png';
+      updated.logoType = 'image';
+    }
 
     // Prevent QuotaExceededError: Never store multi-megabyte base64 strings in localStorage
     const storageCopy = { ...updated };
@@ -113,7 +132,12 @@ export const useStoreBranding = () => {
         if (res.ok) {
           const json = await res.json();
           if (json?.branding) {
-            saveStoreBranding(json.branding);
+            const remote = json.branding;
+            if (isLegacyOrInvalidLogo(remote.logoImage)) {
+              remote.logoImage = '/tin-logo.png';
+              remote.logoType = 'image';
+            }
+            saveStoreBranding(remote);
           }
         }
       } catch (_) {}

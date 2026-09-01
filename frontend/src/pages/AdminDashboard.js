@@ -5591,7 +5591,7 @@ const PRICING_GAMES = [
                         </div>
                       </button>
 
-                      {/* Card 2: Cloudinary Profile Photo */}
+                      {/* Card 2: Cloudinary / Custom Logo */}
                       <div
                         className={`p-2.5 rounded-xl border flex flex-col justify-between gap-2 transition-all ${
                           storeBrandingForm.logoImage?.includes('cloudinary.com')
@@ -5603,11 +5603,11 @@ const PRICING_GAMES = [
                           onClick={() => {
                             const url = storeBrandingForm.logoImage?.includes('cloudinary.com')
                               ? storeBrandingForm.logoImage
-                              : 'https://res.cloudinary.com/dpz7vpmf8/image/upload/profile-photos/a1kiv9bhqlqrp4rasfo2.jpg';
+                              : '/tin-logo.png';
                             const updated = { ...storeBrandingForm, logoType: 'image', logoImage: url };
                             setStoreBrandingForm(updated);
                             updateBranding(updated);
-                            showToast('success', '✅ Cloudinary Profile Photo activated & saved!');
+                            showToast('success', '✅ Logo activated & saved!');
                           }}
                           className="flex items-center gap-3 cursor-pointer"
                         >
@@ -5616,14 +5616,14 @@ const PRICING_GAMES = [
                               src={
                                 storeBrandingForm.logoImage?.includes('cloudinary.com')
                                   ? storeBrandingForm.logoImage
-                                  : 'https://res.cloudinary.com/dpz7vpmf8/image/upload/profile-photos/a1kiv9bhqlqrp4rasfo2.jpg'
+                                  : '/tin-logo.png'
                               }
-                              alt="Cloudinary"
+                              alt="Tin-Topup Logo"
                               className="w-full h-full object-contain"
                             />
                           </div>
                           <div className="min-w-0 flex-1">
-                            <div className="font-bold text-xs text-white truncate">Cloudinary Profile</div>
+                            <div className="font-bold text-xs text-white truncate">Cloudinary Logo</div>
                             <div className="text-[10px] text-cyan-400 font-semibold">Active Cloud CDN</div>
                           </div>
                         </div>
