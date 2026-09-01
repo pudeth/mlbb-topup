@@ -5561,18 +5561,20 @@ const PRICING_GAMES = [
                 {/* Storefront Navbar Preview */}
                 <div className="p-3 bg-dark-card rounded-xl border border-dark-border flex items-center justify-between">
                   <div className="flex items-center gap-2.5">
-                    <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-amber-400 to-amber-600 p-[2px] shadow-glow-gold shrink-0 overflow-hidden">
-                      <div className="w-full h-full bg-slate-950 rounded-[10px] flex items-center justify-center overflow-hidden">
-                        {storeBrandingForm.logoType === 'image' && storeBrandingForm.logoImage ? (
-                          <img
-                            src={storeBrandingForm.logoImage}
-                            alt="Logo"
-                            className="w-full h-full object-cover"
-                          />
-                        ) : (
-                          <span className="text-xl">{storeBrandingForm.logoEmoji || '💎'}</span>
-                        )}
-                      </div>
+                    <div className="w-10 h-10 shrink-0 flex items-center justify-center">
+                      {storeBrandingForm.logoType === 'image' && storeBrandingForm.logoImage ? (
+                        <img
+                          src={storeBrandingForm.logoImage}
+                          alt="Logo"
+                          className="w-full h-full object-contain"
+                          onError={(e) => {
+                            e.target.onerror = null;
+                            e.target.src = '/tin-logo.png';
+                          }}
+                        />
+                      ) : (
+                        <span className="text-xl">{storeBrandingForm.logoEmoji || '💎'}</span>
+                      )}
                     </div>
                     <div>
                       <div className="flex items-center gap-1">

@@ -64,11 +64,11 @@ const Navbar = () => {
           {/* Logo */}
           <div className="flex items-center gap-3">
             <Link to="/" className="flex items-center gap-2.5 group">
-              <div className="h-10 sm:h-12 w-10 sm:w-12 rounded-xl bg-[#111728] border-2 border-amber-400 p-0.5 overflow-hidden flex items-center justify-center shrink-0 shadow-[0_0_12px_rgba(245,158,11,0.4)] group-hover:scale-105 transition-all">
+              <div className="h-10 sm:h-12 w-10 sm:w-12 flex items-center justify-center shrink-0 group-hover:scale-105 transition-all">
                 <img
                   src={branding.logoImage || '/tin-logo.png'}
                   alt={branding.storeName || 'Tin-Topup'}
-                  className="w-full h-full object-cover rounded-lg"
+                  className="w-full h-full object-contain"
                   onError={(e) => {
                     e.target.onerror = null;
                     e.target.src = '/tin-logo.png';
