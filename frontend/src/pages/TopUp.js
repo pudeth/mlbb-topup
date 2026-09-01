@@ -3,7 +3,7 @@ import { useSearchParams, useNavigate, Link } from 'react-router-dom';
 import { QRCodeSVG } from 'qrcode.react';
 import { useLanguage } from '../context/LanguageContext';
 import { ordersAPI, paymentsAPI, topupAPI, khqrAPI } from '../services/api';
-import { getStoredGames } from '../services/gamesConfig';
+import { getStoredGames, getMasterTopupStatus } from '../services/gamesConfig';
 import { CambodiaFlagFrame } from '../components/CambodiaFlagBadge';
 import ProductPackageImage from '../components/ProductPackageImage';
 
@@ -253,10 +253,33 @@ const TopUp = () => {
   };
 
   const [selectedGame, setSelectedGame] = useState(matchedGame);
+  const [masterStatus, setMasterStatus] = useState(() => getMasterTopupStatus());
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [autoDetectedMessage, setAutoDetectedMessage] = useState('');
   const [showIdGuide, setShowIdGuide] = useState(false);
+
+  useEffect(() => {
+    const handleStatusSync = () => {
+      setMasterStatus(getMasterTopupStatus());
+      const updatedAll = getStoredGames();
+      const updatedMatched = updatedAll.find(g => g.id === rawGameParam || g.id.startsWith(rawGameParam)) || updatedAll[0];
+      if (updatedMatched) setSelectedGame(updatedMatched);
+    };
+    window.addEventListener('gamesConfigUpdated', handleStatusSync);
+    window.addEventListener('masterTopupStatusUpdated', handleStatusSync);
+    return () => {
+      window.removeEventListener('gamesConfigUpdated', handleStatusSync);
+      window.removeEventListener('masterTopupStatusUpdated', handleStatusSync);
+    };
+  }, [rawGameParam]);
+
+  const isMasterPaused = masterStatus?.status && masterStatus.status !== 'Active';
+  const isGamePaused = selectedGame?.status && selectedGame.status !== 'Active';
+  const isTopupDisabled = isMasterPaused || isGamePaused;
+  const pauseReasonMessage = isMasterPaused 
+    ? (masterStatus.notice || 'Top-Ups are temporarily paused by Admin for system maintenance.')
+    : (selectedGame?.status === 'Closed' ? `Top-Up orders for ${selectedGame.name} are currently closed.` : `Top-Up orders for ${selectedGame.name} are temporarily paused by Admin for maintenance.`);
 
     // Determine active packages merged with Admin Customer Retail Prices
   const getPackagesForGame = useCallback((gameId) => {
@@ -731,6 +754,11 @@ const TopUp = () => {
   }, [orderId, paymentPaid, checkPaymentStatus]);
 
   const handleProceedToPayment = async () => {
+    if (isTopupDisabled) {
+      setError(pauseReasonMessage);
+      return;
+    }
+
     if (!formData.playerID.trim()) {
       setError('Please enter your Player ID / Account name in the left column.');
       return;
@@ -925,6 +953,23 @@ const TopUp = () => {
           })}
         </div>
       </div>
+
+      {/* Top-Up Paused / Closed Maintenance Notice Banner */}
+      {isTopupDisabled && (
+        <div className="mb-6 p-4 sm:p-5 rounded-3xl bg-amber-500/10 border border-amber-500/40 flex items-center gap-3.5 text-amber-300 shadow-xl animate-pulse">
+          <span className="text-2xl sm:text-3xl shrink-0">
+            {(masterStatus?.status === 'Closed' || selectedGame?.status === 'Closed') ? '🔴' : '⏸️'}
+          </span>
+          <div>
+            <h3 className="font-black text-sm sm:text-base uppercase tracking-wider">
+              {(masterStatus?.status === 'Closed' || selectedGame?.status === 'Closed') ? 'Top-Up Temporarily Closed' : 'Top-Up Temporarily Paused by Admin'}
+            </h3>
+            <p className="text-xs text-slate-200 mt-0.5 font-medium">
+              {pauseReasonMessage}
+            </p>
+          </div>
+        </div>
+      )}
 
       {/* ========================================================= */}
       {/* 2-COLUMN FAZERCARDS-STYLED TOPUP INTERFACE */}
@@ -1439,11 +1484,21 @@ const TopUp = () => {
                 <div className="space-y-2">
                   <button
                     onClick={handleProceedToPayment}
-                    disabled={loading}
-                    className="w-full py-4 rounded-2xl bg-gradient-to-r from-amber-500 via-amber-400 to-yellow-400 hover:from-amber-400 hover:to-yellow-300 text-slate-950 font-black text-base uppercase tracking-wider shadow-glow-gold flex items-center justify-center gap-2 transition-all cursor-pointer"
+                    disabled={loading || isTopupDisabled}
+                    className={`w-full py-4 rounded-2xl font-black text-base uppercase tracking-wider flex items-center justify-center gap-2 transition-all cursor-pointer ${
+                      isTopupDisabled
+                        ? 'bg-slate-800 text-slate-400 border border-slate-700 cursor-not-allowed opacity-80'
+                        : 'bg-gradient-to-r from-amber-500 via-amber-400 to-yellow-400 hover:from-amber-400 hover:to-yellow-300 text-slate-950 shadow-glow-gold'
+                    }`}
                   >
-                    <span>{loading ? '⏳' : '⚡'}</span>
-                    <span>{loading ? 'Generating Dynamic KHQR...' : `Pay ${currency === 'KHR' ? `${Math.round(selectedProduct.price * 4100).toLocaleString()} ៛` : `$${selectedProduct.price.toFixed(2)} USD`} with Bakong KHQR`}</span>
+                    <span>{isTopupDisabled ? '⚠️' : loading ? '⏳' : '⚡'}</span>
+                    <span>
+                      {isTopupDisabled
+                        ? (selectedGame?.status === 'Closed' || masterStatus?.status === 'Closed' ? 'Top-Up Temporarily Closed' : 'Top-Up Temporarily Paused')
+                        : loading
+                        ? 'Generating Dynamic KHQR...'
+                        : `Pay ${currency === 'KHR' ? `${Math.round(selectedProduct.price * 4100).toLocaleString()} ៛` : `$${selectedProduct.price.toFixed(2)} USD`} with Bakong KHQR`}
+                    </span>
                   </button>
                   <p className="text-[11px] text-center text-slate-400">
                     By proceeding, you agree to our{' '}

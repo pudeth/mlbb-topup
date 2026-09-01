@@ -482,3 +482,35 @@ export const resetToDefaultGames = () => {
   }
   return DEFAULT_GAMES;
 };
+
+const MASTER_STATUS_KEY = 'mlbb_topup_master_status_v1';
+
+export const getMasterTopupStatus = () => {
+  try {
+    const cached = localStorage.getItem(MASTER_STATUS_KEY);
+    if (cached) {
+      return JSON.parse(cached);
+    }
+  } catch (err) {}
+  return {
+    status: 'Active', // 'Active', 'Paused', 'Closed', 'Maintenance'
+    notice: 'Top-Ups are temporarily paused by Admin for maintenance. Please check back shortly!',
+    updatedAt: new Date().toISOString()
+  };
+};
+
+export const saveMasterTopupStatus = (statusData) => {
+  try {
+    const data = typeof statusData === 'string'
+      ? { status: statusData, notice: 'Top-Ups are temporarily paused by Admin for maintenance. Please check back shortly!', updatedAt: new Date().toISOString() }
+      : { updatedAt: new Date().toISOString(), ...statusData };
+    localStorage.setItem(MASTER_STATUS_KEY, JSON.stringify(data));
+    if (typeof window !== 'undefined') {
+      window.dispatchEvent(new Event('gamesConfigUpdated'));
+      window.dispatchEvent(new CustomEvent('masterTopupStatusUpdated', { detail: data }));
+    }
+    return data;
+  } catch (err) {
+    console.warn('Error saving master topup status:', err);
+  }
+};

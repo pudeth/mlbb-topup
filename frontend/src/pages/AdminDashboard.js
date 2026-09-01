@@ -1,8 +1,8 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { adminAPI, bakongAPI } from '../services/api';
 import { useAuth } from '../context/AuthContext';
-import { getStoredGames, saveStoredGames, resetToDefaultGames } from '../services/gamesConfig';
+import { adminAPI, bakongAPI } from '../services/api';
+import { getStoredGames, saveStoredGames, resetToDefaultGames, getMasterTopupStatus, saveMasterTopupStatus } from '../services/gamesConfig';
 import { useStoreBranding } from '../services/storeBranding';
 import { DEFAULT_EVENT_BANNERS } from '../components/EventBannerSlider';
 import { CambodiaFlagSvg, CambodiaFlagFrame, CambodiaCornerBadge } from '../components/CambodiaFlagBadge';
@@ -607,6 +607,8 @@ const PRICING_GAMES = [
 
   // Game & Logo Management State
   const [gamesList, setGamesList] = useState(() => getStoredGames());
+  const [masterTopupStatus, setMasterTopupStatus] = useState(() => getMasterTopupStatus());
+  const [customNoticeText, setCustomNoticeText] = useState(() => getMasterTopupStatus()?.notice || 'Top-Ups are temporarily paused by Admin for maintenance. Please check back shortly!');
   const [gameModalOpen, setGameModalOpen] = useState(false);
   const [editingGame, setEditingGame] = useState(null);
   const [gameFormData, setGameFormData] = useState({
@@ -1108,18 +1110,53 @@ const PRICING_GAMES = [
     showToast('success', 'Game removed from storefront.');
   };
 
-  const handleToggleGameStatus = (gameId) => {
+  const handleSetGameStatus = (gameId, newStatus) => {
     const updated = gamesList.map((g) => {
       if (g.id === gameId) {
-        const nextStatus = g.status === 'Active' ? 'Coming Soon' : 'Active';
-        return { ...g, status: nextStatus };
+        return { ...g, status: newStatus };
       }
       return g;
     });
     setGamesList(updated);
     saveStoredGames(updated);
     window.dispatchEvent(new Event('gamesConfigUpdated'));
-    showToast('info', 'Game status toggled.');
+    showToast('success', `Status updated to "${newStatus}"!`);
+  };
+
+  const handleSetMasterTopupStatus = (status, notice) => {
+    const noticeText = notice || customNoticeText || 'Top-Ups are temporarily paused by Admin for maintenance. Please check back shortly!';
+    const updated = saveMasterTopupStatus({
+      status,
+      notice: noticeText,
+    });
+    setMasterTopupStatus(updated);
+    showToast('success', `Store Top-Up Status updated to "${status}"!`);
+  };
+
+  const handleQuickPauseAllGames = (statusToSet = 'Paused') => {
+    if (!window.confirm(`Are you sure you want to ${statusToSet === 'Closed' ? 'CLOSE' : 'PAUSE'} top-ups for ALL games?`)) return;
+    const updatedGames = gamesList.map((g) => ({ ...g, status: statusToSet }));
+    setGamesList(updatedGames);
+    saveStoredGames(updatedGames);
+    handleSetMasterTopupStatus(statusToSet);
+    window.dispatchEvent(new Event('gamesConfigUpdated'));
+    showToast('success', `All games and store top-ups are now ${statusToSet.toUpperCase()}!`);
+  };
+
+  const handleOpenAllGames = () => {
+    if (!window.confirm('Open & Activate top-up for ALL games?')) return;
+    const updatedGames = gamesList.map((g) => ({ ...g, status: 'Active' }));
+    setGamesList(updatedGames);
+    saveStoredGames(updatedGames);
+    handleSetMasterTopupStatus('Active');
+    window.dispatchEvent(new Event('gamesConfigUpdated'));
+    showToast('success', '✅ All games and store top-ups are now ACTIVE & OPEN!');
+  };
+
+  const handleToggleGameStatus = (gameId) => {
+    const currentGame = gamesList.find((g) => g.id === gameId);
+    const nextStatus = currentGame?.status === 'Active' ? 'Paused' : currentGame?.status === 'Paused' ? 'Closed' : 'Active';
+    handleSetGameStatus(gameId, nextStatus);
   };
 
   const handleResetGames = () => {
@@ -2239,13 +2276,110 @@ const PRICING_GAMES = [
               </div>
             </div>
 
+            {/* Master Top-Up Status Controller Bar */}
+            <div className="p-4 sm:p-5 rounded-2xl bg-gradient-to-r from-[#0E1526] via-[#111A30] to-[#0E1526] border border-amber-500/40 shadow-xl space-y-4">
+              <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+                <div className="flex items-center gap-3">
+                  <div className="w-11 h-11 rounded-xl bg-amber-500/20 border border-amber-500/40 flex items-center justify-center text-2xl shrink-0">
+                    {masterTopupStatus?.status === 'Closed' ? '🔴' : masterTopupStatus?.status === 'Paused' ? '⏸️' : '🟢'}
+                  </div>
+                  <div>
+                    <div className="flex items-center gap-2 flex-wrap">
+                      <h3 className="font-black text-white text-sm sm:text-base">
+                        Store Top-Up Master Switch
+                      </h3>
+                      <span className={`px-2 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider ${
+                        masterTopupStatus?.status === 'Active'
+                          ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/40'
+                          : masterTopupStatus?.status === 'Closed'
+                          ? 'bg-rose-500/20 text-rose-300 border border-rose-500/40'
+                          : 'bg-amber-500/20 text-amber-300 border border-amber-500/40'
+                      }`}>
+                        {masterTopupStatus?.status === 'Active' ? '🟢 ALL TOP-UPS OPEN' : masterTopupStatus?.status === 'Closed' ? '🔴 ALL TOP-UPS CLOSED' : '⏸️ ALL TOP-UPS PAUSED'}
+                      </span>
+                    </div>
+                    <p className="text-xs text-slate-400 mt-0.5">
+                      Instantly pause or close all game top-ups across customer storefront during maintenance or restock.
+                    </p>
+                  </div>
+                </div>
+
+                {/* Master Action Buttons */}
+                <div className="flex items-center gap-2 flex-wrap w-full sm:w-auto">
+                  <button
+                    type="button"
+                    onClick={handleOpenAllGames}
+                    className={`flex-1 sm:flex-initial px-3.5 py-2 rounded-xl text-xs font-black transition-all flex items-center justify-center gap-1.5 cursor-pointer ${
+                      masterTopupStatus?.status === 'Active'
+                        ? 'bg-emerald-500 text-slate-950 font-black scale-105 shadow-md shadow-emerald-950/60'
+                        : 'bg-emerald-500/20 hover:bg-emerald-500/30 text-emerald-300 border border-emerald-500/40'
+                    }`}
+                  >
+                    <span>🟢</span>
+                    <span>Open All</span>
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => handleQuickPauseAllGames('Paused')}
+                    className={`flex-1 sm:flex-initial px-3.5 py-2 rounded-xl text-xs font-black transition-all flex items-center justify-center gap-1.5 cursor-pointer ${
+                      masterTopupStatus?.status === 'Paused'
+                        ? 'bg-amber-500 text-slate-950 font-black scale-105 shadow-md shadow-amber-950/60'
+                        : 'bg-amber-500/20 hover:bg-amber-500/30 text-amber-300 border border-amber-500/40'
+                    }`}
+                  >
+                    <span>⏸️</span>
+                    <span>Pause All</span>
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => handleQuickPauseAllGames('Closed')}
+                    className={`flex-1 sm:flex-initial px-3.5 py-2 rounded-xl text-xs font-black transition-all flex items-center justify-center gap-1.5 cursor-pointer ${
+                      masterTopupStatus?.status === 'Closed'
+                        ? 'bg-rose-600 text-white font-black scale-105 shadow-md shadow-rose-950/60'
+                        : 'bg-rose-500/20 hover:bg-rose-500/30 text-rose-300 border border-rose-500/40'
+                    }`}
+                  >
+                    <span>🔴</span>
+                    <span>Close All</span>
+                  </button>
+                </div>
+              </div>
+
+              {/* Maintenance Notice Message Input */}
+              <div className="pt-3 border-t border-slate-800 flex flex-col sm:flex-row items-center gap-2">
+                <div className="w-full relative flex-1">
+                  <span className="text-[10px] text-slate-400 font-bold uppercase tracking-wider block mb-1">
+                    Customer Maintenance / Pause Notice Message:
+                  </span>
+                  <input
+                    type="text"
+                    value={customNoticeText}
+                    onChange={(e) => setCustomNoticeText(e.target.value)}
+                    placeholder="e.g. Top-Ups are temporarily paused by Admin for system maintenance. Please check back shortly!"
+                    className="w-full bg-[#080C15] border border-slate-700 text-xs text-white rounded-xl px-3 py-2 focus:outline-none focus:border-amber-400"
+                  />
+                </div>
+                <div className="w-full sm:w-auto pt-0 sm:pt-4">
+                  <button
+                    type="button"
+                    onClick={() => handleSetMasterTopupStatus(masterTopupStatus?.status || 'Paused', customNoticeText)}
+                    className="w-full sm:w-auto px-4 py-2 bg-amber-500 hover:bg-amber-400 text-slate-950 font-black text-xs rounded-xl transition-all cursor-pointer"
+                  >
+                    Save Notice
+                  </button>
+                </div>
+              </div>
+            </div>
+
             {/* Quick Info Box */}
             <div className="p-4 rounded-2xl bg-dark-card border border-cyan-500/30 text-xs text-slate-300 flex items-start gap-3 shadow-md">
               <span className="text-xl shrink-0">💡</span>
               <div>
                 <strong className="text-cyan-300 block text-sm mb-0.5">Live Storefront Integration</strong>
                 <p className="text-slate-400 leading-relaxed">
-                  The primary game <strong className="text-white">Mobile Legends: Bang Bang</strong> uses your uploaded 5v5 icon. You can change any logo by clicking <strong className="text-amber-300">"Edit Logo & Info"</strong> and uploading a new image file or pasting an image URL. All customer visits on the Homepage and Top-Up page reflect your changes in real-time.
+                  The primary game <strong className="text-white">Mobile Legends: Bang Bang</strong> uses your uploaded 5v5 icon. You can change any logo by clicking <strong className="text-amber-300">"Edit Logo & Info"</strong> and uploading a new image file or pasting an image URL. You can also pause or close top-ups for any individual game using the status buttons below.
                 </p>
               </div>
             </div>
@@ -2279,18 +2413,45 @@ const PRICING_GAMES = [
                         <span className="text-[10px] text-slate-400 font-semibold">{game.category}</span>
                       </div>
 
-                      <button
-                        type="button"
-                        onClick={() => handleToggleGameStatus(game.id)}
-                        className={`text-[10px] font-bold px-2 py-0.5 rounded-lg border transition-all ${
-                          isActive
-                            ? 'bg-emerald-500/20 border-emerald-500/40 text-emerald-300'
-                            : 'bg-slate-800 border-slate-700 text-slate-400'
-                        }`}
-                        title="Click to toggle status"
-                      >
-                        {isActive ? '🟢 Active' : '⚪ Coming Soon'}
-                      </button>
+                      {/* 1-Click Game Status Selector */}
+                      <div className="flex items-center gap-1 bg-slate-950/80 p-0.5 rounded-lg border border-slate-800">
+                        <button
+                          type="button"
+                          onClick={() => handleSetGameStatus(game.id, 'Active')}
+                          className={`px-1.5 py-0.5 text-[9px] font-bold rounded transition-all cursor-pointer ${
+                            game.status === 'Active'
+                              ? 'bg-emerald-500 text-slate-950 font-black'
+                              : 'text-slate-400 hover:text-emerald-300'
+                          }`}
+                          title="Open Top-Up"
+                        >
+                          🟢 Open
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => handleSetGameStatus(game.id, 'Paused')}
+                          className={`px-1.5 py-0.5 text-[9px] font-bold rounded transition-all cursor-pointer ${
+                            game.status === 'Paused'
+                              ? 'bg-amber-500 text-slate-950 font-black'
+                              : 'text-slate-400 hover:text-amber-300'
+                          }`}
+                          title="Pause Top-Up"
+                        >
+                          ⏸️ Pause
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => handleSetGameStatus(game.id, 'Closed')}
+                          className={`px-1.5 py-0.5 text-[9px] font-bold rounded transition-all cursor-pointer ${
+                            game.status === 'Closed'
+                              ? 'bg-rose-600 text-white font-black'
+                              : 'text-slate-400 hover:text-rose-300'
+                          }`}
+                          title="Close Top-Up"
+                        >
+                          🔴 Close
+                        </button>
+                      </div>
                     </div>
 
                     {/* Image & Game Info */}
