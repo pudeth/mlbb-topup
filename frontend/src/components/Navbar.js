@@ -154,9 +154,23 @@ const Navbar = () => {
             )}
           </nav>
 
-          {/* Right Action: AI Language Switcher + CTA */}
+          {/* Right Action: Admin Quick Button + AI Language Switcher + CTA */}
           <div className="flex items-center gap-2 sm:gap-3">
             
+            {/* Admin Button - Always visible on mobile & login */}
+            <Link
+              to="/admin"
+              className={`px-2.5 sm:px-3 py-1 sm:py-1.5 rounded-xl border transition-all flex flex-col items-center justify-center text-center select-none active:scale-95 ${
+                isActive('/admin')
+                  ? 'bg-red-500/20 text-red-400 border-red-500/50 shadow-glow-red'
+                  : 'bg-[#0e1320] hover:bg-slate-800 border-slate-700/80 text-slate-200 hover:text-white shadow-sm'
+              }`}
+              title={t('nav_admin')}
+            >
+              <span className="text-xs sm:text-sm leading-none">⚙️</span>
+              <span className="text-[10px] sm:text-xs font-bold leading-tight mt-0.5">{t('nav_admin')}</span>
+            </Link>
+
             {/* Language Selector Dropdown */}
             <div className="relative">
               <button

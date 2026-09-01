@@ -2,11 +2,13 @@ import React, { useState, useEffect, useRef } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { useLanguage } from '../context/LanguageContext';
 import { useStoreBranding } from '../services/storeBranding';
+import { useAuth } from '../context/AuthContext';
 
 const MobileBottomNav = () => {
   const location = useLocation();
   const { t } = useLanguage();
   const { branding } = useStoreBranding();
+  const { isAdmin } = useAuth();
 
   const [isVisible, setIsVisible] = useState(true);
   const lastScrollYRef = useRef(0);
@@ -123,6 +125,22 @@ const MobileBottomNav = () => {
             <path d="M12 22c1.1 0 2-.9 2-2h-4c0 1.1.9 2 2 2zm6-6v-5c0-3.07-1.63-5.64-4.5-6.32V4c0-.83-.67-1.5-1.5-1.5s-1.5.67-1.5 1.5v.68C7.64 5.36 6 7.92 6 11v5l-2 2v1h16v-1l-2-2z" />
           </svg>
         </Link>
+
+        {/* Admin Tab (When Admin) */}
+        {isAdmin() && (
+          <Link
+            to="/admin"
+            className={`relative flex items-center justify-center transition-all duration-200 ${
+              pathname.startsWith('/admin')
+                ? 'w-11 h-11 rounded-full bg-gradient-to-tr from-red-600 to-rose-500 text-white shadow-glow-red scale-105'
+                : 'w-10 h-10 rounded-full text-red-400 hover:text-white hover:bg-red-950/60 active:scale-90'
+            }`}
+            title={t('nav_admin')}
+            aria-label="Admin"
+          >
+            <span className="text-base leading-none">⚙️</span>
+          </Link>
+        )}
 
         {/* 6. Profile Avatar with Blue Ring Border matching image */}
         <a
