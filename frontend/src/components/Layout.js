@@ -49,11 +49,11 @@ const Layout = ({ children }) => {
       <div className="fixed inset-0 bg-gaming-grid pointer-events-none opacity-40"></div>
 
       <Navbar />
-      <main className="flex-grow relative z-10 pb-20 lg:pb-0">
+      <main className={`flex-grow relative z-10 ${isAuthPath ? 'pb-0 flex flex-col' : 'pb-20 lg:pb-0'}`}>
         {children}
       </main>
-      <AiAssistant />
-      <ScrollNavigator />
+      {!isAuthPath && <AiAssistant />}
+      {!isAuthPath && <ScrollNavigator />}
       {!isAuthPath && <MobileBottomNav />}
       {!hideFooter && <Footer />}
     </div>
