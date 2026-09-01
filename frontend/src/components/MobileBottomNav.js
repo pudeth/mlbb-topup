@@ -151,16 +151,16 @@ const MobileBottomNav = () => {
           title="Direct Telegram Profile: @Peak_Deth"
           aria-label="Profile"
         >
-          <div className="w-9 h-9 rounded-full ring-2 ring-blue-500 ring-offset-2 ring-offset-[#181a20] overflow-hidden bg-slate-900 shadow-md flex items-center justify-center">
-            {branding.logoImage ? (
-              <img
-                src={branding.logoImage}
-                alt="Profile"
-                className="w-full h-full object-cover"
-              />
-            ) : (
-              <span className="text-xs font-black text-white">💎</span>
-            )}
+          <div className="w-9 h-9 rounded-full ring-2 ring-amber-400 ring-offset-2 ring-offset-[#181a20] overflow-hidden bg-slate-900 shadow-md flex items-center justify-center">
+            <img
+              src={branding.logoImage || '/tin-logo.png'}
+              alt="Profile"
+              className="w-full h-full object-cover"
+              onError={(e) => {
+                e.target.onerror = null;
+                e.target.src = '/tin-logo.png';
+              }}
+            />
           </div>
           {/* Online green dot */}
           <span className="absolute bottom-0 right-0 w-2.5 h-2.5 bg-emerald-400 border-2 border-[#181a20] rounded-full"></span>

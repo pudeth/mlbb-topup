@@ -64,36 +64,34 @@ const Navbar = () => {
           {/* Logo */}
           <div className="flex items-center gap-3">
             <Link to="/" className="flex items-center gap-2.5 group">
-              {branding.logoType === 'image' && branding.logoImage ? (
-                <div className="h-10 sm:h-12 w-auto flex items-center justify-center shrink-0 group-hover:scale-105 transition-all">
-                  <img
-                    src={branding.logoImage}
-                    alt={branding.storeName || 'Store Logo'}
-                    className="h-10 sm:h-12 w-auto max-w-[130px] object-contain drop-shadow-md"
-                    onError={(e) => {
-                      e.target.style.display = 'none';
-                    }}
-                  />
-                </div>
-              ) : (
-                <div className="w-10 h-10 sm:w-11 sm:h-11 rounded-xl bg-slate-950 border border-slate-800 flex items-center justify-center text-xl shadow-md group-hover:scale-105 transition-all">
-                  <span>{branding.logoEmoji || '💎'}</span>
-                </div>
-              )}
+              <div className="h-10 sm:h-12 w-10 sm:w-12 rounded-xl bg-[#111728] border-2 border-amber-400 p-0.5 overflow-hidden flex items-center justify-center shrink-0 shadow-[0_0_12px_rgba(245,158,11,0.4)] group-hover:scale-105 transition-all">
+                <img
+                  src={branding.logoImage || '/tin-logo.png'}
+                  alt={branding.storeName || 'Tin-Topup'}
+                  className="w-full h-full object-cover rounded-lg"
+                  onError={(e) => {
+                    e.target.onerror = null;
+                    e.target.src = '/tin-logo.png';
+                  }}
+                />
+              </div>
               <div className="flex flex-col">
-                <div className="flex items-center gap-1">
-                  <span className="text-lg sm:text-xl font-black tracking-wider text-white group-hover:text-cyan-400 transition-colors">
-                    {branding.storeName || 'MLBB TOPUP'}
+                <div className="flex items-center gap-1.5">
+                  <span className="text-lg sm:text-xl font-black tracking-wider text-white group-hover:text-amber-400 transition-colors">
+                    {branding.storeName || 'Tin-Topup'}
                   </span>
                   {branding.badgeText && (
-                    <span className="bg-gradient-to-r from-cyan-500 to-blue-500 text-slate-950 text-[9px] sm:text-[10px] font-black px-1.5 py-0.5 rounded tracking-widest uppercase ml-0.5 sm:ml-1">
+                    <span className="bg-gradient-to-r from-cyan-500 to-blue-500 text-slate-950 text-[9px] sm:text-[10px] font-black px-1.5 py-0.5 rounded tracking-widest uppercase">
                       {branding.badgeText}
                     </span>
                   )}
                 </div>
-                <span className="text-[9px] sm:text-[10px] tracking-widest text-slate-400 font-semibold uppercase">
-                  {branding.tagline || 'Official Diamond Hub'}
-                </span>
+                <div className="flex items-center gap-1.5">
+                  <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+                  <span className="text-[10px] sm:text-[11px] font-bold text-slate-300">
+                    {branding.versionText || 'Enterprise Hub v2.5'}
+                  </span>
+                </div>
               </div>
             </Link>
           </div>
