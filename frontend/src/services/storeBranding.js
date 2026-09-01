@@ -2,12 +2,12 @@ import { useState, useEffect } from 'react';
 
 // Store Branding Service & State Manager
 export const DEFAULT_BRANDING = {
-  storeName: 'MLBB TOPUP',
+  storeName: 'Tin-Topup',
   storeNameHighlight: 'PRO',
   tagline: 'Official Diamond Hub',
-  logoType: 'emoji', // 'emoji' or 'image'
+  logoType: 'image', // 'emoji' or 'image'
   logoEmoji: '💎',
-  logoImage: '', // Custom uploaded image URL or base64 data URI
+  logoImage: '/profile.jpg', // Custom uploaded image URL or base64 data URI
   badgeText: 'PRO',
   adminBadgeText: 'ADMIN',
   versionText: 'Enterprise Hub v2.5',
@@ -26,7 +26,14 @@ export const getStoreBranding = () => {
     const cached = localStorage.getItem(STORAGE_KEY);
     if (cached) {
       const parsed = JSON.parse(cached);
-      return { ...DEFAULT_BRANDING, ...parsed };
+      const merged = { ...DEFAULT_BRANDING, ...parsed };
+      // If cached had legacy default values without image, use new defaults
+      if (!merged.logoImage || merged.storeName === 'MLBB TOPUP') {
+        merged.logoImage = DEFAULT_BRANDING.logoImage;
+        merged.logoType = DEFAULT_BRANDING.logoType;
+        merged.storeName = DEFAULT_BRANDING.storeName;
+      }
+      return merged;
     }
   } catch (err) {
     console.warn('Error reading store branding from storage:', err);
