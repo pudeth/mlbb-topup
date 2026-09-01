@@ -6,12 +6,13 @@ export const getCloudinaryConfig = () => {
   try {
     const saved = localStorage.getItem(CLOUDINARY_CONFIG_KEY);
     if (saved) {
-      return JSON.parse(saved);
+      const parsed = JSON.parse(saved);
+      return { cloudName: 'dpz7vpmf8', uploadPreset: 'mlbb_topup', ...parsed };
     }
   } catch (e) {}
   
   return {
-    cloudName: process.env.REACT_APP_CLOUDINARY_CLOUD_NAME || '',
+    cloudName: process.env.REACT_APP_CLOUDINARY_CLOUD_NAME || 'dpz7vpmf8',
     uploadPreset: process.env.REACT_APP_CLOUDINARY_UPLOAD_PRESET || 'mlbb_topup',
     autoUpload: true,
   };
@@ -30,9 +31,9 @@ export const saveCloudinaryConfig = (config) => {
  * @param {string} folder - Optional folder tag in Cloudinary
  * @returns {Promise<{ url: string, publicId: string, success: boolean }>}
  */
-export const uploadToCloudinary = async (file, folder = 'mlbb_topup') => {
+export const uploadToCloudinary = async (file, folder = 'profile-photos') => {
   const config = getCloudinaryConfig();
-  const cloudName = config.cloudName || 'deth-topup';
+  const cloudName = config.cloudName || 'dpz7vpmf8';
   const uploadPreset = config.uploadPreset || 'mlbb_topup';
 
   try {
