@@ -43,8 +43,25 @@ export const getStoreBranding = () => {
 
 export const saveStoreBranding = (newBranding) => {
   try {
-    const updated = { ...getStoreBranding(), ...newBranding };
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(updated));
+    const current = getStoreBranding();
+    const updated = { ...current, ...newBranding };
+
+    // Prevent QuotaExceededError: Never store multi-megabyte base64 strings in localStorage
+    const storageCopy = { ...updated };
+    if (storageCopy.logoImage && storageCopy.logoImage.startsWith('data:') && storageCopy.logoImage.length > 50000) {
+      storageCopy.logoImage = DEFAULT_BRANDING.logoImage;
+    }
+
+    try {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(storageCopy));
+    } catch (quotaErr) {
+      console.warn('LocalStorage quota exceeded, resetting cache:', quotaErr);
+      try {
+        localStorage.removeItem(STORAGE_KEY);
+        localStorage.setItem(STORAGE_KEY, JSON.stringify({ ...DEFAULT_BRANDING, ...newBranding, logoImage: DEFAULT_BRANDING.logoImage }));
+      } catch (_) {}
+    }
+
     // Dispatch custom event for real-time reactive updates across all components
     if (typeof window !== 'undefined') {
       window.dispatchEvent(new CustomEvent(EVENT_NAME, { detail: updated }));
