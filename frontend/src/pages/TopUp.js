@@ -400,6 +400,8 @@ const TopUp = () => {
   const [orderId, setOrderId] = useState(null);
   const [paymentData, setPaymentData] = useState(null);
   const [paymentPaid, setPaymentPaid] = useState(false);
+  const [qrExpired, setQrExpired] = useState(false);
+  const qrExpiredRef = useRef(false);
   const [processingStep, setProcessingStep] = useState(0); // 0: scanning, 1: verifying, 2: server sync, 3: delivering
   const [currency, setCurrency] = useState('USD'); // 'USD' or 'KHR'
   const [switchingCurrency, setSwitchingCurrency] = useState(false);
@@ -442,10 +444,15 @@ const TopUp = () => {
   useEffect(() => {
     if (!paymentData || paymentPaid) return;
     setTimeLeft(300);
+    setQrExpired(false);
+    qrExpiredRef.current = false;
     const timer = setInterval(() => {
       setTimeLeft(prev => {
         if (prev <= 1) {
           clearInterval(timer);
+          // Mark QR as expired — polling will stop automatically
+          setQrExpired(true);
+          qrExpiredRef.current = true;
           return 0;
         }
         return prev - 1;
@@ -660,7 +667,7 @@ const TopUp = () => {
     const curOrderId = currentOrderIdRef.current;
     const curMd5 = currentMd5Ref.current;
 
-    if (!curOrderId || paymentPaidRef.current || isCheckingRef.current) return false;
+    if (!curOrderId || paymentPaidRef.current || isCheckingRef.current || qrExpiredRef.current) return false;
     isCheckingRef.current = true;
 
     console.log(
@@ -739,20 +746,23 @@ const TopUp = () => {
 
   // Automatic Real-Time Polling Interval (Every 2 seconds)
   useEffect(() => {
-    if (!orderId || paymentPaid) return;
+    // Do NOT start or continue polling if QR has expired or payment is done
+    if (!orderId || paymentPaid || qrExpired) return;
 
     // Initial check right after order creation
     checkPaymentStatus();
 
-    // Poll every 2 seconds until payment is detected or component unmounts
+    // Poll every 2 seconds until payment is detected, QR expires, or component unmounts
     const interval = setInterval(() => {
-      if (!paymentPaidRef.current) {
+      if (!paymentPaidRef.current && !qrExpiredRef.current) {
         checkPaymentStatus();
+      } else {
+        clearInterval(interval);
       }
     }, 2000);
 
     return () => clearInterval(interval);
-  }, [orderId, paymentPaid, checkPaymentStatus]);
+  }, [orderId, paymentPaid, qrExpired, checkPaymentStatus]);
 
   const handleProceedToPayment = async () => {
     if (isTopupDisabled) {
@@ -767,6 +777,9 @@ const TopUp = () => {
 
     setLoading(true);
     setError('');
+    // Reset QR expired state for new payment attempt
+    setQrExpired(false);
+    qrExpiredRef.current = false;
 
     try {
       const targetAmount = selectedProduct?.price || 0.95;
