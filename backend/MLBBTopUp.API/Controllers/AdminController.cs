@@ -72,6 +72,64 @@ public class AdminController : BaseController
         return Ok(new { success = true, branding = _storeBranding });
     }
 
+    private static object? _gamesConfig = null;
+    private static object _masterTopupStatus = new
+    {
+        status = "Active",
+        notice = "Top-Ups are temporarily paused by Admin for maintenance. Please check back shortly!",
+        updatedAt = DateTime.UtcNow.ToString("o")
+    };
+
+    /// <summary>
+    /// Get Store Games Catalog & Status (Public)
+    /// </summary>
+    [HttpGet("games")]
+    [AllowAnonymous]
+    public IActionResult GetGames()
+    {
+        return Ok(new { success = true, games = _gamesConfig });
+    }
+
+    /// <summary>
+    /// Update Store Games Catalog & Status
+    /// </summary>
+    [HttpPost("games")]
+    [HttpPut("games")]
+    [AllowAnonymous]
+    public IActionResult UpdateGames([FromBody] object data)
+    {
+        if (data != null)
+        {
+            _gamesConfig = data;
+        }
+        return Ok(new { success = true, games = _gamesConfig });
+    }
+
+    /// <summary>
+    /// Get Master Top-Up Status (Public)
+    /// </summary>
+    [HttpGet("master-status")]
+    [AllowAnonymous]
+    public IActionResult GetMasterStatus()
+    {
+        return Ok(new { success = true, masterStatus = _masterTopupStatus });
+    }
+
+    /// <summary>
+    /// Update Master Top-Up Status
+    /// </summary>
+    [HttpPost("master-status")]
+    [HttpPut("master-status")]
+    [AllowAnonymous]
+    public IActionResult UpdateMasterStatus([FromBody] object data)
+    {
+        if (data != null)
+        {
+            _masterTopupStatus = data;
+        }
+        return Ok(new { success = true, masterStatus = _masterTopupStatus });
+    }
+
     /// <summary>
     /// Get all orders
     /// </summary>

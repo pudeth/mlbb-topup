@@ -451,11 +451,16 @@ export const DEFAULT_GAMES = [
 
 const STORAGE_KEY = 'mlbb_topup_custom_games_v5';
 
-const getApiUrl = () => {
+const getApiUrls = () => {
   if (typeof window !== 'undefined' && (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1')) {
-    return 'http://localhost:5001/api';
+    return ['http://localhost:5001/api', 'http://localhost:5000/api/admin'];
   }
-  return process.env.REACT_APP_KHQR_API_URL ? `${process.env.REACT_APP_KHQR_API_URL}/api` : 'https://mlbb-khqr-api.onrender.com/api';
+  const urls = [];
+  if (process.env.REACT_APP_KHQR_API_URL) urls.push(`${process.env.REACT_APP_KHQR_API_URL}/api`);
+  if (process.env.REACT_APP_API_URL) urls.push(`${process.env.REACT_APP_API_URL}/admin`);
+  urls.push('https://mlbb-khqr-api.onrender.com/api');
+  urls.push('https://mlbb-backend-api.onrender.com/api/admin');
+  return [...new Set(urls)];
 };
 
 export const getStoredGames = () => {
@@ -474,23 +479,24 @@ export const getStoredGames = () => {
 };
 
 export const fetchStoredGames = async () => {
-  try {
-    const res = await fetch(`${getApiUrl()}/games?_t=${Date.now()}`, {
-      cache: 'no-store',
-      headers: { 'Cache-Control': 'no-cache', 'Pragma': 'no-cache' }
-    });
-    if (res.ok) {
-      const data = await res.json();
-      if (data?.success && Array.isArray(data.games) && data.games.length > 0) {
-        localStorage.setItem(STORAGE_KEY, JSON.stringify(data.games));
-        if (typeof window !== 'undefined') {
-          window.dispatchEvent(new Event('gamesConfigUpdated'));
+  const urls = getApiUrls();
+  for (const base of urls) {
+    try {
+      const res = await fetch(`${base}/games?_t=${Date.now()}`, {
+        cache: 'no-store',
+        headers: { 'Cache-Control': 'no-cache', 'Pragma': 'no-cache' }
+      });
+      if (res.ok) {
+        const data = await res.json();
+        if (data?.success && Array.isArray(data.games) && data.games.length > 0) {
+          localStorage.setItem(STORAGE_KEY, JSON.stringify(data.games));
+          if (typeof window !== 'undefined') {
+            window.dispatchEvent(new Event('gamesConfigUpdated'));
+          }
+          return data.games;
         }
-        return data.games;
       }
-    }
-  } catch (e) {
-    console.warn('Could not fetch games from cloud, using cache:', e);
+    } catch (e) {}
   }
   return getStoredGames();
 };
@@ -498,12 +504,15 @@ export const fetchStoredGames = async () => {
 export const saveStoredGames = (games) => {
   try {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(games));
-    // Asynchronously sync to MongoDB Atlas
-    fetch(`${getApiUrl()}/games`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ games }),
-    }).catch(() => {});
+    // Asynchronously sync to all MongoDB Atlas API backends
+    const urls = getApiUrls();
+    urls.forEach((base) => {
+      fetch(`${base}/games`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ games }),
+      }).catch(() => {});
+    });
   } catch (err) {
     console.warn('Error saving stored games:', err);
   }
@@ -512,11 +521,14 @@ export const saveStoredGames = (games) => {
 export const resetToDefaultGames = () => {
   try {
     localStorage.removeItem(STORAGE_KEY);
-    fetch(`${getApiUrl()}/games`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ games: DEFAULT_GAMES }),
-    }).catch(() => {});
+    const urls = getApiUrls();
+    urls.forEach((base) => {
+      fetch(`${base}/games`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ games: DEFAULT_GAMES }),
+      }).catch(() => {});
+    });
   } catch (err) {
     console.warn('Error resetting stored games:', err);
   }
@@ -540,24 +552,25 @@ export const getMasterTopupStatus = () => {
 };
 
 export const fetchMasterTopupStatus = async () => {
-  try {
-    const res = await fetch(`${getApiUrl()}/master-status?_t=${Date.now()}`, {
-      cache: 'no-store',
-      headers: { 'Cache-Control': 'no-cache', 'Pragma': 'no-cache' }
-    });
-    if (res.ok) {
-      const data = await res.json();
-      if (data?.success && data.masterStatus) {
-        localStorage.setItem(MASTER_STATUS_KEY, JSON.stringify(data.masterStatus));
-        if (typeof window !== 'undefined') {
-          window.dispatchEvent(new Event('gamesConfigUpdated'));
-          window.dispatchEvent(new CustomEvent('masterTopupStatusUpdated', { detail: data.masterStatus }));
+  const urls = getApiUrls();
+  for (const base of urls) {
+    try {
+      const res = await fetch(`${base}/master-status?_t=${Date.now()}`, {
+        cache: 'no-store',
+        headers: { 'Cache-Control': 'no-cache', 'Pragma': 'no-cache' }
+      });
+      if (res.ok) {
+        const data = await res.json();
+        if (data?.success && data.masterStatus) {
+          localStorage.setItem(MASTER_STATUS_KEY, JSON.stringify(data.masterStatus));
+          if (typeof window !== 'undefined') {
+            window.dispatchEvent(new Event('gamesConfigUpdated'));
+            window.dispatchEvent(new CustomEvent('masterTopupStatusUpdated', { detail: data.masterStatus }));
+          }
+          return data.masterStatus;
         }
-        return data.masterStatus;
       }
-    }
-  } catch (e) {
-    console.warn('Could not fetch master status from cloud, using cache:', e);
+    } catch (e) {}
   }
   return getMasterTopupStatus();
 };
@@ -572,12 +585,15 @@ export const saveMasterTopupStatus = (statusData) => {
       window.dispatchEvent(new Event('gamesConfigUpdated'));
       window.dispatchEvent(new CustomEvent('masterTopupStatusUpdated', { detail: data }));
     }
-    // Asynchronously sync to MongoDB Atlas
-    fetch(`${getApiUrl()}/master-status`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(data),
-    }).catch(() => {});
+    // Asynchronously sync to all MongoDB Atlas API backends
+    const urls = getApiUrls();
+    urls.forEach((base) => {
+      fetch(`${base}/master-status`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(data),
+      }).catch(() => {});
+    });
     return data;
   } catch (err) {
     console.warn('Error saving master topup status:', err);
