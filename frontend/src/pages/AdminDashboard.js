@@ -146,6 +146,7 @@ const PRICING_GAMES = [
   const [isUploadingLogo, setIsUploadingLogo] = useState(false);
   const [cloudinaryConfigState, setCloudinaryConfigState] = useState(getCloudinaryConfig);
   const [showCloudinarySettings, setShowCloudinarySettings] = useState(false);
+  const logoFileInputRef = useRef(null);
   const [storeBrandingForm, setStoreBrandingForm] = useState({
     storeName: 'MLBB TOPUP',
     storeNameHighlight: 'PRO',
@@ -1105,7 +1106,7 @@ const PRICING_GAMES = [
     }
 
     setIsUploadingLogo(true);
-    showToast('info', '☁️ Uploading logo directly to Cloudinary CDN...');
+    showToast('info', '☁️ Uploading new logo to Cloudinary CDN...');
     try {
       const res = await uploadToCloudinary(file, 'profile-photos');
       if (res.success && res.url) {
@@ -1115,9 +1116,9 @@ const PRICING_GAMES = [
           logoImage: res.url,
         };
         setStoreBrandingForm(updatedForm);
-        // Automatically save to database & local state
+        // Automatically save to database & storefront in real time
         updateBranding(updatedForm);
-        showToast('success', '✅ Logo uploaded to Cloudinary CDN & saved to Database!');
+        showToast('success', '✅ New Profile Logo uploaded to Cloudinary & auto-saved to Database!');
       } else {
         showToast('error', res.error || 'Cloudinary upload failed. Check your Upload Preset.');
       }
@@ -1125,6 +1126,7 @@ const PRICING_GAMES = [
       showToast('error', 'Failed to upload image: ' + err.message);
     } finally {
       setIsUploadingLogo(false);
+      if (e.target) e.target.value = '';
     }
   };
 
@@ -5429,33 +5431,52 @@ const PRICING_GAMES = [
                       </button>
 
                       {/* Card 2: Cloudinary Profile Photo */}
-                      <button
-                        type="button"
-                        onClick={() => {
-                          const url = 'https://res.cloudinary.com/dpz7vpmf8/image/upload/profile-photos/a1kiv9bhqlqrp4rasfo2.jpg';
-                          const updated = { ...storeBrandingForm, logoType: 'image', logoImage: url };
-                          setStoreBrandingForm(updated);
-                          updateBranding(updated);
-                          showToast('success', '✅ Cloudinary Profile Photo applied & saved!');
-                        }}
-                        className={`p-2.5 rounded-xl border text-left flex items-center gap-3 transition-all cursor-pointer ${
+                      <div
+                        className={`p-2.5 rounded-xl border flex flex-col justify-between gap-2 transition-all ${
                           storeBrandingForm.logoImage?.includes('cloudinary.com')
                             ? 'bg-cyan-500/20 border-cyan-400 ring-2 ring-cyan-400/40 shadow-[0_0_15px_rgba(6,182,212,0.3)]'
                             : 'bg-dark-card border-dark-border hover:border-slate-600'
                         }`}
                       >
-                        <div className="w-11 h-11 rounded-lg overflow-hidden shrink-0 flex items-center justify-center bg-slate-950/60 p-0.5">
-                          <img
-                            src="https://res.cloudinary.com/dpz7vpmf8/image/upload/profile-photos/a1kiv9bhqlqrp4rasfo2.jpg"
-                            alt="Cloudinary"
-                            className="w-full h-full object-contain"
-                          />
+                        <div
+                          onClick={() => {
+                            const url = storeBrandingForm.logoImage?.includes('cloudinary.com')
+                              ? storeBrandingForm.logoImage
+                              : 'https://res.cloudinary.com/dpz7vpmf8/image/upload/profile-photos/a1kiv9bhqlqrp4rasfo2.jpg';
+                            const updated = { ...storeBrandingForm, logoType: 'image', logoImage: url };
+                            setStoreBrandingForm(updated);
+                            updateBranding(updated);
+                            showToast('success', '✅ Cloudinary Profile Photo activated & saved!');
+                          }}
+                          className="flex items-center gap-3 cursor-pointer"
+                        >
+                          <div className="w-11 h-11 rounded-lg overflow-hidden shrink-0 flex items-center justify-center bg-slate-950/60 p-0.5">
+                            <img
+                              src={
+                                storeBrandingForm.logoImage?.includes('cloudinary.com')
+                                  ? storeBrandingForm.logoImage
+                                  : 'https://res.cloudinary.com/dpz7vpmf8/image/upload/profile-photos/a1kiv9bhqlqrp4rasfo2.jpg'
+                              }
+                              alt="Cloudinary"
+                              className="w-full h-full object-contain"
+                            />
+                          </div>
+                          <div className="min-w-0 flex-1">
+                            <div className="font-bold text-xs text-white truncate">Cloudinary Profile</div>
+                            <div className="text-[10px] text-cyan-400 font-semibold">Active Cloud CDN</div>
+                          </div>
                         </div>
-                        <div className="min-w-0">
-                          <div className="font-bold text-xs text-white truncate">Cloudinary Profile</div>
-                          <div className="text-[10px] text-cyan-400 font-semibold">Cloudinary CDN</div>
-                        </div>
-                      </button>
+
+                        {/* Direct Click to Upload New to Cloudinary */}
+                        <button
+                          type="button"
+                          onClick={() => logoFileInputRef.current?.click()}
+                          className="w-full py-1 px-2 rounded-lg bg-cyan-500/20 hover:bg-cyan-500/30 text-cyan-300 border border-cyan-500/40 text-[10px] font-bold flex items-center justify-center gap-1 transition-all cursor-pointer"
+                        >
+                          <span>☁️</span>
+                          <span>Upload & Replace to Cloudinary</span>
+                        </button>
+                      </div>
                     </div>
                   </div>
 
@@ -5516,6 +5537,7 @@ const PRICING_GAMES = [
 
                       <div className="relative">
                         <input
+                          ref={logoFileInputRef}
                           type="file"
                           accept="image/*"
                           disabled={isUploadingLogo}

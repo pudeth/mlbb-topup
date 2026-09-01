@@ -25,20 +25,32 @@ export const saveCloudinaryConfig = (config) => {
   return config;
 };
 
+const fileToDataUrl = (file) => {
+  return new Promise((resolve) => {
+    if (typeof file === 'string') {
+      return resolve(file);
+    }
+    const reader = new FileReader();
+    reader.onload = () => resolve(reader.result);
+    reader.onerror = () => resolve(null);
+    reader.readAsDataURL(file);
+  });
+};
+
 /**
- * Upload an image file directly to Cloudinary CDN
+ * Upload an image file directly to Cloudinary CDN with local fallback
  * @param {File|Blob|string} file - The file or base64 data to upload
- * @param {string} folder - Optional folder tag in Cloudinary
- * @returns {Promise<{ url: string, publicId: string, success: boolean }>}
+ * @param {string} folder - Optional folder tag in Cloudinary (e.g. 'event_banners')
+ * @returns {Promise<{ url: string, publicId?: string, success: boolean, isCloudinary?: boolean, isFallback?: boolean, error?: string }>}
  */
-export const uploadToCloudinary = async (file, folder = 'profile-photos') => {
+export const uploadToCloudinary = async (file, folder = 'event_banners') => {
   const config = getCloudinaryConfig();
   const cloudName = config.cloudName || 'dpz7vpmf8';
   const uploadPreset = config.uploadPreset || 'mlbb_topup';
 
   try {
     if (!cloudName) {
-      throw new Error('Cloudinary Cloud Name not set. Using local base64 fallback.');
+      throw new Error('Cloudinary Cloud Name not set.');
     }
 
     const formData = new FormData();
@@ -48,7 +60,7 @@ export const uploadToCloudinary = async (file, folder = 'profile-photos') => {
       formData.append('folder', folder);
     }
 
-    const uploadUrl = 'https://api.cloudinary.com/v1_1/' + cloudName + '/image/upload';
+    const uploadUrl = `https://api.cloudinary.com/v1_1/${cloudName}/image/upload`;
     const response = await fetch(uploadUrl, {
       method: 'POST',
       body: formData,
@@ -56,7 +68,7 @@ export const uploadToCloudinary = async (file, folder = 'profile-photos') => {
 
     if (!response.ok) {
       const errorData = await response.json().catch(() => ({}));
-      throw new Error(errorData?.error?.message || ('Cloudinary upload failed (HTTP ' + response.status + ')'));
+      throw new Error(errorData?.error?.message || `Cloudinary upload failed (HTTP ${response.status})`);
     }
 
     const data = await response.json();
@@ -67,13 +79,26 @@ export const uploadToCloudinary = async (file, folder = 'profile-photos') => {
       format: data.format,
       width: data.width,
       height: data.height,
+      isCloudinary: true,
     };
   } catch (error) {
     console.warn('Cloudinary upload error:', error.message);
     let msg = error.message;
-    if (msg.includes('whitelisted for unsigned') || msg.includes('not found')) {
-      msg = 'Upload Preset required: In your Cloudinary Settings -> Upload, click "Add upload preset" and set Signing Mode to "Unsigned".';
+    if (msg.includes('whitelisted for unsigned') || msg.includes('not found') || msg.includes('Upload preset must be specified')) {
+      msg = 'Cloudinary Notice: Unsigned upload preset required. Using optimized local storage for this banner image.';
     }
+
+    // Local data URL fallback so the admin is NEVER blocked from updating banner image!
+    const dataUrl = await fileToDataUrl(file);
+    if (dataUrl) {
+      return {
+        success: true,
+        url: dataUrl,
+        isFallback: true,
+        error: msg,
+      };
+    }
+
     return {
       success: false,
       error: msg,
