@@ -2453,9 +2453,9 @@ const PRICING_GAMES = [
                     </div>
 
                     {/* Middle Row: Compact Artwork + Game Details */}
-                    <div className="flex items-center gap-3">
+                    <div className="flex items-center gap-3 min-w-0">
                       {/* Logo Thumbnail with Quick Edit Overlay */}
-                      <div className="relative w-13 h-13 sm:w-14 sm:h-14 rounded-xl overflow-hidden bg-slate-950 border border-amber-400/60 shadow-md shrink-0">
+                      <div className="relative w-14 h-14 min-w-[56px] min-h-[56px] max-w-[56px] max-h-[56px] rounded-xl overflow-hidden bg-slate-950 border border-amber-400/60 shadow-md shrink-0">
                         <img
                           src={game.image}
                           alt={game.name}
@@ -2463,7 +2463,7 @@ const PRICING_GAMES = [
                             e.target.onerror = null;
                             e.target.src = '/mlbb-logo.png';
                           }}
-                          className="w-full h-full object-cover object-center"
+                          className="w-full h-full object-cover object-center block"
                         />
                         <div
                           onClick={() => handleOpenGameModal(game)}
