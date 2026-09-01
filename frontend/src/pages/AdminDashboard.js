@@ -143,6 +143,9 @@ const PRICING_GAMES = [
   const { user, logout } = useAuth();
   const { branding, updateBranding, resetBranding } = useStoreBranding();
   const [storeLogoModalOpen, setStoreLogoModalOpen] = useState(false);
+  const [isUploadingLogo, setIsUploadingLogo] = useState(false);
+  const [cloudinaryConfigState, setCloudinaryConfigState] = useState(getCloudinaryConfig);
+  const [showCloudinarySettings, setShowCloudinarySettings] = useState(false);
   const [storeBrandingForm, setStoreBrandingForm] = useState({
     storeName: 'MLBB TOPUP',
     storeNameHighlight: 'PRO',
@@ -1099,15 +1102,25 @@ const PRICING_GAMES = [
       return;
     }
 
-    showToast('info', 'Uploading logo to Cloudinary CDN...');
-    const res = await uploadToCloudinary(file, 'store_branding');
-    if (res.url) {
-      setStoreBrandingForm((prev) => ({
-        ...prev,
-        logoType: 'image',
-        logoImage: res.url,
-      }));
-      showToast('success', res.isFallback ? 'Store logo loaded locally! Click "Save Store Logo" to apply.' : 'Store logo uploaded to Cloudinary CDN!');
+    setIsUploadingLogo(true);
+    showToast('info', '☁️ Uploading logo directly to Cloudinary CDN...');
+    try {
+      const res = await uploadToCloudinary(file, 'store_branding');
+      if (res.url) {
+        const updatedForm = {
+          ...storeBrandingForm,
+          logoType: 'image',
+          logoImage: res.url,
+        };
+        setStoreBrandingForm(updatedForm);
+        // Automatically save to database & local state
+        updateBranding(updatedForm);
+        showToast('success', res.isFallback ? '✅ Logo loaded & auto-saved to database!' : '✅ Uploaded to Cloudinary CDN & saved to Database!');
+      }
+    } catch (err) {
+      showToast('error', 'Failed to upload image: ' + err.message);
+    } finally {
+      setIsUploadingLogo(false);
     }
   };
 
@@ -5380,20 +5393,81 @@ const PRICING_GAMES = [
               {storeBrandingForm.logoType === 'image' && (
                 <div className="p-4 bg-dark-input rounded-2xl border border-dark-border space-y-3">
                   <div>
-                    <label className="block text-slate-400 font-semibold mb-1">
-                      Upload Logo Image (PNG, JPG, SVG, WebP)
-                    </label>
-                    <input
-                      type="file"
-                      accept="image/*"
-                      onChange={handleStoreLogoFileUpload}
-                      className="block w-full text-xs text-slate-400 file:mr-3 file:py-2 file:px-4 file:rounded-xl file:border-0 file:text-xs file:font-black file:bg-amber-500 file:text-black hover:file:bg-amber-400 cursor-pointer"
-                    />
+                    <div className="flex items-center justify-between mb-1.5">
+                      <label className="text-slate-400 font-semibold flex items-center gap-1.5">
+                        <span>☁️</span>
+                        <span>Auto-Upload to Cloudinary CDN</span>
+                      </label>
+                      <button
+                        type="button"
+                        onClick={() => setShowCloudinarySettings(!showCloudinarySettings)}
+                        className="text-[10px] text-cyan-400 hover:text-cyan-300 font-bold underline"
+                      >
+                        {showCloudinarySettings ? 'Hide Cloudinary Settings' : '⚙️ Cloudinary Settings'}
+                      </button>
+                    </div>
+
+                    {showCloudinarySettings && (
+                      <div className="p-3 mb-2.5 bg-[#0B0F19] rounded-xl border border-cyan-500/30 space-y-2 animate-fadeIn">
+                        <div className="text-[10px] font-bold text-cyan-400 uppercase tracking-wider flex items-center gap-1">
+                          <span>☁️</span> Cloudinary Direct Upload Settings
+                        </div>
+                        <div className="grid grid-cols-2 gap-2">
+                          <div>
+                            <label className="text-[10px] text-slate-400 block mb-0.5">Cloud Name</label>
+                            <input
+                              type="text"
+                              value={cloudinaryConfigState.cloudName}
+                              onChange={(e) => {
+                                const next = { ...cloudinaryConfigState, cloudName: e.target.value };
+                                setCloudinaryConfigState(next);
+                                saveCloudinaryConfig(next);
+                              }}
+                              placeholder="e.g. deth-topup"
+                              className="input w-full text-xs py-1.5 px-2 rounded-lg"
+                            />
+                          </div>
+                          <div>
+                            <label className="text-[10px] text-slate-400 block mb-0.5">Upload Preset</label>
+                            <input
+                              type="text"
+                              value={cloudinaryConfigState.uploadPreset}
+                              onChange={(e) => {
+                                const next = { ...cloudinaryConfigState, uploadPreset: e.target.value };
+                                setCloudinaryConfigState(next);
+                                saveCloudinaryConfig(next);
+                              }}
+                              placeholder="e.g. mlbb_topup"
+                              className="input w-full text-xs py-1.5 px-2 rounded-lg"
+                            />
+                          </div>
+                        </div>
+                        <p className="text-[10px] text-slate-400">
+                          Images upload directly to your Cloudinary Media Library and auto-save permanent CDN links to database.
+                        </p>
+                      </div>
+                    )}
+
+                    <div className="relative">
+                      <input
+                        type="file"
+                        accept="image/*"
+                        disabled={isUploadingLogo}
+                        onChange={handleStoreLogoFileUpload}
+                        className="block w-full text-xs text-slate-400 file:mr-3 file:py-2.5 file:px-4 file:rounded-xl file:border-0 file:text-xs file:font-black file:bg-gradient-to-r file:from-amber-500 file:to-yellow-400 file:text-black hover:file:opacity-90 cursor-pointer disabled:opacity-50"
+                      />
+                      {isUploadingLogo && (
+                        <div className="absolute inset-0 bg-slate-950/80 rounded-xl flex items-center justify-center gap-2 text-amber-400 font-bold text-xs">
+                          <span className="w-4 h-4 border-2 border-amber-400 border-t-transparent rounded-full animate-spin"></span>
+                          <span>☁️ Uploading to Cloudinary CDN & auto-saving to Database...</span>
+                        </div>
+                      )}
+                    </div>
                   </div>
 
                   <div className="relative flex items-center justify-center">
                     <span className="bg-dark-input px-3 text-[10px] text-slate-500 uppercase tracking-widest font-mono">
-                      OR PASTE IMAGE URL
+                      OR PASTE CLOUDINARY / IMAGE URL
                     </span>
                   </div>
 
@@ -5405,7 +5479,7 @@ const PRICING_GAMES = [
                         setStoreBrandingForm({ ...storeBrandingForm, logoImage: e.target.value })
                       }
                       className="input w-full text-xs py-2 rounded-xl"
-                      placeholder="https://example.com/logo.png"
+                      placeholder="https://res.cloudinary.com/.../logo.png"
                     />
                   </div>
                 </div>
