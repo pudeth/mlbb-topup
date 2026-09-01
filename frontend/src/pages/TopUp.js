@@ -702,11 +702,15 @@ const TopUp = () => {
       // 1. Check direct Bakong MD5 microservice status
       if (curMd5) {
         try {
-          const khqrEndpoints = [
-            `http://localhost:5001/api/payment/status/${curMd5}`,
-            `http://localhost:5005/api/payment/status/${curMd5}`,
-            `https://mlbb-khqr-api.onrender.com/api/payment/status/${curMd5}`
-          ];
+          const isLocal = typeof window !== 'undefined' && (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1');
+          const khqrEndpoints = isLocal
+            ? [
+                `http://localhost:5001/api/payment/status/${curMd5}`,
+                `http://localhost:5005/api/payment/status/${curMd5}`,
+              ]
+            : [
+                `/api/khqr/payment/status/${curMd5}`,
+              ];
           for (const ep of khqrEndpoints) {
             try {
               const r = await fetch(ep).then(res => res.json());
@@ -850,10 +854,10 @@ const TopUp = () => {
 
         try {
           // Attempt local or public Python KHQR API
-          const khqrEndpoints = [
-            'http://localhost:5001/api/payment/create',
-            'https://mlbb-khqr-api.onrender.com/api/payment/create'
-          ];
+          const isLocalHost = typeof window !== 'undefined' && (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1');
+          const khqrEndpoints = isLocalHost
+            ? ['http://localhost:5001/api/payment/create']
+            : ['/api/khqr/payment/create'];
 
           for (const ep of khqrEndpoints) {
             try {
@@ -1696,12 +1700,10 @@ const TopUp = () => {
                     billNumber: paymentData.khqrBillNumber || `MLBB${orderId || 1}`
                   });
 
-                  const khqrHost = (typeof window !== 'undefined' && (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'))
-                    ? 'http://localhost:5001'
-                    : (process.env.REACT_APP_KHQR_API_URL || 'https://mlbb-khqr-api.onrender.com');
-
+                  const isLocalDev = typeof window !== 'undefined' && (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1');
+                  const khqrBase = isLocalDev ? 'http://localhost:5001' : '';
                   const qrImgUrl = paymentData?.khqrMd5Hash 
-                    ? `${khqrHost}/api/payment/qr/${paymentData.khqrMd5Hash}?amount=${payAmount}&currency=${currentCur}`
+                    ? `${khqrBase}/api/khqr/payment/qr/${paymentData.khqrMd5Hash}?amount=${payAmount}&currency=${currentCur}`
                     : null;
 
                   return (
