@@ -29,9 +29,11 @@ const Navbar = () => {
     { icon: '🎧', title: t('ticker_4_title'), desc: t('ticker_4_desc') },
   ];
 
+  const isAuthPage = location.pathname.startsWith('/login') || location.pathname.startsWith('/register');
+
   return (
-    <header className="sticky top-0 z-50 bg-dark-bg/85 backdrop-blur-xl border-b border-slate-800/80 shadow-2xl">
-      {/* Top micro moving marquee announcement bar */}
+    <header className={`sticky top-0 z-50 ${isAuthPage ? '' : 'bg-dark-bg/85 backdrop-blur-xl border-b border-slate-800/80 shadow-2xl'}`}>
+      {/* Top micro moving marquee announcement bar (Text Transition) */}
       <div className="bg-gradient-to-r from-cyan-950 via-slate-900 to-indigo-950 border-b border-cyan-500/20 py-1.5 overflow-hidden relative select-none">
         <div className="flex items-center gap-2">
           {/* Live pulsing dot */}
@@ -58,8 +60,10 @@ const Navbar = () => {
         </div>
       </div>
 
-      <div className="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8">
-        <div className="flex items-center justify-between h-20">
+      {!isAuthPage && (
+        <>
+          <div className="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8">
+            <div className="flex items-center justify-between h-20">
           
           {/* Logo */}
           <div className="flex items-center gap-3">
@@ -440,6 +444,8 @@ const Navbar = () => {
             </a>
           </div>
         </div>
+      )}
+        </>
       )}
     </header>
   );
