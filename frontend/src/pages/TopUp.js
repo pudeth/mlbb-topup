@@ -699,70 +699,34 @@ const TopUp = () => {
     };
 
     try {
-      // 1. Check direct Bakong MD5 microservice status
+      // 1. Check Bakong MD5 payment status via Flask API (Vercel proxy in prod)
       if (curMd5) {
         try {
           const isLocal = typeof window !== 'undefined' && (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1');
-          const khqrEndpoints = isLocal
-            ? [
-                `http://localhost:5001/api/payment/status/${curMd5}`,
-                `http://localhost:5005/api/payment/status/${curMd5}`,
-              ]
-            : [
-                `/api/khqr/payment/status/${curMd5}`,
-              ];
-          for (const ep of khqrEndpoints) {
-            try {
-              const r = await fetch(ep).then(res => res.json());
-              const raw = (r?.status || '').toUpperCase();
-              if (raw === 'PAID' || raw === 'SUCCESS' || raw === 'COMPLETED' || r?.auto_confirmed) {
-                console.log(`%c[Bakong Auto-Tracker] ✓ Endpoint ${ep} confirmed PAID`, 'color: #10b981; font-weight: bold;');
-                await ordersAPI.checkPayment(curOrderId, true);
-                await triggerPaidTransition();
-                return true;
-              }
-              if (r?.rate_limited) {
-                rateLimitCountRef.current = (rateLimitCountRef.current || 0) + 1;
-                if (rateLimitCountRef.current >= 3) {
-                  console.log(`%c[Bakong Auto-Tracker] ⚡ Rate-limit fallback auto-confirming Order #${curOrderId}...`, 'color: #10b981; font-weight: bold;');
-                  await ordersAPI.checkPayment(curOrderId, true);
-                  await triggerPaidTransition();
-                  return true;
-                }
-              }
-            } catch {}
+          const statusEp = isLocal
+            ? `http://localhost:5001/api/payment/status/${curMd5}`
+            : `/api/khqr/payment/status/${curMd5}`;
+
+          const r = await fetch(statusEp).then(res => res.json());
+          const raw = (r?.status || '').toUpperCase();
+
+          // Only trust a REAL paid response from Bakong — never trust auto_confirmed
+          if ((raw === 'PAID' || raw === 'SUCCESS' || raw === 'COMPLETED') && !r?.auto_confirmed) {
+            console.log(`%c[Bakong Auto-Tracker] ✓ getStatus confirmed PAID`, 'color: #10b981; font-weight: bold;');
+            await ordersAPI.checkPayment(curOrderId, true);
+            await triggerPaidTransition();
+            return true;
           }
-        } catch {}
+
+          if (r?.rate_limited) {
+            console.log(`%c[Bakong Auto-Tracker] ⚠️ Rate limited – waiting for real Bakong confirmation...`, 'color: #f59e0b; font-size: 11px;');
+          }
+        } catch (e) {
+          console.warn('[Bakong Auto-Tracker] Status check error:', e?.message);
+        }
       }
 
-      // 2. Direct backend order payment check
-      const res = await ordersAPI.checkPayment(curOrderId, false);
-      const isSuccess =
-        res.data?.isPaid ||
-        res.data?.paymentStatus === 'Paid' ||
-        res.data?.status === 'PAID' ||
-        res.data?.status === 'Completed' ||
-        res.data?.order?.paymentStatus === 'Paid';
-
-      if (isSuccess) {
-        console.log('%c[Bakong Auto-Tracker] ✓ Backend ordersAPI confirmed PAID', 'color: #10b981; font-weight: bold;');
-        await triggerPaidTransition();
-        return true;
-      }
-
-      // 3. Query order status endpoint
-      const statusRes = await ordersAPI.getStatus(curOrderId);
-      if (
-        statusRes.data?.paymentStatus === 'Paid' ||
-        statusRes.data?.status === 'PAID' ||
-        statusRes.data?.status === 'Completed'
-      ) {
-        console.log('%c[Bakong Auto-Tracker] ✓ getStatus confirmed PAID', 'color: #10b981; font-weight: bold;');
-        await triggerPaidTransition();
-        return true;
-      }
-
-      console.log(`%c[Bakong Auto-Tracker] ⏳ Order #${curOrderId} is UNPAID (Listening to Bakong, next poll in 2s)...`, 'color: #94a3b8; font-size: 11px;');
+      console.log(`%c[Bakong Auto-Tracker] ⏳ Order #${curOrderId} | Waiting for real Bakong payment...`, 'color: #94a3b8; font-size: 11px;');
     } catch (err) {
       console.warn('[Bakong Auto-Tracker] Notice:', err?.message);
     } finally {
@@ -771,6 +735,7 @@ const TopUp = () => {
 
     return false;
   }, [formData.playerID, formData.serverID, selectedProduct.name]);
+
 
   // Automatic Real-Time Polling Interval (Every 2 seconds)
   useEffect(() => {

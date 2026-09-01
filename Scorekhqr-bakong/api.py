@@ -353,25 +353,8 @@ def check_status(md5):
             error_msg = str(api_error)
             print(f"[-] Bakong API notice: {error_msg}")
             
-            # Rate limit or temporary error - return current status with warning and rate_limited flag
+            # Rate limit or temporary error - return current status with warning
             is_rate_limit = "limit" in error_msg.lower() or "exceeded" in error_msg.lower() or "17" in error_msg
-            
-            # If rate-limited by Bakong daily test limit, fallback to auto-confirming after 3 polling attempts (6s)
-            if is_rate_limit:
-                if md5 not in qr_cache:
-                    qr_cache[md5] = {}
-                fail_count = qr_cache[md5].get('rate_limit_polls', 0) + 1
-                qr_cache[md5]['rate_limit_polls'] = fail_count
-                
-                if fail_count >= 3:
-                    print(f"[+] Rate-limit fallback: auto-confirming payment for {md5} as PAID")
-                    qr_cache[md5]['status'] = 'PAID'
-                    qr_cache[md5]['paid_at'] = datetime.now().isoformat()
-                    return jsonify({
-                        'md5_hash': md5,
-                        'status': 'PAID',
-                        'auto_confirmed': True
-                    })
             
             return jsonify({
                 'md5_hash': md5,
@@ -379,6 +362,7 @@ def check_status(md5):
                 'warning': error_msg,
                 'rate_limited': is_rate_limit
             })
+
 
         # Update MongoDB Atlas, database and cache if paid
         if status == "PAID":
