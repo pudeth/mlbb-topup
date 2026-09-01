@@ -73,22 +73,17 @@ const Register = () => {
         {/* Brand Header */}
         <div className="text-center space-y-2.5">
           <Link to="/" className="inline-flex items-center gap-3 group">
-            {branding.logoType === 'image' && branding.logoImage ? (
-              <div className="h-12 w-auto flex items-center justify-center shrink-0 group-hover:scale-105 transition-all">
-                <img
-                  src={branding.logoImage}
-                  alt={branding.storeName || 'Store Logo'}
-                  className="h-12 w-auto max-w-[140px] object-contain drop-shadow-md"
-                  onError={(e) => {
-                    e.target.style.display = 'none';
-                  }}
-                />
-              </div>
-            ) : (
-              <div className="w-12 h-12 rounded-2xl bg-slate-950 border border-slate-800 flex items-center justify-center text-2xl shadow-md group-hover:scale-105 transition-all">
-                <span>{branding.logoEmoji || '💎'}</span>
-              </div>
-            )}
+            <div className="h-12 w-12 flex items-center justify-center shrink-0 group-hover:scale-105 transition-all">
+              <img
+                src={branding.logoImage || '/tin-logo.png'}
+                alt={branding.storeName || 'Tin-TopUp'}
+                className="w-full h-full object-contain drop-shadow-md"
+                onError={(e) => {
+                  e.target.onerror = null;
+                  e.target.src = '/tin-logo.png';
+                }}
+              />
+            </div>
             <div className="text-left">
               <div className="flex items-center gap-1.5">
                 <span className="text-xl font-black tracking-wider text-white">
