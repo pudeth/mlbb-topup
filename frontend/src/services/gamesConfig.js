@@ -501,36 +501,40 @@ export const fetchStoredGames = async () => {
   return getStoredGames();
 };
 
-export const saveStoredGames = (games) => {
+export const saveStoredGames = async (games) => {
   try {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(games));
-    // Asynchronously sync to all MongoDB Atlas API backends
+    // Immediately broadcast to all MongoDB Atlas API backends
     const urls = getApiUrls();
-    urls.forEach((base) => {
-      fetch(`${base}/games`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ games }),
-      }).catch(() => {});
-    });
+    await Promise.allSettled(
+      urls.map((base) =>
+        fetch(`${base}/games`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ games }),
+        })
+      )
+    );
   } catch (err) {
-    console.warn('Error saving stored games:', err);
+    console.warn('Error saving stored games to cloud:', err);
   }
 };
 
-export const resetToDefaultGames = () => {
+export const resetToDefaultGames = async () => {
   try {
     localStorage.removeItem(STORAGE_KEY);
     const urls = getApiUrls();
-    urls.forEach((base) => {
-      fetch(`${base}/games`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ games: DEFAULT_GAMES }),
-      }).catch(() => {});
-    });
+    await Promise.allSettled(
+      urls.map((base) =>
+        fetch(`${base}/games`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ games: DEFAULT_GAMES }),
+        })
+      )
+    );
   } catch (err) {
-    console.warn('Error resetting stored games:', err);
+    console.warn('Error resetting stored games in cloud:', err);
   }
   return DEFAULT_GAMES;
 };
@@ -575,7 +579,7 @@ export const fetchMasterTopupStatus = async () => {
   return getMasterTopupStatus();
 };
 
-export const saveMasterTopupStatus = (statusData) => {
+export const saveMasterTopupStatus = async (statusData) => {
   try {
     const data = typeof statusData === 'string'
       ? { status: statusData, notice: 'Top-Ups are temporarily paused by Admin for maintenance. Please check back shortly!', updatedAt: new Date().toISOString() }
@@ -585,17 +589,19 @@ export const saveMasterTopupStatus = (statusData) => {
       window.dispatchEvent(new Event('gamesConfigUpdated'));
       window.dispatchEvent(new CustomEvent('masterTopupStatusUpdated', { detail: data }));
     }
-    // Asynchronously sync to all MongoDB Atlas API backends
+    // Immediately broadcast to all MongoDB Atlas API backends
     const urls = getApiUrls();
-    urls.forEach((base) => {
-      fetch(`${base}/master-status`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(data),
-      }).catch(() => {});
-    });
+    await Promise.allSettled(
+      urls.map((base) =>
+        fetch(`${base}/master-status`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(data),
+        })
+      )
+    );
     return data;
   } catch (err) {
-    console.warn('Error saving master topup status:', err);
+    console.warn('Error saving master topup status to cloud:', err);
   }
 };
