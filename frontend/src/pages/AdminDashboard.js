@@ -404,13 +404,13 @@ const PRICING_GAMES = [
       return;
     }
     setUploadingBannerImage(true);
-    showToast('info', '☁️ Uploading banner to Cloudinary CDN (event_banners)...');
+    showToast('info', '☁️ Uploading banner to Cloudinary (Banner folder)...');
     try {
-      const res = await uploadToCloudinary(file, 'event_banners');
+      const res = await uploadToCloudinary(file, 'Banner');
       if (res.url) {
         setBannerFormData(prev => ({ ...prev, image: res.url }));
         if (res.isCloudinary) {
-          showToast('success', '✅ Banner uploaded to Cloudinary CDN successfully!');
+          showToast('success', '✅ Banner uploaded to Cloudinary "Banner" folder successfully!');
         } else {
           showToast('success', '✅ Banner image loaded and preview updated!');
         }
@@ -432,15 +432,15 @@ const PRICING_GAMES = [
       showToast('error', 'Image size should be under 10MB.');
       return;
     }
-    showToast('info', '☁️ Uploading new banner artwork to Cloudinary CDN...');
+    showToast('info', '☁️ Uploading new banner artwork to Cloudinary "Banner" folder...');
     try {
-      const res = await uploadToCloudinary(file, 'event_banners');
+      const res = await uploadToCloudinary(file, 'Banner');
       if (res.url) {
         const updated = eventBanners.map(b => b.id === bannerId ? { ...b, image: res.url } : b);
         setEventBanners(updated);
         localStorage.setItem('admin_event_banners', JSON.stringify(updated));
         window.dispatchEvent(new Event('eventBannersUpdated'));
-        showToast('success', res.isCloudinary ? '✅ Banner artwork updated on Cloudinary CDN & saved!' : '✅ Banner image updated and saved!');
+        showToast('success', res.isCloudinary ? '✅ Banner artwork uploaded to Cloudinary "Banner" folder & saved!' : '✅ Banner image updated and saved!');
       } else {
         showToast('error', res.error || 'Failed to upload image.');
       }
