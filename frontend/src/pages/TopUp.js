@@ -752,7 +752,7 @@ const TopUp = () => {
     const curOrderId = currentOrderIdRef.current;
     if (!curMd5 || paymentPaidRef.current || qrExpiredRef.current) return;
     setForceChecking(true);
-    setForceCheckMsg('Checking Bakong Network...');
+    setForceCheckMsg('Checking payment status...');
     try {
       const isLocal = typeof window !== 'undefined' && (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1');
       const ep = isLocal
@@ -761,8 +761,8 @@ const TopUp = () => {
       const r = await fetch(ep).then(res => res.json());
       const raw = (r?.status || '').toUpperCase();
       if (raw === 'PAID' || raw === 'SUCCESS' || raw === 'COMPLETED') {
-        setForceCheckMsg('✅ Real Payment Confirmed on Bakong!');
-        await ordersAPI.checkPayment(curOrderId, true);
+        setForceCheckMsg('✅ You pay success!');
+        await ordersAPI.checkPayment(curOrderId);
         // Trigger success screen
         const triggerPaid = async () => {
           setProcessingStep(1);
@@ -775,13 +775,11 @@ const TopUp = () => {
           }, 1800);
         };
         await triggerPaid();
-      } else if (r?.rate_limited) {
-        setForceCheckMsg('⚠️ Bakong NBC network busy. Please try again in 30 seconds.');
       } else {
-        setForceCheckMsg('❌ Payment not found on Bakong network yet. Please scan and pay with your bank app.');
+        setForceCheckMsg('❌ You not Pay already. Please scan QR code and pay with your bank app.');
       }
     } catch (e) {
-      setForceCheckMsg('❌ Check failed. Please try again.');
+      setForceCheckMsg('❌ You not Pay already. Please scan QR code and pay with your bank app.');
     } finally {
       setForceChecking(false);
       setTimeout(() => setForceCheckMsg(''), 5000);

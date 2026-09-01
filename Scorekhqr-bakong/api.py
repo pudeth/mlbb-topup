@@ -436,13 +436,13 @@ def force_check_status(md5):
             error_msg = str(api_error)
             print(f"[-] Real Bakong NBC check error: {error_msg}")
             is_rate_limit = "limit" in error_msg.lower() or "exceeded" in error_msg.lower() or "17" in error_msg
-            if is_rate_limit:
-                # Bakong NBC daily 100-request quota exceeded. Since customer explicitly tapped "I HAVE PAID",
-                # confirm as PAID so paying customer is not blocked by NBC rate limit.
-                print(f"[FORCE-CHECK] Bakong NBC rate-limited (quota exceeded). Confirming {md5} as PAID.")
-                status = "PAID"
-            else:
-                status = "PAID"
+            return jsonify({
+                'md5_hash': md5,
+                'status': 'UNPAID',
+                'rate_limited': is_rate_limit,
+                'message': 'You have not paid yet',
+                'warning': error_msg
+            })
 
         # 3. Only update records if REAL payment is confirmed PAID
         if status == "PAID":
