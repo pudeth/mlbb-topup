@@ -165,31 +165,6 @@ public class OrdersController : BaseController
         else
         {
             isPaid = await _paymentService.VerifyPaymentAsync(id);
-
-            // If customer confirmed transfer or manualConfirm is true
-            if (!isPaid && manualConfirm)
-            {
-                await _orderService.UpdateOrderPaymentStatusAsync(id, "Paid");
-                isPaid = true;
-
-                // Auto-trigger top-up
-                if (order.TopupStatus == "Pending")
-                {
-                    try
-                    {
-                        await _topUpService.ProcessTopUpAsync(
-                            order.OrderId,
-                            order.PlayerID,
-                            order.ServerID,
-                            order.DiamondAmount
-                        );
-                    }
-                    catch (Exception ex)
-                    {
-                        Console.WriteLine($"Error processing topup for order {id}: {ex.Message}");
-                    }
-                }
-            }
         }
 
         var updatedOrder = await _orderService.GetOrderByIdAsync(id);

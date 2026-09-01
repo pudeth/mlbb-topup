@@ -74,6 +74,7 @@ db_config = {
 
 # Initialize MongoDB Atlas Client
 mongo_payments = None
+mongo_db = None
 try:
     from pymongo import MongoClient
     mongo_uri = os.getenv('MONGODB_URI', 'mongodb+srv://peakmao007_db_user:DNelqTteMX30a7PX@pudeth.olrum6s.mongodb.net/?appName=pudeth&retryWrites=true&w=majority')
@@ -85,6 +86,7 @@ try:
 except Exception as mongo_err:
     print(f"[-] MongoDB Atlas notice: {mongo_err}")
     mongo_payments = None
+    mongo_db = None
 
 def get_db_connection():
     """Get database connection"""
@@ -398,9 +400,9 @@ def check_status(md5):
 
 @app.route('/api/payment/force-check/<md5>', methods=['GET'])
 def force_check_status(md5):
-    """Force-check payment status bypassing the throttle — called when user says 'I have paid'"""
+    """Force-check payment status with real Bakong API — strictly requires real payment confirmation"""
     try:
-        # Always check cache/DB first
+        # 1. Check in-memory cache/DB first
         if md5 in qr_cache and qr_cache[md5].get('status') == 'PAID':
             return jsonify({'md5_hash': md5, 'status': 'PAID'})
 
@@ -415,18 +417,20 @@ def force_check_status(md5):
             except Exception as mongo_e:
                 print(f"MongoDB force-check error: {mongo_e}")
 
-        # Force a fresh Bakong API call (bypass throttle)
+        # 2. Query real Bakong NBC API
         last_check_cache[md5] = 0  # Reset throttle
         status = "UNPAID"
         try:
-            print(f"[FORCE] Checking Bakong API for MD5: {md5}")
+            print(f"[REAL-CHECK] Querying Bakong NBC API for MD5: {md5}")
             raw_st = khqr.check_payment(md5)
             if str(raw_st).strip().upper() in ["PAID", "SUCCESS", "COMPLETED"]:
                 status = "PAID"
-            print(f"[FORCE] Bakong status for {md5}: {status}")
+            else:
+                status = "UNPAID"
+            print(f"[REAL-CHECK] Real Bakong NBC status for {md5}: {status}")
         except Exception as api_error:
             error_msg = str(api_error)
-            print(f"[-] Force-check Bakong error: {error_msg}")
+            print(f"[-] Real Bakong NBC check error: {error_msg}")
             is_rate_limit = "limit" in error_msg.lower() or "exceeded" in error_msg.lower() or "17" in error_msg
             return jsonify({
                 'md5_hash': md5,
@@ -435,10 +439,12 @@ def force_check_status(md5):
                 'warning': error_msg
             })
 
+        # 3. Only update records if REAL payment is confirmed PAID
         if status == "PAID":
             if md5 not in qr_cache:
                 qr_cache[md5] = {}
             qr_cache[md5]['status'] = 'PAID'
+            qr_cache[md5]['paid_at'] = datetime.now().isoformat()
             if mongo_payments is not None:
                 try:
                     mongo_payments.update_one(
@@ -449,19 +455,22 @@ def force_check_status(md5):
                 except Exception:
                     pass
 
+            conn = get_db_connection()
+            if conn:
+                try:
+                    cursor = conn.cursor()
+                    cursor.execute(
+                        "UPDATE payments SET status='PAID', paid_at=NOW() WHERE md5_hash=%s AND status='UNPAID'",
+                        (md5,)
+                    )
+                    conn.commit()
+                finally:
+                    conn.close()
+
         return jsonify({'md5_hash': md5, 'status': status})
 
     except Exception as e:
         return jsonify({'md5_hash': md5, 'status': 'UNPAID', 'error': str(e)})
-
-
-        import traceback
-        traceback.print_exc()
-        return jsonify({
-            'md5_hash': md5,
-            'status': qr_cache.get(md5, {}).get('status', 'UNPAID'),
-            'error': str(e)
-        })
 
 @app.route('/api/payment/confirm/<md5>', methods=['POST', 'GET'])
 def confirm_payment(md5):
