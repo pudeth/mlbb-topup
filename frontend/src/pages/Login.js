@@ -10,7 +10,7 @@ const Login = () => {
   const { branding } = useStoreBranding();
 
   const [formData, setFormData] = useState({
-    email: 'admin@mlbbtopup.com',
+    email: '',
     password: '',
   });
   const [showPassword, setShowPassword] = useState(false);
@@ -31,14 +31,6 @@ const Login = () => {
     setFormData({
       ...formData,
       [e.target.name]: e.target.value,
-    });
-    setError('');
-  };
-
-  const handleQuickFillAdmin = () => {
-    setFormData({
-      email: 'admin@mlbbtopup.com',
-      password: 'Admin@123',
     });
     setError('');
   };
@@ -186,7 +178,7 @@ const Login = () => {
                   value={formData.email}
                   onChange={handleChange}
                   className="w-full bg-[#111728] border border-slate-700/80 focus:border-amber-400 focus:ring-1 focus:ring-amber-400 text-white placeholder-slate-500 text-sm rounded-xl pl-10 pr-4 py-3 transition-all outline-none"
-                  placeholder="admin@mlbbtopup.com"
+                  placeholder="Enter administrator email"
                 />
               </div>
             </div>
@@ -255,18 +247,6 @@ const Login = () => {
                     <span>Sign In to Admin Dashboard</span>
                   </>
                 )}
-              </button>
-            </div>
-
-            {/* 1-Click Admin Quick Fill */}
-            <div className="pt-3 border-t border-slate-800/80">
-              <button
-                type="button"
-                onClick={handleQuickFillAdmin}
-                className="w-full py-2 px-3 rounded-xl bg-amber-500/10 hover:bg-amber-500/20 text-amber-300 border border-amber-500/30 text-xs font-bold transition-all flex items-center justify-center gap-2 cursor-pointer"
-              >
-                <span>👑</span>
-                <span>1-Click Auto-Fill Admin Credentials</span>
               </button>
             </div>
           </form>
