@@ -2384,21 +2384,19 @@ const PRICING_GAMES = [
               </div>
             </div>
 
-            {/* Games Grid */}
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+            {/* Games Grid - Compact & Easy to Use Layout */}
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4">
               {gamesList.map((game) => {
-                const isActive = game.status === 'Active';
-
                 return (
                   <div
                     key={game.id}
-                    className="card p-5 border border-dark-border bg-dark-card hover:border-slate-700 transition-all flex flex-col justify-between space-y-4 rounded-2xl shadow-xl relative overflow-hidden group"
+                    className="p-3 sm:p-3.5 rounded-2xl bg-[#0B0F19] border border-slate-800/90 hover:border-slate-700 transition-all flex flex-col justify-between space-y-2.5 shadow-lg relative group"
                   >
-                    {/* Top Status Tag */}
+                    {/* Top Header: Badge Tag + Compact Status Segmented Switcher */}
                     <div className="flex items-center justify-between gap-2">
-                      <div className="flex items-center gap-1.5">
+                      <div className="flex items-center gap-1.5 min-w-0">
                         <span
-                          className={`text-[9px] font-black px-2 py-0.5 rounded-full uppercase tracking-wider ${
+                          className={`text-[9px] font-black px-2 py-0.5 rounded-md uppercase tracking-wider truncate shrink-0 ${
                             game.badgeColor === 'gold' || game.id === 'mlbb'
                               ? 'bg-amber-400 text-slate-950 font-black'
                               : game.badgeColor === 'emerald'
@@ -2410,17 +2408,17 @@ const PRICING_GAMES = [
                         >
                           {game.badge || 'Official'}
                         </span>
-                        <span className="text-[10px] text-slate-400 font-semibold">{game.category}</span>
+                        <span className="text-[10px] text-slate-400 font-semibold truncate hidden sm:inline">{game.category}</span>
                       </div>
 
-                      {/* 1-Click Game Status Selector */}
-                      <div className="flex items-center gap-1 bg-slate-950/80 p-0.5 rounded-lg border border-slate-800">
+                      {/* 1-Click Compact Status Selector */}
+                      <div className="flex items-center gap-0.5 bg-slate-950 p-0.5 rounded-lg border border-slate-800 shrink-0">
                         <button
                           type="button"
                           onClick={() => handleSetGameStatus(game.id, 'Active')}
-                          className={`px-1.5 py-0.5 text-[9px] font-bold rounded transition-all cursor-pointer ${
+                          className={`px-2 py-1 text-[10px] font-black rounded-md transition-all cursor-pointer ${
                             game.status === 'Active'
-                              ? 'bg-emerald-500 text-slate-950 font-black'
+                              ? 'bg-emerald-500 text-slate-950 shadow-sm'
                               : 'text-slate-400 hover:text-emerald-300'
                           }`}
                           title="Open Top-Up"
@@ -2430,9 +2428,9 @@ const PRICING_GAMES = [
                         <button
                           type="button"
                           onClick={() => handleSetGameStatus(game.id, 'Paused')}
-                          className={`px-1.5 py-0.5 text-[9px] font-bold rounded transition-all cursor-pointer ${
+                          className={`px-2 py-1 text-[10px] font-black rounded-md transition-all cursor-pointer ${
                             game.status === 'Paused'
-                              ? 'bg-amber-500 text-slate-950 font-black'
+                              ? 'bg-amber-500 text-slate-950 shadow-sm'
                               : 'text-slate-400 hover:text-amber-300'
                           }`}
                           title="Pause Top-Up"
@@ -2442,9 +2440,9 @@ const PRICING_GAMES = [
                         <button
                           type="button"
                           onClick={() => handleSetGameStatus(game.id, 'Closed')}
-                          className={`px-1.5 py-0.5 text-[9px] font-bold rounded transition-all cursor-pointer ${
+                          className={`px-2 py-1 text-[10px] font-black rounded-md transition-all cursor-pointer ${
                             game.status === 'Closed'
-                              ? 'bg-rose-600 text-white font-black'
+                              ? 'bg-rose-600 text-white shadow-sm'
                               : 'text-slate-400 hover:text-rose-300'
                           }`}
                           title="Close Top-Up"
@@ -2454,10 +2452,10 @@ const PRICING_GAMES = [
                       </div>
                     </div>
 
-                    {/* Image & Game Info */}
-                    <div className="flex items-start gap-4">
+                    {/* Middle Row: Compact Artwork + Game Details */}
+                    <div className="flex items-center gap-3">
                       {/* Logo Thumbnail with Quick Edit Overlay */}
-                      <div className="relative w-20 h-20 rounded-2xl overflow-hidden bg-slate-900 border-2 border-amber-400/80 shadow-glow-gold shrink-0">
+                      <div className="relative w-13 h-13 sm:w-14 sm:h-14 rounded-xl overflow-hidden bg-slate-950 border border-amber-400/60 shadow-md shrink-0">
                         <img
                           src={game.image}
                           alt={game.name}
@@ -2469,45 +2467,44 @@ const PRICING_GAMES = [
                         />
                         <div
                           onClick={() => handleOpenGameModal(game)}
-                          className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center cursor-pointer text-amber-300 font-black text-xs"
+                          className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center cursor-pointer text-amber-300 font-black text-[10px]"
                           title="Change Logo"
                         >
-                          📷 Change
+                          📷
                         </div>
                       </div>
 
                       {/* Details */}
-                      <div className="flex-1 min-w-0 space-y-1">
-                        <h3 className="font-black text-white text-base leading-snug truncate">
+                      <div className="flex-1 min-w-0">
+                        <h3 className="font-extrabold text-white text-xs sm:text-sm truncate">
                           {game.name}
                         </h3>
-                        <p className="text-xs text-slate-400 truncate">
-                          🏢 {game.publisher || 'Publisher'}
-                        </p>
-                        <p className="text-xs text-amber-300 font-semibold truncate">
-                          💎 {game.currency || 'Diamonds'}
-                        </p>
-                        <p className="text-[11px] text-cyan-300 font-medium">
-                          ⚡ {game.deliveryTime || '10s Instant'}
-                        </p>
+                        <div className="flex items-center gap-2 text-[10px] sm:text-[11px] text-slate-400 truncate mt-0.5">
+                          <span>{game.publisher || 'Moonton'}</span>
+                          <span>•</span>
+                          <span className="text-amber-300 font-semibold truncate">{game.currency || 'Diamonds'}</span>
+                        </div>
+                        <div className="text-[10px] text-cyan-400 font-medium truncate mt-0.5">
+                          ⚡ {game.deliveryTime || '10 - 30s'}
+                        </div>
                       </div>
                     </div>
 
-                    {/* Bottom Actions */}
-                    <div className="pt-3 border-t border-dark-border grid grid-cols-2 gap-2">
+                    {/* Bottom Actions: Compact Slim Buttons */}
+                    <div className="pt-2 border-t border-slate-800/80 grid grid-cols-2 gap-2">
                       <button
                         type="button"
                         onClick={() => handleOpenGameModal(game)}
-                        className="py-2 px-3 rounded-xl bg-amber-500/15 hover:bg-amber-500/25 border border-amber-500/30 text-amber-300 text-xs font-bold transition-all flex items-center justify-center gap-1.5"
+                        className="py-1.5 px-2.5 rounded-lg bg-amber-500/10 hover:bg-amber-500/20 border border-amber-500/30 text-amber-300 text-[11px] font-bold transition-all flex items-center justify-center gap-1 cursor-pointer"
                       >
                         <span>✏️</span>
-                        <span>Edit Logo & Info</span>
+                        <span>Edit Info</span>
                       </button>
                       {game.id !== 'mlbb' ? (
                         <button
                           type="button"
                           onClick={() => handleDeleteGame(game.id)}
-                          className="py-2 px-3 rounded-xl bg-rose-950/40 hover:bg-rose-900/60 border border-rose-500/30 text-rose-300 text-xs font-bold transition-all flex items-center justify-center gap-1.5"
+                          className="py-1.5 px-2.5 rounded-lg bg-rose-950/30 hover:bg-rose-900/50 border border-rose-500/30 text-rose-300 text-[11px] font-bold transition-all flex items-center justify-center gap-1 cursor-pointer"
                         >
                           <span>🗑️</span>
                           <span>Delete</span>
@@ -2516,7 +2513,7 @@ const PRICING_GAMES = [
                         <Link
                           to="/"
                           target="_blank"
-                          className="py-2 px-3 rounded-xl bg-cyan-950/40 hover:bg-cyan-900/60 border border-cyan-500/30 text-cyan-300 text-xs font-bold transition-all flex items-center justify-center gap-1.5"
+                          className="py-1.5 px-2.5 rounded-lg bg-cyan-950/30 hover:bg-cyan-900/50 border border-cyan-500/30 text-cyan-300 text-[11px] font-bold transition-all flex items-center justify-center gap-1 cursor-pointer"
                         >
                           <span>👁️</span>
                           <span>View on Home</span>
