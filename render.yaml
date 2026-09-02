@@ -32,6 +32,12 @@ services:
         value: "8633673377:AAF35ZeHsmZOgUEsl0oXPraB35gq-vYYc_A"
       - key: TELEGRAM_MASTER_TOTAL_TOPIC_ID
         value: "126"
+      - key: ABA_PAYWAY_MERCHANT_ID
+        value: "ec000002"
+      - key: ABA_PAYWAY_API_KEY
+        value: ""
+      - key: ABA_PAYWAY_BASE_URL
+        value: "https://checkout-sandbox.payway.com.kh"
       - key: MONGODB_URI
         value: "mongodb+srv://peakmao007_db_user:DNelqTteMX30a7PX@pudeth.olrum6s.mongodb.net/?appName=pudeth&retryWrites=true&w=majority"
 

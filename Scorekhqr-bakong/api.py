@@ -20,6 +20,8 @@ import requests
 from datetime import datetime
 import io
 import hashlib
+import hmac
+import base64
 import time
 import threading
 import re
@@ -1365,6 +1367,252 @@ def test_bakong_token():
             'status': f'Connection Error: {str(e)}',
             'error': str(e)
         }), 500
+
+# ==============================================================================
+# ABA PAYWAY GATEWAY INTEGRATION (Official PayWay v1 API)
+# ==============================================================================
+
+def generate_payway_hash(raw_str: str, api_key: str) -> str:
+    """Generate HMAC-SHA512 Base64 signature according to ABA PayWay specs"""
+    if not api_key:
+        return ""
+    digest = hmac.new(api_key.encode('utf-8'), raw_str.encode('utf-8'), hashlib.sha512).digest()
+    return base64.b64encode(digest).decode('utf-8')
+
+
+@app.route('/api/payway/create-qr', methods=['POST', 'OPTIONS'])
+def payway_create_qr():
+    """
+    Generate dynamic ABA KHQR & Deeplink using ABA PayWay QR API
+    POST /api/payment-gateway/v1/payments/generate-qr
+    """
+    if request.method == 'OPTIONS':
+        return jsonify({'status': 'ok'})
+
+    try:
+        data = request.get_json(force=True, silent=True) or {}
+        order_id = str(data.get('order_id') or data.get('orderId') or data.get('bill_number') or int(time.time()))
+        amount = float(data.get('amount') or 0.95)
+        currency = str(data.get('currency') or 'USD').upper()
+        
+        merchant_id = get_config('ABA_PAYWAY_MERCHANT_ID', 'ec000002')
+        api_key = get_config('ABA_PAYWAY_API_KEY', '')
+        base_url = get_config('ABA_PAYWAY_BASE_URL', 'https://checkout-sandbox.payway.com.kh').rstrip('/')
+
+        req_time = datetime.utcnow().strftime('%Y%m%d%H%M%S')
+        tran_id = f"TRX{order_id}_{int(time.time()) % 100000}"[:20]
+        amt_str = f"{amount:.2f}" if currency == 'USD' else str(int(amount))
+
+        first_name = data.get('first_name', 'Customer')
+        last_name = data.get('last_name', 'Player')
+        email = data.get('email', 'customer@mlbb.com')
+        phone = data.get('phone', '012345678')
+        payment_option = "abapay_khqr"
+        lifetime = 60 # minutes
+        qr_image_template = "template3"
+        purchase_type = "purchase"
+        items = ""
+        callback_url = base64.b64encode(f"https://mlbb-backend-api.onrender.com/api/payway/callback".encode()).decode()
+        return_deeplink = ""
+        custom_fields = ""
+        return_params = ""
+        payout = ""
+
+        # Concatenation order as specified in ABA PayWay docs 14-qr-api.md
+        b4hash = (
+            req_time + merchant_id + tran_id + amt_str + items + 
+            first_name + last_name + email + phone + purchase_type + 
+            payment_option + callback_url + return_deeplink + currency + 
+            custom_fields + return_params + payout + str(lifetime) + qr_image_template
+        )
+        hash_val = generate_payway_hash(b4hash, api_key)
+
+        payway_payload = {
+            "req_time": req_time,
+            "merchant_id": merchant_id,
+            "tran_id": tran_id,
+            "amount": amt_str,
+            "currency": currency,
+            "payment_option": payment_option,
+            "lifetime": lifetime,
+            "qr_image_template": qr_image_template,
+            "hash": hash_val,
+            "first_name": first_name,
+            "last_name": last_name,
+            "email": email,
+            "phone": phone,
+            "purchase_type": purchase_type,
+            "callback_url": callback_url
+        }
+
+        # If live API key is present, attempt ABA PayWay gateway
+        if api_key and api_key.strip():
+            try:
+                resp = requests.post(f"{base_url}/api/payment-gateway/v1/payments/generate-qr", json=payway_payload, timeout=8)
+                if resp.status_code == 200:
+                    res_data = resp.json()
+                    status_code = res_data.get('status', {}).get('code')
+                    if status_code in ['00', 0, '0']:
+                        qr_string = res_data.get('qr_string')
+                        qr_image = res_data.get('qr_image')
+                        abapay_deeplink = res_data.get('abapay_deeplink')
+                        md5_hash = hashlib.md5(qr_string.encode()).hexdigest() if qr_string else hashlib.md5(tran_id.encode()).hexdigest()
+
+                        qr_cache[md5_hash] = {
+                            'bill_number': f"MLBB{order_id}",
+                            'tran_id': tran_id,
+                            'amount': amount,
+                            'currency': currency,
+                            'qr_code': qr_string,
+                            'status': 'UNPAID',
+                            'gateway': 'aba_payway',
+                            'deeplink': abapay_deeplink,
+                            'created_at': datetime.now().isoformat()
+                        }
+
+                        return jsonify({
+                            'success': True,
+                            'status': 'SUCCESS',
+                            'gateway': 'aba_payway',
+                            'tran_id': tran_id,
+                            'bill_number': f"MLBB{order_id}",
+                            'orderId': order_id,
+                            'qr_code': qr_string,
+                            'khqrString': qr_string,
+                            'qr_image': qr_image,
+                            'qr_image_url': f"data:image/png;base64,{qr_image}" if qr_image else f"/api/payment/qr/{md5_hash}",
+                            'deeplink': abapay_deeplink,
+                            'abapay_deeplink': abapay_deeplink,
+                            'md5_hash': md5_hash,
+                            'md5': md5_hash,
+                            'amount': amount,
+                            'currency': currency
+                        }), 201
+            except Exception as pe:
+                print(f"[-] ABA PayWay API call error, falling back to NBC Bakong: {pe}")
+
+        # High-resilience Fallback: Generate EMVCo KHQR directly
+        bakong_id = get_config('MERCHANT_BAKONG_ID') or 'phorn_sokkhim@bkrt'
+        m_name = get_config('MERCHANT_NAME') or 'PuDeth Smart-PAY'
+        m_city = get_config('MERCHANT_CITY') or 'Phnom Penh'
+        qr, md5 = generate_emvco_khqr(bakong_id, m_name, m_city, amount, currency)
+        deeplink = f"https://bakong.nbc.org.kh/pay?md5={md5}"
+
+        payment_doc = {
+            'bill_number': f"MLBB{order_id}",
+            'qr_code': qr,
+            'md5_hash': md5,
+            'deeplink': deeplink,
+            'amount': amount,
+            'currency': currency,
+            'status': 'UNPAID',
+            'created_at': datetime.now().isoformat()
+        }
+        save_payment_record(payment_doc)
+
+        return jsonify({
+            'success': True,
+            'status': 'SUCCESS',
+            'gateway': 'khqr_direct',
+            'tran_id': tran_id,
+            'bill_number': f"MLBB{order_id}",
+            'orderId': order_id,
+            'qr_code': qr,
+            'khqrString': qr,
+            'md5_hash': md5,
+            'md5': md5,
+            'deeplink': deeplink,
+            'abapay_deeplink': deeplink,
+            'qr_image_url': f"/api/payment/qr/{md5}",
+            'amount': amount,
+            'currency': currency
+        }), 201
+
+    except Exception as e:
+        return jsonify({'status': 'error', 'message': str(e)}), 500
+
+
+@app.route('/api/payway/check-status', methods=['POST', 'GET', 'OPTIONS'])
+def payway_check_status():
+    """
+    Check transaction status with ABA PayWay check-transaction-2 API (up to 600 req/sec)
+    """
+    if request.method == 'OPTIONS':
+        return jsonify({'status': 'ok'})
+
+    try:
+        data = request.get_json(force=True, silent=True) or {}
+        tran_id = data.get('tran_id') or request.args.get('tran_id') or ''
+        order_id = data.get('order_id') or request.args.get('order_id') or ''
+        md5 = data.get('md5') or request.args.get('md5') or ''
+
+        merchant_id = get_config('ABA_PAYWAY_MERCHANT_ID', 'ec000002')
+        api_key = get_config('ABA_PAYWAY_API_KEY', '')
+        base_url = get_config('ABA_PAYWAY_BASE_URL', 'https://checkout-sandbox.payway.com.kh').rstrip('/')
+
+        # 1. If API key configured, check with ABA PayWay gateway
+        if api_key and tran_id:
+            req_time = datetime.utcnow().strftime('%Y%m%d%H%M%S')
+            b4hash = req_time + merchant_id + tran_id
+            hash_val = generate_payway_hash(b4hash, api_key)
+
+            try:
+                resp = requests.post(f"{base_url}/api/payment-gateway/v1/payments/check-transaction-2", json={
+                    "req_time": req_time,
+                    "merchant_id": merchant_id,
+                    "tran_id": tran_id,
+                    "hash": hash_val
+                }, timeout=5)
+
+                if resp.status_code == 200:
+                    rdata = resp.json().get('data', {})
+                    if rdata.get('payment_status_code') == 0:
+                        mark_order_paid_everywhere(order_id or tran_id, md5)
+                        return jsonify({'status': 'PAID', 'paid': True, 'gateway': 'aba_payway'})
+            except Exception as e:
+                print(f"[-] PayWay status check error: {e}")
+
+        # 2. Check in-memory / MongoDB / Bakong
+        if md5:
+            rec = get_payment_record(md5)
+            if rec and rec.get('status') == 'PAID':
+                return jsonify({'status': 'PAID', 'paid': True, 'gateway': 'cache'})
+            st, _ = query_bakong_nbc_direct(md5)
+            if st == 'PAID':
+                mark_order_paid_everywhere(order_id or md5, md5)
+                return jsonify({'status': 'PAID', 'paid': True, 'gateway': 'bakong'})
+
+        return jsonify({'status': 'UNPAID', 'paid': False})
+
+    except Exception as e:
+        return jsonify({'status': 'error', 'message': str(e)}), 500
+
+
+@app.route('/api/payway/callback', methods=['POST', 'GET'])
+def payway_callback():
+    """
+    ABA PayWay Instant Pushback Webhook URL
+    Called directly by ABA PayWay servers when a customer pays
+    """
+    try:
+        data = request.get_json(force=True, silent=True) or request.form.to_dict() or {}
+        print(f"[+] ABA PayWay Webhook Received: {data}")
+
+        tran_id = str(data.get('tran_id') or data.get('transaction_id') or '')
+        status = data.get('status') or data.get('payment_status') or data.get('payment_status_code')
+        order_id = str(data.get('order_id') or data.get('bill_number') or tran_id)
+
+        # Standard ABA status 0 or APPROVED means paid
+        if str(status) in ['0', '00', 'APPROVED', 'SUCCESS', 'PAID']:
+            clean_ord = order_id.split('_')[0].replace('TRX', '').replace('MLBB', '')
+            mark_order_paid_everywhere(clean_ord)
+            return jsonify({'status': 0, 'description': 'Success'}), 200
+
+        return jsonify({'status': 0, 'description': 'Received'}), 200
+    except Exception as e:
+        print(f"[-] PayWay callback error: {e}")
+        return jsonify({'status': -1, 'error': str(e)}), 500
+
 
 @app.route('/health', methods=['GET'])
 @app.route('/api/health', methods=['GET'])

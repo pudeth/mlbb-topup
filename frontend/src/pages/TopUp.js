@@ -1863,6 +1863,19 @@ const TopUp = () => {
                   </div>
                 </div>
 
+                {/* One-Tap ABA Mobile Deeplink Button */}
+                {(paymentData?.abapayDeeplink || paymentData?.khqrDeeplink) && (
+                  <a
+                    href={paymentData.abapayDeeplink || paymentData.khqrDeeplink}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="w-full py-2 px-3 rounded-xl bg-gradient-to-r from-sky-600 to-blue-700 hover:from-sky-500 hover:to-blue-600 text-white font-black text-xs tracking-wider uppercase transition-all flex items-center justify-center gap-2 shadow-lg shadow-sky-900/30 border border-sky-400/40 active:scale-[0.98]"
+                  >
+                    <span>📲</span>
+                    <span>Pay with ABA Mobile App</span>
+                  </a>
+                )}
+
                 {/* I Have Paid button */}
                 <button
                   onClick={handleForceCheck}

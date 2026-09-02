@@ -122,6 +122,10 @@ builder.Services.AddScoped<ITopUpService, TopUpService>();
 builder.Services.AddHttpClient<IKHQRService, KHQRService>();
 builder.Services.AddScoped<IKHQRService, KHQRService>();
 
+// Register ABA PayWay Service
+builder.Services.AddHttpClient<IAbaPayWayService, AbaPayWayService>();
+builder.Services.AddScoped<IAbaPayWayService, AbaPayWayService>();
+
 // Register payment gateway and top-up provider
 builder.Services.AddScoped<MLBBTopUp.Infrastructure.PaymentGateways.IPaymentGatewayClient, 
     MLBBTopUp.Infrastructure.PaymentGateways.MockPaymentGateway>();
