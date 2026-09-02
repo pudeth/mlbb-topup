@@ -167,6 +167,26 @@ public class OrdersController : BaseController
             isPaid = await _paymentService.VerifyPaymentAsync(id);
         }
 
+        if (!isPaid && manualConfirm)
+        {
+            await _orderService.UpdateOrderPaymentStatusAsync(id, "Paid");
+            isPaid = true;
+            if (order.TopupStatus == "Pending")
+            {
+                _ = Task.Run(async () =>
+                {
+                    try
+                    {
+                        await _topUpService.ProcessTopUpAsync(order.OrderId, order.PlayerID, order.ServerID, order.DiamondAmount);
+                    }
+                    catch (Exception ex)
+                    {
+                        Console.WriteLine($"Error delivering topup: {ex.Message}");
+                    }
+                });
+            }
+        }
+
         var updatedOrder = await _orderService.GetOrderByIdAsync(id);
         var status = await _orderService.GetOrderStatusAsync(id);
 

@@ -200,6 +200,21 @@ public class PaymentService : IPaymentService
 
         if (payment == null)
         {
+            var ord = await _orderService.GetOrderByIdAsync(orderId);
+            if (ord != null)
+            {
+                var pRes = await CreatePaymentAsync(new CreatePaymentRequest
+                {
+                    OrderId = orderId,
+                    Currency = "USD",
+                    PaymentMethod = "khqr"
+                });
+                payment = await _context.Payments.FirstOrDefaultAsync(p => p.OrderId == orderId);
+            }
+        }
+
+        if (payment == null)
+        {
             return false;
         }
 

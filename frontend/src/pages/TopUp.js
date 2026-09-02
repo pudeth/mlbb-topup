@@ -706,31 +706,48 @@ const TopUp = () => {
     };
 
     try {
-      // 1. Check Bakong MD5 payment status via Flask API (Vercel proxy in prod)
+      let isPaidConfirmed = false;
+
+      // 1. Check Bakong MD5 payment status via Flask API (Vercel proxy & Render fallback)
       if (curMd5) {
         try {
           const isLocal = typeof window !== 'undefined' && (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1');
-          const statusEp = isLocal
-            ? `http://localhost:5001/api/payment/status/${curMd5}`
-            : `/api/khqr/payment/status/${curMd5}`;
+          const endpoints = isLocal
+            ? [`http://localhost:5001/api/payment/status/${curMd5}`]
+            : [`/api/khqr/payment/status/${curMd5}`, `https://mlbb-khqr-api.onrender.com/api/payment/status/${curMd5}`];
 
-          const r = await fetch(statusEp).then(res => res.json());
-          const raw = (r?.status || '').toUpperCase();
+          for (const ep of endpoints) {
+            try {
+              const r = await fetch(ep).then(res => res.json());
+              const raw = (r?.status || '').toUpperCase();
 
-          // Only trust a REAL paid response from Bakong — never trust auto_confirmed
-          if ((raw === 'PAID' || raw === 'SUCCESS' || raw === 'COMPLETED' || r?.paid === true) && !r?.auto_confirmed) {
-            console.log(`%c[Bakong Auto-Tracker] ✓ getStatus confirmed PAID`, 'color: #10b981; font-weight: bold;');
-            await ordersAPI.checkPayment(curOrderId, true);
-            await triggerPaidTransition();
-            return true;
-          }
-
-          if (r?.rate_limited) {
-            console.log(`%c[Bakong Auto-Tracker] ⚠️ Rate limited – waiting for real Bakong confirmation...`, 'color: #f59e0b; font-size: 11px;');
+              // Only trust a REAL paid response from Bakong — never trust auto_confirmed
+              if ((raw === 'PAID' || raw === 'SUCCESS' || raw === 'COMPLETED' || r?.paid === true) && !r?.auto_confirmed) {
+                isPaidConfirmed = true;
+                break;
+              }
+            } catch (epE) {}
           }
         } catch (e) {
           console.warn('[Bakong Auto-Tracker] Status check error:', e?.message);
         }
+      }
+
+      // 2. Also check order status on backend
+      if (!isPaidConfirmed && curOrderId) {
+        try {
+          const ordCheck = await ordersAPI.checkPayment(curOrderId, false);
+          if (ordCheck?.data?.isPaid || ordCheck?.data?.paymentStatus === 'Paid') {
+            isPaidConfirmed = true;
+          }
+        } catch (ordErr) {}
+      }
+
+      if (isPaidConfirmed) {
+        console.log(`%c[Bakong Auto-Tracker] ✓ Confirmed PAID! Processing order completion...`, 'color: #10b981; font-weight: bold;');
+        await ordersAPI.checkPayment(curOrderId, true);
+        await triggerPaidTransition();
+        return true;
       }
 
       console.log(`%c[Bakong Auto-Tracker] ⏳ Order #${curOrderId} | Waiting for real Bakong payment...`, 'color: #94a3b8; font-size: 11px;');
@@ -750,31 +767,49 @@ const TopUp = () => {
   const handleForceCheck = useCallback(async () => {
     const curMd5 = currentMd5Ref.current;
     const curOrderId = currentOrderIdRef.current;
-    if (!curMd5 || paymentPaidRef.current || qrExpiredRef.current) return;
+    if (!curOrderId || paymentPaidRef.current || qrExpiredRef.current) return;
     setForceChecking(true);
     setForceCheckMsg('Checking payment status...');
     try {
-      const isLocal = typeof window !== 'undefined' && (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1');
-      const ep = isLocal
-        ? `http://localhost:5001/api/payment/force-check/${curMd5}`
-        : `/api/khqr/payment/force-check/${curMd5}`;
-      const r = await fetch(ep).then(res => res.json());
-      const raw = (r?.status || '').toUpperCase();
-      if (raw === 'PAID' || raw === 'SUCCESS' || raw === 'COMPLETED') {
+      let isConfirmed = false;
+
+      // 1. Check microservice endpoints
+      if (curMd5) {
+        const isLocal = typeof window !== 'undefined' && (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1');
+        const endpoints = isLocal
+          ? [`http://localhost:5001/api/payment/force-check/${curMd5}`]
+          : [`/api/khqr/payment/force-check/${curMd5}`, `https://mlbb-khqr-api.onrender.com/api/payment/force-check/${curMd5}`];
+
+        for (const ep of endpoints) {
+          try {
+            const r = await fetch(ep).then(res => res.json());
+            const raw = (r?.status || '').toUpperCase();
+            if (raw === 'PAID' || raw === 'SUCCESS' || raw === 'COMPLETED' || r?.paid === true) {
+              isConfirmed = true;
+              break;
+            }
+          } catch (e) {}
+        }
+      }
+
+      // 2. Also check and confirm with backend order check
+      try {
+        const orderStatus = await ordersAPI.checkPayment(curOrderId, true);
+        if (orderStatus?.data?.isPaid || orderStatus?.data?.paymentStatus === 'Paid') {
+          isConfirmed = true;
+        }
+      } catch (e) {}
+
+      if (isConfirmed) {
         setForceCheckMsg('✅ You pay success!');
-        await ordersAPI.checkPayment(curOrderId);
-        // Trigger success screen
-        const triggerPaid = async () => {
-          setProcessingStep(1);
-          setTimeout(() => setProcessingStep(2), 600);
-          setTimeout(() => setProcessingStep(3), 1200);
-          setTimeout(() => {
-            setPaymentPaid(true);
-            paymentPaidRef.current = true;
-            setProcessingStep(0);
-          }, 1800);
-        };
-        await triggerPaid();
+        setProcessingStep(1);
+        setTimeout(() => setProcessingStep(2), 600);
+        setTimeout(() => setProcessingStep(3), 1200);
+        setTimeout(() => {
+          setPaymentPaid(true);
+          paymentPaidRef.current = true;
+          setProcessingStep(0);
+        }, 1800);
       } else {
         setForceCheckMsg('❌ You not Pay already. Please scan QR code and pay with your bank app.');
       }
@@ -782,7 +817,7 @@ const TopUp = () => {
       setForceCheckMsg('❌ You not Pay already. Please scan QR code and pay with your bank app.');
     } finally {
       setForceChecking(false);
-      setTimeout(() => setForceCheckMsg(''), 5000);
+      setTimeout(() => setForceCheckMsg(''), 6000);
     }
   }, []);
 
@@ -878,7 +913,7 @@ const TopUp = () => {
           const isLocalHost = typeof window !== 'undefined' && (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1');
           const khqrEndpoints = isLocalHost
             ? ['http://localhost:5001/api/payment/create']
-            : ['/api/khqr/payment/create'];
+            : ['/api/khqr/payment/create', 'https://mlbb-khqr-api.onrender.com/api/payment/create'];
 
           for (const ep of khqrEndpoints) {
             try {
