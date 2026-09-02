@@ -2,7 +2,7 @@ import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { useSearchParams, useNavigate, Link } from 'react-router-dom';
 import { QRCodeSVG } from 'qrcode.react';
 import { useLanguage } from '../context/LanguageContext';
-import { ordersAPI, paymentsAPI, topupAPI, khqrAPI } from '../services/api';
+import { ordersAPI, paymentsAPI, topupAPI } from '../services/api';
 import { getStoredGames, getMasterTopupStatus, fetchStoredGames, fetchMasterTopupStatus } from '../services/gamesConfig';
 import { CambodiaFlagFrame } from '../components/CambodiaFlagBadge';
 import ProductPackageImage from '../components/ProductPackageImage';
@@ -400,6 +400,8 @@ const TopUp = () => {
   const [orderId, setOrderId] = useState(null);
   const [paymentData, setPaymentData] = useState(null);
   const [paymentPaid, setPaymentPaid] = useState(false);
+  const [awaitingBalance, setAwaitingBalance] = useState(false); // provider has no balance — pending admin
+  const [confirmSent, setConfirmSent] = useState(false); // customer pressed Confirm button
   const [qrExpired, setQrExpired] = useState(false);
   const qrExpiredRef = useRef(false);
   const [processingStep, setProcessingStep] = useState(0); // 0: scanning, 1: verifying, 2: server sync, 3: delivering
@@ -511,6 +513,8 @@ const TopUp = () => {
     setPaymentData(null);
     setOrderId(null);
     setPaymentPaid(false);
+    setAwaitingBalance(false);
+    setConfirmSent(false);
   };
 
   const handlePlayerIdChange = (e) => {
@@ -659,7 +663,6 @@ const TopUp = () => {
 
   const currentMd5Ref = useRef(paymentData?.khqrMd5Hash || paymentData?.md5Hash);
   currentMd5Ref.current = paymentData?.khqrMd5Hash || paymentData?.md5Hash;
-  const rateLimitCountRef = useRef(0);
 
 
 
@@ -745,7 +748,16 @@ const TopUp = () => {
 
       if (isPaidConfirmed) {
         console.log(`%c[Bakong Auto-Tracker] ✓ Confirmed PAID! Processing order completion...`, 'color: #10b981; font-weight: bold;');
-        await ordersAPI.checkPayment(curOrderId, true);
+        const confirmResult = await ordersAPI.checkPayment(curOrderId, true);
+        // Check if topup is awaiting balance (provider has no funds)
+        const topupStatus = confirmResult?.data?.topupStatus || confirmResult?.data?.order?.TopupStatus || '';
+        if (topupStatus === 'AwaitingBalance') {
+          // Show pending receipt — admin needs to approve
+          setAwaitingBalance(true);
+          paymentPaidRef.current = true;
+          setProcessingStep(0);
+          return true;
+        }
         await triggerPaidTransition();
         return true;
       }
@@ -760,66 +772,6 @@ const TopUp = () => {
     return false;
   }, [formData.playerID, formData.serverID, selectedProduct.name]);
 
-  // Force-check: called when user clicks "I Have Paid" — bypasses throttle
-  const [forceChecking, setForceChecking] = useState(false);
-  const [forceCheckMsg, setForceCheckMsg] = useState('');
-
-  const handleForceCheck = useCallback(async () => {
-    const curMd5 = currentMd5Ref.current;
-    const curOrderId = currentOrderIdRef.current;
-    if (!curOrderId || paymentPaidRef.current || qrExpiredRef.current) return;
-    setForceChecking(true);
-    setForceCheckMsg('Checking payment status...');
-    try {
-      let isConfirmed = false;
-
-      // 1. Check microservice endpoints
-      if (curMd5) {
-        const isLocal = typeof window !== 'undefined' && (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1');
-        const endpoints = isLocal
-          ? [`http://localhost:5001/api/payment/force-check/${curMd5}`]
-          : [`/api/khqr/payment/force-check/${curMd5}`, `https://mlbb-khqr-api.onrender.com/api/payment/force-check/${curMd5}`];
-
-        for (const ep of endpoints) {
-          try {
-            const r = await fetch(ep).then(res => res.json());
-            const raw = (r?.status || '').toUpperCase();
-            if (raw === 'PAID' || raw === 'SUCCESS' || raw === 'COMPLETED' || r?.paid === true) {
-              isConfirmed = true;
-              break;
-            }
-          } catch (e) {}
-        }
-      }
-
-      // 2. Also check and confirm with backend order check
-      try {
-        const orderStatus = await ordersAPI.checkPayment(curOrderId, true);
-        if (orderStatus?.data?.isPaid || orderStatus?.data?.paymentStatus === 'Paid') {
-          isConfirmed = true;
-        }
-      } catch (e) {}
-
-      if (isConfirmed) {
-        setForceCheckMsg('✅ You pay success!');
-        setProcessingStep(1);
-        setTimeout(() => setProcessingStep(2), 600);
-        setTimeout(() => setProcessingStep(3), 1200);
-        setTimeout(() => {
-          setPaymentPaid(true);
-          paymentPaidRef.current = true;
-          setProcessingStep(0);
-        }, 1800);
-      } else {
-        setForceCheckMsg('❌ You not Pay already. Please scan QR code and pay with your bank app.');
-      }
-    } catch (e) {
-      setForceCheckMsg('❌ You not Pay already. Please scan QR code and pay with your bank app.');
-    } finally {
-      setForceChecking(false);
-      setTimeout(() => setForceCheckMsg(''), 6000);
-    }
-  }, []);
 
 
   // Automatic Real-Time Polling Interval (Every 3 seconds matching Restaurant POS engine)
@@ -1876,45 +1828,97 @@ const TopUp = () => {
                   </a>
                 )}
 
-                {/* I Have Paid button */}
-                <button
-                  onClick={handleForceCheck}
-                  disabled={forceChecking}
-                  className={`w-full py-2 px-3 rounded-xl font-black text-xs tracking-wider uppercase transition-all flex items-center justify-center gap-2 shadow-lg ${
-                    forceChecking
-                      ? 'bg-amber-500/20 text-amber-400 border border-amber-500/30 cursor-wait'
-                      : 'bg-gradient-to-r from-amber-500 to-orange-500 text-black border-0 hover:opacity-90 active:scale-[0.98] cursor-pointer'
-                  }`}
-                >
-                  {forceChecking ? (
-                    <>
-                      <span className="w-3 h-3 border-2 border-amber-400 border-t-transparent rounded-full animate-spin" />
-                      <span>Verifying with Bakong...</span>
-                    </>
-                  ) : (
-                    <>
-                      <span>✅</span>
-                      <span>I Have Paid — Verify Now</span>
-                    </>
-                  )}
-                </button>
 
-                {forceCheckMsg && (
-                  <p className={`text-center text-[11px] font-bold py-1 rounded-lg ${
-                    forceCheckMsg.includes('✅') ? 'text-emerald-400 bg-emerald-950/40' :
-                    forceCheckMsg.includes('⚠️') ? 'text-amber-400 bg-amber-950/40' :
-                    'text-rose-400 bg-rose-950/40'
-                  }`}>
-                    {forceCheckMsg}
-                  </p>
-                )}
-
-                <p className="text-[10px] text-center text-slate-300 leading-normal">
-                  Scan with any Cambodian Banking App. After paying, tap <strong className="text-amber-400">I Have Paid</strong> to verify instantly.
-                </p>
               </div>
             )}
 
+          </div>
+        </div>
+      )}
+
+      {/* ======================================================== */}
+      {/* AWAITING BALANCE — PENDING RECEIPT (provider low balance) */}
+      {/* ======================================================== */}
+      {awaitingBalance && !paymentPaid && (
+        <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4 bg-black/85 backdrop-blur-lg overflow-y-auto animate-fadeIn">
+          <div className="bg-[#0B0F19] border-2 border-amber-500/70 rounded-3xl max-w-lg w-full p-6 sm:p-8 shadow-2xl shadow-amber-500/20 text-center space-y-5 animate-scaleUp relative overflow-hidden my-auto">
+
+            {/* Glow */}
+            <div className="absolute -top-24 left-1/2 -translate-x-1/2 w-64 h-64 bg-amber-500/15 rounded-full blur-3xl pointer-events-none" />
+
+            {/* Icon */}
+            <div className="w-20 h-20 rounded-full bg-gradient-to-tr from-amber-500 to-orange-400 text-slate-950 text-4xl flex items-center justify-center mx-auto shadow-lg">
+              ✅
+            </div>
+
+            <div className="space-y-1 relative">
+              <span className="px-3.5 py-1 rounded-full bg-amber-500/20 text-amber-300 border border-amber-500/40 text-xs font-black uppercase tracking-widest inline-flex items-center gap-1.5">
+                <span className="w-2 h-2 rounded-full bg-amber-400 animate-ping" />
+                Payment Received
+              </span>
+              <h2 className="text-2xl sm:text-3xl font-black text-white pt-1">Your Payment is Confirmed!</h2>
+              <p className="text-xs sm:text-sm text-slate-300">
+                We have received your payment. Your diamonds will be delivered shortly.
+              </p>
+            </div>
+
+            {/* Order Receipt */}
+            <div className="p-4 rounded-2xl bg-[#111728] border border-slate-700 text-left space-y-2.5 text-xs shadow-inner">
+              <div className="flex justify-between items-center pb-2 border-b border-slate-800">
+                <span className="text-slate-400">Order Number:</span>
+                <span className="font-mono font-black text-amber-300 text-sm">#{orderId}</span>
+              </div>
+              <div className="flex justify-between items-center">
+                <span className="text-slate-400">Player ID:</span>
+                <span className="font-mono text-white">{formData.playerID}</span>
+              </div>
+              <div className="flex justify-between items-center">
+                <span className="text-slate-400">Package:</span>
+                <span className="text-white font-bold">{selectedProduct.name}</span>
+              </div>
+              <div className="flex justify-between items-center pt-2 border-t border-slate-800">
+                <span className="text-slate-400">Amount Paid:</span>
+                <span className="font-black text-emerald-400">${paymentData?.amount?.toFixed(2) || '—'}</span>
+              </div>
+            </div>
+
+            {/* Status Badge */}
+            <div className="flex items-center justify-center gap-3 py-3 px-4 rounded-2xl bg-amber-950/40 border border-amber-500/30">
+              <span className="text-2xl">⏳</span>
+              <div className="text-left">
+                <p className="text-amber-300 font-black text-sm">Topup Diamond Pending</p>
+                <p className="text-slate-400 text-xs leading-relaxed">
+                  We are sorry, our team will check and complete your order in a few minutes.
+                </p>
+              </div>
+            </div>
+
+            {/* Confirm Button */}
+            {!confirmSent ? (
+              <button
+                onClick={async () => {
+                  try {
+                    await ordersAPI.confirmPaid(orderId);
+                    setConfirmSent(true);
+                  } catch {
+                    setConfirmSent(true); // still mark as sent on error
+                  }
+                }}
+                className="w-full py-3 px-4 rounded-2xl bg-gradient-to-r from-amber-500 to-orange-500 text-black font-black text-sm tracking-wider uppercase flex items-center justify-center gap-2 shadow-lg hover:opacity-90 active:scale-[0.98] transition-all cursor-pointer"
+              >
+                <span>✅</span>
+                <span>I Have Paid — Confirm & Alert Admin</span>
+              </button>
+            ) : (
+              <div className="w-full py-3 px-4 rounded-2xl bg-emerald-950/50 border border-emerald-500/40 flex items-center justify-center gap-2">
+                <span>✅</span>
+                <span className="text-emerald-400 font-black text-sm">Admin Has Been Notified!</span>
+              </div>
+            )}
+
+            <p className="text-[10px] text-slate-500 leading-relaxed">
+              After confirming, our admin will be alerted immediately and your 💎 diamonds will be delivered as soon as possible. Thank you for your patience!
+            </p>
           </div>
         </div>
       )}

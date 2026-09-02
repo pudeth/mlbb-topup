@@ -182,6 +182,7 @@ const PRICING_GAMES = [
   const [failedTransactions, setFailedTransactions] = useState([]);
   const [orders, setOrders] = useState([]);
   const [pendingOrders, setPendingOrders] = useState([]);
+  const [pendingBalanceOrders, setPendingBalanceOrders] = useState([]); // paid but provider had no balance
   const [products, setProducts] = useState([]);
   const [users, setUsers] = useState([]);
   const [systemStatus, setSystemStatus] = useState(null);
@@ -655,14 +656,16 @@ const PRICING_GAMES = [
 
     try {
       if (activeTab === 'overview') {
-        const [repRes, anaRes, pendRes] = await Promise.all([
+        const [repRes, anaRes, pendRes, balRes] = await Promise.all([
           adminAPI.getReports().catch(() => ({ data: null })),
           adminAPI.getAnalytics().catch(() => ({ data: null })),
           adminAPI.getPendingOrders().catch(() => ({ data: [] })),
+          adminAPI.getPendingBalanceOrders().catch(() => ({ data: { orders: [] } })),
         ]);
         if (repRes.data) setReports(repRes.data);
         if (anaRes.data) setAnalytics(anaRes.data);
         setPendingOrders(pendRes.data || []);
+        setPendingBalanceOrders(balRes.data?.orders || []);
       } else if (activeTab === 'financials') {
         const finRes = await adminAPI.getFinancialsProfit().catch(() => ({ data: null }));
         if (finRes.data) setFinancials(finRes.data);
@@ -676,12 +679,14 @@ const PRICING_GAMES = [
         const failRes = await adminAPI.getFailedTransactions().catch(() => ({ data: [] }));
         setFailedTransactions(failRes.data || []);
       } else if (activeTab === 'pending') {
-        const [pendRes, provRes] = await Promise.all([
+        const [pendRes, provRes, balRes] = await Promise.all([
           adminAPI.getPendingOrders().catch(() => ({ data: [] })),
           adminAPI.getProviderSettings().catch(() => ({ data: null })),
+          adminAPI.getPendingBalanceOrders().catch(() => ({ data: { orders: [] } })),
         ]);
         setPendingOrders(pendRes.data || []);
         if (provRes.data) setProviderSettings(provRes.data);
+        setPendingBalanceOrders(balRes.data?.orders || []);
       } else if (activeTab === 'orders') {
         const ordersRes = await adminAPI.getAllOrders().catch(() => ({ data: [] }));
         setOrders(ordersRes.data || []);
@@ -2950,6 +2955,91 @@ const PRICING_GAMES = [
         )}
 
         {/* ========================================================= */}
+        {/* AWAITING BALANCE ORDERS — Customer Paid, Provider No Funds */}
+        {/* ========================================================= */}
+        {!loading && activeTab === 'pending' && pendingBalanceOrders.length > 0 && (
+          <div className="space-y-5 mt-4">
+            <div className="flex items-center gap-3 p-4 rounded-2xl bg-amber-950/40 border border-amber-500/40">
+              <span className="text-3xl">🚨</span>
+              <div>
+                <h3 className="text-amber-300 font-black text-base">
+                  Awaiting Balance — {pendingBalanceOrders.length} Order{pendingBalanceOrders.length !== 1 ? 's' : ''}
+                </h3>
+                <p className="text-slate-400 text-xs">
+                  Customer paid but diamonds were NOT delivered — provider had insufficient balance. Please top up provider and approve each order below.
+                </p>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+              {pendingBalanceOrders.map((order) => (
+                <div
+                  key={order.orderId}
+                  className="card bg-gradient-to-br from-amber-950/30 to-dark-card border-amber-500/50 hover:border-amber-400 transition-all space-y-4 shadow-xl relative overflow-hidden rounded-3xl"
+                >
+                  <div className="flex justify-between items-center">
+                    <span className="px-3 py-1 rounded-xl bg-amber-500/20 text-amber-300 border border-amber-500/40 font-mono font-black text-xs">
+                      ORDER #{order.orderId}
+                    </span>
+                    <span className="px-2 py-1 rounded-lg bg-amber-500/20 text-amber-400 border border-amber-500/30 text-[10px] font-black uppercase tracking-wider">
+                      ⚠️ Awaiting Balance
+                    </span>
+                  </div>
+                  <div className="space-y-2 text-xs">
+                    <div className="flex justify-between">
+                      <span className="text-slate-400">Player ID</span>
+                      <span className="font-mono text-white">{order.playerID}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-slate-400">Zone</span>
+                      <span className="font-mono text-white">{order.serverID}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-slate-400">Package</span>
+                      <span className="text-white font-bold">{order.productName}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-slate-400">Diamonds</span>
+                      <span className="text-amber-300 font-black">💎 {order.diamondAmount}</span>
+                    </div>
+                    <div className="flex justify-between border-t border-slate-800 pt-2">
+                      <span className="text-slate-400">Amount</span>
+                      <span className="text-emerald-400 font-black">${Number(order.amount).toFixed(2)}</span>
+                    </div>
+                  </div>
+                  <button
+                    onClick={async () => {
+                      setProcessingOrderId(order.orderId);
+                      try {
+                        const res = await adminAPI.approveTopup(order.orderId);
+                        if (res.data?.success) {
+                          showToast('success', `✅ Diamonds delivered for Order #${order.orderId}!`);
+                        } else {
+                          showToast('error', res.data?.message || 'Delivery failed');
+                        }
+                        loadData(true);
+                      } catch (err) {
+                        showToast('error', err.response?.data?.message || 'Failed to approve topup');
+                      } finally {
+                        setProcessingOrderId(null);
+                      }
+                    }}
+                    disabled={processingOrderId === order.orderId}
+                    className="w-full py-2.5 px-4 rounded-xl bg-gradient-to-r from-amber-500 to-orange-500 text-black font-black text-xs tracking-wider uppercase flex items-center justify-center gap-2 shadow-lg hover:opacity-90 active:scale-[0.98] transition-all disabled:opacity-50"
+                  >
+                    {processingOrderId === order.orderId ? (
+                      <><span className="w-3 h-3 border-2 border-black border-t-transparent rounded-full animate-spin" /><span>Delivering...</span></>
+                    ) : (
+                      <><span>⚡</span><span>Approve &amp; Deliver Diamonds</span></>
+                    )}
+                  </button>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* ========================================================= */}
         {/* TAB 2: DIAMOND PACKAGES & MULTI-TIER PRICING (WITH GAME & EVENT SELECTOR) */}
         {/* ========================================================= */}
         {!loading && activeTab === 'pricing' && (
@@ -4671,9 +4761,9 @@ const PRICING_GAMES = [
         >
           <span className="text-lg relative">
             ⚡
-            {pendingOrders.length > 0 && (
+            {(pendingOrders.length + pendingBalanceOrders.length) > 0 && (
               <span className="absolute -top-1 -right-2 px-1 py-0.2 rounded-full text-[8px] font-black bg-amber-500 text-black">
-                {pendingOrders.length}
+                {pendingOrders.length + pendingBalanceOrders.length}
               </span>
             )}
           </span>

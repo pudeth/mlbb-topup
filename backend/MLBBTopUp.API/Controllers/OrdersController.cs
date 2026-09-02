@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Configuration;
 using MLBBTopUp.Core.DTOs;
 using MLBBTopUp.Core.Interfaces;
 
@@ -12,15 +13,18 @@ public class OrdersController : BaseController
     private readonly IOrderService _orderService;
     private readonly IPaymentService _paymentService;
     private readonly ITopUpService _topUpService;
+    private readonly IConfiguration _configuration;
 
     public OrdersController(
         IOrderService orderService,
         IPaymentService paymentService,
-        ITopUpService topUpService)
+        ITopUpService topUpService,
+        IConfiguration configuration)
     {
         _orderService = orderService;
         _paymentService = paymentService;
         _topUpService = topUpService;
+        _configuration = configuration;
     }
 
     /// <summary>
@@ -177,7 +181,17 @@ public class OrdersController : BaseController
                 {
                     try
                     {
-                        await _topUpService.ProcessTopUpAsync(order.OrderId, order.PlayerID, order.ServerID, order.DiamondAmount);
+                        var topupRes = await _topUpService.ProcessTopUpAsync(order.OrderId, order.PlayerID, order.ServerID, order.DiamondAmount);
+                        if (topupRes.Success)
+                        {
+                            await _orderService.UpdateOrderTopupStatusAsync(order.OrderId, "Completed");
+                        }
+                        else
+                        {
+                            var err = (topupRes.ErrorReason ?? topupRes.Message ?? "").ToLower();
+                            var isLowBalance = err.Contains("insufficient") || err.Contains("balance") || err.Contains("funds") || err.Contains("fzr.cards") || err.Contains("wallet");
+                            await _orderService.UpdateOrderTopupStatusAsync(order.OrderId, isLowBalance ? "AwaitingBalance" : "Failed");
+                        }
                     }
                     catch (Exception ex)
                     {
@@ -199,6 +213,73 @@ public class OrdersController : BaseController
             status = status?.PaymentStatus,
             message = status?.Message,
             order = updatedOrder
+        });
+    }
+
+    /// <summary>
+    /// Called when the customer presses "I Have Paid — Confirm" on the pending receipt screen.
+    /// Sets topupStatus to AwaitingBalance and fires a Telegram alert to admin.
+    /// </summary>
+    [HttpPost("{id}/confirm-paid")]
+    [AllowAnonymous]
+    public async Task<IActionResult> CustomerConfirmPaid(int id)
+    {
+        var order = await _orderService.GetOrderByIdAsync(id);
+        if (order == null)
+            return NotFound(new { message = "Order not found" });
+
+        // Only allow if payment is paid but topup is still awaiting
+        if (order.PaymentStatus != "Paid")
+            return BadRequest(new { message = "Payment not yet confirmed for this order" });
+
+        // Mark as AwaitingBalance if not already done or completed
+        if (order.TopupStatus != "Completed" && order.TopupStatus != "AwaitingBalance")
+        {
+            await _orderService.UpdateOrderTopupStatusAsync(id, "AwaitingBalance");
+        }
+
+        // Fire Telegram alert to admin (background task — non-blocking)
+        _ = Task.Run(async () =>
+        {
+            try
+            {
+                var botToken = _configuration["Telegram:BotToken"] ?? "8516986555:AAH3enGgrbjWPKnQRPwXRQHKVfGgqiQ2Rhw";
+                var chatId = _configuration["Telegram:ChatId"] ?? "-1004398577975";
+                var topicId = _configuration["Telegram:TopicId"] ?? "35";
+
+                var msg = $"🚨 <b>URGENT — CUSTOMER CONFIRMED PAYMENT!</b>\n" +
+                          $"━━━━━━━━━━━━━━━━━━━━━━\n" +
+                          $"⚠️ <b>Diamonds NOT yet delivered!</b>\n" +
+                          $"📦 <b>Order:</b> <code>#{order.OrderId}</code>\n" +
+                          $"👤 <b>Player ID:</b> <code>{order.PlayerID}</code> (Zone {order.ServerID})\n" +
+                          $"💎 <b>Diamonds:</b> {order.DiamondAmount}\n" +
+                          $"💰 <b>Amount:</b> ${order.Amount:F2} USD\n" +
+                          $"📌 <b>Topup Status:</b> AwaitingBalance\n" +
+                          $"━━━━━━━━━━━━━━━━━━━━━━\n" +
+                          $"👉 <i>Please top up provider balance and approve this order in Admin Dashboard.</i>";
+
+                using var httpClient = new HttpClient { Timeout = TimeSpan.FromSeconds(8) };
+                var payload = new Dictionary<string, object>
+                {
+                    ["chat_id"] = chatId,
+                    ["text"] = msg,
+                    ["parse_mode"] = "HTML"
+                };
+                if (!string.IsNullOrEmpty(topicId) && int.TryParse(topicId, out int threadId))
+                    payload["message_thread_id"] = threadId;
+
+                var json = System.Text.Json.JsonSerializer.Serialize(payload);
+                var content = new StringContent(json, System.Text.Encoding.UTF8, "application/json");
+                await httpClient.PostAsync($"https://api.telegram.org/bot{botToken}/sendMessage", content);
+            }
+            catch { }
+        });
+
+        return Ok(new
+        {
+            success = true,
+            message = "Admin has been notified. Your diamonds will be delivered shortly.",
+            topupStatus = "AwaitingBalance"
         });
     }
 }

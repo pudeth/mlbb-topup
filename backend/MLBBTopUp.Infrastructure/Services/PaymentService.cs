@@ -202,12 +202,23 @@ public class PaymentService : IPaymentService
                     {
                         using var scope = _serviceScopeFactory.CreateScope();
                         var scopedTopUp = scope.ServiceProvider.GetRequiredService<ITopUpService>();
-                        await scopedTopUp.ProcessTopUpAsync(
+                        var scopedOrderService = scope.ServiceProvider.GetRequiredService<IOrderService>();
+                        var topupRes = await scopedTopUp.ProcessTopUpAsync(
                             orderObj.OrderId,
                             orderObj.PlayerID,
                             orderObj.ServerID,
                             orderObj.DiamondAmount
                         );
+                        if (topupRes.Success)
+                        {
+                            await scopedOrderService.UpdateOrderTopupStatusAsync(orderObj.OrderId, "Completed");
+                        }
+                        else
+                        {
+                            var err = (topupRes.ErrorReason ?? topupRes.Message ?? "").ToLower();
+                            var isLowBalance = err.Contains("insufficient") || err.Contains("balance") || err.Contains("funds") || err.Contains("fzr.cards") || err.Contains("wallet");
+                            await scopedOrderService.UpdateOrderTopupStatusAsync(orderObj.OrderId, isLowBalance ? "AwaitingBalance" : "Failed");
+                        }
                     }
                     catch (Exception ex)
                     {
@@ -285,12 +296,23 @@ public class PaymentService : IPaymentService
                         {
                             using var scope = _serviceScopeFactory.CreateScope();
                             var scopedTopUp = scope.ServiceProvider.GetRequiredService<ITopUpService>();
-                            await scopedTopUp.ProcessTopUpAsync(
+                            var scopedOrderService = scope.ServiceProvider.GetRequiredService<IOrderService>();
+                            var topupRes = await scopedTopUp.ProcessTopUpAsync(
                                 order.OrderId,
                                 order.PlayerID,
                                 order.ServerID,
                                 order.DiamondAmount
                             );
+                            if (topupRes.Success)
+                            {
+                                await scopedOrderService.UpdateOrderTopupStatusAsync(order.OrderId, "Completed");
+                            }
+                            else
+                            {
+                                var err = (topupRes.ErrorReason ?? topupRes.Message ?? "").ToLower();
+                                var isLowBalance = err.Contains("insufficient") || err.Contains("balance") || err.Contains("funds") || err.Contains("fzr.cards") || err.Contains("wallet");
+                                await scopedOrderService.UpdateOrderTopupStatusAsync(order.OrderId, isLowBalance ? "AwaitingBalance" : "Failed");
+                            }
                         }
                         catch (Exception ex)
                         {

@@ -1674,4 +1674,81 @@ public class AdminController : BaseController
     {
         public List<int>? OrderIds { get; set; }
     }
+
+    /// <summary>
+    /// Get all orders with TopupStatus = AwaitingBalance (customer paid but provider had no balance).
+    /// Used to show the notification badge and list in Admin Dashboard.
+    /// </summary>
+    [HttpGet("pending-balance-orders")]
+    public async Task<IActionResult> GetPendingBalanceOrders()
+    {
+        var orders = await _context.Orders
+            .Include(o => o.Product)
+            .Where(o => o.TopupStatus == "AwaitingBalance" && o.PaymentStatus == "Paid")
+            .OrderByDescending(o => o.CreatedAt)
+            .Select(o => new
+            {
+                o.OrderId,
+                o.PlayerID,
+                o.ServerID,
+                o.Amount,
+                o.PaymentStatus,
+                o.TopupStatus,
+                o.CreatedAt,
+                DiamondAmount = o.Product != null ? o.Product.DiamondAmount : 0,
+                ProductName = o.Product != null ? (o.Product.Description != "" ? o.Product.Description : $"{o.Product.DiamondAmount} Diamonds") : "Unknown"
+            })
+            .ToListAsync();
+
+        return Ok(new { success = true, count = orders.Count, orders });
+    }
+
+    /// <summary>
+    /// Admin manually approves and delivers diamonds for an AwaitingBalance order.
+    /// </summary>
+    [HttpPost("orders/{id}/approve-topup")]
+    public async Task<IActionResult> ApproveTopUp(int id)
+    {
+        var order = await _orderService.GetOrderByIdAsync(id);
+
+        if (order == null)
+            return NotFound(new { message = "Order not found" });
+
+        if (order.PaymentStatus != "Paid")
+            return BadRequest(new { message = "Order has not been paid" });
+
+        if (order.TopupStatus == "Completed")
+            return BadRequest(new { message = "Order topup already completed" });
+
+        // Trigger topup delivery
+        bool success = false;
+        string resultMessage = string.Empty;
+        try
+        {
+            var result = await _topUpService.ProcessTopUpAsync(
+                order.OrderId,
+                order.PlayerID,
+                order.ServerID,
+                order.DiamondAmount);
+
+            success = result.Success;
+            resultMessage = result.Message ?? (result.Success ? "Delivered successfully" : "Delivery failed");
+
+            var newStatus = result.Success ? "Completed" : "Failed";
+            await _orderService.UpdateOrderTopupStatusAsync(id, newStatus);
+        }
+        catch (Exception ex)
+        {
+            resultMessage = ex.Message;
+            await _orderService.UpdateOrderTopupStatusAsync(id, "Failed");
+        }
+
+        return Ok(new
+        {
+            success,
+            orderId = id,
+            topupStatus = success ? "Completed" : "Failed",
+            message = resultMessage
+        });
+    }
 }

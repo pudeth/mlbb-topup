@@ -70,6 +70,7 @@ export const ordersAPI = {
   getStatus: (id) => api.get(`/orders/${id}/status`),
   checkPayment: (id, manualConfirm = false) =>
     api.post(`/orders/${id}/check-payment${manualConfirm ? '?manualConfirm=true' : ''}`),
+  confirmPaid: (id) => api.post(`/orders/${id}/confirm-paid`),
 };
 
 // TopUp API
@@ -148,6 +149,8 @@ export const adminAPI = {
   deleteBakongAccount: (id) => api.delete(`/admin/bakong/accounts/${id}`),
   updateBakongToken: (token) => api.post('/admin/bakong/update-token', { token }),
   testBakongToken: (token) => api.post('/admin/bakong/test-token', { token }),
+  getPendingBalanceOrders: () => api.get('/admin/pending-balance-orders'),
+  approveTopup: (orderId) => api.post(`/admin/orders/${orderId}/approve-topup`),
 };
 
 export default api;
