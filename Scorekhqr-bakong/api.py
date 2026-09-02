@@ -183,9 +183,31 @@ def mark_order_paid_everywhere(order_id_or_bill, md5=None):
     4. Backend ASP.NET Core API
     5. Master Total Calculator topic
     """
-    print(f"[+] Marking order #{order_id_or_bill} / MD5 {md5} as PAID everywhere...")
     now_iso = datetime.now().isoformat()
-    clean_id = str(order_id_or_bill).replace('MLBB', '').replace('TRX', '').replace('ORD', '').replace('#', '').strip()
+    raw_str = str(order_id_or_bill).replace('MLBB', '').replace('TRX', '').replace('ORD', '').replace('#', '').strip()
+    
+    # Extract integer order ID (e.g. "000001" -> "1")
+    int_id = None
+    clean_id = raw_str
+    try:
+        int_id = str(int(raw_str))
+    except:
+        pass
+
+    # If raw_str is not an int (like a hash), check if MongoDB Atlas has the record
+    if not int_id and md5 and mongo_payments is not None:
+        try:
+            rec = mongo_payments.find_one({'md5_hash': md5})
+            if rec and rec.get('bill_number'):
+                b_val = str(rec.get('bill_number')).replace('MLBB', '').replace('TRX', '').replace('ORD', '').strip()
+                if b_val.isdigit():
+                    int_id = str(int(b_val))
+                    clean_id = b_val
+        except:
+            pass
+
+    target_id = int_id or clean_id
+    print(f"[+] Marking order #{clean_id} (Target ID: {target_id}) / MD5 {md5} as PAID everywhere...")
 
     # 1. Update in-memory cache
     if md5:
@@ -199,8 +221,12 @@ def mark_order_paid_everywhere(order_id_or_bill, md5=None):
         try:
             or_conditions = [
                 {'bill_number': f"MLBB{clean_id}"},
+                {'bill_number': f"MLBB{target_id}"},
+                {'bill_number': f"MLBB{target_id.zfill(6)}"},
                 {'bill_number': f"TRX{clean_id}"},
-                {'bill_number': clean_id}
+                {'bill_number': f"TRX{target_id}"},
+                {'bill_number': clean_id},
+                {'bill_number': target_id}
             ]
             if md5:
                 or_conditions.append({'md5_hash': md5})
@@ -230,14 +256,14 @@ def mark_order_paid_everywhere(order_id_or_bill, md5=None):
 
     # 4. Notify Backend ASP.NET Core API
     backend_urls = [
-        f"https://mlbb-backend-api.onrender.com/api/orders/{clean_id}/check-payment?manualConfirm=true",
-        f"http://localhost:5000/api/orders/{clean_id}/check-payment?manualConfirm=true"
+        f"https://mlbb-backend-api.onrender.com/api/orders/{target_id}/check-payment?manualConfirm=true",
+        f"http://localhost:5000/api/orders/{target_id}/check-payment?manualConfirm=true"
     ]
     for b_url in backend_urls:
         try:
-            r = requests.post(b_url, timeout=5)
+            r = requests.post(b_url, timeout=4)
             if r.status_code == 200:
-                print(f"[+] Backend confirmed order {clean_id} as PAID via {b_url}")
+                print(f"[+] Backend confirmed order {target_id} as PAID via {b_url}")
                 break
         except:
             pass
@@ -257,12 +283,157 @@ def mark_order_paid_everywhere(order_id_or_bill, md5=None):
     return True
 
 
+def process_single_telegram_update(upd):
+    """Process a single Telegram update (from polling or webhook) without blocking"""
+    bot_token = get_config('TELEGRAM_BOT_TOKEN')
+    if not bot_token:
+        return
+
+    # 1. Handle Button Click (Callback Query)
+    if 'callback_query' in upd:
+        cb = upd['callback_query']
+        cb_id = cb.get('id')
+        cb_data = cb.get('data', '')
+        from_user = cb.get('from', {}).get('first_name', 'Admin')
+        msg = cb.get('message', {})
+        msg_id = msg.get('message_id')
+        chat_id = msg.get('chat', {}).get('id')
+
+        print(f"[+] Telegram button pressed by {from_user}: {cb_data}")
+
+        # Action: Confirm & Deliver
+        if cb_data.startswith('confirm_'):
+            parts = cb_data.split('_')
+            order_id = parts[1] if len(parts) > 1 else '1'
+            md5 = parts[2] if len(parts) > 2 else ''
+
+            # STEP 1: IMMEDIATELY answer callback query so Telegram UI unlocks instantly!
+            try:
+                requests.post(f"https://api.telegram.org/bot{bot_token}/answerCallbackQuery", json={
+                    "callback_query_id": cb_id,
+                    "text": f"🎉 Order #{order_id} APPROVED! Diamonds are being credited...",
+                    "show_alert": True
+                }, timeout=4)
+            except Exception as ae:
+                print(f"[-] answerCallbackQuery error: {ae}")
+
+            # STEP 2: Update the button to show [✅ APPROVED & PAID] (disables further clicks)
+            try:
+                requests.post(f"https://api.telegram.org/bot{bot_token}/editMessageReplyMarkup", json={
+                    "chat_id": chat_id,
+                    "message_id": msg_id,
+                    "reply_markup": {
+                        "inline_keyboard": [
+                            [{"text": f"✅ APPROVED & PAID ({from_user})", "callback_data": "done"}]
+                        ]
+                    }
+                }, timeout=4)
+            except Exception as ee:
+                print(f"[-] editMessageReplyMarkup error: {ee}")
+
+            # STEP 3: Post confirmation notice in topic 35
+            try:
+                send_telegram(f"""✅ <b>ORDER #{order_id} APPROVED & PAID!</b>
+━━━━━━━━━━━━━━━━━━━━━━
+👤 <b>Approved by:</b> {from_user}
+⏰ <b>Timestamp:</b> {datetime.now().strftime('%d %b %Y, %H:%M:%S')}
+⚡ <b>Customer screen transitioned to [PAID SUCCESS]!</b>
+💎 <b>Diamond delivery sequence dispatched.</b>
+━━━━━━━━━━━━━━━━━━━━━━""", topic_id=get_config('TELEGRAM_TOPIC_ID', '35'))
+            except:
+                pass
+
+            # STEP 4: Asynchronously mark order PAID everywhere
+            threading.Thread(target=mark_order_paid_everywhere, args=(order_id, md5), daemon=True).start()
+
+        # Action: Check Bakong Status
+        elif cb_data.startswith('check_'):
+            parts = cb_data.split('_')
+            order_id = parts[1] if len(parts) > 1 else '1'
+            md5 = parts[2] if len(parts) > 2 else ''
+
+            st, _ = query_bakong_nbc_direct(md5) if md5 else ("UNPAID", None)
+            if st == "PAID":
+                try:
+                    requests.post(f"https://api.telegram.org/bot{bot_token}/answerCallbackQuery", json={
+                        "callback_query_id": cb_id,
+                        "text": f"✅ Payment CONFIRMED on Bakong! Order #{order_id} is PAID.",
+                        "show_alert": True
+                    }, timeout=4)
+                except:
+                    pass
+                threading.Thread(target=mark_order_paid_everywhere, args=(order_id, md5), daemon=True).start()
+            else:
+                try:
+                    requests.post(f"https://api.telegram.org/bot{bot_token}/answerCallbackQuery", json={
+                        "callback_query_id": cb_id,
+                        "text": f"⏳ Order #{order_id} is still UNPAID on Bakong network.",
+                        "show_alert": True
+                    }, timeout=4)
+                except:
+                    pass
+
+    # 2. Handle Text Commands
+    elif 'message' in upd:
+        msg = upd['message']
+        text = (msg.get('text') or '').strip()
+        chat_id = msg.get('chat', {}).get('id')
+        from_user = msg.get('from', {}).get('first_name', 'Admin')
+
+        if not text:
+            return
+
+        # Command: /paid <order_id>
+        if text.startswith('/paid'):
+            parts = text.split()
+            if len(parts) > 1:
+                target_id = parts[1].replace('#', '').strip()
+                threading.Thread(target=mark_order_paid_everywhere, args=(target_id,), daemon=True).start()
+                send_telegram(f"✅ <b>Order #{target_id} marked as PAID by {from_user}!</b>\nDiamond delivery dispatched & customer screen updated.")
+            else:
+                send_telegram("ℹ️ Usage: <code>/paid &lt;order_id&gt;</code> (e.g. <code>/paid 1</code>)")
+
+        # Command: /check <order_id>
+        elif text.startswith('/check'):
+            parts = text.split()
+            if len(parts) > 1:
+                target_id = parts[1].replace('#', '').strip()
+                rec = get_payment_record(target_id)
+                st = rec.get('status') if rec else 'Pending'
+                send_telegram(f"🔍 <b>Order #{target_id} Status:</b> <code>{st}</code>")
+            else:
+                send_telegram("ℹ️ Usage: <code>/check &lt;order_id&gt;</code>")
+
+        # Command: /start or /help
+        elif text in ['/start', '/help']:
+            send_telegram("""🤖 <b>MLBB Bakong Transition Tracker Bot</b>
+━━━━━━━━━━━━━━━━━━━━━━
+I automatically track payments and allow you to approve orders instantly!
+
+<b>Commands:</b>
+• <code>/paid &lt;order_id&gt;</code> - Manually approve order & deliver diamonds
+• <code>/check &lt;order_id&gt;</code> - Check status of an order
+• <code>/help</code> - Show this menu
+━━━━━━━━━━━━━━━━━━━━━━
+<i>When a new order is created, I will send an interactive card with [Approve] buttons!</i>""")
+
+
 def telegram_bot_poller():
     """
-    Background daemon that listens for Telegram button clicks and commands
-    allowing the merchant to approve transitions directly from their phone!
+    Background daemon that continuously checks getUpdates with automatic webhook clearance
     """
     print("[+] Telegram Bot Transition Tracking Poller started!")
+    time.sleep(2)
+
+    # Ensure any stuck webhook is cleared so getUpdates works reliably
+    bot_token = get_config('TELEGRAM_BOT_TOKEN')
+    if bot_token:
+        try:
+            r = requests.post(f"https://api.telegram.org/bot{bot_token}/deleteWebhook", json={"drop_pending_updates": False}, timeout=5)
+            print(f"[+] Telegram webhook check on start: {r.status_code}")
+        except Exception as we:
+            print(f"[-] deleteWebhook error: {we}")
+
     last_update_id = 0
     while True:
         try:
@@ -274,10 +445,10 @@ def telegram_bot_poller():
             url = f"https://api.telegram.org/bot{bot_token}/getUpdates"
             params = {
                 "offset": last_update_id + 1,
-                "timeout": 20,
+                "timeout": 15,
                 "allowed_updates": ["message", "callback_query"]
             }
-            resp = requests.get(url, params=params, timeout=25)
+            resp = requests.get(url, params=params, timeout=20)
             if resp.status_code != 200:
                 time.sleep(3)
                 continue
@@ -285,104 +456,7 @@ def telegram_bot_poller():
             updates = resp.json().get('result', [])
             for upd in updates:
                 last_update_id = upd.get('update_id', last_update_id)
-
-                # 1. Handle Button Click (Callback Query)
-                if 'callback_query' in upd:
-                    cb = upd['callback_query']
-                    cb_id = cb.get('id')
-                    cb_data = cb.get('data', '')
-                    from_user = cb.get('from', {}).get('first_name', 'Admin')
-                    msg = cb.get('message', {})
-                    msg_id = msg.get('message_id')
-                    chat_id = msg.get('chat', {}).get('id')
-
-                    # Action: Confirm & Deliver
-                    if cb_data.startswith('confirm_'):
-                        parts = cb_data.split('_')
-                        order_id = parts[1] if len(parts) > 1 else '1'
-                        md5 = parts[2] if len(parts) > 2 else ''
-
-                        mark_order_paid_everywhere(order_id, md5)
-
-                        # Answer callback query popup
-                        requests.post(f"https://api.telegram.org/bot{bot_token}/answerCallbackQuery", json={
-                            "callback_query_id": cb_id,
-                            "text": f"🎉 Order #{order_id} APPROVED! Diamonds are delivering.",
-                            "show_alert": True
-                        }, timeout=5)
-
-                        # Edit message to show PAID status
-                        edited_text = (msg.get('text', '') or '') + f"\n\n✅ <b>APPROVED & PAID BY {from_user}!</b>\n⏰ <i>{datetime.now().strftime('%d %b %Y, %H:%M:%S')}</i>\n⚡ Customer screen transitioned to [PAID SUCCESS]."
-                        requests.post(f"https://api.telegram.org/bot{bot_token}/editMessageText", json={
-                            "chat_id": chat_id,
-                            "message_id": msg_id,
-                            "text": edited_text,
-                            "parse_mode": "HTML"
-                        }, timeout=5)
-
-                    # Action: Check Bakong Status
-                    elif cb_data.startswith('check_'):
-                        parts = cb_data.split('_')
-                        order_id = parts[1] if len(parts) > 1 else '1'
-                        md5 = parts[2] if len(parts) > 2 else ''
-
-                        st, _ = query_bakong_nbc_direct(md5) if md5 else ("UNPAID", None)
-                        if st == "PAID":
-                            mark_order_paid_everywhere(order_id, md5)
-                            requests.post(f"https://api.telegram.org/bot{bot_token}/answerCallbackQuery", json={
-                                "callback_query_id": cb_id,
-                                "text": f"✅ Payment CONFIRMED on Bakong! Order #{order_id} is PAID.",
-                                "show_alert": True
-                            }, timeout=5)
-                        else:
-                            requests.post(f"https://api.telegram.org/bot{bot_token}/answerCallbackQuery", json={
-                                "callback_query_id": cb_id,
-                                "text": f"⏳ Order #{order_id} is still UNPAID on Bakong network.",
-                                "show_alert": True
-                            }, timeout=5)
-
-                # 2. Handle Text Commands
-                elif 'message' in upd:
-                    msg = upd['message']
-                    text = (msg.get('text') or '').strip()
-                    chat_id = msg.get('chat', {}).get('id')
-
-                    if not text:
-                        continue
-
-                    # Command: /paid <order_id>
-                    if text.startswith('/paid'):
-                        parts = text.split()
-                        if len(parts) > 1:
-                            target_id = parts[1].replace('#', '').strip()
-                            mark_order_paid_everywhere(target_id)
-                            send_telegram(f"✅ <b>Order #{target_id} marked as PAID!</b>\nDiamond delivery dispatched & customer screen updated.")
-                        else:
-                            send_telegram("ℹ️ Usage: <code>/paid &lt;order_id&gt;</code> (e.g. <code>/paid 1</code>)")
-
-                    # Command: /check <order_id>
-                    elif text.startswith('/check'):
-                        parts = text.split()
-                        if len(parts) > 1:
-                            target_id = parts[1].replace('#', '').strip()
-                            rec = get_payment_record(target_id)
-                            st = rec.get('status') if rec else 'Pending'
-                            send_telegram(f"🔍 <b>Order #{target_id} Status:</b> <code>{st}</code>")
-                        else:
-                            send_telegram("ℹ️ Usage: <code>/check &lt;order_id&gt;</code>")
-
-                    # Command: /start or /help
-                    elif text in ['/start', '/help']:
-                        send_telegram("""🤖 <b>MLBB Bakong Transition Tracker Bot</b>
-━━━━━━━━━━━━━━━━━━━━━━
-I automatically track payments and allow you to approve orders instantly!
-
-<b>Commands:</b>
-• <code>/paid &lt;order_id&gt;</code> - Manually approve order & deliver diamonds
-• <code>/check &lt;order_id&gt;</code> - Check status of an order
-• <code>/help</code> - Show this menu
-━━━━━━━━━━━━━━━━━━━━━━
-<i>When a new order is created, I will send an interactive card with [Approve] buttons!</i>""")
+                process_single_telegram_update(upd)
 
         except Exception as err:
             time.sleep(3)
@@ -390,6 +464,19 @@ I automatically track payments and allow you to approve orders instantly!
 
 # Start Telegram Bot Poller in background daemon thread
 threading.Thread(target=telegram_bot_poller, daemon=True).start()
+
+
+@app.route('/api/telegram/webhook', methods=['POST'])
+def telegram_webhook():
+    """Receive Telegram webhook directly from Telegram servers (0ms push latency)"""
+    try:
+        data = request.get_json(force=True, silent=True) or {}
+        if data:
+            threading.Thread(target=process_single_telegram_update, args=(data,), daemon=True).start()
+        return jsonify({"ok": True})
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
 
 @app.route('/api/mlbb/check', methods=['GET', 'OPTIONS'])
 def check_mlbb_account():
