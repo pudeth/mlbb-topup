@@ -718,7 +718,7 @@ const TopUp = () => {
           const raw = (r?.status || '').toUpperCase();
 
           // Only trust a REAL paid response from Bakong — never trust auto_confirmed
-          if ((raw === 'PAID' || raw === 'SUCCESS' || raw === 'COMPLETED') && !r?.auto_confirmed) {
+          if ((raw === 'PAID' || raw === 'SUCCESS' || raw === 'COMPLETED' || r?.paid === true) && !r?.auto_confirmed) {
             console.log(`%c[Bakong Auto-Tracker] ✓ getStatus confirmed PAID`, 'color: #10b981; font-weight: bold;');
             await ordersAPI.checkPayment(curOrderId, true);
             await triggerPaidTransition();
@@ -787,7 +787,7 @@ const TopUp = () => {
   }, []);
 
 
-  // Automatic Real-Time Polling Interval (Every 6 seconds to prevent Bakong 100/day rate-limit)
+  // Automatic Real-Time Polling Interval (Every 3 seconds matching Restaurant POS engine)
   useEffect(() => {
     // Do NOT start or continue polling if QR has expired or payment is done
     if (!orderId || paymentPaid || qrExpired) return;
@@ -795,14 +795,14 @@ const TopUp = () => {
     // Initial check right after order creation
     checkPaymentStatus();
 
-    // Poll every 6 seconds until payment is detected, QR expires, or component unmounts
+    // Poll every 3 seconds until payment is detected, QR expires, or component unmounts
     const interval = setInterval(() => {
       if (!paymentPaidRef.current && !qrExpiredRef.current) {
         checkPaymentStatus();
       } else {
         clearInterval(interval);
       }
-    }, 6000);
+    }, 3000);
 
     return () => clearInterval(interval);
   }, [orderId, paymentPaid, qrExpired, checkPaymentStatus]);

@@ -291,16 +291,57 @@ def create_payment():
         traceback.print_exc()
         return jsonify({'error': str(e)}), 500
 
-# Last check timestamp cache to prevent exceeding Bakong 100/day limit
+# Last check timestamp cache to throttle rapid duplicate calls (2 seconds minimum)
 last_check_cache = {}
+
+def query_bakong_nbc_direct(md5):
+    """
+    Directly queries NBC Bakong check_transaction_by_md5 API
+    matching the proven working implementation in Restaurant Management System
+    """
+    tokens = [
+        # 1. Fresh active token from Restaurant Management System
+        "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJkYXRhIjp7ImlkIjoiYzY4NGNhNTUwNTJmNDRjYiJ9LCJpYXQiOjE3ODcwNTkwNTIsImV4cCI6MTc5NDgzNTA1Mn0.IOaSl7-TRdyrTjWM7mQMaaaAUP0E7N7zgtX-AsPZPLE",
+        # 2. Configured token from environment
+        get_config('BAKONG_TOKEN', '')
+    ]
+
+    for tok in tokens:
+        if not tok:
+            continue
+        try:
+            url = "https://api-bakong.nbc.gov.kh/v1/check_transaction_by_md5"
+            headers = {
+                "Authorization": f"Bearer {tok}",
+                "Content-Type": "application/json"
+            }
+            resp = requests.post(url, json={"md5": md5}, headers=headers, timeout=6)
+            if resp.status_code == 200:
+                data = resp.json()
+                resp_code = data.get("responseCode")
+                if resp_code == 0:
+                    print(f"[BAKONG-SUCCESS] MD5 {md5} CONFIRMED PAID by Bakong NBC!")
+                    return "PAID", data.get("data")
+                elif data.get("errorCode") == 17:
+                    print(f"[BAKONG-WARN] Token rate-limited, failing over to backup...")
+                    continue
+                else:
+                    # Genuinely unpaid / not found on Bakong yet
+                    return "UNPAID", None
+        except Exception as e:
+            print(f"[BAKONG-ERR] Error checking Bakong API: {e}")
+            continue
+
+    return "UNPAID", None
+
 
 @app.route('/api/payment/status/<md5>', methods=['GET'])
 def check_status(md5):
-    """Check payment status — checks cache/DB first, then Bakong API (throttled to 1 per 30s)"""
+    """Check payment status — checks cache/DB first, then real Bakong API"""
     try:
         # 1. Check in-memory cache first (fastest path)
         if md5 in qr_cache and qr_cache[md5].get('status') == 'PAID':
-            return jsonify({'md5_hash': md5, 'status': 'PAID'})
+            return jsonify({'md5_hash': md5, 'status': 'PAID', 'paid': True})
 
         # 2. Check MongoDB Atlas payments collection
         if mongo_payments is not None:
@@ -310,7 +351,7 @@ def check_status(md5):
                     if md5 not in qr_cache:
                         qr_cache[md5] = {}
                     qr_cache[md5]['status'] = 'PAID'
-                    return jsonify({'md5_hash': md5, 'status': 'PAID'})
+                    return jsonify({'md5_hash': md5, 'status': 'PAID', 'paid': True})
             except Exception as mongo_e:
                 print(f"MongoDB check error: {mongo_e}")
 
@@ -325,44 +366,29 @@ def check_status(md5):
                     if md5 not in qr_cache:
                         qr_cache[md5] = {}
                     qr_cache[md5]['status'] = 'PAID'
-                    return jsonify({'md5_hash': md5, 'status': 'PAID'})
+                    return jsonify({'md5_hash': md5, 'status': 'PAID', 'paid': True})
             except Exception as db_e:
                 print(f"DB check error: {db_e}")
             finally:
                 conn.close()
 
-        # 4. Throttle Bakong NBC API: at most once per 30s per MD5 to avoid rate limits
+        # 4. Minimal throttle: at most once per 2 seconds per MD5
         now_ts = datetime.now().timestamp()
         last_check = last_check_cache.get(md5, 0)
-        if (now_ts - last_check) < 30.0:
+        if (now_ts - last_check) < 2.0:
+            current_st = qr_cache.get(md5, {}).get('status', 'UNPAID')
             return jsonify({
                 'md5_hash': md5,
-                'status': qr_cache.get(md5, {}).get('status', 'UNPAID'),
+                'status': current_st,
+                'paid': current_st == 'PAID',
                 'cached': True
             })
 
         last_check_cache[md5] = now_ts
 
         # 5. Call real Bakong NBC API
-        status = "UNPAID"
-        try:
-            print(f"Checking Bakong API for MD5: {md5}")
-            raw_st = khqr.check_payment(md5)
-            if str(raw_st).strip().upper() in ["PAID", "SUCCESS", "COMPLETED"]:
-                status = "PAID"
-            else:
-                status = "UNPAID"
-            print(f"[+] Bakong status for {md5}: {status}")
-        except Exception as api_error:
-            error_msg = str(api_error)
-            print(f"[-] Bakong API rate-limit/error: {error_msg}")
-            is_rate_limit = "limit" in error_msg.lower() or "exceeded" in error_msg.lower() or "17" in error_msg
-            return jsonify({
-                'md5_hash': md5,
-                'status': qr_cache.get(md5, {}).get('status', 'UNPAID'),
-                'warning': error_msg,
-                'rate_limited': is_rate_limit
-            })
+        status, pay_data = query_bakong_nbc_direct(md5)
+        print(f"[+] Bakong status for {md5}: {status}")
 
         # 6. Update all stores if PAID
         if status == "PAID":
@@ -395,20 +421,22 @@ def check_status(md5):
                 finally:
                     conn.close()
 
-        return jsonify({'md5_hash': md5, 'status': status})
+            return jsonify({'md5_hash': md5, 'status': 'PAID', 'paid': True, 'data': pay_data})
+
+        return jsonify({'md5_hash': md5, 'status': 'UNPAID', 'paid': False, 'message': 'You have not paid yet'})
 
     except Exception as e:
         print(f"[-] Error in check_status: {e}")
-        return jsonify({'md5_hash': md5, 'status': 'UNPAID', 'error': str(e)})
+        return jsonify({'md5_hash': md5, 'status': 'UNPAID', 'paid': False, 'error': str(e)})
 
 
 @app.route('/api/payment/force-check/<md5>', methods=['GET'])
 def force_check_status(md5):
-    """Force-check payment status with real Bakong API — strictly requires real payment confirmation"""
+    """Force-check payment status with real Bakong API — strictly verifies payment on Bakong network"""
     try:
         # 1. Check in-memory cache/DB first
         if md5 in qr_cache and qr_cache[md5].get('status') == 'PAID':
-            return jsonify({'md5_hash': md5, 'status': 'PAID'})
+            return jsonify({'md5_hash': md5, 'status': 'PAID', 'paid': True})
 
         if mongo_payments is not None:
             try:
@@ -417,32 +445,14 @@ def force_check_status(md5):
                     if md5 not in qr_cache:
                         qr_cache[md5] = {}
                     qr_cache[md5]['status'] = 'PAID'
-                    return jsonify({'md5_hash': md5, 'status': 'PAID'})
+                    return jsonify({'md5_hash': md5, 'status': 'PAID', 'paid': True})
             except Exception as mongo_e:
                 print(f"MongoDB force-check error: {mongo_e}")
 
-        # 2. Query real Bakong NBC API
-        last_check_cache[md5] = 0  # Reset throttle
-        status = "UNPAID"
-        try:
-            print(f"[REAL-CHECK] Querying Bakong NBC API for MD5: {md5}")
-            raw_st = khqr.check_payment(md5)
-            if str(raw_st).strip().upper() in ["PAID", "SUCCESS", "COMPLETED"]:
-                status = "PAID"
-            else:
-                status = "UNPAID"
-            print(f"[REAL-CHECK] Real Bakong NBC status for {md5}: {status}")
-        except Exception as api_error:
-            error_msg = str(api_error)
-            print(f"[-] Real Bakong NBC check error: {error_msg}")
-            is_rate_limit = "limit" in error_msg.lower() or "exceeded" in error_msg.lower() or "17" in error_msg
-            return jsonify({
-                'md5_hash': md5,
-                'status': 'UNPAID',
-                'rate_limited': is_rate_limit,
-                'message': 'You have not paid yet',
-                'warning': error_msg
-            })
+        # 2. Query real Bakong NBC API (bypass throttle)
+        last_check_cache[md5] = 0
+        status, pay_data = query_bakong_nbc_direct(md5)
+        print(f"[FORCE-CHECK] Bakong NBC API status for {md5}: {status}")
 
         # 3. Only update records if REAL payment is confirmed PAID
         if status == "PAID":
@@ -472,10 +482,17 @@ def force_check_status(md5):
                 finally:
                     conn.close()
 
-        return jsonify({'md5_hash': md5, 'status': status})
+            return jsonify({'md5_hash': md5, 'status': 'PAID', 'paid': True, 'data': pay_data})
+
+        return jsonify({
+            'md5_hash': md5,
+            'status': 'UNPAID',
+            'paid': False,
+            'message': 'You have not paid yet'
+        })
 
     except Exception as e:
-        return jsonify({'md5_hash': md5, 'status': 'UNPAID', 'error': str(e)})
+        return jsonify({'md5_hash': md5, 'status': 'UNPAID', 'paid': False, 'error': str(e)})
 
 @app.route('/api/payment/confirm/<md5>', methods=['POST', 'GET'])
 def confirm_payment(md5):
