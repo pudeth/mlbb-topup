@@ -23,9 +23,15 @@ services:
       - key: BAKONG_TOKEN
         value: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJkYXRhIjp7ImlkIjoiYzY4NGNhNTUwNTJmNDRjYiJ9LCJpYXQiOjE3ODcwNTkwNTIsImV4cCI6MTc5NDgzNTA1Mn0.IOaSl7-TRdyrTjWM7mQMaaaAUP0E7N7zgtX-AsPZPLE"
       - key: TELEGRAM_BOT_TOKEN
-        value: "8988314306:AAHC0tSOA6BGiBc-AqqRzRQaWiwKaLr_6bU"
+        value: "8516986555:AAH3enGgrbjWPKnQRPwXRQHKVfGgqiQ2Rhw"
       - key: TELEGRAM_CHAT_ID
-        value: "1294502034"
+        value: "-1004398577975"
+      - key: TELEGRAM_TOPIC_ID
+        value: "35"
+      - key: TELEGRAM_MASTER_BOT_TOKEN
+        value: "8633673377:AAF35ZeHsmZOgUEsl0oXPraB35gq-vYYc_A"
+      - key: TELEGRAM_MASTER_TOTAL_TOPIC_ID
+        value: "126"
       - key: MONGODB_URI
         value: "mongodb+srv://peakmao007_db_user:DNelqTteMX30a7PX@pudeth.olrum6s.mongodb.net/?appName=pudeth&retryWrites=true&w=majority"
 

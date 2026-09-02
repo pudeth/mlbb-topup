@@ -350,12 +350,13 @@ public class PaymentService : IPaymentService
         };
     }
 
-    private async Task SendTelegramAsync(string message, object? replyMarkup = null)
+    private async Task SendTelegramAsync(string message, object? replyMarkup = null, string? customToken = null, string? customTopic = null)
     {
         try
         {
-            var botToken = _configuration["Telegram:BotToken"] ?? "8988314306:AAHC0tSOA6BGiBc-AqqRzRQaWiwKaLr_6bU";
-            var chatId = _configuration["Telegram:ChatId"] ?? "1294502034";
+            var botToken = customToken ?? _configuration["Telegram:BotToken"] ?? "8516986555:AAH3enGgrbjWPKnQRPwXRQHKVfGgqiQ2Rhw";
+            var chatId = _configuration["Telegram:ChatId"] ?? "-1004398577975";
+            var topicId = customTopic ?? _configuration["Telegram:TopicId"] ?? "35";
             if (string.IsNullOrEmpty(botToken) || string.IsNullOrEmpty(chatId)) return;
 
             using var httpClient = new HttpClient { Timeout = TimeSpan.FromSeconds(6) };
@@ -365,6 +366,10 @@ public class PaymentService : IPaymentService
                 ["text"] = message,
                 ["parse_mode"] = "HTML"
             };
+            if (!string.IsNullOrEmpty(topicId) && int.TryParse(topicId, out int threadId))
+            {
+                payload["message_thread_id"] = threadId;
+            }
             if (replyMarkup != null)
             {
                 payload["reply_markup"] = replyMarkup;
@@ -378,5 +383,16 @@ public class PaymentService : IPaymentService
         {
             _logger.LogWarning("Telegram send failed: {Message}", ex.Message);
         }
+    }
+
+    private async Task SendMasterTotalAsync(string message)
+    {
+        try
+        {
+            var masterToken = _configuration["Telegram:MasterBotToken"] ?? "8633673377:AAF35ZeHsmZOgUEsl0oXPraB35gq-vYYc_A";
+            var masterTopic = _configuration["Telegram:MasterTotalTopicId"] ?? "126";
+            await SendTelegramAsync(message, replyMarkup: null, customToken: masterToken, customTopic: masterTopic);
+        }
+        catch { }
     }
 }

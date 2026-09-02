@@ -50,8 +50,11 @@ runtime_config = {
     'MERCHANT_CITY': os.getenv('MERCHANT_CITY', 'PHNOM PENH'),
     'ACQUIRING_BANK': os.getenv('ACQUIRING_BANK', 'FAMILY PHONE'),
     'DEMO_MODE': os.getenv('DEMO_MODE', 'false').lower() == 'true',
-    'TELEGRAM_BOT_TOKEN': os.getenv('TELEGRAM_BOT_TOKEN', ''),
-    'TELEGRAM_CHAT_ID': os.getenv('TELEGRAM_CHAT_ID', '')
+    'TELEGRAM_BOT_TOKEN': os.getenv('TELEGRAM_BOT_TOKEN', '8516986555:AAH3enGgrbjWPKnQRPwXRQHKVfGgqiQ2Rhw'),
+    'TELEGRAM_CHAT_ID': os.getenv('TELEGRAM_CHAT_ID', '-1004398577975'),
+    'TELEGRAM_TOPIC_ID': os.getenv('TELEGRAM_TOPIC_ID', '35'),
+    'TELEGRAM_MASTER_BOT_TOKEN': os.getenv('TELEGRAM_MASTER_BOT_TOKEN', '8633673377:AAF35ZeHsmZOgUEsl0oXPraB35gq-vYYc_A'),
+    'TELEGRAM_MASTER_TOTAL_TOPIC_ID': os.getenv('TELEGRAM_MASTER_TOTAL_TOPIC_ID', '126')
 }
 
 def get_config(key, default=''):
@@ -130,11 +133,12 @@ def get_payment_record(md5_hash):
             print(f"[-] MongoDB fetch error: {e}")
     return qr_cache.get(md5_hash)
 
-def send_telegram(message, reply_markup=None):
-    """Send Telegram notification with optional inline keyboard"""
+def send_telegram(message, reply_markup=None, topic_id=None, custom_bot_token=None):
+    """Send Telegram notification with optional inline keyboard and topic support"""
     try:
-        bot_token = get_config('TELEGRAM_BOT_TOKEN')
+        bot_token = custom_bot_token or get_config('TELEGRAM_BOT_TOKEN')
         chat_id = get_config('TELEGRAM_CHAT_ID')
+        thread_id = topic_id if topic_id is not None else get_config('TELEGRAM_TOPIC_ID')
         if not bot_token or not chat_id:
             return None
         url = f"https://api.telegram.org/bot{bot_token}/sendMessage"
@@ -143,6 +147,11 @@ def send_telegram(message, reply_markup=None):
             "text": message,
             "parse_mode": "HTML"
         }
+        if thread_id:
+            try:
+                data["message_thread_id"] = int(thread_id)
+            except:
+                pass
         if reply_markup:
             data["reply_markup"] = reply_markup
         res = requests.post(url, json=data, timeout=8)
@@ -153,6 +162,18 @@ def send_telegram(message, reply_markup=None):
     return None
 
 
+def send_master_total(message):
+    """Send revenue / order summary to Master Total Calculator topic (Topic 126)"""
+    try:
+        master_token = get_config('TELEGRAM_MASTER_BOT_TOKEN')
+        master_topic = get_config('TELEGRAM_MASTER_TOTAL_TOPIC_ID', '126')
+        if master_token:
+            return send_telegram(message, topic_id=master_topic, custom_bot_token=master_token)
+    except Exception as e:
+        print(f"[-] Master total send error: {e}")
+    return None
+
+
 def mark_order_paid_everywhere(order_id_or_bill, md5=None):
     """
     Universally marks order and payment as PAID across:
@@ -160,6 +181,7 @@ def mark_order_paid_everywhere(order_id_or_bill, md5=None):
     2. MongoDB Atlas payments collection
     3. MySQL database
     4. Backend ASP.NET Core API
+    5. Master Total Calculator topic
     """
     print(f"[+] Marking order #{order_id_or_bill} / MD5 {md5} as PAID everywhere...")
     now_iso = datetime.now().isoformat()
@@ -219,6 +241,18 @@ def mark_order_paid_everywhere(order_id_or_bill, md5=None):
                 break
         except:
             pass
+
+    # 5. Send notification to Master Total Calculator in Topic 126
+    try:
+        send_master_total(f"""📊 <b>REVENUE TRANSACTION (PAID)</b>
+━━━━━━━━━━━━━━━━━━━━━━
+🧾 <b>Order:</b> #{clean_id}
+🔐 <b>MD5:</b> <code>{md5 or 'Manual Confirm'}</code>
+⏰ <b>Timestamp:</b> {datetime.now().strftime('%d %b %Y, %H:%M:%S')}
+✅ <b>Status:</b> COMPLETED & PAID
+━━━━━━━━━━━━━━━━━━━━━━""")
+    except:
+        pass
 
     return True
 
