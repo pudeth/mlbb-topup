@@ -19,6 +19,8 @@ from mysql.connector import Error
 import requests
 from datetime import datetime
 import io
+import hashlib
+import time
 
 # Load environment variables
 load_dotenv()
@@ -204,53 +206,109 @@ def after_request(response):
     response.headers.add('Access-Control-Allow-Methods', 'GET,PUT,POST,DELETE,OPTIONS')
     return response
 
+
+def calculate_emvco_crc16(data: str) -> str:
+    """Standard EMVCo CRC-16 CCITT Algorithm (Polynomial 0x1021, Initial 0xFFFF)"""
+    crc = 0xFFFF
+    polynomial = 0x1021
+    bytes_data = data.encode('utf-8')
+    for b in bytes_data:
+        for i in range(8):
+            bit = ((b >> (7 - i)) & 1) == 1
+            c15 = ((crc >> 15) & 1) == 1
+            crc = (crc << 1) & 0xFFFF
+            if c15 ^ bit:
+                crc ^= polynomial
+    return f"{crc:04X}"
+
+
+def generate_emvco_khqr(bakong_id: str, name: str, city: str, amount: float, currency: str = 'USD'):
+    """
+    Constructs exact EMVCo standard KHQR payload matching Official NBC Bakong KHQR Engine
+    and Restaurant Management System (BakongPaymentController.java)
+    """
+    currency_type = currency.upper()
+    is_khr = (currency_type == 'KHR')
+    currency_code = '116' if is_khr else '840'
+    final_amt = round(amount * 4100) if is_khr else amount
+    amt_str = f"{final_amt:.0f}" if is_khr else f"{final_amt:.2f}"
+
+    payload = "000201010212"
+
+    # Tag 29: Merchant Account Info (Bakong Account ID + Account Info + Acquiring Bank)
+    sub00 = f"00{len(bakong_id):02d}{bakong_id}"
+    sub01 = f"01{len(name):02d}{name}"
+    sub02 = "0206Bakong"
+    tag29_content = sub00 + sub01 + sub02
+    payload += f"29{len(tag29_content):02d}{tag29_content}"
+
+    # Tag 52: Merchant Category Code (5999 for Personal/Individual/Retail KHQR)
+    payload += "52045999"
+
+    # Tag 53: Transaction Currency (840 = USD, 116 = KHR)
+    payload += f"5303{currency_code}"
+
+    # Tag 54: Transaction Amount
+    payload += f"54{len(amt_str):02d}{amt_str}"
+
+    # Tag 58: Country Code (KH)
+    payload += "5802KH"
+
+    # Tag 59: Merchant Name
+    payload += f"59{len(name):02d}{name}"
+
+    # Tag 60: Merchant City
+    merchant_city = city or "Phnom Penh"
+    payload += f"60{len(merchant_city):02d}{merchant_city}"
+
+    # Tag 99: Bakong Expiration Timestamp (Required by NBC for dynamic QR validation — 5 Minutes)
+    now_ms = int(time.time() * 1000)
+    expire_ms = now_ms + (5 * 60 * 1000)
+    created_str = str(now_ms)
+    expire_str = str(expire_ms)
+    subT00 = f"00{len(created_str):02d}{created_str}"
+    subT01 = f"01{len(expire_str):02d}{expire_str}"
+    tag99_content = subT00 + subT01
+    payload += f"99{len(tag99_content):02d}{tag99_content}"
+
+    # Tag 63: CRC Tag ID & Length
+    payload += "6304"
+
+    # Calculate standard EMVCo CRC-16
+    crc = calculate_emvco_crc16(payload)
+    full_khqr = payload + crc
+
+    # Generate MD5 hash of full KHQR string for Bakong API check
+    md5_hash = hashlib.md5(full_khqr.encode('utf-8')).hexdigest()
+
+    return full_khqr, md5_hash
+
+
 @app.route('/api/payment/create', methods=['POST'])
+@app.route('/api/payments/khqr/generate', methods=['POST'])
+@app.route('/api/khqr/payment/create', methods=['POST'])
 def create_payment():
-    """Create a new payment"""
+    """Create a new payment with official EMVCo standard matching Restaurant Management System"""
     try:
-        data = request.get_json()
+        data = request.get_json() or {}
         
         amount = float(data.get('amount', 0))
         currency = data.get('currency', 'USD').upper()
         phone = data.get('phone', '')
-        bill_number = data.get('bill_number', f"TRX{int(datetime.now().timestamp())}")
+        bill_number = data.get('bill_number', data.get('orderId', f"TRX{int(datetime.now().timestamp())}"))
         
         if amount <= 0:
             return jsonify({'error': 'Invalid amount'}), 400
         
-        # Generate QR code
-        qr = khqr.create_qr(
-            bank_account=get_config('MERCHANT_BAKONG_ID'),
-            merchant_name=get_config('MERCHANT_NAME'),
-            merchant_city=get_config('MERCHANT_CITY'),
-            amount=amount,
-            currency=currency,
-            store_label='Smart-PAY',
-            phone_number=phone or '85512345678',
-            bill_number=bill_number,
-            terminal_label='POS-01',
-            static=False,
-            expiration=1
-        )
+        bakong_id = get_config('MERCHANT_BAKONG_ID') or 'phorn_sokkhim@bkrt'
+        merchant_name = get_config('MERCHANT_NAME') or 'Phorn Sokkhim'
+        merchant_city = get_config('MERCHANT_CITY') or 'Phnom Penh'
+
+        # Generate official EMVCo KHQR code
+        qr, md5 = generate_emvco_khqr(bakong_id, merchant_name, merchant_city, amount, currency)
         
-        # Generate MD5 and deeplink
-        md5 = khqr.generate_md5(qr)
-        
-        # Try to generate deeplink (skip if demo mode or if it fails)
-        demo_mode = str(get_config('DEMO_MODE')).lower() == 'true'
-        deeplink = None
-        
-        if not demo_mode:
-            try:
-                deeplink = khqr.generate_deeplink(
-                    qr,
-                    callback=f"{get_config('APP_URL', 'http://localhost:5001')}/api/payment/callback",
-                    appIconUrl=f"{get_config('APP_URL', 'http://localhost:5001')}/logo.png",
-                    appName="SmartPAY"
-                )
-            except Exception as e:
-                print(f"Warning: Could not generate deeplink: {e}")
-                deeplink = None
+        # Direct official Bakong deeplink
+        deeplink = f"https://bakong.nbc.org.kh/pay?md5={md5}"
         
         # Save to MongoDB Atlas / MySQL / Cache
         payment_doc = {
@@ -266,7 +324,7 @@ def create_payment():
         }
         save_payment_record(payment_doc)
         
-        # Send Telegram notification
+        # Send Telegram notification (if configured)
         send_telegram(f"""
 🆕 <b>New Payment</b>
 💰 {amount} {currency}
@@ -276,13 +334,22 @@ def create_payment():
         
         return jsonify({
             'success': True,
+            'status': 'SUCCESS',
             'bill_number': bill_number,
+            'orderId': bill_number,
             'qr_code': qr,
+            'khqrString': qr,
             'md5_hash': md5,
+            'md5': md5,
             'deeplink': deeplink,
             'amount': amount,
+            'amountUsd': amount if currency == 'USD' else amount / 4100,
+            'amountKhr': round(amount * 4100) if currency == 'USD' else amount,
             'currency': currency,
-            'qr_image_url': f"/api/payment/qr/{md5}"
+            'bakongAccountId': bakong_id,
+            'merchantName': merchant_name,
+            'qr_image_url': f"/api/payment/qr/{md5}",
+            'qrImageUrl': f"/api/payment/qr/{md5}"
         }), 201
         
     except Exception as e:
@@ -290,6 +357,16 @@ def create_payment():
         import traceback
         traceback.print_exc()
         return jsonify({'error': str(e)}), 500
+
+
+@app.route('/api/payments/khqr/check-status', methods=['POST'])
+def check_khqr_status_body():
+    """POST /api/payments/khqr/check-status matching Restaurant Management System format"""
+    data = request.get_json() or {}
+    md5 = data.get('md5', '')
+    if not md5:
+        return jsonify({'paid': False, 'message': 'Missing md5'}), 400
+    return check_status(md5)
 
 # Last check timestamp cache to throttle rapid duplicate calls (2 seconds minimum)
 last_check_cache = {}
