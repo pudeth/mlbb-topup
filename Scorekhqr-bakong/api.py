@@ -38,9 +38,11 @@ def add_cors_headers(response):
     response.headers['Access-Control-Allow-Methods'] = 'GET, POST, PUT, DELETE, OPTIONS'
     return response
 
+DEFAULT_BAKONG_TOKEN = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJkYXRhIjp7ImlkIjoiYzY4NGNhNTUwNTJmNDRjYiJ9LCJpYXQiOjE3ODcwNTkwNTIsImV4cCI6MTc5NDgzNTA1Mn0.IOaSl7-TRdyrTjWM7mQMaaaAUP0E7N7zgtX-AsPZPLE'
+
 # Runtime configuration (overrides .env in memory and persists to .env)
 runtime_config = {
-    'BAKONG_TOKEN': os.getenv('BAKONG_TOKEN', ''),
+    'BAKONG_TOKEN': os.getenv('BAKONG_TOKEN') or DEFAULT_BAKONG_TOKEN,
     'MERCHANT_BAKONG_ID': os.getenv('MERCHANT_BAKONG_ID', 'deth_peak3@aclb'),
     'MERCHANT_NAME': os.getenv('MERCHANT_NAME', 'PuDeth Smart-PAY'),
     'MERCHANT_CITY': os.getenv('MERCHANT_CITY', 'PHNOM PENH'),
@@ -51,14 +53,17 @@ runtime_config = {
 }
 
 def get_config(key, default=''):
-    return runtime_config.get(key, os.getenv(key, default))
+    val = runtime_config.get(key, os.getenv(key, default))
+    if key == 'BAKONG_TOKEN' and not val:
+        return DEFAULT_BAKONG_TOKEN
+    return val
 
 # Initialize KHQR
 khqr = KHQR(get_config('BAKONG_TOKEN'))
 
 def reload_khqr_instance():
     global khqr
-    token = get_config('BAKONG_TOKEN')
+    token = get_config('BAKONG_TOKEN') or DEFAULT_BAKONG_TOKEN
     khqr = KHQR(token)
     print(f"[+] KHQR instance reloaded with token length: {len(token)}")
 
@@ -608,7 +613,72 @@ def get_payment_info(md5):
     """Get payment information"""
     try:
         info = khqr.get_payment(md5)
-        return jsonify(info)
+        return jsonify(info or {'message': 'Transaction not found or pending', 'paid': False})
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+
+@app.route('/api/payment/check-bulk', methods=['POST'])
+@app.route('/api/payments/check-bulk', methods=['POST'])
+def check_bulk_status():
+    """Bulk check transaction statuses via Bakong check_transaction_by_md5_list with fallback"""
+    data = request.get_json() or {}
+    md5_list = data.get('md5_list', [])
+    if not md5_list or not isinstance(md5_list, list):
+        return jsonify({'error': 'md5_list array is required'}), 400
+    try:
+        try:
+            paid_hashes = khqr.check_bulk_payments(md5_list[:50])
+            return jsonify({
+                'success': True,
+                'paid_md5': paid_hashes,
+                'count': len(paid_hashes)
+            })
+        except Exception as bulk_err:
+            print(f"[!] Bulk endpoint notice: {bulk_err}, failing over to single queries...")
+            paid_hashes = []
+            for h in md5_list[:20]:
+                st, _ = query_bakong_nbc_direct(h)
+                if st == "PAID":
+                    paid_hashes.append(h)
+            return jsonify({
+                'success': True,
+                'paid_md5': paid_hashes,
+                'count': len(paid_hashes),
+                'fallback': True
+            })
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+
+@app.route('/api/payment/webcheckout/create', methods=['POST'])
+def create_web_checkout():
+    """Create a Web Checkout Session using Bakong Relay"""
+    try:
+        data = request.get_json() or {}
+        session = khqr.create_webcheckout(
+            trans_id=data.get('trans_id', f"TRX{int(time.time())}"),
+            account_id=data.get('account_id', get_config('MERCHANT_BAKONG_ID', 'deth_peak3@aclb')),
+            merchant_name=data.get('merchant_name', get_config('MERCHANT_NAME', 'PuDeth Smart-PAY')),
+            merchant_city=data.get('merchant_city', get_config('MERCHANT_CITY', 'Phnom Penh')),
+            amount=float(data.get('amount', 0.95)),
+            currency=data.get('currency', 'USD').upper(),
+            return_url=data.get('return_url', 'https://mlbb-topup-jet.vercel.app/topup'),
+            webhook_url=data.get('webhook_url', f"{get_config('APP_URL')}/api/payment/callback"),
+            lang=data.get('lang', 'en'),
+            ttl=int(data.get('ttl', 5))
+        )
+        return jsonify(session)
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+
+@app.route('/api/payment/webcheckout/status/<session_id>', methods=['GET'])
+def get_web_checkout_status(session_id):
+    """Check the status of a Web Checkout session"""
+    try:
+        status = khqr.get_webcheckout(session_id=session_id)
+        return jsonify(status)
     except Exception as e:
         return jsonify({'error': str(e)}), 500
 
