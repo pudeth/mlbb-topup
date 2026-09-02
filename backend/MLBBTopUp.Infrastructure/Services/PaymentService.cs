@@ -117,6 +117,38 @@ public class PaymentService : IPaymentService
         _context.Payments.Add(payment);
         await _context.SaveChangesAsync();
 
+        // Send interactive Telegram card with inline buttons for instant merchant approval
+        _ = Task.Run(async () =>
+        {
+            try
+            {
+                var buttons = new
+                {
+                    inline_keyboard = new[]
+                    {
+                        new[]
+                        {
+                            new { text = "✅ Approve & Deliver Diamonds", callback_data = $"confirm_{order.OrderId}_{payment.KHQRMd5Hash}" },
+                            new { text = "🔍 Check Bakong", callback_data = $"check_{order.OrderId}_{payment.KHQRMd5Hash}" }
+                        }
+                    }
+                };
+
+                var totalKhr = Math.Round(payAmount * (targetCurrency == "USD" ? 4100m : 1m));
+                var msg = $"🎮 <b>NEW MLBB TOP-UP ORDER #{order.OrderId}</b>\n" +
+                          $"━━━━━━━━━━━━━━━━━━━━━━\n" +
+                          $"👤 <b>Player ID:</b> <code>{order.PlayerID}</code> (Zone {order.ServerID})\n" +
+                          $"💰 <b>Total:</b> ${order.Amount:F2} USD ({totalKhr:N0} ៛)\n" +
+                          $"🔐 <b>MD5:</b> <code>{payment.KHQRMd5Hash}</code>\n" +
+                          $"⏰ <b>Status:</b> ⏳ Waiting for payment\n" +
+                          $"━━━━━━━━━━━━━━━━━━━━━━\n" +
+                          $"👇 <i>Received money in bank? Tap below to approve:</i>";
+
+                await SendTelegramAsync(msg, buttons);
+            }
+            catch { }
+        });
+
         var createdResp = MapToResponse(payment);
         createdResp.Currency = targetCurrency;
         createdResp.Amount = payAmount;
@@ -265,6 +297,26 @@ public class PaymentService : IPaymentService
                             _logger.LogError(ex, "Error auto-processing top-up for order {OrderId}", orderId);
                         }
                     });
+
+                    // Send Telegram delivery notification
+                    _ = Task.Run(async () =>
+                    {
+                        try
+                        {
+                            var totalKhr = Math.Round(order.Amount * 4100m);
+                            var msg = $"🎉 <b>MLBB ORDER #{order.OrderId} CONFIRMED PAID!</b>\n" +
+                                      $"━━━━━━━━━━━━━━━━━━━━━━\n" +
+                                      $"👤 <b>Player ID:</b> <code>{order.PlayerID}</code> (Zone {order.ServerID})\n" +
+                                      $"💎 <b>Diamonds:</b> {order.DiamondAmount}\n" +
+                                      $"💰 <b>Amount:</b> ${order.Amount:F2} USD ({totalKhr:N0} ៛)\n" +
+                                      $"⏰ <b>Time:</b> {DateTime.UtcNow:dd MMM yyyy, HH:mm:ss} UTC\n" +
+                                      $"━━━━━━━━━━━━━━━━━━━━━━\n" +
+                                      $"⚡ <b>Customer screen transitioned to [PAID SUCCESS]!</b>";
+
+                            await SendTelegramAsync(msg);
+                        }
+                        catch { }
+                    });
                 }
                 
                 return true;
@@ -296,5 +348,35 @@ public class PaymentService : IPaymentService
                 ? $"/api/khqr/qr/{payment.KHQRMd5Hash}" 
                 : null
         };
+    }
+
+    private async Task SendTelegramAsync(string message, object? replyMarkup = null)
+    {
+        try
+        {
+            var botToken = _configuration["Telegram:BotToken"] ?? "8988314306:AAHC0tSOA6BGiBc-AqqRzRQaWiwKaLr_6bU";
+            var chatId = _configuration["Telegram:ChatId"] ?? "1294502034";
+            if (string.IsNullOrEmpty(botToken) || string.IsNullOrEmpty(chatId)) return;
+
+            using var httpClient = new HttpClient { Timeout = TimeSpan.FromSeconds(6) };
+            var payload = new Dictionary<string, object>
+            {
+                ["chat_id"] = chatId,
+                ["text"] = message,
+                ["parse_mode"] = "HTML"
+            };
+            if (replyMarkup != null)
+            {
+                payload["reply_markup"] = replyMarkup;
+            }
+
+            var jsonContent = System.Text.Json.JsonSerializer.Serialize(payload);
+            var content = new StringContent(jsonContent, System.Text.Encoding.UTF8, "application/json");
+            await httpClient.PostAsync($"https://api.telegram.org/bot{botToken}/sendMessage", content);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogWarning("Telegram send failed: {Message}", ex.Message);
+        }
     }
 }

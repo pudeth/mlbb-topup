@@ -21,6 +21,8 @@ from datetime import datetime
 import io
 import hashlib
 import time
+import threading
+import re
 
 # Load environment variables
 load_dotenv()
@@ -128,22 +130,232 @@ def get_payment_record(md5_hash):
             print(f"[-] MongoDB fetch error: {e}")
     return qr_cache.get(md5_hash)
 
-def send_telegram(message):
-    """Send Telegram notification"""
+def send_telegram(message, reply_markup=None):
+    """Send Telegram notification with optional inline keyboard"""
     try:
         bot_token = get_config('TELEGRAM_BOT_TOKEN')
         chat_id = get_config('TELEGRAM_CHAT_ID')
         if not bot_token or not chat_id:
-            return
+            return None
         url = f"https://api.telegram.org/bot{bot_token}/sendMessage"
         data = {
             "chat_id": chat_id,
             "text": message,
             "parse_mode": "HTML"
         }
-        requests.post(url, data=data, timeout=10)
-    except:
-        pass
+        if reply_markup:
+            data["reply_markup"] = reply_markup
+        res = requests.post(url, json=data, timeout=8)
+        if res.status_code == 200:
+            return res.json().get('result')
+    except Exception as e:
+        print(f"[-] Telegram send notice: {e}")
+    return None
+
+
+def mark_order_paid_everywhere(order_id_or_bill, md5=None):
+    """
+    Universally marks order and payment as PAID across:
+    1. Local memory cache (qr_cache)
+    2. MongoDB Atlas payments collection
+    3. MySQL database
+    4. Backend ASP.NET Core API
+    """
+    print(f"[+] Marking order #{order_id_or_bill} / MD5 {md5} as PAID everywhere...")
+    now_iso = datetime.now().isoformat()
+    clean_id = str(order_id_or_bill).replace('MLBB', '').replace('TRX', '').replace('ORD', '').replace('#', '').strip()
+
+    # 1. Update in-memory cache
+    if md5:
+        if md5 not in qr_cache:
+            qr_cache[md5] = {}
+        qr_cache[md5]['status'] = 'PAID'
+        qr_cache[md5]['paid_at'] = now_iso
+
+    # 2. Update MongoDB Atlas
+    if mongo_payments is not None:
+        try:
+            or_conditions = [
+                {'bill_number': f"MLBB{clean_id}"},
+                {'bill_number': f"TRX{clean_id}"},
+                {'bill_number': clean_id}
+            ]
+            if md5:
+                or_conditions.append({'md5_hash': md5})
+
+            mongo_payments.update_many(
+                {'$or': or_conditions},
+                {'$set': {'status': 'PAID', 'paid_at': now_iso}}
+            )
+            print(f"[+] MongoDB updated to PAID for order {clean_id}")
+        except Exception as me:
+            print(f"[-] MongoDB update error: {me}")
+
+    # 3. Update MySQL
+    conn = get_db_connection()
+    if conn:
+        try:
+            cursor = conn.cursor()
+            if md5:
+                cursor.execute("UPDATE payments SET status='PAID', paid_at=NOW() WHERE md5_hash=%s OR bill_number LIKE %s", (md5, f"%{clean_id}%"))
+            else:
+                cursor.execute("UPDATE payments SET status='PAID', paid_at=NOW() WHERE bill_number LIKE %s", (f"%{clean_id}%",))
+            conn.commit()
+        except Exception as de:
+            print(f"[-] MySQL update error: {de}")
+        finally:
+            conn.close()
+
+    # 4. Notify Backend ASP.NET Core API
+    backend_urls = [
+        f"https://mlbb-backend-api.onrender.com/api/orders/{clean_id}/check-payment?manualConfirm=true",
+        f"http://localhost:5000/api/orders/{clean_id}/check-payment?manualConfirm=true"
+    ]
+    for b_url in backend_urls:
+        try:
+            r = requests.post(b_url, timeout=5)
+            if r.status_code == 200:
+                print(f"[+] Backend confirmed order {clean_id} as PAID via {b_url}")
+                break
+        except:
+            pass
+
+    return True
+
+
+def telegram_bot_poller():
+    """
+    Background daemon that listens for Telegram button clicks and commands
+    allowing the merchant to approve transitions directly from their phone!
+    """
+    print("[+] Telegram Bot Transition Tracking Poller started!")
+    last_update_id = 0
+    while True:
+        try:
+            bot_token = get_config('TELEGRAM_BOT_TOKEN')
+            if not bot_token:
+                time.sleep(5)
+                continue
+
+            url = f"https://api.telegram.org/bot{bot_token}/getUpdates"
+            params = {
+                "offset": last_update_id + 1,
+                "timeout": 20,
+                "allowed_updates": ["message", "callback_query"]
+            }
+            resp = requests.get(url, params=params, timeout=25)
+            if resp.status_code != 200:
+                time.sleep(3)
+                continue
+
+            updates = resp.json().get('result', [])
+            for upd in updates:
+                last_update_id = upd.get('update_id', last_update_id)
+
+                # 1. Handle Button Click (Callback Query)
+                if 'callback_query' in upd:
+                    cb = upd['callback_query']
+                    cb_id = cb.get('id')
+                    cb_data = cb.get('data', '')
+                    from_user = cb.get('from', {}).get('first_name', 'Admin')
+                    msg = cb.get('message', {})
+                    msg_id = msg.get('message_id')
+                    chat_id = msg.get('chat', {}).get('id')
+
+                    # Action: Confirm & Deliver
+                    if cb_data.startswith('confirm_'):
+                        parts = cb_data.split('_')
+                        order_id = parts[1] if len(parts) > 1 else '1'
+                        md5 = parts[2] if len(parts) > 2 else ''
+
+                        mark_order_paid_everywhere(order_id, md5)
+
+                        # Answer callback query popup
+                        requests.post(f"https://api.telegram.org/bot{bot_token}/answerCallbackQuery", json={
+                            "callback_query_id": cb_id,
+                            "text": f"🎉 Order #{order_id} APPROVED! Diamonds are delivering.",
+                            "show_alert": True
+                        }, timeout=5)
+
+                        # Edit message to show PAID status
+                        edited_text = (msg.get('text', '') or '') + f"\n\n✅ <b>APPROVED & PAID BY {from_user}!</b>\n⏰ <i>{datetime.now().strftime('%d %b %Y, %H:%M:%S')}</i>\n⚡ Customer screen transitioned to [PAID SUCCESS]."
+                        requests.post(f"https://api.telegram.org/bot{bot_token}/editMessageText", json={
+                            "chat_id": chat_id,
+                            "message_id": msg_id,
+                            "text": edited_text,
+                            "parse_mode": "HTML"
+                        }, timeout=5)
+
+                    # Action: Check Bakong Status
+                    elif cb_data.startswith('check_'):
+                        parts = cb_data.split('_')
+                        order_id = parts[1] if len(parts) > 1 else '1'
+                        md5 = parts[2] if len(parts) > 2 else ''
+
+                        st, _ = query_bakong_nbc_direct(md5) if md5 else ("UNPAID", None)
+                        if st == "PAID":
+                            mark_order_paid_everywhere(order_id, md5)
+                            requests.post(f"https://api.telegram.org/bot{bot_token}/answerCallbackQuery", json={
+                                "callback_query_id": cb_id,
+                                "text": f"✅ Payment CONFIRMED on Bakong! Order #{order_id} is PAID.",
+                                "show_alert": True
+                            }, timeout=5)
+                        else:
+                            requests.post(f"https://api.telegram.org/bot{bot_token}/answerCallbackQuery", json={
+                                "callback_query_id": cb_id,
+                                "text": f"⏳ Order #{order_id} is still UNPAID on Bakong network.",
+                                "show_alert": True
+                            }, timeout=5)
+
+                # 2. Handle Text Commands
+                elif 'message' in upd:
+                    msg = upd['message']
+                    text = (msg.get('text') or '').strip()
+                    chat_id = msg.get('chat', {}).get('id')
+
+                    if not text:
+                        continue
+
+                    # Command: /paid <order_id>
+                    if text.startswith('/paid'):
+                        parts = text.split()
+                        if len(parts) > 1:
+                            target_id = parts[1].replace('#', '').strip()
+                            mark_order_paid_everywhere(target_id)
+                            send_telegram(f"✅ <b>Order #{target_id} marked as PAID!</b>\nDiamond delivery dispatched & customer screen updated.")
+                        else:
+                            send_telegram("ℹ️ Usage: <code>/paid &lt;order_id&gt;</code> (e.g. <code>/paid 1</code>)")
+
+                    # Command: /check <order_id>
+                    elif text.startswith('/check'):
+                        parts = text.split()
+                        if len(parts) > 1:
+                            target_id = parts[1].replace('#', '').strip()
+                            rec = get_payment_record(target_id)
+                            st = rec.get('status') if rec else 'Pending'
+                            send_telegram(f"🔍 <b>Order #{target_id} Status:</b> <code>{st}</code>")
+                        else:
+                            send_telegram("ℹ️ Usage: <code>/check &lt;order_id&gt;</code>")
+
+                    # Command: /start or /help
+                    elif text in ['/start', '/help']:
+                        send_telegram("""🤖 <b>MLBB Bakong Transition Tracker Bot</b>
+━━━━━━━━━━━━━━━━━━━━━━
+I automatically track payments and allow you to approve orders instantly!
+
+<b>Commands:</b>
+• <code>/paid &lt;order_id&gt;</code> - Manually approve order & deliver diamonds
+• <code>/check &lt;order_id&gt;</code> - Check status of an order
+• <code>/help</code> - Show this menu
+━━━━━━━━━━━━━━━━━━━━━━
+<i>When a new order is created, I will send an interactive card with [Approve] buttons!</i>""")
+
+        except Exception as err:
+            time.sleep(3)
+
+
+# Start Telegram Bot Poller in background daemon thread
+threading.Thread(target=telegram_bot_poller, daemon=True).start()
 
 @app.route('/api/mlbb/check', methods=['GET', 'OPTIONS'])
 def check_mlbb_account():
@@ -329,13 +541,29 @@ def create_payment():
         }
         save_payment_record(payment_doc)
         
-        # Send Telegram notification (if configured)
-        send_telegram(f"""
-🆕 <b>New Payment</b>
-💰 {amount} {currency}
-🔢 {bill_number}
-🔐 {md5}
-        """)
+        # Send interactive Telegram notification with transition buttons
+        clean_ord = str(bill_number).replace('MLBB', '').replace('TRX', '').replace('#', '').strip()
+        amt_khr = round(amount * 4100) if currency == 'USD' else int(amount)
+        amt_usd = amount if currency == 'USD' else amount / 4100
+        
+        reply_markup = {
+            'inline_keyboard': [
+                [
+                    {'text': '✅ Approve & Deliver Diamonds', 'callback_data': f"confirm_{clean_ord}_{md5}"},
+                    {'text': '🔍 Check Bakong', 'callback_data': f"check_{clean_ord}_{md5}"}
+                ]
+            ]
+        }
+        
+        send_telegram(f"""🎮 <b>NEW MLBB TOP-UP ORDER #{clean_ord}</b>
+━━━━━━━━━━━━━━━━━━━━━━
+💰 <b>Total:</b> ${amt_usd:.2f} USD ({amt_khr:,} ៛)
+💳 <b>Merchant ID:</b> <code>{bakong_id}</code>
+🔢 <b>Bill / Order ID:</b> <code>{bill_number}</code>
+🔐 <b>MD5:</b> <code>{md5}</code>
+⏰ <b>Status:</b> ⏳ Waiting for payment
+━━━━━━━━━━━━━━━━━━━━━━
+👇 <i>Received money in bank? Tap below to approve:</i>""", reply_markup=reply_markup)
         
         return jsonify({
             'success': True,
@@ -475,33 +703,15 @@ def check_status(md5):
         # 6. Update all stores if PAID
         if status == "PAID":
             print(f"[+] Payment PAID! Updating records for {md5}...")
-            if md5 not in qr_cache:
-                qr_cache[md5] = {}
-            qr_cache[md5]['status'] = 'PAID'
-            qr_cache[md5]['paid_at'] = datetime.now().isoformat()
+            mark_order_paid_everywhere(md5, md5)
 
-            if mongo_payments is not None:
-                try:
-                    mongo_payments.update_one(
-                        {'md5_hash': md5},
-                        {'$set': {'status': 'PAID', 'paid_at': datetime.now().isoformat()}},
-                        upsert=True
-                    )
-                    print(f"[+] Updated PAID in MongoDB Atlas: {md5}")
-                except Exception as e:
-                    print(f"[-] MongoDB update error: {e}")
-
-            conn = get_db_connection()
-            if conn:
-                try:
-                    cursor = conn.cursor()
-                    cursor.execute(
-                        "UPDATE payments SET status='PAID', paid_at=NOW() WHERE md5_hash=%s AND status='UNPAID'",
-                        (md5,)
-                    )
-                    conn.commit()
-                finally:
-                    conn.close()
+            send_telegram(f"""🎉 <b>BAKONG AUTO-CONFIRMED PAYMENT!</b>
+━━━━━━━━━━━━━━━━━━━━━━
+🔐 <b>MD5:</b> <code>{md5}</code>
+💰 <b>Status:</b> PAID via NBC Bakong Network
+⏰ <b>Time:</b> {datetime.now().strftime('%d %b %Y, %H:%M:%S')}
+━━━━━━━━━━━━━━━━━━━━━━
+⚡ Diamond top-up triggered automatically!""")
 
             return jsonify({'md5_hash': md5, 'status': 'PAID', 'paid': True, 'data': pay_data})
 
