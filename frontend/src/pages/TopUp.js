@@ -424,13 +424,24 @@ const TopUp = () => {
   // Automatically trigger ABA Official Checkout if backend QR generation fails
   useEffect(() => {
     if (paymentData && !paymentPaid && !paymentData.qrString && !paymentData.khqrQRCode) {
-      if (typeof window !== 'undefined' && window.AbaPayway) {
-        window.AbaPayway.checkout();
-      } else {
-        // Absolute fallback
-        const form = document.getElementById('aba_merchant_request');
-        if (form) form.submit();
-      }
+      
+      let attempts = 0;
+      const maxAttempts = 50; // 50 * 100ms = 5 seconds
+      
+      const tryCheckout = () => {
+        if (typeof window !== 'undefined' && window.AbaPayway) {
+          window.AbaPayway.checkout();
+        } else if (attempts < maxAttempts) {
+          attempts++;
+          setTimeout(tryCheckout, 100);
+        } else {
+          // Absolute fallback (wait failed)
+          const form = document.getElementById('aba_merchant_request');
+          if (form) form.submit();
+        }
+      };
+
+      tryCheckout();
     }
   }, [paymentData, paymentPaid]);
 
