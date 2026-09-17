@@ -424,31 +424,12 @@ const TopUp = () => {
   // Automatically trigger ABA Official Checkout if backend QR generation fails
   useEffect(() => {
     if (paymentData && !paymentPaid && !paymentData.qrString && !paymentData.khqrQRCode) {
-      
-      const scriptUrl = 'https://checkout.payway.com.kh/plugins/checkout2-0.js'; // Always use Production script, it handles Sandbox internally
-
-      const triggerCheckout = () => {
-        if (typeof window !== 'undefined' && window.AbaPayway) {
-          window.AbaPayway.checkout();
-        } else {
-          // Fallback just in case plugin is completely blocked
-          const form = document.getElementById('aba_merchant_request');
-          if (form) form.submit();
-        }
-      };
-
-      // Load script if not present
-      if (!window.AbaPayway) {
-        const script = document.createElement('script');
-        script.src = scriptUrl;
-        script.async = true;
-        script.onload = () => {
-          setTimeout(triggerCheckout, 300); // Give it a moment to initialize
-        };
-        script.onerror = triggerCheckout;
-        document.head.appendChild(script);
+      if (typeof window !== 'undefined' && window.AbaPayway) {
+        window.AbaPayway.checkout();
       } else {
-        triggerCheckout();
+        // Absolute fallback
+        const form = document.getElementById('aba_merchant_request');
+        if (form) form.submit();
       }
     }
   }, [paymentData, paymentPaid]);
