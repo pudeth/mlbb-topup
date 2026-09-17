@@ -758,16 +758,15 @@ const TopUp = () => {
       }
 
       // Always check .NET backend DB via quick-status as fallback
-      if (!isPaidConfirmed && curOrderId) {
-        try {
-          const ordCheck = await fetch(`http://localhost:5000/api/orders/${curOrderId}/quick-status`)
-            .then(res => res.json())
-            .catch(() => null);
-          if (ordCheck?.isPaid === true || ordCheck?.paymentStatus === 'Paid') {
-            console.log(`%c[ABA PayWay Tracker] ✅ Backend DB confirmed PAID for Order #${curOrderId}`, 'color: #10b981; font-weight: bold;');
-            isPaidConfirmed = true;
-          }
-        } catch (e) {}
+        if (!isPaidConfirmed && curOrderId) {
+          try {
+            const ordCheckRes = await ordersAPI.getQuickStatus(curOrderId);
+            const ordCheck = ordCheckRes?.data;
+            if (ordCheck?.isPaid === true || ordCheck?.paymentStatus === 'Paid') {
+              console.log(`%c[ABA PayWay Tracker] ✓ Backend DB confirmed PAID for Order #${curOrderId}`, 'color: #10b981; font-weight: bold;');
+              isPaidConfirmed = true;
+            }
+          } catch (e) {}
       }
 
 

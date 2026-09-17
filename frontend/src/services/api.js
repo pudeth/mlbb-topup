@@ -68,6 +68,7 @@ export const ordersAPI = {
   getById: (id) => api.get(`/orders/${id}`),
   getMyOrders: () => api.get('/orders/my-orders'),
   getStatus: (id) => api.get(`/orders/${id}/status`),
+  getQuickStatus: (id) => api.get(`/orders/${id}/quick-status`),
   checkPayment: (id, manualConfirm = false) =>
     api.post(`/orders/${id}/check-payment${manualConfirm ? '?manualConfirm=true' : ''}`),
   confirmPaid: (id) => api.post(`/orders/${id}/confirm-paid`),
