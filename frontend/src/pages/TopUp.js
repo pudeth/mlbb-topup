@@ -2284,7 +2284,7 @@ const TopUp = () => {
               <div className="w-full flex justify-between items-center p-4 border-b border-gray-100 bg-white">
                 <span className="font-black text-slate-800 text-lg">Payment</span>
                 <button 
-                  onClick={() => setShowCustomModal(false)}
+                  onClick={() => { setShowCustomModal(false); window.location.reload(); }}
                   className="w-8 h-8 flex items-center justify-center rounded-full bg-slate-100 text-slate-500 font-bold active:bg-slate-200"
                 >
                   <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}>
