@@ -2080,7 +2080,20 @@ const TopUp = () => {
                 <span className="text-slate-400">Amount Paid:</span>
                 <span className="font-black text-emerald-400">${paymentData?.amount?.toFixed(2) || '—'}</span>
               </div>
-            </div>
+            
+                {paymentData?.tranId && (
+                  <div className="flex justify-between items-center pt-2 border-t border-slate-800/50">
+                    <span className="text-slate-400">ABA Transaction ID:</span>
+                    <span className="font-mono text-[10px] text-slate-300 bg-slate-800/50 px-2 py-0.5 rounded">{paymentData.tranId}</span>
+                  </div>
+                )}
+                <div className="flex justify-center pt-3 pb-1">
+                  <div className="flex items-center gap-1.5 opacity-60">
+                    <span className="text-[10px] text-slate-500 font-medium">Processed securely by</span>
+                    <img src="https://checkout.payway.com.kh/images/payway-logo-white.svg" alt="ABA PayWay" className="h-3" />
+                  </div>
+                </div>
+              </div>
 
             {/* Status Badge */}
             <div className="flex items-center justify-center gap-3 py-3 px-4 rounded-2xl bg-amber-950/40 border border-amber-500/30">
