@@ -426,7 +426,7 @@ const TopUp = () => {
     if (paymentData && !paymentPaid && !paymentData.qrString && !paymentData.khqrQRCode) {
       
       let attempts = 0;
-      const maxAttempts = 50; // Wait up to 5s for the script to load
+      const maxAttempts = 30; // Wait 3s
 
       const tryCheckout = () => {
         if (typeof window !== 'undefined' && window.AbaPayway) {
@@ -435,18 +435,27 @@ const TopUp = () => {
           attempts++;
           setTimeout(tryCheckout, 100);
         } else {
-          // Absolute fallback: submit directly in current window so Safari doesn't block it!
-          const form = document.getElementById('aba_merchant_request');
-          if (form) {
-             form.removeAttribute('target'); // Force current tab
-             form.submit();
-          }
+          // Absolute fallback: use custom React Modal overlay with iframe
+          setShowCustomModal(true);
         }
       };
 
       tryCheckout();
     }
   }, [paymentData, paymentPaid]);
+  
+  // When custom modal is shown, submit form into the iframe
+  useEffect(() => {
+    if (showCustomModal) {
+      setTimeout(() => {
+        const form = document.getElementById('aba_merchant_request');
+        if (form) {
+          form.target = 'custom_aba_iframe';
+          form.submit();
+        }
+      }, 200);
+    }
+  }, [showCustomModal]);
 
   // 5-minute Countdown Timer
   useEffect(() => {
