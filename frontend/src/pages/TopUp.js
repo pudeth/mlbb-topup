@@ -2138,116 +2138,64 @@ const TopUp = () => {
 
       {/* ======================================================== */}
       {/* PAY-SUCCESSFULLY CELEBRATORY POPUP INTERFACE (z-[9999]) */}
-      {/* ======================================================== */}
-      {paymentPaid && (
-        <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4 bg-black/85 backdrop-blur-lg overflow-y-auto animate-fadeIn">
-          <div className="bg-[#0B0F19] border-2 border-emerald-500/80 rounded-3xl max-w-lg w-full p-6 sm:p-8 shadow-2xl shadow-emerald-500/30 text-center space-y-5 animate-scaleUp relative overflow-hidden my-auto">
-            
-            {/* Glowing background halo */}
-            <div className="absolute -top-24 left-1/2 -translate-x-1/2 w-64 h-64 bg-emerald-500/20 rounded-full blur-3xl pointer-events-none" />
-
-            {/* Celebratory Icon */}
-            <div className="w-20 h-20 rounded-full bg-gradient-to-tr from-emerald-500 to-teal-400 text-slate-950 text-4xl flex items-center justify-center mx-auto shadow-glow-emerald animate-bounce">
-              ✓
-            </div>
-
-            <div className="space-y-1 relative">
-              <span className="px-3.5 py-1 rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-500/40 text-xs font-black uppercase tracking-widest inline-flex items-center gap-1.5">
-                <span className="w-2 h-2 rounded-full bg-emerald-400 animate-ping" />
-                Pay-Successfully 🎉
-              </span>
-              <h2 className="text-2xl sm:text-3xl font-black text-white pt-1">
-                Payment Confirmed!
-              </h2>
-              <p className="text-xs sm:text-sm text-slate-300">
-                Your diamonds have been automatically credited directly into your in-game mailbox!
-              </p>
-            </div>
-
-            {/* Order Receipt Box */}
-            <div className="p-4 rounded-2xl bg-[#111728] border border-slate-700 text-left space-y-2.5 text-xs shadow-inner">
-              <div className="flex justify-between items-center pb-2 border-b border-slate-800">
-                <span className="text-slate-400">Order Number:</span>
-                <span className="font-mono font-black text-amber-300 text-sm">#{orderId}</span>
-              </div>
-              <div className="flex justify-between items-center">
-                <span className="text-slate-400">Target Player ID:</span>
-                <span className="font-mono font-bold text-cyan-300">{formData.playerID} ({formData.serverID || '11446'})</span>
-              </div>
-              {verifiedAccount?.name && (
-                <div className="flex justify-between items-center">
-                  <span className="text-slate-400">Account Gamertag:</span>
-                  <span className="font-bold text-slate-200">{verifiedAccount.name}</span>
-                </div>
-              )}
-              <div className="flex justify-between items-center">
-                <span className="text-slate-400">Package Delivered:</span>
-                <span className="font-black text-white flex items-center gap-1">
-                  <span>💎</span>
-                  <span>{selectedProduct.name}</span>
-                </span>
-              </div>
-              <div className="flex justify-between items-center pt-2 border-t border-slate-800">
-                <span className="text-slate-400">Amount Paid:</span>
-                <div className="text-right">
-                  <span className="font-mono font-extrabold text-emerald-400 text-sm">
-                    ${selectedProduct.price.toFixed(2)} USD
-                  </span>
-                  <span className="text-[10px] text-slate-500 block">
-                    ~{(Math.round(selectedProduct.price * 4100)).toLocaleString()} KHR
-                  </span>
+        {/* ======================================================== */}
+        {paymentPaid && (
+          <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm overflow-y-auto animate-fadeIn">
+            <div className="bg-white rounded-3xl max-w-sm w-full shadow-2xl text-center relative overflow-hidden my-auto animate-scaleUp">
+              
+              {/* Top Graphic Section (matching ABA PayWay Guideline) */}
+              <div className="w-full h-48 bg-[#e8f5fb] relative overflow-hidden flex flex-col items-center justify-end pb-8" style={{ backgroundImage: 'radial-gradient(#cbe7f5 1px, transparent 1px)', backgroundSize: '20px 20px' }}>
+                {/* Simulated clouds and landscape */}
+                <div className="absolute bottom-0 left-0 w-full h-16 bg-white/40" style={{ borderRadius: '100% 100% 0 0' }} />
+                
+                {/* Flag pole and flag with Checkmark */}
+                <div className="relative z-10 flex flex-col items-center">
+                  <div className="w-1 h-24 bg-blue-400 absolute -bottom-8 -left-3 rounded-full" />
+                  <div className="bg-white px-8 py-4 rounded-r-2xl shadow-sm relative -ml-4">
+                    <div className="w-16 h-16 rounded-full bg-[#48b668] flex items-center justify-center shadow-md">
+                      <svg xmlns="http://www.w3.org/2000/svg" className="h-8 w-8 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}>
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+                      </svg>
+                    </div>
+                  </div>
                 </div>
               </div>
-            </div>
 
-            {/* Live 2 Delivery Progression Steps Detail Box */}
-            <div className="p-3.5 rounded-2xl bg-[#0B132B] border border-emerald-500/40 text-left space-y-2 text-xs shadow-inner">
-              <div className="text-[10.5px] font-black text-emerald-400 uppercase tracking-wider flex items-center gap-1.5 pb-1.5 border-b border-slate-800">
-                <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
-                Live Delivery Progression Audit
+              {/* Text Section */}
+              <div className="px-6 py-6 space-y-3 bg-white">
+                <h2 className="text-3xl font-semibold text-[#152745]">
+                  Success
+                </h2>
+                <p className="text-[#8c94a0] text-[13px] leading-relaxed max-w-[260px] mx-auto">
+                  Your diamonds have been automatically credited directly into your in-game mailbox!
+                </p>
               </div>
 
-              <div className="flex items-center justify-between text-[11px] text-slate-300">
-                <span className="flex items-center gap-1.5">
-                  <span className="text-emerald-400 font-bold">✓</span>
-                  <span>Step 2: Moonton Game Server Sync</span>
-                </span>
-                <span className="font-mono text-[10px] text-cyan-300 font-bold bg-cyan-500/15 px-2 py-0.5 rounded-md border border-cyan-500/30">Zone {formData.serverID || '11446'} Connected</span>
+              {/* Action Buttons */}
+              <div className="px-6 pb-8 space-y-3 bg-white">
+                <Link
+                  to={`/order-status/${orderId}`}
+                  className="block w-full py-3.5 rounded-xl border border-[#48b668] text-[#48b668] font-bold text-[15px] bg-transparent hover:bg-[#48b668]/5 transition-all text-center"
+                >
+                  Download Receipt
+                </Link>
+                
+                <button
+                  onClick={() => {
+                    setFormData(prev => ({ ...prev, playerID: '' }));
+                    setOrderId(null);
+                    setPaymentData(null);
+                    setPaymentPaid(false);
+                  }}
+                  className="block w-full py-3.5 rounded-xl bg-[#48b668] text-white font-bold text-[15px] hover:bg-[#3ea05b] shadow-md shadow-[#48b668]/30 transition-all text-center"
+                >
+                  Continue Shopping
+                </button>
               </div>
 
-              <div className="flex items-center justify-between text-[11px] text-slate-300">
-                <span className="flex items-center gap-1.5">
-                  <span className="text-emerald-400 font-bold">✓</span>
-                  <span>Step 3: In-Game Mailbox Delivery</span>
-                </span>
-                <span className="font-mono text-[10px] text-emerald-300 font-bold bg-emerald-500/15 px-2 py-0.5 rounded-md border border-emerald-500/30">💎 {selectedProduct.name} Delivered</span>
-              </div>
-            </div>
-
-            {/* Action Buttons */}
-            <div className="pt-2 flex flex-col sm:flex-row gap-3">
-              <button
-                onClick={() => {
-                  setFormData(prev => ({ ...prev, playerID: '' }));
-                  setOrderId(null);
-                  setPaymentData(null);
-                  setPaymentPaid(false);
-                }}
-                className="btn btn-gold flex-1 py-3 text-xs font-black uppercase tracking-wider shadow-glow-gold cursor-pointer"
-              >
-                ⚡ Make Another Top-Up
-              </button>
-              <Link
-                to={`/order-status/${orderId}`}
-                className="btn btn-secondary flex-1 py-3 text-xs font-bold text-center flex items-center justify-center gap-1.5"
-              >
-                <span>📦</span>
-                <span>Track Receipt</span>
-              </Link>
             </div>
           </div>
-        </div>
-      )}
+        )}
 
       {/* ======================================================== */}
       {/* ID GUIDE MODAL (z-[9999]) */}
