@@ -425,10 +425,18 @@ const TopUp = () => {
   // Automatically trigger ABA Official Checkout if backend QR generation fails
   useEffect(() => {
     if (paymentPaid) {
+      if (typeof window !== 'undefined' && window.AbaPayway) {
+         window.AbaPayway.closeCheckout();
+      }
       setShowCustomModal(false);
     } else if (paymentData && !paymentPaid && !paymentData.qrString && !paymentData.khqrQRCode) {
-      // We explicitly bypass the flaky ABA PayWay global script to guarantee a flawless React popup
-      setShowCustomModal(true);
+      // Try to use official ABA Payway script first (so Mobile App deeplinks work natively)
+      if (typeof window !== 'undefined' && window.AbaPayway) {
+          window.AbaPayway.checkout();
+      } else {
+          // Fallback to custom modal if script is blocked
+          setShowCustomModal(true);
+      }
     }
   }, [paymentData, paymentPaid]);
   
