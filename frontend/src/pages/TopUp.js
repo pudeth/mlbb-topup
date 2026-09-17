@@ -436,7 +436,7 @@ const TopUp = () => {
       setTimeout(() => {
         const form = document.getElementById('aba_merchant_request');
         if (form) {
-          form.target = 'custom_aba_iframe';
+          form.target = 'aba_webservice';
           form.submit();
         }
       }, 200);
@@ -2292,11 +2292,11 @@ const TopUp = () => {
               </div>
               <div className="flex-1 w-full bg-slate-50 relative">
                 <iframe
-                  name="custom_aba_iframe"
-                  id="custom_aba_iframe"
+                  name="aba_webservice"
+                  id="aba_webservice"
                   title="ABA Payway Checkout"
                   className="w-full h-full border-none"
-                  sandbox="allow-scripts allow-same-origin allow-forms allow-popups"
+                  
                 />
               </div>
             </div>
