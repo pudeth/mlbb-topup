@@ -424,7 +424,13 @@ const TopUp = () => {
 
   // Automatically trigger ABA Official Checkout if backend QR generation fails
   useEffect(() => {
-    if (paymentData && !paymentPaid && !paymentData.qrString && !paymentData.khqrQRCode) {
+    if (paymentPaid) {
+      // INSTANTLY CLOSE checkout when paid so the user can see our beautifully redesigned success screen!
+      if (typeof window !== 'undefined' && window.AbaPayway) {
+         window.AbaPayway.closeCheckout();
+      }
+      setShowCustomModal(false);
+    } else if (paymentData && !paymentPaid && !paymentData.qrString && !paymentData.khqrQRCode) {
       // Try to use official ABA Payway script first (so Mobile App deeplinks work natively)
       if (typeof window !== 'undefined' && window.AbaPayway) {
           window.AbaPayway.checkout();
