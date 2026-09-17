@@ -147,9 +147,9 @@ namespace MLBBTopUp.Infrastructure.Services
                     var popupPaymentOption = "abapay_khqr"; 
                     
                     var returnUrl = "http://localhost:3000/success"; // Success URL for Web Continuation
-                    var continueSuccessUrl = "http://localhost:3000/success";
+                    var continueSuccessUrl = $"{_configuration["FrontendUrl"] ?? "http://localhost:3000"}/topup";
                     var returnDeeplink = "abamobilebank://ababank.com"; // Success URL for Mobile Continuation
-                    var cancelUrl = "http://localhost:3000/checkout";
+                    var cancelUrl = $"{_configuration["FrontendUrl"] ?? "http://localhost:3000"}/topup";
 
                     var popupHash = GeneratePurchaseHash(reqTime, merchantId, tranId, amtStr, itemsBase64,
                         "", firstName, lastName, email, phone, purchaseType, popupPaymentOption,
@@ -617,9 +617,9 @@ namespace MLBBTopUp.Infrastructure.Services
                     var popupPaymentOption = "abapay_khqr";
                     
                     var returnUrl = "http://localhost:3000/success";
-                    var continueSuccessUrl = "http://localhost:3000/success";
+                    var continueSuccessUrl = $"{_configuration["FrontendUrl"] ?? "http://localhost:3000"}/topup";
                     var returnDeeplink = "abamobilebank://ababank.com";
-                    var cancelUrl = "http://localhost:3000/checkout";
+                    var cancelUrl = $"{_configuration["FrontendUrl"] ?? "http://localhost:3000"}/topup";
 
                     var popupHash = GenerateSubscriptionHash(reqTime, merchantId, tranId, amtStr, itemsBase64,
                         "", firstName, lastName, email, phone, purchaseType, popupPaymentOption,
@@ -744,7 +744,7 @@ namespace MLBBTopUp.Infrastructure.Services
             var callbackUrl = "https://yourdomain.com/api/PayWay/webhook";
             var callbackUrlB64 = Convert.ToBase64String(System.Text.Encoding.UTF8.GetBytes(callbackUrl));
 
-            var continueSuccessUrl = "http://localhost:3000/success";
+            var continueSuccessUrl = $"{_configuration["FrontendUrl"] ?? "http://localhost:3000"}/topup";
             var continueSuccessUrlB64 = Convert.ToBase64String(System.Text.Encoding.UTF8.GetBytes(continueSuccessUrl));
 
             var b4hash = $"{merchantId}{reqTime}{ctid}{callbackUrlB64}{requestId}{tokenFlag}{frequency}{amount}{currency}{continueSuccessUrlB64}";
