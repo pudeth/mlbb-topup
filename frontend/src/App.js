@@ -13,6 +13,7 @@ import Register from './pages/Register';
 import Support from './pages/Support';
 import PrivacyPolicy from './pages/PrivacyPolicy';
 import AdminDashboard from './pages/AdminDashboard';
+import Wallet from './pages/Wallet';
 import PrivateRoute from './components/PrivateRoute';
 import AdminRoute from './components/AdminRoute';
 import Layout from './components/Layout';
@@ -57,3 +58,4 @@ function App() {
 }
 
 export default App;
+

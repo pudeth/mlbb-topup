@@ -2,6 +2,7 @@ import React from 'react';
 import { Link } from 'react-router-dom';
 import { useLanguage } from '../context/LanguageContext';
 import { useStoreBranding } from '../services/storeBranding';
+import { AbaPaywayLogo, AbaAcceptanceMarks } from './AbaPaymentLogos';
 
 const Footer = () => {
   const { t } = useLanguage();
@@ -37,14 +38,14 @@ const Footer = () => {
             </p>
           </div>
 
-          {/* Detail 3: Bakong KHQR */}
+          {/* Detail 3: ABA PayWay & KHQR */}
           <div className="space-y-0.5">
             <div className="flex items-center gap-1.5 text-white font-bold text-xs sm:text-sm">
-              <span className="text-emerald-400 text-sm sm:text-base">🏦</span>
-              <span>{t('footer_khqr')}</span>
+              <span className="text-sky-400 text-sm sm:text-base">💳</span>
+              <span>ABA PayWay & KHQR</span>
             </div>
             <p className="text-[11px] sm:text-xs text-slate-400 leading-relaxed">
-              {t('footer_khqr_desc')}
+              Zero-fee instant checkout with ABA Mobile, KHQR & Cards
             </p>
           </div>
 
@@ -187,6 +188,38 @@ const Footer = () => {
               <span>✈️</span>
               <span>Telegram {branding.telegramUsername || '@Peak_Deth'}</span>
             </a>
+          </div>
+        </div>
+
+        {/* ======================================================== */}
+        {/* ABA PAYWAY OFFICIAL COMPLIANCE & ACCEPTANCE ROW */}
+        {/* Strictly complying with ABA Bank Merchant Integration Guideline v2.11 */}
+        {/* ======================================================== */}
+        <div className="pt-6 border-t border-slate-800/80">
+          <div className="p-4 sm:p-5 rounded-2xl bg-gradient-to-r from-[#002244]/80 via-slate-900/90 to-[#00172e]/80 border border-sky-500/30 flex flex-col md:flex-row items-center justify-between gap-4 shadow-xl">
+            <div className="flex flex-col sm:flex-row items-center sm:items-start md:items-center gap-3 text-center sm:text-left">
+              <AbaPaywayLogo className="h-7 w-auto" />
+              <div className="space-y-0.5">
+                <div className="flex items-center justify-center sm:justify-start gap-2">
+                  <span className="text-xs font-black text-white tracking-wide">
+                    Secured & Powered by ABA PayWay
+                  </span>
+                  <span className="text-[9px] px-2 py-0.5 rounded-full bg-sky-500/20 text-sky-300 font-bold border border-sky-400/30">
+                    Official Gateway
+                  </span>
+                </div>
+                <p className="text-[10.5px] text-slate-400 leading-snug max-w-xl">
+                  ABA PayWay is an online payment gateway operated by Advanced Bank of Asia Ltd. (ABA Bank), licensed and regulated by the National Bank of Cambodia. All transactions are protected by 256-bit SSL encryption.
+                </p>
+              </div>
+            </div>
+
+            <div className="flex flex-col items-center md:items-end gap-1.5 shrink-0">
+              <span className="text-[10px] uppercase font-bold text-slate-400 tracking-wider">
+                We Accept
+              </span>
+              <AbaAcceptanceMarks />
+            </div>
           </div>
         </div>
 

@@ -11,4 +11,6 @@ public class User
 
     // Navigation properties
     public ICollection<Order> Orders { get; set; } = new List<Order>();
+    public ICollection<PayWayToken> PayWayTokens { get; set; } = new List<PayWayToken>();
 }
+

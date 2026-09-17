@@ -17,6 +17,7 @@ public class PaymentService : IPaymentService
     private readonly IKHQRService _khqrService;
     private readonly ITopUpService _topUpService;
     private readonly IServiceScopeFactory _serviceScopeFactory;
+    private readonly IAbaPayWayService _abaPayWayService;
     private readonly ILogger<PaymentService> _logger;
 
     public PaymentService(
@@ -24,6 +25,7 @@ public class PaymentService : IPaymentService
         IConfiguration configuration,
         IOrderService orderService,
         IKHQRService khqrService,
+        IAbaPayWayService abaPayWayService,
         ITopUpService topUpService,
         IServiceScopeFactory serviceScopeFactory,
         ILogger<PaymentService> logger)
@@ -32,6 +34,7 @@ public class PaymentService : IPaymentService
         _configuration = configuration;
         _orderService = orderService;
         _khqrService = khqrService;
+        _abaPayWayService = abaPayWayService;
         _topUpService = topUpService;
         _serviceScopeFactory = serviceScopeFactory;
         _logger = logger;
@@ -50,6 +53,7 @@ public class PaymentService : IPaymentService
         string targetCurrency = (request.Currency ?? "USD").ToUpper();
         bool isKhr = targetCurrency == "KHR";
         decimal payAmount = isKhr ? Math.Round(order.Amount * 4100m) : order.Amount;
+        string method = string.IsNullOrWhiteSpace(request.PaymentMethod) ? "abapayway" : request.PaymentMethod.ToLower();
 
         // Check if payment already exists for this order
         var existingPayment = await _context.Payments
@@ -57,17 +61,34 @@ public class PaymentService : IPaymentService
 
         if (existingPayment != null)
         {
-            if (existingPayment.Status == "Pending" && request.PaymentMethod.ToLower() == "khqr")
+            if (existingPayment.Status == "Pending")
             {
-                var khqrResult = await _khqrService.CreatePaymentAsync(request.OrderId, payAmount, targetCurrency);
-                if (khqrResult.Success)
+                if (method == "abapayway")
                 {
-                    existingPayment.Amount = payAmount;
-                    existingPayment.KHQRBillNumber = khqrResult.BillNumber;
-                    existingPayment.KHQRMd5Hash = khqrResult.Md5Hash;
-                    existingPayment.KHQRQRCode = khqrResult.QrCode;
-                    existingPayment.KHQRDeeplink = khqrResult.Deeplink;
-                    await _context.SaveChangesAsync();
+                    var paywayResult = await _abaPayWayService.CreatePaymentAsync(request.OrderId, payAmount, targetCurrency);
+                    if (paywayResult.Success)
+                    {
+                        existingPayment.Amount = payAmount;
+                        existingPayment.PaymentMethod = "abapayway";
+                        existingPayment.TransactionID = paywayResult.TranId ?? existingPayment.TransactionID;
+                        existingPayment.KHQRMd5Hash = paywayResult.Md5Hash;
+                        existingPayment.KHQRQRCode = paywayResult.QrString;
+                        existingPayment.KHQRDeeplink = paywayResult.AbapayDeeplink;
+                        await _context.SaveChangesAsync();
+                    }
+                }
+                else if (method == "khqr")
+                {
+                    var khqrResult = await _khqrService.CreatePaymentAsync(request.OrderId, payAmount, targetCurrency);
+                    if (khqrResult.Success)
+                    {
+                        existingPayment.Amount = payAmount;
+                        existingPayment.KHQRBillNumber = khqrResult.BillNumber;
+                        existingPayment.KHQRMd5Hash = khqrResult.Md5Hash;
+                        existingPayment.KHQRQRCode = khqrResult.QrCode;
+                        existingPayment.KHQRDeeplink = khqrResult.Deeplink;
+                        await _context.SaveChangesAsync();
+                    }
                 }
             }
 
@@ -84,15 +105,31 @@ public class PaymentService : IPaymentService
         var payment = new Payment
         {
             OrderId = request.OrderId,
-            PaymentMethod = request.PaymentMethod,
+            PaymentMethod = method,
             TransactionID = transactionId,
             Amount = payAmount,
             Status = "Pending",
             CreatedAt = DateTime.UtcNow
         };
 
-        // If payment method is KHQR, create KHQR payment
-        if (request.PaymentMethod.ToLower() == "khqr")
+        // If payment method is ABA PayWay (default)
+        if (method == "abapayway")
+        {
+            _logger.LogInformation("Creating ABA PayWay payment for order {OrderId} ({Amount} {Currency})", 
+                request.OrderId, payAmount, targetCurrency);
+
+            var paywayResult = await _abaPayWayService.CreatePaymentAsync(request.OrderId, payAmount, targetCurrency);
+            if (paywayResult.Success)
+            {
+                payment.TransactionID = paywayResult.TranId ?? transactionId;
+                payment.KHQRMd5Hash = paywayResult.Md5Hash;
+                payment.KHQRQRCode = paywayResult.QrString;
+                payment.KHQRDeeplink = paywayResult.AbapayDeeplink;
+                payment.PaymentMethod = "abapayway";
+                _logger.LogInformation("ABA PayWay payment created: TranId={TranId}, Md5={Md5}", paywayResult.TranId, paywayResult.Md5Hash);
+            }
+        }
+        else if (method == "khqr")
         {
             _logger.LogInformation("Creating KHQR payment for order {OrderId} ({Amount} {Currency})", 
                 request.OrderId, payAmount, targetCurrency);
@@ -250,7 +287,7 @@ public class PaymentService : IPaymentService
                 {
                     OrderId = orderId,
                     Currency = "USD",
-                    PaymentMethod = "khqr"
+                    PaymentMethod = "abapayway"
                 });
                 payment = await _context.Payments.FirstOrDefaultAsync(p => p.OrderId == orderId);
             }
@@ -265,6 +302,50 @@ public class PaymentService : IPaymentService
         if (payment.Status == "Completed" && payment.PaidAt.HasValue)
         {
             return true;
+        }
+
+        // If ABA PayWay payment, check status with ABA PayWay service
+        if (payment.PaymentMethod?.ToLower() == "abapayway" && !string.IsNullOrEmpty(payment.TransactionID))
+        {
+            _logger.LogInformation("Verifying ABA PayWay payment for order {OrderId} (TranId: {TranId})", orderId, payment.TransactionID);
+            var payWayCheck = await _abaPayWayService.CheckTransactionAsync(payment.TransactionID);
+            if (payWayCheck.IsPaid)
+            {
+                _logger.LogInformation("ABA PayWay payment confirmed as PAID for order {OrderId}", orderId);
+                payment.Status = "Completed";
+                payment.PaidAt = DateTime.UtcNow;
+                await _orderService.UpdateOrderPaymentStatusAsync(orderId, "Paid");
+                await _context.SaveChangesAsync();
+
+                // Auto-trigger top-up delivery
+                var order = await _orderService.GetOrderByIdAsync(orderId);
+                if (order != null && order.TopupStatus == "Pending")
+                {
+                    _logger.LogInformation("Auto-triggering top-up delivery for paid order {OrderId}", orderId);
+                    _ = Task.Run(async () =>
+                    {
+                        try
+                        {
+                            using var scope = _serviceScopeFactory.CreateScope();
+                            var scopedTopUp = scope.ServiceProvider.GetRequiredService<ITopUpService>();
+                            var scopedOrderService = scope.ServiceProvider.GetRequiredService<IOrderService>();
+                            var topupRes = await scopedTopUp.ProcessTopUpAsync(order.OrderId, order.PlayerID, order.ServerID, order.DiamondAmount);
+                            if (topupRes.Success)
+                            {
+                                await scopedOrderService.UpdateOrderTopupStatusAsync(order.OrderId, "Completed");
+                            }
+                            else
+                            {
+                                var err = (topupRes.ErrorReason ?? topupRes.Message ?? "").ToLower();
+                                var isLowBalance = err.Contains("insufficient") || err.Contains("balance") || err.Contains("funds") || err.Contains("wallet") || err.Contains("fzr.cards");
+                                await scopedOrderService.UpdateOrderTopupStatusAsync(order.OrderId, isLowBalance ? "AwaitingBalance" : "Failed");
+                            }
+                        }
+                        catch { }
+                    });
+                }
+                return true;
+            }
         }
 
         // If KHQR payment, check status with KHQR service

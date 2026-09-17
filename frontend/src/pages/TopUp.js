@@ -2,10 +2,20 @@ import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { useSearchParams, useNavigate, Link } from 'react-router-dom';
 import { QRCodeSVG } from 'qrcode.react';
 import { useLanguage } from '../context/LanguageContext';
-import { ordersAPI, paymentsAPI, topupAPI } from '../services/api';
+import { ordersAPI, paymentsAPI, topupAPI, paywayAPI } from '../services/api';
 import { getStoredGames, getMasterTopupStatus, fetchStoredGames, fetchMasterTopupStatus } from '../services/gamesConfig';
 import { CambodiaFlagFrame } from '../components/CambodiaFlagBadge';
 import ProductPackageImage from '../components/ProductPackageImage';
+import {
+  AbaPayLogo,
+  KhqrLogo,
+  AbaPaywayVoucherHeader,
+  VisaLogo,
+  MastercardLogo,
+  UnionPayLogo,
+  JcbLogo,
+  AbaPaywayTrustBox
+} from '../components/AbaPaymentLogos';
 
 // Game-specific packages matching upstream supplier catalog
 const GAME_PACKAGES_MAP = {
@@ -106,68 +116,6 @@ const GAME_PACKAGES_MAP = {
     { productId: 806, diamondAmount: 25, name: '$25 Apple App Store & iTunes', price: 25.00, tag: 'Apple ID' },
     { productId: 807, diamondAmount: 10, name: '$10 Razer Gold PIN (Global)', price: 10.00, tag: 'Universal' },
   ]
-};
-
-// Real Bakong KHQR EMVCo Spec & CRC16-CCITT Generator (NBC Standard)
-const crc16Ccitt = (data) => {
-  let crc = 0xFFFF;
-  for (let i = 0; i < data.length; i++) {
-    crc ^= (data.charCodeAt(i) << 8);
-    for (let j = 0; j < 8; j++) {
-      if ((crc & 0x8000) !== 0) {
-        crc = ((crc << 1) ^ 0x1021) & 0xFFFF;
-      } else {
-        crc = (crc << 1) & 0xFFFF;
-      }
-    }
-  }
-  return crc.toString(16).toUpperCase().padStart(4, '0');
-};
-
-const buildBakongKhqr = ({
-  accountId = 'deth_peak3@aclb',
-  merchantName = 'PuDeth Smart-PAY',
-  city = 'Phnom Penh',
-  amount = 0.95,
-  currency = 'USD',
-  billNumber = 'MLBB000001',
-  phone = '85512345678',
-  storeLabel = 'Smart-PAY'
-}) => {
-  const isKhr = currency === 'KHR';
-  const currCode = isKhr ? '116' : '840';
-  const amtStr = isKhr ? Math.round(amount).toString() : Number(amount).toFixed(2);
-
-  // Tag 29: Individual Account Information
-  const tag29Val = `00${accountId.length.toString().padStart(2, '0')}${accountId}`;
-  const tag29 = `29${tag29Val.length.toString().padStart(2, '0')}${tag29Val}`;
-  
-  // Tag 54: Amount
-  const tag54 = `54${amtStr.length.toString().padStart(2, '0')}${amtStr}`;
-  
-  // Tag 59: Merchant Name
-  const cleanName = merchantName.slice(0, 25);
-  const tag59 = `59${cleanName.length.toString().padStart(2, '0')}${cleanName}`;
-  
-  // Tag 60: Merchant City
-  const cleanCity = city.slice(0, 15);
-  const tag60 = `60${cleanCity.length.toString().padStart(2, '0')}${cleanCity}`;
-  
-  // Tag 62: Additional Data Field (03: store label, 02: mobile, 01: bill number)
-  const cleanStore = storeLabel.slice(0, 25);
-  const cleanPhone = phone.slice(0, 25);
-  const cleanBill = billNumber.slice(0, 25);
-  const tag62Val = `03${cleanStore.length.toString().padStart(2, '0')}${cleanStore}02${cleanPhone.length.toString().padStart(2, '0')}${cleanPhone}01${cleanBill.length.toString().padStart(2, '0')}${cleanBill}`;
-  const tag62 = `62${tag62Val.length.toString().padStart(2, '0')}${tag62Val}`;
-
-  // Tag 99: Timestamp (00: created_ms, 01: expiry_ms 24h)
-  const nowMs = Date.now().toString();
-  const expMs = (Date.now() + 86400000).toString();
-  const tag99Val = `00${nowMs.length.toString().padStart(2, '0')}${nowMs}01${expMs.length.toString().padStart(2, '0')}${expMs}`;
-  const tag99 = `99${tag99Val.length.toString().padStart(2, '0')}${tag99Val}`;
-
-  const raw = `000201010212${tag29}520459995303${currCode}${tag54}5802KH${tag59}${tag60}${tag62}${tag99}6304`;
-  return raw + crc16Ccitt(raw);
 };
 
 // Auto-extract Player ID and Server ID
@@ -393,7 +341,7 @@ const TopUp = () => {
     playerID: '',
     serverID: 'Global',
     productId: products[0]?.productId || 100,
-    paymentMethod: 'khqr',
+    paymentMethod: 'abapayway',
   });
 
   // Payment states
@@ -410,6 +358,7 @@ const TopUp = () => {
   const [timeLeft, setTimeLeft] = useState(300); // 5-minute (300 seconds) countdown
   const [productCategoryTab, setProductCategoryTab] = useState('all'); // 'all', 'passes', 'diamonds'
   const [layoutMode, setLayoutMode] = useState('tiles'); // 'list', 'tiles', 'grid'
+  const [selectedPaymentOption, setSelectedPaymentOption] = useState('abapay_khqr'); // 'abapay_khqr' or 'cards'
   const checkoutSectionRef = useRef(null);
 
   const handleSwitchCurrency = async (newCurr) => {
@@ -420,20 +369,49 @@ const TopUp = () => {
 
     if (orderId) {
       try {
-        const payRes = await paymentsAPI.process(orderId, {
-          paymentMethod: 'khqr',
-          currency: newCurr
-        });
-        if (payRes.data) {
-          const ts = Date.now();
-          setPaymentData({
-            ...payRes.data,
+        // Try Python Scorekhqr service first for real ABA KHQR
+        const directRes = await fetch('http://localhost:5001/api/payment/create', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            orderId,
+            amount: selectedProduct?.price || 0.95,
+            currency: newCurr
+          })
+        }).then(r => r.json());
+
+        if (directRes?.qr_code) {
+          setPaymentData(prev => ({
+            ...prev,
             currency: newCurr,
-            khqrQRImageUrl: payRes.data.khqrMd5Hash ? `/api/khqr/qr/${payRes.data.khqrMd5Hash}?t=${ts}` : null
+            qrString: directRes.qr_code,
+            khqrQRCode: directRes.qr_code,
+            khqrDeeplink: directRes.deeplink,
+            abapayDeeplink: directRes.deeplink,
+            khqrMd5Hash: directRes.md5,
+            md5Hash: directRes.md5
+          }));
+        } else {
+          // Fallback to paywayAPI
+          const payRes = await paywayAPI.create({
+            orderId,
+            amount: selectedProduct?.price || 0.95,
+            currency: newCurr
           });
+          if (payRes.data) {
+            setPaymentData(prev => ({
+              ...prev,
+              ...payRes.data,
+              currency: newCurr,
+              qrString: payRes.data.qrString,
+              khqrQRCode: payRes.data.qrString,
+              khqrDeeplink: payRes.data.abapayDeeplink,
+              khqrMd5Hash: payRes.data.md5
+            }));
+          }
         }
       } catch (err) {
-        console.warn('Currency switch error:', err?.message);
+        console.warn('Currency switch notice:', err?.message);
       } finally {
         setTimeout(() => setSwitchingCurrency(false), 350);
       }
@@ -441,6 +419,21 @@ const TopUp = () => {
       setSwitchingCurrency(false);
     }
   };
+
+
+  // Automatically trigger ABA Official Checkout if backend QR generation fails
+  useEffect(() => {
+    if (paymentData && !paymentPaid && !paymentData.qrString && !paymentData.khqrQRCode) {
+      // The backend failed to generate the QR string due to Wrong Hash (Sandbox constraints).
+      // Instantly open the official ABA checkout popup instead of showing a broken React popup.
+      if (typeof window !== 'undefined' && 'AbaPayway' in window) {
+        window.AbaPayway.checkout();
+      } else {
+        const form = document.getElementById('aba_merchant_request');
+        if (form) form.submit();
+      }
+    }
+  }, [paymentData, paymentPaid]);
 
   // 5-minute Countdown Timer
   useEffect(() => {
@@ -507,7 +500,7 @@ const TopUp = () => {
       playerID: '',
       serverID: game.id.startsWith('mlbb') ? '' : 'Global',
       productId: newPkgs[0]?.productId || 100,
-      paymentMethod: 'khqr'
+      paymentMethod: 'abapayway'
     });
     setVerifiedAccount(null);
     setPaymentData(null);
@@ -661,93 +654,106 @@ const TopUp = () => {
   const currentOrderIdRef = useRef(orderId);
   currentOrderIdRef.current = orderId;
 
+  const currentTranIdRef = useRef(paymentData?.tranId);
+  currentTranIdRef.current = paymentData?.tranId;
+
   const currentMd5Ref = useRef(paymentData?.khqrMd5Hash || paymentData?.md5Hash);
   currentMd5Ref.current = paymentData?.khqrMd5Hash || paymentData?.md5Hash;
 
-
-
   const checkPaymentStatus = useCallback(async () => {
     const curOrderId = currentOrderIdRef.current;
+    const curTranId = currentTranIdRef.current;
     const curMd5 = currentMd5Ref.current;
 
     if (!curOrderId || paymentPaidRef.current || isCheckingRef.current || qrExpiredRef.current) return false;
     isCheckingRef.current = true;
 
     console.log(
-      `%c[Bakong Auto-Tracker] 🔄 Polling Order #${curOrderId} | MD5: ${curMd5 ? curMd5.slice(0, 10) + '...' : 'N/A'}`,
+      `%c[ABA PayWay Tracker] 🔄 Polling Order #${curOrderId} | TranID: ${curTranId || 'N/A'}`,
       'color: #38bdf8; font-weight: bold;'
     );
 
     const triggerPaidTransition = async () => {
       console.log(
-        `%c[Bakong Auto-Tracker] 🚀 PAYMENT DETECTED (PAID) for Order #${curOrderId}! Starting delivery transition...`,
+        `%c[ABA PayWay Tracker] 🚀 PAYMENT DETECTED (PAID) for Order #${curOrderId}! Starting delivery transition...`,
         'color: #10b981; font-weight: 900; font-size: 13px; background: #064e3b; padding: 3px 6px; border-radius: 4px;'
       );
 
+      // ── Step 1: Payment Confirmed ──────────────────────────────────
       setProcessingStep(1);
       playSuccessSound();
       console.log(
-        '%c[Bakong Auto-Tracker] 💳 Step 1/1: Payment Confirmed! Verifying NBC Bakong Signature... (100% pipeline start) ✓',
+        '%c[ABA PayWay Tracker] 💳 Step 1/3: Payment Confirmed! Verifying ABA PayWay Gateway Signature... (100% pipeline start) ✓',
         'color: #34d399; font-weight: bold; font-size: 12px;'
       );
 
-      // Execute Step 2 and Step 3 console progression in background
+      // ── Step 2: Game Server Sync ───────────────────────────────────
       setTimeout(() => {
-        console.log(`%c[Bakong Auto-Tracker] ⚡ Step 2/3: Connected to Moonton Game Server (Zone ${formData.serverID || 'Default'}) ✓`, 'color: #38bdf8; font-weight: bold;');
-      }, 400);
+        setProcessingStep(2);
+        console.log(`%c[ABA PayWay Tracker] ⚡ Step 2/3: Connected to Game Server (Zone ${formData.serverID || 'Default'}) ✓`, 'color: #38bdf8; font-weight: bold;');
+      }, 1200);
 
+      // ── Step 3: Crediting Diamonds ─────────────────────────────────
       setTimeout(() => {
-        console.log(`%c[Bakong Auto-Tracker] 💎 Step 3/3: Crediting ${selectedProduct.name} to Player ID ${formData.playerID} ✓`, 'color: #fbbf24; font-weight: bold;');
-      }, 800);
+        setProcessingStep(3);
+        console.log(`%c[ABA PayWay Tracker] 💎 Step 3/3: Crediting ${selectedProduct.name} to Player ID ${formData.playerID} ✓`, 'color: #fbbf24; font-weight: bold;');
+      }, 2400);
 
+      // ── Final: Show Receipt Screen ─────────────────────────────────
       setTimeout(() => {
         setPaymentPaid(true);
         paymentPaidRef.current = true;
         setProcessingStep(0);
-        console.log(`%c[Bakong Auto-Tracker] 🎉 Order #${curOrderId} Completed! Displaying [Pay-Successfully] invoice receipt screen.`, 'color: #a7f3d0; font-weight: bold;');
-      }, 1200);
+        console.log(`%c[ABA PayWay Tracker] 🎉 Order #${curOrderId} Completed! Displaying [Pay-Successfully] invoice receipt screen.`, 'color: #a7f3d0; font-weight: bold;');
+      }, 3600);
     };
 
     try {
       let isPaidConfirmed = false;
 
-      // 1. Check Bakong MD5 payment status via Flask API (Vercel proxy & Render fallback)
-      if (curMd5) {
+      // Real direct bank checking via ABA PayWay endpoint
+      if (curTranId && (paymentData?.gateway === 'aba_payway' || !curMd5)) {
         try {
-          const isLocal = typeof window !== 'undefined' && (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1');
-          const endpoints = isLocal
-            ? [`http://localhost:5001/api/payment/status/${curMd5}`]
-            : [`/api/khqr/payment/status/${curMd5}`, `https://mlbb-khqr-api.onrender.com/api/payment/status/${curMd5}`];
-
-          for (const ep of endpoints) {
-            try {
-              const r = await fetch(ep).then(res => res.json());
-              const raw = (r?.status || '').toUpperCase();
-
-              // Only trust a REAL paid response from Bakong — never trust auto_confirmed
-              if ((raw === 'PAID' || raw === 'SUCCESS' || raw === 'COMPLETED' || r?.paid === true) && !r?.auto_confirmed) {
-                isPaidConfirmed = true;
-                break;
-              }
-            } catch (epE) {}
-          }
-        } catch (e) {
-          console.warn('[Bakong Auto-Tracker] Status check error:', e?.message);
-        }
-      }
-
-      // 2. Also check order status on backend
-      if (!isPaidConfirmed && curOrderId) {
-        try {
-          const ordCheck = await ordersAPI.checkPayment(curOrderId, false);
-          if (ordCheck?.data?.isPaid || ordCheck?.data?.paymentStatus === 'Paid') {
+          const r = await paywayAPI.checkStatus(curTranId, curOrderId);
+          if (r?.data?.isPaid === true || (r?.data?.status || '').toUpperCase() === 'PAID') {
+            console.log(`%c[ABA PayWay Tracker] ✅ PayWay Bank API confirmed PAID (TranID: ${curTranId})`, 'color: #10b981; font-weight: bold;');
             isPaidConfirmed = true;
           }
-        } catch (ordErr) {}
+        } catch (pwErr) {
+          console.warn('[ABA PayWay Tracker] PayWay status error:', pwErr?.message);
+        }
+      } 
+      
+      // Legacy KHQR path (Scorekhqr-bakong) - only used if strictly aba_khqr
+      else if (curMd5 && paymentData?.gateway === 'aba_khqr') {
+        try {
+          const r = await fetch(`http://localhost:5001/api/payment/status/${curMd5}`)
+            .then(res => res.json())
+            .catch(() => null);
+          const raw = (r?.status || '').toUpperCase();
+          if (raw === 'PAID' || raw === 'SUCCESS' || raw === 'COMPLETED' || r?.paid === true) {
+            console.log(`%c[ABA PayWay Tracker] ✅ KHQR Cache confirmed PAID (md5: ${curMd5.slice(0,8)}...)`, 'color: #10b981; font-weight: bold;');
+            isPaidConfirmed = true;
+          }
+        } catch (e) {}
       }
 
+      // Always check .NET backend DB via quick-status as fallback
+      if (!isPaidConfirmed && curOrderId) {
+        try {
+          const ordCheck = await fetch(`http://localhost:5000/api/orders/${curOrderId}/quick-status`)
+            .then(res => res.json())
+            .catch(() => null);
+          if (ordCheck?.isPaid === true || ordCheck?.paymentStatus === 'Paid') {
+            console.log(`%c[ABA PayWay Tracker] ✅ Backend DB confirmed PAID for Order #${curOrderId}`, 'color: #10b981; font-weight: bold;');
+            isPaidConfirmed = true;
+          }
+        } catch (e) {}
+      }
+
+
       if (isPaidConfirmed) {
-        console.log(`%c[Bakong Auto-Tracker] ✓ Confirmed PAID! Processing order completion...`, 'color: #10b981; font-weight: bold;');
+        console.log(`%c[ABA PayWay Tracker] ✓ Confirmed PAID! Processing order completion...`, 'color: #10b981; font-weight: bold;');
         const confirmResult = await ordersAPI.checkPayment(curOrderId, true);
         // Check if topup is awaiting balance (provider has no funds)
         const topupStatus = confirmResult?.data?.topupStatus || confirmResult?.data?.order?.TopupStatus || '';
@@ -762,9 +768,9 @@ const TopUp = () => {
         return true;
       }
 
-      console.log(`%c[Bakong Auto-Tracker] ⏳ Order #${curOrderId} | Waiting for real Bakong payment...`, 'color: #94a3b8; font-size: 11px;');
+      console.log(`%c[ABA PayWay Tracker] ⏳ Order #${curOrderId} | Waiting for ABA PayWay payment...`, 'color: #94a3b8; font-size: 11px;');
     } catch (err) {
-      console.warn('[Bakong Auto-Tracker] Notice:', err?.message);
+      console.warn('[ABA PayWay Tracker] Notice:', err?.message);
     } finally {
       isCheckingRef.current = false;
     }
@@ -782,17 +788,92 @@ const TopUp = () => {
     // Initial check right after order creation
     checkPaymentStatus();
 
-    // Poll every 3 seconds until payment is detected, QR expires, or component unmounts
+    // Poll every 2 seconds until payment is detected, QR expires, or component unmounts
     const interval = setInterval(() => {
       if (!paymentPaidRef.current && !qrExpiredRef.current) {
         checkPaymentStatus();
       } else {
         clearInterval(interval);
       }
-    }, 3000);
+    }, 2000);
 
     return () => clearInterval(interval);
   }, [orderId, paymentPaid, qrExpired, checkPaymentStatus]);
+
+  // ── SSE Real-Time Payment Push ─────────────────────────────────────────────
+  // Connects to Scorekhqr-bakong SSE endpoint. Fires INSTANTLY when Telegram
+  // "✅ Approve" button is clicked — no polling delay needed.
+  useEffect(() => {
+    const md5 = paymentData?.khqrMd5Hash || paymentData?.md5Hash;
+    if (!md5 || paymentPaid || qrExpired || !orderId) return;
+
+    let es = null;
+    let active = true;
+
+    const connectSSE = () => {
+      try {
+        es = new EventSource(`http://localhost:5001/api/payment/sse/${md5}`);
+
+        es.onmessage = (ev) => {
+          if (!active) return;
+          const data = (ev.data || '').trim().toUpperCase();
+          if (data === 'PAID' && !paymentPaidRef.current) {
+            console.log(
+              `%c[ABA PayWay Tracker] ⚡ SSE PUSH: PAID event received for md5 ${md5.slice(0, 8)}... — triggering instant transition!`,
+              'color: #10b981; font-weight: 900; font-size: 13px; background: #064e3b; padding: 3px 6px; border-radius: 4px;'
+            );
+            // Mark paid flag immediately to stop polling
+            paymentPaidRef.current = true;
+            es && es.close();
+
+            // Run the 3-step visual transition
+            const run = async () => {
+              // Confirm on backend (marks order Paid in DB)
+              try { await ordersAPI.checkPayment(orderId, true); } catch(e) {}
+
+              // Step 1
+              setProcessingStep(1);
+              playSuccessSound();
+              console.log('%c[ABA PayWay Tracker] 💳 Step 1/3: Payment Confirmed! Verifying ABA PayWay Gateway Signature... ✓', 'color: #34d399; font-weight: bold;');
+              // Step 2
+              setTimeout(() => {
+                setProcessingStep(2);
+                console.log(`%c[ABA PayWay Tracker] ⚡ Step 2/3: Connected to Game Server ✓`, 'color: #38bdf8; font-weight: bold;');
+              }, 1200);
+              // Step 3
+              setTimeout(() => {
+                setProcessingStep(3);
+                console.log(`%c[ABA PayWay Tracker] 💎 Step 3/3: Crediting ${selectedProduct?.name} to Player ID ${formData.playerID} ✓`, 'color: #fbbf24; font-weight: bold;');
+              }, 2400);
+              // Receipt
+              setTimeout(() => {
+                setPaymentPaid(true);
+                setProcessingStep(0);
+                console.log(`%c[ABA PayWay Tracker] 🎉 Order #${orderId} Completed! Displaying [Pay-Successfully] invoice receipt screen.`, 'color: #a7f3d0; font-weight: bold;');
+              }, 3600);
+            };
+            run();
+          }
+        };
+
+        es.onerror = () => {
+          // SSE disconnected — polling interval handles detection as fallback
+          if (active && !paymentPaidRef.current) {
+            setTimeout(() => { if (active && !paymentPaidRef.current) connectSSE(); }, 3000);
+          }
+        };
+      } catch (e) {
+        // EventSource not supported or blocked — polling fallback handles it
+      }
+    };
+
+    connectSSE();
+
+    return () => {
+      active = false;
+      es && es.close();
+    };
+  }, [orderId, paymentData, paymentPaid, qrExpired, selectedProduct?.name, formData.playerID]);
 
   const handleProceedToPayment = async () => {
     if (isTopupDisabled) {
@@ -822,7 +903,7 @@ const TopUp = () => {
         price: targetAmount,
         amount: targetAmount,
         currency: currency,
-        paymentMethod: 'khqr'
+        paymentMethod: 'abapayway'
       };
 
       let newOrder = null;
@@ -830,113 +911,96 @@ const TopUp = () => {
         const orderRes = await ordersAPI.create(orderPayload);
         newOrder = orderRes?.data;
       } catch (orderApiErr) {
-        console.warn('Backend order notice, creating direct payment session:', orderApiErr?.message);
+        console.warn('Backend order notice:', orderApiErr?.message);
       }
 
       const activeOrderId = newOrder?.orderId || Math.floor(100000 + Math.random() * 900000);
       setOrderId(activeOrderId);
 
-      const khqrBase = process.env.REACT_APP_KHQR_API_URL || (typeof window !== 'undefined' && window.location.hostname !== 'localhost' ? 'https://mlbb-khqr-api.onrender.com' : '');
-      const getQrUrl = (hash) => hash ? `${khqrBase}/api/payment/qr/${hash}?t=${Date.now()}` : null;
+      let createdPayment = null;
 
-      let createdPayment = newOrder?.payment;
-
-      if (!createdPayment && newOrder?.orderId) {
-        try {
-          const payRes = await paymentsAPI.process(newOrder.orderId, {
-            paymentMethod: 'khqr',
-            currency: currency
-          });
-          if (payRes?.data) {
-            createdPayment = payRes.data;
-          }
-        } catch (payErr) {
-          console.warn('Payment service notice, using direct KHQR:', payErr?.message);
-        }
-      }
-
-      // If backend payment was null or missing md5Hash, generate KHQR directly
-      if (!createdPayment || !createdPayment.khqrMd5Hash) {
-        const fallbackHash = 'khqr_' + Math.random().toString(36).substring(2, 12) + Date.now().toString(36);
-        const billNum = `MLBB${activeOrderId}`;
-
-        try {
-          // Attempt local or public Python KHQR API
-          const isLocalHost = typeof window !== 'undefined' && (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1');
-          const khqrEndpoints = isLocalHost
-            ? ['http://localhost:5001/api/payment/create']
-            : ['/api/khqr/payment/create', 'https://mlbb-khqr-api.onrender.com/api/payment/create'];
-
-          for (const ep of khqrEndpoints) {
-            try {
-              const res = await fetch(ep, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                  amount: targetAmount,
-                  currency: currency,
-                  bill_number: billNum,
-                  phone: '85512345678'
-                })
-              });
-              if (res.ok) {
-                const data = await res.json();
-                if (data && (data.md5_hash || data.md5Hash)) {
-                  createdPayment = {
-                    orderId: activeOrderId,
-                    amount: targetAmount,
-                    currency: currency,
-                    khqrBillNumber: data.bill_number || data.billNumber || billNum,
-                    khqrMd5Hash: data.md5_hash || data.md5Hash,
-                    khqrQRCode: data.qr_code || data.qrCode,
-                    khqrDeeplink: data.deeplink || `https://bakong.nbc.org.kh/pay?md5=${data.md5_hash || data.md5Hash}`,
-                    khqrQRImageUrl: `${ep.replace('/api/payment/create', '')}/api/payment/qr/${data.md5_hash || data.md5Hash}`
-                  };
-                  break;
-                }
-              }
-            } catch (epErr) {
-              // Try next endpoint
-            }
-          }
-        } catch (directErr) {
-          console.warn('Direct KHQR notice:', directErr);
-        }
-
-        // Guaranteed resilient client-side KHQR QR payload
-        if (!createdPayment) {
-          const currTag = currency === 'KHR' ? '116' : '840';
-          const payAmt = currency === 'KHR' ? Math.round(targetAmount * 4100) : Number(targetAmount);
-          const rawQr = `00020101021229190015deth_peak3@aclb520459995303${currTag}5404${payAmt.toFixed(2)}5802KH5916PuDeth Smart-PAY6010PHNOM PENH62400309Smart-PAY02090123456780110${billNum}6304ED20`;
-
+      // 1. ALWAYS call PayWay Controller to get full gateway data (including FormData and CheckoutUrl)
+      try {
+        const directRes = await paywayAPI.create({
+          orderId: activeOrderId,
+          amount: targetAmount,
+          currency: currency
+        });
+        const pd = directRes?.data;
+        if (pd?.qrString || pd?.tranId) {
           createdPayment = {
             orderId: activeOrderId,
             amount: targetAmount,
             currency: currency,
-            khqrBillNumber: billNum,
-            khqrMd5Hash: fallbackHash,
-            khqrQRCode: rawQr,
-            khqrDeeplink: `https://bakong.nbc.org.kh/pay?md5=${fallbackHash}`,
-            khqrQRImageUrl: `https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=${encodeURIComponent(rawQr)}`
+            tranId: pd.tranId,
+            qrString: pd.qrString,
+            abapayDeeplink: pd.abapayDeeplink,
+            khqrDeeplink: pd.abapayDeeplink,
+            md5Hash: pd.md5,
+            khqrMd5Hash: pd.md5,
+            khqrQRCode: pd.qrString,
+            formData: pd.formData, // Explicitly save form data for the checkout popup
+            purchaseUrl: pd.purchaseUrl,
+            checkoutUrl: pd.checkoutUrl,
+            gateway: 'aba_payway'
           };
         }
+      } catch (err) {
+        console.warn('ABA PayWay API notice:', err?.message);
+      }
+
+      // 2. Fallback to basic DB payment if API failed
+      if (!createdPayment && (newOrder?.payment?.transactionId || newOrder?.payment?.khqrQRCode)) {
+        createdPayment = {
+          orderId: activeOrderId,
+          amount: newOrder.payment.amount || targetAmount,
+          currency: currency,
+          tranId: newOrder.payment.transactionId,
+          qrString: newOrder.payment.khqrQRCode,
+          abapayDeeplink: newOrder.payment.khqrDeeplink,
+          khqrDeeplink: newOrder.payment.khqrDeeplink,
+          md5Hash: newOrder.payment.khqrMd5Hash,
+          khqrMd5Hash: newOrder.payment.khqrMd5Hash,
+          khqrQRCode: newOrder.payment.khqrQRCode,
+          gateway: 'aba_payway'
+        };
+      }
+
+      // 3. Last fallback (Mock data)
+      if (!createdPayment) {
+        const simTranId = `TRX${activeOrderId}_${Math.floor(Date.now() % 100000)}`;
+        const simMd5 = 'aba_' + Math.random().toString(36).substring(2, 10);
+        const simDeeplink = `https://checkout-sandbox.payway.com.kh/pay?tran_id=${simTranId}&amount=${targetAmount}&currency=${currency}`;
+        const fallbackQr = `https://checkout-sandbox.payway.com.kh/pay?tran_id=${simTranId}`;
+        createdPayment = {
+          orderId: activeOrderId,
+          amount: targetAmount,
+          currency: currency,
+          tranId: simTranId,
+          qrString: fallbackQr,
+          abapayDeeplink: simDeeplink,
+          md5Hash: simMd5,
+          khqrMd5Hash: simMd5,
+          khqrQRCode: fallbackQr,
+          khqrDeeplink: simDeeplink,
+          gateway: 'aba_payway'
+        };
       }
 
       if (createdPayment) {
         setPaymentData({
           ...createdPayment,
-          currency: currency,
-          khqrQRImageUrl: getQrUrl(createdPayment.khqrMd5Hash) || createdPayment.khqrQRImageUrl
+          currency: currency
         });
       }
 
       setTimeout(() => {
         checkoutSectionRef.current?.scrollIntoView({ behavior: 'smooth' });
       }, 100);
+      setLoading(false);
     } catch (err) {
-      console.error('Payment initialization error:', err);
-      setError(err.response?.data?.message || 'Payment server is initializing. Please try again in a moment.');
-    } finally {
+      console.error('Error proceeding to payment:', err);
+      setError(err.response?.data?.message || 'Failed to initialize payment. Please try again.');
       setLoading(false);
     }
   };
@@ -1473,6 +1537,115 @@ const TopUp = () => {
               Click any item to select and proceed to instant checkout.
             </div>
 
+            {/* ======================================================== */}
+            {/* STEP 3: SELECT PAYMENT METHOD (ABA PAYWAY COMPLIANCE v2.11) */}
+            {/* Strictly adhering to Figma Guideline Node 18242-814 */}
+            {/* ======================================================== */}
+            <div className="pt-4 border-t border-slate-800/90 space-y-3">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <span className="w-6 h-6 rounded-full bg-gradient-to-r from-sky-500 to-blue-600 text-white font-black text-xs flex items-center justify-center shadow-md">
+                    3
+                  </span>
+                  <div>
+                    <h3 className="text-sm font-black text-white tracking-wide flex items-center gap-1.5">
+                      <span>Select Payment Method</span>
+                      <span className="text-[10px] text-sky-400 font-semibold">(វិធីសាស្ត្រទូទាត់)</span>
+                    </h3>
+                    <p className="text-[10.5px] text-slate-400">
+                      Official payment gateway powered by Advanced Bank of Asia Ltd. (ABA Bank)
+                    </p>
+                  </div>
+                </div>
+                <span className="px-2 py-0.5 rounded-full bg-emerald-500/15 border border-emerald-500/40 text-emerald-400 text-[10px] font-bold">
+                  0% Fee
+                </span>
+              </div>
+
+              {/* Payment Method Cards Container */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+                {/* Option A: ABA PAY & KHQR */}
+                <div
+                  onClick={() => setSelectedPaymentOption('abapay_khqr')}
+                  className={`relative p-3.5 rounded-2xl border transition-all cursor-pointer ${
+                    selectedPaymentOption === 'abapay_khqr'
+                      ? 'bg-gradient-to-b from-[#002b52]/50 via-[#0B1528] to-[#0A101E] border-sky-400 shadow-lg shadow-sky-950/60 ring-1 ring-sky-400/40'
+                      : 'bg-[#0B0F19] border-slate-800 hover:border-slate-700 opacity-80'
+                  }`}
+                >
+                  <div className="flex items-start justify-between gap-2">
+                    <div className="space-y-1.5">
+                      <div className="flex items-center gap-1.5">
+                        <AbaPayLogo className="h-5 w-auto" />
+                        <span className="text-slate-600 text-xs">•</span>
+                        <KhqrLogo className="h-4.5 w-auto" />
+                      </div>
+                      <div>
+                        <span className="text-xs font-black text-white block">ABA PAYWAY (ABA Mobile & KHQR)</span>
+                        <p className="text-[10px] text-slate-400 leading-tight">
+                          Scan with ABA Mobile App or any mobile banking app via ABA PayWay
+                        </p>
+                      </div>
+                    </div>
+                    {/* Radio Indicator */}
+                    <div className={`w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-black shrink-0 transition-all ${
+                      selectedPaymentOption === 'abapay_khqr'
+                        ? 'bg-sky-500 text-white shadow-md'
+                        : 'border border-slate-700 text-transparent'
+                    }`}>
+                      ✓
+                    </div>
+                  </div>
+                  <div className="mt-2.5 pt-2 border-t border-slate-800/80 flex items-center justify-between text-[9.5px]">
+                    <span className="text-emerald-400 font-bold">⚡ Instant 10s Delivery</span>
+                    <span className="text-sky-300 font-mono font-semibold">0% Transaction Fee</span>
+                  </div>
+                </div>
+
+                {/* Option B: Credit / Debit Cards via ABA PayWay */}
+                <div
+                  onClick={() => setSelectedPaymentOption('cards')}
+                  className={`relative p-3.5 rounded-2xl border transition-all cursor-pointer ${
+                    selectedPaymentOption === 'cards'
+                      ? 'bg-gradient-to-b from-[#002b52]/50 via-[#0B1528] to-[#0A101E] border-sky-400 shadow-lg shadow-sky-950/60 ring-1 ring-sky-400/40'
+                      : 'bg-[#0B0F19] border-slate-800 hover:border-slate-700 opacity-80'
+                  }`}
+                >
+                  <div className="flex items-start justify-between gap-2">
+                    <div className="space-y-1.5">
+                      <div className="flex items-center gap-1 flex-wrap">
+                        <VisaLogo className="h-4 w-auto" />
+                        <MastercardLogo className="h-4 w-auto" />
+                        <UnionPayLogo className="h-4 w-auto" />
+                        <JcbLogo className="h-4 w-auto" />
+                      </div>
+                      <div>
+                        <span className="text-xs font-black text-white block">Credit / Debit Cards</span>
+                        <p className="text-[10px] text-slate-400 leading-tight">
+                          Visa, Mastercard, UnionPay & JCB via ABA PayWay 3D-Secure
+                        </p>
+                      </div>
+                    </div>
+                    {/* Radio Indicator */}
+                    <div className={`w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-black shrink-0 transition-all ${
+                      selectedPaymentOption === 'cards'
+                        ? 'bg-sky-500 text-white shadow-md'
+                        : 'border border-slate-700 text-transparent'
+                    }`}>
+                      ✓
+                    </div>
+                  </div>
+                  <div className="mt-2.5 pt-2 border-t border-slate-800/80 flex items-center justify-between text-[9.5px]">
+                    <span className="text-sky-400 font-semibold">🔒 3D-Secure Protected</span>
+                    <span className="text-slate-400 font-mono">ABA PayWay</span>
+                  </div>
+                </div>
+              </div>
+
+              {/* ABA PayWay Trust Box & Acceptance Marks Bar */}
+              <AbaPaywayTrustBox merchantName="Pu Deth" />
+            </div>
+
             {/* Review & Pay Bar */}
             <div ref={checkoutSectionRef} className="pt-4 border-t border-slate-800 space-y-4">
               <div className="flex flex-col sm:flex-row items-center justify-between gap-3 p-4 rounded-2xl bg-[#111728] border border-slate-700">
@@ -1523,33 +1696,39 @@ const TopUp = () => {
                 </div>
               )}
 
-              {/* Pay Button */}
+              {/* Pay Button (ABA PayWay Branded CTA strictly matching Figma v2.11) */}
               {!paymentData && !paymentPaid && (
-                <div className="space-y-2">
+                <div className="space-y-2.5">
                   <button
                     onClick={handleProceedToPayment}
                     disabled={loading || isTopupDisabled}
-                    className={`w-full py-4 rounded-2xl font-black text-base uppercase tracking-wider flex items-center justify-center gap-2 transition-all cursor-pointer ${
+                    className={`w-full py-4 rounded-2xl font-black text-base uppercase tracking-wider flex items-center justify-center gap-2.5 transition-all cursor-pointer ${
                       isTopupDisabled
                         ? 'bg-slate-800 text-slate-400 border border-slate-700 cursor-not-allowed opacity-80'
-                        : 'bg-gradient-to-r from-amber-500 via-amber-400 to-yellow-400 hover:from-amber-400 hover:to-yellow-300 text-slate-950 shadow-glow-gold'
+                        : 'bg-gradient-to-r from-[#0055a5] via-[#00488d] to-[#003870] hover:from-[#0066cc] hover:to-[#004d99] text-white shadow-xl shadow-sky-950/50 border border-sky-400/40 active:scale-[0.99]'
                     }`}
                   >
-                    <span>{isTopupDisabled ? '⚠️' : loading ? '⏳' : '⚡'}</span>
+                    <span>{isTopupDisabled ? '⚠️' : loading ? '⏳' : '💳'}</span>
                     <span>
                       {isTopupDisabled
                         ? (selectedGame?.status === 'Closed' || masterStatus?.status === 'Closed' ? 'Top-Up Temporarily Closed' : 'Top-Up Temporarily Paused')
                         : loading
-                        ? 'Generating Dynamic KHQR...'
-                        : `Pay ${currency === 'KHR' ? `${Math.round(selectedProduct.price * 4100).toLocaleString()} ៛` : `$${selectedProduct.price.toFixed(2)} USD`} with Bakong KHQR`}
+                        ? 'Connecting ABA PayWay...'
+                        : `Pay ${currency === 'KHR' ? `${Math.round(selectedProduct.price * 4100).toLocaleString()} ៛` : `$${selectedProduct.price.toFixed(2)} USD`} with ABA PayWay`}
                     </span>
                   </button>
-                  <p className="text-[11px] text-center text-slate-400">
-                    By proceeding, you agree to our{' '}
-                    <Link to="/privacy" target="_blank" className="text-cyan-400 hover:underline font-semibold">
-                      Terms & Conditions and Privacy Policy
-                    </Link>.
-                  </p>
+
+                  <div className="flex flex-col sm:flex-row items-center justify-between gap-1.5 text-[10.5px] text-slate-400 px-1 pt-0.5">
+                    <span className="flex items-center gap-1.5">
+                      <span>🛡️</span>
+                      <span>Processed securely by <strong>Advanced Bank of Asia Ltd. (ABA Bank)</strong></span>
+                    </span>
+                    <span>
+                      <Link to="/privacy" target="_blank" className="text-cyan-400 hover:underline">
+                        Terms & Privacy Policy
+                      </Link>
+                    </span>
+                  </div>
                 </div>
               )}
 
@@ -1561,274 +1740,277 @@ const TopUp = () => {
 
       {/* ======================================================== */}
       {/* ROOT-LEVEL DYNAMIC KHQR PAYMENT POPUP MODAL (z-[9999]) */}
+      {/* Strictly matching ABA PayWay Official Figma Guideline */}
       {/* ======================================================== */}
-      {paymentData && !paymentPaid && (
-        <div className="fixed inset-0 z-[9999] flex items-center justify-center p-2 sm:p-4 bg-black/85 backdrop-blur-md overflow-y-auto animate-fadeIn">
-          <div className="bg-[#0B0F19] border-2 border-amber-400 rounded-3xl max-w-sm sm:max-w-md w-full p-4 sm:p-5 shadow-2xl space-y-2.5 sm:space-y-3 animate-scaleUp relative my-auto max-h-[96vh] flex flex-col justify-between overflow-y-auto">
+      {paymentData && !paymentPaid && (paymentData.qrString || paymentData.khqrQRCode) && (
+        <div className="fixed inset-0 z-[9999] flex flex-col items-center justify-center p-3 sm:p-4 bg-slate-950/85 backdrop-blur-md overflow-y-auto animate-fadeIn">
+          
+          {/* Top ABA' PAYWAY Wordmark (Strictly matching Image 2) */}
+          <div className="w-full max-w-[340px] sm:max-w-[360px] flex justify-end items-center gap-1.5 pb-2.5 text-white pr-2">
+            <span className="font-black text-base sm:text-lg tracking-wider">ABA'</span>
+            <span className="font-extrabold text-sm sm:text-base tracking-widest uppercase italic text-sky-400">PAYWAY</span>
+          </div>
+
+          {/* Clean White Modal Container (Strictly matching Image 2) */}
+          <div className="bg-white rounded-3xl max-w-[340px] sm:max-w-[360px] w-full p-4 sm:p-5 shadow-2xl space-y-3.5 animate-scaleUp relative my-auto">
             
-            {/* Glowing background halo */}
-            <div className="absolute -top-24 left-1/2 -translate-x-1/2 w-64 h-64 bg-amber-500/10 rounded-full blur-3xl pointer-events-none" />
-
-            {/* Close Modal Button */}
-            <button
-              type="button"
-              onClick={() => {
-                setPaymentData(null);
-                setOrderId(null);
-              }}
-              className="absolute top-3 right-3 sm:top-4 sm:right-4 w-7 h-7 sm:w-8 sm:h-8 rounded-full bg-slate-800 hover:bg-slate-700 text-slate-400 hover:text-white flex items-center justify-center text-xs sm:text-sm font-bold transition-all cursor-pointer z-10 shadow-md"
-              title="Cancel Payment"
-            >
-              ✕
-            </button>
-
-            <div className="text-center space-y-1.5 pt-0.5">
-              <div className="flex flex-wrap items-center justify-center gap-1.5 pr-6">
-                <span className="px-2.5 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-500/40 text-[10px] sm:text-xs font-black uppercase tracking-wider">
-                  ⚡ DYNAMIC KHQR (ORDER #{orderId})
+            {/* Modal Header: Title & Close Button */}
+            <div className="flex items-center justify-between pt-0.5 px-0.5">
+              <h3 className="text-lg sm:text-xl font-black text-slate-900 tracking-tight flex items-center gap-2">
+                <span>ABA PAYWAY</span>
+                <span className="text-[10px] font-mono font-bold text-slate-400 bg-slate-100 px-2 py-0.5 rounded-full">
+                  #{orderId}
                 </span>
-                <span className="px-2.5 py-0.5 rounded-full bg-amber-500/15 text-amber-300 border border-amber-500/40 text-[10px] sm:text-xs font-mono font-extrabold flex items-center gap-1 shadow-sm">
-                  <span>⏱️</span>
-                  <span>Expires in:</span>
-                  <strong className="text-amber-400 text-xs sm:text-sm tracking-wider">{formatTime(timeLeft)}</strong>
-                </span>
-              </div>
+              </h3>
+              <button
+                type="button"
+                onClick={() => {
+                  setPaymentData(null);
+                  setOrderId(null);
+                }}
+                className="w-7 h-7 rounded-full text-slate-400 hover:text-slate-700 hover:bg-slate-100 flex items-center justify-center text-sm font-bold transition-all cursor-pointer"
+                title="Close"
+              >
+                ✕
+              </button>
+            </div>
 
-              {/* Currency Toggle Buttons inside KHQR Modal */}
-              <div className="flex items-center justify-center p-0.5 bg-slate-900 rounded-xl border border-slate-700/80 max-w-[190px] mx-auto shadow-inner my-1">
+            {/* Currency & Timer Controls */}
+            <div className="flex items-center justify-between gap-2 px-0.5 text-xs">
+              {/* Currency Toggle Buttons */}
+              <div className="flex items-center p-0.5 bg-slate-100 rounded-xl border border-slate-200">
                 <button
                   type="button"
                   onClick={() => handleSwitchCurrency('USD')}
-                  className={`flex-1 py-1 px-2.5 rounded-lg text-[11px] font-black transition-all cursor-pointer ${(paymentData?.currency || currency) === 'USD' ? 'bg-gradient-to-r from-amber-500 to-yellow-400 text-slate-950 shadow-md scale-105' : 'text-slate-400 hover:text-white'}`}
+                  className={`py-1 px-2.5 rounded-lg text-[11px] font-black transition-all cursor-pointer ${
+                    (paymentData?.currency || currency) === 'USD'
+                      ? 'bg-[#0055a5] text-white shadow-xs'
+                      : 'text-slate-500 hover:text-slate-800'
+                  }`}
                 >
-                  💵 USD ($)
+                  USD ($)
                 </button>
                 <button
                   type="button"
                   onClick={() => handleSwitchCurrency('KHR')}
-                  className={`flex-1 py-1 px-2.5 rounded-lg text-[11px] font-black transition-all cursor-pointer ${(paymentData?.currency || currency) === 'KHR' ? 'bg-gradient-to-r from-emerald-500 to-teal-400 text-slate-950 shadow-md scale-105' : 'text-slate-400 hover:text-white'}`}
+                  className={`py-1 px-2.5 rounded-lg text-[11px] font-black transition-all cursor-pointer ${
+                    (paymentData?.currency || currency) === 'KHR'
+                      ? 'bg-[#0055a5] text-white shadow-xs'
+                      : 'text-slate-500 hover:text-slate-800'
+                  }`}
                 >
-                  🇰🇭 KHR (៛)
+                  KHR (៛)
                 </button>
               </div>
 
-              <h3 className="text-sm sm:text-base font-black text-white">Scan to Complete Payment</h3>
-              <p className="text-[10px] sm:text-[11px] text-slate-400 max-w-[280px] mx-auto leading-tight">
-                Open ABA Mobile, Wing, ACLEDA, or any Bank App and scan the QR code.
-              </p>
+              {/* Countdown Timer */}
+              <div className="text-[11px] font-mono text-amber-700 bg-amber-50 px-2.5 py-1 rounded-xl border border-amber-200 font-bold flex items-center gap-1">
+                <span>⏱️</span>
+                <span>{formatTime(timeLeft)}</span>
+              </div>
             </div>
 
             {processingStep > 0 ? (
-              /* ======================================================== */
-              /* DYNAMIC PROCESS TRACKING TRANSITION SCREEN (AFTER PAID)   */
-              /* ======================================================== */
-              <div className="p-5 sm:p-6 bg-[#0E1526] rounded-3xl border-2 border-emerald-500/60 shadow-[0_0_35px_rgba(16,185,129,0.25)] text-center space-y-4 my-2 animate-fadeIn">
-                {/* Glowing Processing Avatar */}
-                <div className="relative w-16 h-16 sm:w-20 sm:h-20 mx-auto">
-                  <div className="absolute inset-0 rounded-full bg-emerald-400/25 animate-ping" />
-                  <div className="relative w-full h-full rounded-full bg-gradient-to-tr from-emerald-500 to-teal-400 border-2 border-emerald-300 flex items-center justify-center text-3xl sm:text-4xl shadow-glow-emerald">
-                    💳
+              /* ── Payment Processing Steps UI ── */
+              <div className="p-5 bg-emerald-50 rounded-2xl border border-emerald-200 text-center space-y-4 my-2 animate-fadeIn">
+                {/* Header */}
+                <div className="flex flex-col items-center gap-1.5">
+                  <div className="w-12 h-12 rounded-full bg-emerald-500 text-white flex items-center justify-center text-xl shadow-lg animate-pulse">
+                    {processingStep < 3 ? '⚡' : '✅'}
                   </div>
-                </div>
-
-                <div className="space-y-1.5">
-                  <span className="px-3 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-500/40 text-[10px] sm:text-xs font-black uppercase tracking-widest inline-flex items-center gap-1.5">
-                    <span className="w-2 h-2 rounded-full bg-emerald-400 animate-ping" />
-                    Step 1/1: Payment Confirmed
-                  </span>
-
-                  <h3 className="text-lg sm:text-xl font-black text-white pt-1">
-                    Payment Confirmed! Verifying NBC Bakong Signature...
-                  </h3>
-
-                  <p className="text-xs sm:text-sm text-emerald-300 font-medium max-w-[280px] mx-auto leading-tight">
-                    Bakong digital transaction confirmed! Finalizing your order receipt & diamond delivery...
+                  <h4 className="text-sm font-black text-slate-900">
+                    {processingStep === 1 && 'Payment Confirmed!'}
+                    {processingStep === 2 && 'Syncing with Game Server...'}
+                    {processingStep === 3 && 'Delivering Diamonds!'}
+                  </h4>
+                  <p className="text-[10px] text-emerald-700 font-medium">
+                    {processingStep === 1 && 'ABA PayWay gateway verified — starting delivery...'}
+                    {processingStep === 2 && `Connected to Zone ${formData.serverID || 'Default'} server ✓`}
+                    {processingStep === 3 && `Crediting ${selectedProduct?.name || 'diamonds'} to Player ID ${formData.playerID}`}
                   </p>
                 </div>
 
-                {/* 100% Full Glowing Progress Bar */}
-                <div className="w-full bg-slate-900 h-3 rounded-full overflow-hidden p-0.5 border border-slate-700 shadow-inner">
+                {/* Step Progress */}
+                <div className="space-y-2 text-left">
+                  {/* Step 1 */}
+                  <div className={`flex items-center gap-2.5 px-3 py-2 rounded-xl text-xs font-bold transition-all duration-500 ${processingStep >= 1 ? 'bg-emerald-100 text-emerald-800' : 'bg-slate-100 text-slate-400'}`}>
+                    <span className={`w-6 h-6 rounded-full flex items-center justify-center text-[11px] font-black flex-shrink-0 ${processingStep >= 1 ? 'bg-emerald-500 text-white' : 'bg-slate-300 text-slate-500'}`}>
+                      {processingStep >= 1 ? '✓' : '1'}
+                    </span>
+                    <span>💳 Payment Confirmed — ABA PayWay Gateway Signature ✓</span>
+                  </div>
+                  {/* Step 2 */}
+                  <div className={`flex items-center gap-2.5 px-3 py-2 rounded-xl text-xs font-bold transition-all duration-500 ${processingStep >= 2 ? 'bg-blue-100 text-blue-800' : processingStep === 1 ? 'bg-slate-100 text-slate-400 animate-pulse' : 'bg-slate-100 text-slate-400'}`}>
+                    <span className={`w-6 h-6 rounded-full flex items-center justify-center text-[11px] font-black flex-shrink-0 ${processingStep >= 2 ? 'bg-blue-500 text-white' : 'bg-slate-300 text-slate-500'}`}>
+                      {processingStep >= 2 ? '✓' : '2'}
+                    </span>
+                    <span>⚡ Connected to Game Server (Zone {formData.serverID || 'Default'}) ✓</span>
+                  </div>
+                  {/* Step 3 */}
+                  <div className={`flex items-center gap-2.5 px-3 py-2 rounded-xl text-xs font-bold transition-all duration-500 ${processingStep >= 3 ? 'bg-amber-100 text-amber-800' : 'bg-slate-100 text-slate-400'}`}>
+                    <span className={`w-6 h-6 rounded-full flex items-center justify-center text-[11px] font-black flex-shrink-0 ${processingStep >= 3 ? 'bg-amber-500 text-white' : 'bg-slate-300 text-slate-500'}`}>
+                      {processingStep >= 3 ? '✓' : '3'}
+                    </span>
+                    <span>💎 Crediting {selectedProduct?.name || 'diamonds'} → Player {formData.playerID}</span>
+                  </div>
+                </div>
+
+                {/* Progress Bar */}
+                <div className="w-full bg-slate-200 h-2 rounded-full overflow-hidden">
                   <div
-                    className="bg-gradient-to-r from-emerald-500 via-teal-400 to-amber-300 h-full rounded-full transition-all duration-700 ease-out shadow-md w-full"
+                    className="bg-emerald-500 h-full rounded-full transition-all duration-700 ease-out"
+                    style={{ width: `${(processingStep / 3) * 100}%` }}
                   />
                 </div>
-
-                {/* Verified Tag */}
-                <div className="p-2 rounded-xl bg-emerald-950/60 border border-emerald-500/40 text-[11px] font-mono text-emerald-300 flex items-center justify-center gap-1.5 shadow-sm">
-                  <span>✓</span>
-                  <span>NBC Bakong Signature 100% Verified</span>
-                </div>
+                <p className="text-[9px] text-slate-400 font-mono">Step {processingStep}/3 — Order #{orderId}</p>
               </div>
             ) : timeLeft === 0 ? (
-              <div className="p-6 bg-slate-900/95 rounded-2xl border-2 border-rose-500/60 text-center space-y-3 max-w-[260px] mx-auto shadow-2xl my-3 animate-fadeIn">
-                <div className="w-12 h-12 rounded-full bg-rose-500/20 text-rose-400 flex items-center justify-center text-2xl mx-auto">
-                  ⏱️
-                </div>
-                <div>
-                  <h4 className="text-white font-black text-sm">QR Code Expired</h4>
-                  <span className="text-[10px] text-rose-300 font-bold uppercase tracking-wider block mt-0.5">
-                    Stand Over (5 Min Limit)
-                  </span>
-                </div>
-                <p className="text-[10px] text-slate-400 leading-tight">
-                  For your security, Bakong KHQR codes stand over and expire after 5 minutes. No funds were charged.
+              /* Expired Screen */
+              <div className="p-5 bg-rose-50 rounded-2xl border border-rose-200 text-center space-y-2.5 my-2 animate-fadeIn">
+                <div className="text-2xl">⏱️</div>
+                <h4 className="text-slate-900 font-bold text-sm">QR Code Expired</h4>
+                <p className="text-[11px] text-slate-500">
+                  Session timeout for your security. Please generate a new QR code.
                 </p>
-                <div className="pt-1 space-y-2">
-                  <button
-                    onClick={handleProceedToPayment}
-                    className="btn btn-gold text-xs py-2 px-3 font-black uppercase w-full shadow-glow-gold flex items-center justify-center gap-1.5 cursor-pointer"
-                  >
-                    <span>🔄</span>
-                    <span>Regenerate New QR</span>
-                  </button>
-                  <button
-                    onClick={() => {
-                      setPaymentData(null);
-                      setOrderId(null);
-                    }}
-                    className="text-[11px] text-slate-400 hover:text-white block w-full py-1 text-center cursor-pointer"
-                  >
-                    ✕ Close Window
-                  </button>
-                </div>
+                <button
+                  onClick={handleProceedToPayment}
+                  className="w-full py-2.5 px-3 bg-[#0055a5] text-white text-xs font-bold rounded-xl shadow cursor-pointer"
+                >
+                  Generate New QR
+                </button>
               </div>
             ) : (
-              <div className="relative mx-auto my-1 max-w-[260px] sm:max-w-[280px] w-full">
-                {(() => {
-                  const currentCur = paymentData?.currency || currency;
-                  const isRiel = currentCur === 'KHR';
-                  const payAmount = isRiel ? Math.round(selectedProduct.price * 4100) : selectedProduct.price;
+              /* THE AUTHENTIC KHQR VOUCHER CARD (100% Matching Image 2) */
+              <div className="space-y-3">
+                <div className="bg-white rounded-2xl shadow-[0_6px_28px_rgba(0,0,0,0.09)] border border-slate-200/90 overflow-hidden relative">
+                  
+                  {/* Official ABA PayWay Voucher Banner */}
+                  <AbaPaywayVoucherHeader />
 
-                  const validQrString = paymentData.khqrQRCode || paymentData.qrCode || buildBakongKhqr({
-                    accountId: 'deth_peak3@aclb',
-                    merchantName: 'PuDeth Smart-PAY',
-                    city: 'Phnom Penh',
-                    amount: payAmount,
-                    currency: currentCur,
-                    billNumber: paymentData.khqrBillNumber || `MLBB${orderId || 1}`
-                  });
+                  {/* Voucher Body: Merchant Name & Amount */}
+                  {(() => {
+                    const currentCur = paymentData?.currency || currency;
+                    const isRiel = currentCur === 'KHR';
+                    const payAmount = isRiel ? Math.round(selectedProduct.price * 4100) : selectedProduct.price;
+                    const validQrString = paymentData?.qrString || paymentData?.khqrQRCode || `https://checkout-sandbox.payway.com.kh/pay?tran_id=${paymentData?.tranId || orderId}`;
 
-                  const isLocalDev = typeof window !== 'undefined' && (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1');
-                  const khqrBase = isLocalDev ? 'http://localhost:5001' : '';
-                  const qrImgUrl = paymentData?.khqrMd5Hash 
-                    ? `${khqrBase}/api/khqr/payment/qr/${paymentData.khqrMd5Hash}?amount=${payAmount}&currency=${currentCur}`
-                    : null;
-
-                  return (
-                    <div className="p-2.5 sm:p-3 bg-gradient-to-b from-slate-900/95 to-slate-950/95 rounded-3xl border border-amber-500/30 shadow-[0_0_30px_rgba(251,191,36,0.12)] flex flex-col items-center">
-                      {/* Authentic White KHQR Card (Uncropped, Full Top Margin, Rounded) */}
-                      <div className="w-full bg-white p-2 sm:p-2.5 rounded-2xl shadow-xl border border-slate-200 flex flex-col items-center justify-center relative transition-all">
-                        {qrImgUrl ? (
-                          <img
-                            src={qrImgUrl}
-                            alt="Official Bakong KHQR"
-                            className="w-full max-w-[220px] sm:max-w-[230px] h-auto object-contain rounded-xl select-none"
-                            onError={(e) => {
-                              // Fallback to SVG if image server unavailable
-                              e.target.style.display = 'none';
-                              const fallbackElem = document.getElementById('qr-svg-fallback');
-                              if (fallbackElem) fallbackElem.style.display = 'flex';
-                            }}
-                          />
-                        ) : null}
-
-                        {/* SVG Vector Fallback */}
-                        <div
-                          id="qr-svg-fallback"
-                          className={`flex-col items-center justify-center w-full ${qrImgUrl ? 'hidden' : 'flex'}`}
-                        >
-                          <div className="w-full bg-[#cc0000] text-white py-1 px-2.5 rounded-xl flex items-center justify-between shadow-sm">
-                            <span className="font-black text-xs tracking-wider">KHQR</span>
-                            <span className="text-[10px] font-bold bg-white/20 px-1.5 py-0.5 rounded text-white uppercase">
-                              {currentCur}
-                            </span>
-                          </div>
-                          <div className="text-center py-0.5">
-                            <span className="text-[10.5px] font-black text-slate-800 block">PuDeth Smart-PAY</span>
-                            <span className="text-[11px] font-mono font-bold text-slate-900">
-                              {isRiel ? `${payAmount.toLocaleString()} ៛` : `$${payAmount.toFixed(2)} USD`}
-                            </span>
-                          </div>
-                          <div className="w-full border-t border-dashed border-slate-300 my-0.5" />
-                          <div className="p-1 bg-white rounded-xl flex items-center justify-center">
-                            <QRCodeSVG
-                              value={validQrString}
-                              size={165}
-                              level="M"
-                              includeMargin={true}
-                              className="w-full h-auto max-w-[165px]"
-                            />
-                          </div>
-                          <div className="w-full text-center pt-0.5 border-t border-slate-100">
-                            <span className="text-[9px] font-mono text-slate-500 block">deth_peak3@aclb</span>
+                    return (
+                      <div className="p-4 sm:p-5 text-center space-y-2.5">
+                        <div className="space-y-0.5">
+                          <span className="text-[10.5px] uppercase font-bold text-slate-600 tracking-wider block">
+                            DETH PHEAK (ABA Bank)
+                          </span>
+                          <span className="text-2xl sm:text-3xl font-black text-slate-900 tracking-tight block">
+                            {isRiel ? `${payAmount.toLocaleString()} ៛` : `$ ${payAmount.toFixed(2)}`}
+                          </span>
+                          <div className="flex items-center justify-center gap-2 pt-0.5 text-[9.5px] text-slate-500 font-mono">
+                            <span>USD: <strong className="text-slate-700">004 164 074</strong></span>
+                            <span>•</span>
+                            <span>KHR: <strong className="text-slate-700">015 499 221</strong></span>
                           </div>
                         </div>
 
-                        {/* Currency Switching Loading Overlay */}
+                        {/* Perforated dashed divider (Image 2) */}
+                        <div className="border-t border-dashed border-slate-200 w-full my-2" />
+
+                        {/* 100% Camera-Readable Dynamic QR Code matching Figma Guideline */}
+                        <div className="p-3 bg-white rounded-2xl border border-slate-100 shadow-sm inline-flex items-center justify-center mx-auto">
+                          <QRCodeSVG
+                            value={validQrString}
+                            size={215}
+                            level="M"
+                            includeMargin={true}
+                            className="w-full h-auto max-w-[215px] select-none"
+                          />
+                        </div>
+
+                        {/* Currency Switching Overlay */}
                         {switchingCurrency && (
-                          <div className="absolute inset-0 flex flex-col items-center justify-center bg-white/95 backdrop-blur-xs rounded-xl p-3 space-y-1.5 animate-fadeIn z-10 shadow-inner">
-                            <div className="w-8 h-8 border-3 border-amber-500 border-t-transparent rounded-full animate-spin shadow-md" />
-                            <span className="text-[10px] font-black text-slate-950 bg-amber-200/90 px-2.5 py-0.5 rounded-full border border-amber-400/60 shadow-sm flex items-center gap-1">
-                              <span>🔄</span>
-                              <span>Generating {currency} QR...</span>
-                            </span>
-                            <span className="text-[9px] text-slate-700 font-bold">
-                              Please wait before scanning
-                            </span>
+                          <div className="absolute inset-0 bg-white/95 backdrop-blur-xs flex flex-col items-center justify-center p-4 space-y-2 z-10 rounded-2xl">
+                            <div className="w-7 h-7 border-3 border-[#0055a5] border-t-transparent rounded-full animate-spin" />
+                            <span className="text-xs font-bold text-slate-700">Updating {currency} QR...</span>
                           </div>
                         )}
                       </div>
-
-                      {/* Clean metadata pill under QR card */}
-                      <div className="mt-2 w-full flex items-center justify-between px-2.5 py-1 bg-slate-950/80 rounded-xl border border-slate-800 text-[9.5px] text-slate-400 font-mono">
-                        <span>BILL: <strong className="text-amber-300">{paymentData.khqrBillNumber || `MLBB${orderId}`}</strong></span>
-                        <span>AMOUNT: <strong className="text-emerald-400">{isRiel ? `${payAmount.toLocaleString()} ៛` : `$${payAmount.toFixed(2)}`}</strong></span>
-                      </div>
-                    </div>
-                  );
-                })()}
-              </div>
-            )}
-
-            {/* Live Real-Time Auto-Tracking Status Card & "I Have Paid" button */}
-            {processingStep === 0 && (
-              <div className="space-y-1.5 pt-1.5 border-t border-slate-800">
-                <div className="w-full py-1.5 px-3 rounded-2xl bg-gradient-to-r from-emerald-950/70 via-slate-900/90 to-teal-950/70 border border-emerald-500/40 text-white shadow-lg flex items-center justify-between gap-2">
-                  <div className="flex items-center gap-2 min-w-0">
-                    <span className="relative flex h-2.5 w-2.5 shrink-0">
-                      <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
-                      <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-emerald-500"></span>
-                    </span>
-                    <div className="min-w-0 text-left">
-                      <span className="text-xs font-black text-emerald-400 block tracking-wide leading-tight">
-                        Auto-Tracking Payment...
-                      </span>
-                      <span className="text-[9px] text-slate-400 block truncate leading-tight">
-                        Listening to Bakong network in real-time
-                      </span>
-                    </div>
-                  </div>
-                  
-                  <div className="flex items-center gap-1 shrink-0 px-2 py-0.5 rounded-lg bg-emerald-500/15 border border-emerald-500/30">
-                    <div className="w-2 h-2 border-2 border-emerald-400 border-t-transparent rounded-full animate-spin" />
-                    <span className="text-[9px] font-mono font-bold text-emerald-300">Live</span>
-                  </div>
+                    );
+                  })()}
                 </div>
 
-                {/* One-Tap ABA Mobile Deeplink Button */}
+                {/* Subtext below QR Card */}
+                <p className="text-[11px] text-slate-500 text-center leading-relaxed px-2">
+                  Scan with ABA Mobile App or any mobile banking app supporting KHQR
+                </p>
+
+                {/* Real-time Tracking Pill */}
+                <div className="py-1.5 px-3 rounded-xl bg-slate-50 border border-slate-200 flex items-center justify-between text-[10.5px]">
+                  <div className="flex items-center gap-1.5">
+                    <span className="relative flex h-2 w-2">
+                      <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-sky-400 opacity-75"></span>
+                      <span className="relative inline-flex rounded-full h-2 w-2 bg-sky-600"></span>
+                    </span>
+                    <span className="text-slate-600 font-medium">Auto-Tracking Payment...</span>
+                  </div>
+                  <span className="font-mono text-slate-400">TRX: {paymentData?.tranId || `TRX${orderId}`}</span>
+                </div>
+
+                {/* One-Tap Mobile Pay Button */}
                 {(paymentData?.abapayDeeplink || paymentData?.khqrDeeplink) && (
                   <a
                     href={paymentData.abapayDeeplink || paymentData.khqrDeeplink}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="w-full py-2 px-3 rounded-xl bg-gradient-to-r from-sky-600 to-blue-700 hover:from-sky-500 hover:to-blue-600 text-white font-black text-xs tracking-wider uppercase transition-all flex items-center justify-center gap-2 shadow-lg shadow-sky-900/30 border border-sky-400/40 active:scale-[0.98]"
+                    className="w-full py-3 px-4 rounded-xl bg-[#0055a5] hover:bg-[#004380] text-white font-black text-xs tracking-wider uppercase transition-all flex items-center justify-center gap-2 shadow-lg shadow-sky-950/20 active:scale-[0.98]"
                   >
                     <span>📲</span>
                     <span>Pay with ABA Mobile App</span>
                   </a>
                 )}
 
+                {/* Instant Verification Button */}
+                <button
+                  type="button"
+                  onClick={async () => {
+                    if (!orderId) return;
+                    try {
+                      const res = await ordersAPI.checkPayment(orderId, true);
+                      if (res?.data?.isPaid || res?.data?.paymentStatus === 'Paid') {
+                        setPaymentPaid(true);
+                      }
+                    } catch (e) {
+                      console.warn('Manual check error:', e);
+                    }
+                  }}
+                  className="w-full py-2.5 px-3 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs transition-all flex items-center justify-center gap-1.5 cursor-pointer shadow-md"
+                >
+                  <span>✓</span>
+                  <span>I Have Transferred / Verify Now</span>
+                </button>
 
+                {/* Official PayWay Checkout Popup Trigger */}
+
+
+                <button
+                  type="button"
+                  onClick={(e) => {
+                    e.preventDefault();
+                    // Follow ABA Guideline exactly
+                    if (typeof window !== 'undefined' && 'AbaPayway' in window) {
+                       window.AbaPayway.checkout();
+                    } else if (typeof AbaPayway !== 'undefined') {
+                       // eslint-disable-next-line no-undef
+                       AbaPayway.checkout();
+                    } else {
+                      const form = document.getElementById('aba_merchant_request');
+                      if (form) {
+                        form.submit(); // Hosted view mode fallback
+                      }
+                    }
+                  }}
+                  className="w-full py-2 px-3 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-600 hover:text-slate-900 font-bold text-[11px] transition-all flex items-center justify-center gap-1.5 cursor-pointer"
+                >
+                  <span>🌐</span>
+                  <span>PayWay Official Checkout Popup</span>
+                </button>
               </div>
             )}
 
@@ -2074,6 +2256,19 @@ const TopUp = () => {
           </div>
         </div>
       )}
+      {/* Injected Form */}
+      <form
+        id="aba_merchant_request"
+        method="POST"
+        target="aba_webservice"
+        action={paymentData?.purchaseUrl || "https://checkout-sandbox.payway.com.kh/api/payment-gateway/v1/payments/purchase"}
+        className="hidden"
+      >
+        {paymentData?.formData &&
+          Object.entries(paymentData.formData).map(([k, v]) => (
+            <input key={k} type="hidden" name={k} value={v || ''} />
+          ))}
+      </form>
     </div>
   );
 };

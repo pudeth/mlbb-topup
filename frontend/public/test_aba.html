@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <script src="https://checkout-sandbox.payway.com.kh/plugins/checkout2-0.js"></script>
+</head>
+<body>
+    <form id="aba_merchant_request" method="POST" action="https://checkout-sandbox.payway.com.kh/api/payment-gateway/v1/payments/purchase">
+        <input type="hidden" name="req_time" value="20260916173608" />
+        <input type="hidden" name="merchant_id" value="ec478601" />
+        <input type="hidden" name="tran_id" value="TRX159-80168" />
+        <input type="hidden" name="amount" value="0.95" />
+        <input type="hidden" name="items" value="W3sibmFtZSI6Ik1MQkIgRGlhbW9uZHMgKE9yZGVyICMxNTkpIiwicXVhbnRpdHkiOiIxIiwicHJpY2UiOiIwLjk1In1d" />
+        <input type="hidden" name="firstname" value="Customer" />
+        <input type="hidden" name="lastname" value="Player" />
+        <input type="hidden" name="email" value="customer@mlbb-topup.com" />
+        <input type="hidden" name="phone" value="012345678" />
+        <input type="hidden" name="type" value="purchase" />
+        <input type="hidden" name="payment_option" value="" />
+        <input type="hidden" name="currency" value="USD" />
+        <input type="hidden" name="lifetime" value="6" />
+        <input type="hidden" name="hash" value="Tw39tCtnkP/VzsuYn+4EJvn6zVOSudo0LNJLWi67Lykq2XvZRu00OhD0BlCorbNRuzFM22q6dG1AgHilE2cWXg==" />
+        <button type="button" onclick="AbaPayway.checkout()">Pay with AbaPayway Popup</button>
+        <button type="submit">Pay with standard form submit</button>
+    </form>
+</body>
+</html>

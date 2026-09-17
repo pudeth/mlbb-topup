@@ -14,10 +14,27 @@ public class ApplicationDbContext : DbContext
     public DbSet<Product> Products { get; set; }
     public DbSet<Order> Orders { get; set; }
     public DbSet<Payment> Payments { get; set; }
+    public DbSet<PayWayToken> PayWayTokens { get; set; }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         base.OnModelCreating(modelBuilder);
+
+        // Configure PayWayToken entity
+        modelBuilder.Entity<PayWayToken>(entity =>
+        {
+            entity.HasKey(e => e.PayWayTokenId);
+            entity.Property(e => e.Ctid).IsRequired().HasMaxLength(50);
+            entity.Property(e => e.Pwt).IsRequired().HasMaxLength(255);
+            entity.Property(e => e.Type).HasMaxLength(50);
+            entity.Property(e => e.SourceOfFund).HasMaxLength(20);
+            entity.Property(e => e.TokenFlag).HasMaxLength(20);
+            
+            entity.HasOne(d => d.User)
+                .WithMany(p => p.PayWayTokens)
+                .HasForeignKey(d => d.UserId)
+                .OnDelete(DeleteBehavior.Cascade);
+        });
 
         var isSqlite = Database.ProviderName?.Contains("Sqlite") == true;
         var utcDateSql = isSqlite ? "CURRENT_TIMESTAMP" : "GETUTCDATE()";
@@ -286,3 +303,4 @@ public class ApplicationDbContext : DbContext
         );
     }
 }
+

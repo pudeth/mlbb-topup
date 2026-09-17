@@ -147,6 +147,26 @@ public class OrdersController : BaseController
     }
 
     /// <summary>
+    /// Quick DB-only status check — no NBC Bakong API call, no rate-limit risk.
+    /// Used by frontend auto-polling for KHQR payments.
+    /// </summary>
+    [HttpGet("{id}/quick-status")]
+    [AllowAnonymous]
+    public async Task<IActionResult> GetQuickStatus(int id)
+    {
+        var order = await _orderService.GetOrderByIdAsync(id);
+        if (order == null)
+            return NotFound(new { message = "Order not found" });
+
+        return Ok(new
+        {
+            orderId = id,
+            paymentStatus = order.PaymentStatus,
+            isPaid = order.PaymentStatus == "Paid"
+        });
+    }
+
+    /// <summary>
     /// Explicit check and verify payment endpoint
     /// </summary>
     [HttpPost("{id}/check-payment")]

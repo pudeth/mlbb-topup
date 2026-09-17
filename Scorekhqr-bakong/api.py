@@ -11,7 +11,7 @@ if hasattr(sys.stdout, 'reconfigure'):
 if hasattr(sys.stderr, 'reconfigure'):
     sys.stderr.reconfigure(encoding='utf-8', errors='replace')
 from dotenv import load_dotenv
-from flask import Flask, request, jsonify, send_file
+from flask import Flask, request, jsonify, send_file, Response, stream_with_context
 from flask_cors import CORS
 from bakong_khqr import KHQR
 import mysql.connector
@@ -25,6 +25,7 @@ import base64
 import time
 import threading
 import re
+import queue as queue_module
 
 # Load environment variables
 load_dotenv()
@@ -47,10 +48,13 @@ DEFAULT_BAKONG_TOKEN = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJkYXRhIjp7ImlkIjo
 # Runtime configuration (overrides .env in memory and persists to .env)
 runtime_config = {
     'BAKONG_TOKEN': os.getenv('BAKONG_TOKEN') or DEFAULT_BAKONG_TOKEN,
-    'MERCHANT_BAKONG_ID': os.getenv('MERCHANT_BAKONG_ID', 'deth_peak3@aclb'),
-    'MERCHANT_NAME': os.getenv('MERCHANT_NAME', 'PuDeth Smart-PAY'),
-    'MERCHANT_CITY': os.getenv('MERCHANT_CITY', 'PHNOM PENH'),
-    'ACQUIRING_BANK': os.getenv('ACQUIRING_BANK', 'FAMILY PHONE'),
+    'MERCHANT_BAKONG_ID': os.getenv('MERCHANT_BAKONG_ID', '015499221@abaa'),
+    'MERCHANT_NAME': os.getenv('MERCHANT_NAME', 'DETH PHEAK'),
+    'MERCHANT_CITY': os.getenv('MERCHANT_CITY', 'Phnom Penh'),
+    'ACQUIRING_BANK': os.getenv('ACQUIRING_BANK', 'ABA Bank'),
+    'ABA_USD_ACCOUNT': os.getenv('ABA_USD_ACCOUNT', '004164074'),
+    'ABA_KHR_ACCOUNT': os.getenv('ABA_KHR_ACCOUNT', '015499221'),
+    'ABA_P2P_ID': os.getenv('ABA_P2P_ID', 'BE4DE1A15BB7'),
     'DEMO_MODE': os.getenv('DEMO_MODE', 'false').lower() == 'true',
     'TELEGRAM_BOT_TOKEN': os.getenv('TELEGRAM_BOT_TOKEN', '8516986555:AAH3enGgrbjWPKnQRPwXRQHKVfGgqiQ2Rhw'),
     'TELEGRAM_CHAT_ID': os.getenv('TELEGRAM_CHAT_ID', '-1004398577975'),
@@ -76,6 +80,14 @@ def reload_khqr_instance():
 
 # In-memory storage for QR codes when database is unavailable
 qr_cache = {}
+
+# SSE (Server-Sent Events) subscriber queues — notified instantly when Telegram Approve fires
+# { md5_hash: [queue1, queue2, ...] }  (one queue per connected browser tab)
+paid_subscribers = {}
+paid_subscribers_lock = threading.Lock()
+
+# Map orderId → md5_hash for looking up payments by order ID
+order_md5_map = {}  # { "5": "abc123...", "6": "def456..." }
 
 # Database configuration (MySQL & MongoDB Atlas)
 db_config = {
@@ -281,6 +293,18 @@ def mark_order_paid_everywhere(order_id_or_bill, md5=None):
 ━━━━━━━━━━━━━━━━━━━━━━""")
     except:
         pass
+
+    # 6. Push instant SSE event to any browser tabs watching this payment
+    if md5:
+        with paid_subscribers_lock:
+            subs = paid_subscribers.get(md5, [])
+            for q in subs:
+                try:
+                    q.put_nowait('PAID')
+                except Exception:
+                    pass
+            if subs:
+                print(f"[+] SSE PAID event pushed to {len(subs)} subscriber(s) for md5 {md5[:8]}...")
 
     return True
 
@@ -570,20 +594,44 @@ def generate_emvco_khqr(bakong_id: str, name: str, city: str, amount: float, cur
     currency_type = currency.upper()
     is_khr = (currency_type == 'KHR')
     currency_code = '116' if is_khr else '840'
-    final_amt = round(amount * 4100) if is_khr else amount
+    if is_khr:
+        final_amt = round(amount * 4100) if amount < 100 else round(amount)
+    else:
+        final_amt = amount
     amt_str = f"{final_amt:.0f}" if is_khr else f"{final_amt:.2f}"
 
     payload = "000201010212"
 
-    # Tag 29: Merchant Account Info (Bakong Account ID + Account Info + Acquiring Bank)
-    sub00 = f"00{len(bakong_id):02d}{bakong_id}"
-    sub01 = f"01{len(name):02d}{name}"
-    sub02 = "0206Bakong"
-    tag29_content = sub00 + sub01 + sub02
-    payload += f"29{len(tag29_content):02d}{tag29_content}"
+    acq_bank = get_config('ACQUIRING_BANK', 'ABA Bank')
+    is_aba = (acq_bank == 'ABA Bank' or 'abaa' in bakong_id.lower())
 
-    # Tag 52: Merchant Category Code (5999 for Personal/Individual/Retail KHQR)
-    payload += "52045999"
+    if is_aba:
+        usd_acc = get_config('ABA_USD_ACCOUNT', '004164074')
+        khr_acc = get_config('ABA_KHR_ACCOUNT', '015499221')
+        p2p_id = get_config('ABA_P2P_ID', 'BE4DE1A15BB7')
+        active_acc = khr_acc if is_khr else usd_acc
+
+        # Tag 29: ABA Bank Merchant Info
+        sub00 = "0016abaakhppxxx@abaa"
+        sub01 = f"01{len(active_acc):02d}{active_acc}"
+        sub02 = "0208ABA Bank"
+        tag29_content = sub00 + sub01 + sub02
+        payload += f"29{len(tag29_content):02d}{tag29_content}"
+
+        # Tag 40: ABA P2P Dual Account
+        sub40 = f"0006abaP2P0112{p2p_id}02{len(khr_acc):02d}{khr_acc}03{len(usd_acc):02d}{usd_acc}0404Dual"
+        payload += f"40{len(sub40):02d}{sub40}"
+
+        # Tag 52: MCC (0000 for ABA P2P)
+        payload += "52040000"
+    else:
+        # Standard Bakong Tag 29
+        sub00 = f"00{len(bakong_id):02d}{bakong_id}"
+        sub01 = f"01{len(name):02d}{name}"
+        sub02 = f"02{len(acq_bank):02d}{acq_bank}"
+        tag29_content = sub00 + sub01 + sub02
+        payload += f"29{len(tag29_content):02d}{tag29_content}"
+        payload += "52045999"
 
     # Tag 53: Transaction Currency (840 = USD, 116 = KHR)
     payload += f"5303{currency_code}"
@@ -663,7 +711,16 @@ def create_payment():
             'created_at': datetime.now().isoformat()
         }
         save_payment_record(payment_doc)
-        
+
+        # Register orderId → md5 mapping for SSE lookup
+        clean_bill = str(bill_number).replace('MLBB', '').replace('TRX', '').replace('ORD', '').replace('#', '').strip()
+        order_md5_map[clean_bill] = md5
+        # Also register the qr_cache entry
+        if md5 not in qr_cache:
+            qr_cache[md5] = {}
+        qr_cache[md5].update({'status': 'UNPAID', 'bill_number': bill_number})
+
+
         # Send interactive Telegram notification with transition buttons
         clean_ord = str(bill_number).replace('MLBB', '').replace('TRX', '').replace('#', '').strip()
         amt_khr = round(amount * 4100) if currency == 'USD' else int(amount)
@@ -843,6 +900,76 @@ def check_status(md5):
     except Exception as e:
         print(f"[-] Error in check_status: {e}")
         return jsonify({'md5_hash': md5, 'status': 'UNPAID', 'paid': False, 'error': str(e)})
+
+
+@app.route('/api/payment/sse/<md5>', methods=['GET'])
+def payment_sse(md5):
+    """
+    Server-Sent Events stream for a specific payment MD5.
+    The browser connects once; the server pushes 'PAID' the instant Telegram Approve fires.
+    Falls back to polling every 2s as a heartbeat.
+    """
+    def event_stream():
+        q = queue_module.Queue()
+        with paid_subscribers_lock:
+            if md5 not in paid_subscribers:
+                paid_subscribers[md5] = []
+            paid_subscribers[md5].append(q)
+        print(f"[+] SSE subscriber connected for md5 {md5[:8]}...")
+        try:
+            # Already PAID? Return immediately
+            if md5 in qr_cache and qr_cache[md5].get('status') == 'PAID':
+                yield 'data: PAID\n\n'
+                return
+            yield 'data: WAITING\n\n'
+            while True:
+                try:
+                    event = q.get(timeout=2.0)
+                    if event == 'PAID':
+                        yield 'data: PAID\n\n'
+                        return
+                except queue_module.Empty:
+                    # Heartbeat + cache re-check in case SSE push was missed
+                    if md5 in qr_cache and qr_cache[md5].get('status') == 'PAID':
+                        yield 'data: PAID\n\n'
+                        return
+                    yield 'data: WAITING\n\n'
+        finally:
+            with paid_subscribers_lock:
+                subs = paid_subscribers.get(md5, [])
+                if q in subs:
+                    subs.remove(q)
+            print(f"[+] SSE subscriber disconnected for md5 {md5[:8]}...")
+
+    resp = Response(stream_with_context(event_stream()), mimetype='text/event-stream')
+    resp.headers['Cache-Control'] = 'no-cache'
+    resp.headers['X-Accel-Buffering'] = 'no'
+    resp.headers['Access-Control-Allow-Origin'] = '*'
+    return resp
+
+
+@app.route('/api/payment/status-by-order/<order_id>', methods=['GET'])
+def status_by_order(order_id):
+    """Check payment status by order ID (when md5 is unknown — looks up order_md5_map)"""
+    clean_id = str(order_id).replace('MLBB', '').replace('TRX', '').replace('#', '').strip()
+    md5 = order_md5_map.get(clean_id)
+    if not md5 and mongo_payments is not None:
+        try:
+            doc = mongo_payments.find_one({'$or': [
+                {'bill_number': f'MLBB{clean_id}'},
+                {'bill_number': f'MLBB{clean_id.zfill(6)}'},
+                {'bill_number': clean_id}
+            ]})
+            if doc:
+                md5 = doc.get('md5_hash')
+                st = doc.get('status', 'UNPAID')
+                return jsonify({'order_id': order_id, 'md5': md5, 'status': st, 'paid': st == 'PAID'})
+        except Exception:
+            pass
+    if not md5:
+        return jsonify({'order_id': order_id, 'status': 'UNKNOWN', 'paid': False})
+    st = qr_cache.get(md5, {}).get('status', 'UNPAID')
+    return jsonify({'order_id': order_id, 'md5': md5, 'status': st, 'paid': st == 'PAID'})
 
 
 @app.route('/api/payment/force-check/<md5>', methods=['GET'])

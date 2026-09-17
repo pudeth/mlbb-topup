@@ -3,7 +3,7 @@ import React, { createContext, useContext, useState } from 'react';
 export const translations = {
   en: {
     // Top Bar
-    instant_delivery_banner: "⚡ Instant Delivery Active: KHQR Bakong automated top-up within 10 seconds!",
+    instant_delivery_banner: "⚡ Instant Delivery Active: ABA PayWay automated top-up within 10 seconds!",
     
     // Navbar
     nav_home: "Home",
@@ -20,7 +20,7 @@ export const translations = {
     hero_title_1: "Top-Up",
     hero_title_highlight: "MLBB Diamonds",
     hero_title_2: "In Seconds",
-    hero_desc: "Enjoy zero-fee checkout via Bakong KHQR. No registration required, 100% official reseller, and automated instant delivery direct to your mailbox.",
+    hero_desc: "Enjoy zero-fee checkout via ABA PayWay. No registration required, 100% official reseller, and automated instant delivery direct to your mailbox.",
     hero_btn_topup: "Start Top Up Now",
     hero_btn_support: "How It Works & Support",
     hero_stat_delivery: "Avg Delivery",
@@ -32,8 +32,8 @@ export const translations = {
     card_api_ready: "Instant API Ready",
     card_feat_1_title: "No Login Required (Guest Mode)",
     card_feat_1_desc: "Direct top-up using Player ID only",
-    card_feat_2_title: "KHQR Bakong Integration",
-    card_feat_2_desc: "Pay with ABA, Wing, ACLEDA, Canadia",
+    card_feat_2_title: "ABA PayWay Integration",
+    card_feat_2_desc: "Pay with ABA Mobile or any KHQR banking app",
     card_feat_3_title: "Official Player ID Check",
     card_feat_3_desc: "Live in-game nickname verification",
     card_goto_topup: "Go to Top Up",
@@ -62,8 +62,8 @@ export const translations = {
     step1_desc: "Provide your MLBB User ID & Zone ID. Our system automatically checks your gamer tag.",
     step2_title: "Choose Diamonds",
     step2_desc: "Select from our wide range of diamond packs, weekly diamond passes, and bulk deals.",
-    step3_title: "Scan Bakong KHQR",
-    step3_desc: "Scan the dynamic KHQR code with ABA Mobile, Wing, ACLEDA, or any banking app.",
+    step3_title: "Pay with ABA PayWay",
+    step3_desc: "Pay seamlessly with ABA Mobile App or scan the dynamic ABA QR code.",
     step4_title: "Instant Delivery",
     step4_desc: "Diamonds appear directly in your MLBB in-game mailbox within 10 seconds!",
     
@@ -78,7 +78,7 @@ export const translations = {
     
     // TopUp Page
     topup_header_title: "Mobile Legends: Bang Bang",
-    topup_header_desc: "Direct diamond top-up with official server verification & Bakong KHQR instant checkout.",
+    topup_header_desc: "Direct diamond top-up with official server verification & ABA PayWay instant checkout.",
     topup_official: "Official",
     topup_instant: "10s Instant",
     topup_online: "Online",
@@ -114,10 +114,10 @@ export const translations = {
     
     // Step 3
     step_3_heading: "Select Payment Method",
-    step_3_sub: "Official National Bank of Cambodia KHQR",
-    khqr_title: "Bakong KHQR",
+    step_3_sub: "Official ABA PayWay Gateway",
+    khqr_title: "ABA PayWay",
     zero_fee: "0% Fee",
-    khqr_desc: "ABA Mobile, Wing, ACLEDA, Canadia, TrueMoney & all banks.",
+    khqr_desc: "Pay instantly with ABA Mobile App or scan with any KHQR banking app.",
     accepted_banks: "Accepted:",
     
     // Order Summary
@@ -197,8 +197,8 @@ export const translations = {
     footer_delivery_desc: "Automated instant direct to game",
     footer_safe: "100% Safe Top-Up",
     footer_safe_desc: "No passwords needed, only ID",
-    footer_khqr: "Bakong KHQR",
-    footer_khqr_desc: "Zero fee via all Cambodia banks",
+    footer_khqr: "ABA PayWay",
+    footer_khqr_desc: "Instant with ABA Mobile & KHQR",
     footer_support: "24/7 Live Support",
     footer_support_desc: "Fast help via Telegram & Chat",
     footer_quick_links: "Quick Links",
@@ -213,8 +213,8 @@ export const translations = {
     ticker_1_desc: "Automated instant direct to game",
     ticker_2_title: "100% Safe Top-Up",
     ticker_2_desc: "No passwords needed, only ID",
-    ticker_3_title: "Bakong KHQR",
-    ticker_3_desc: "Zero fee via all Cambodia banks",
+    ticker_3_title: "ABA PayWay",
+    ticker_3_desc: "Instant with ABA Mobile & KHQR",
     ticker_4_title: "24/7 Live Support",
     ticker_4_desc: "Fast help via Telegram & Chat",
 
@@ -267,20 +267,20 @@ export const translations = {
     hero_title_1: "បញ្ចូល",
     hero_title_highlight: "គ្រាប់ពេជ្រ MLBB",
     hero_title_2: "ក្នុងរយៈពេលប៉ុន្មានវិនាទី",
-    hero_desc: "ទូទាត់ប្រាក់ដោយឥតគិតថ្លៃសេវាជាមួយ Bakong KHQR។ មិនចាំបាច់ចុះឈ្មោះ ធានាផ្លូវការ 100% និងផ្ញើគ្រាប់ពេជ្រចូលក្នុងហ្គេមភ្លាមៗ។",
+    hero_desc: "ទូទាត់ប្រាក់ដោយឥតគិតថ្លៃសេវាជាមួយ ABA PayWay។ មិនចាំបាច់ចុះឈ្មោះ ធានាផ្លូវការ 100% និងផ្ញើគ្រាប់ពេជ្រចូលក្នុងហ្គេមភ្លាមៗ។",
     hero_btn_topup: "ចាប់ផ្តើមបញ្ចូលពេជ្រឥឡូវនេះ",
-    hero_btn_support: "របៀបទិញ & ជំនួយ",
-    hero_stat_delivery: "ល្បឿនទទួលបាន",
-    hero_stat_orders: "ការបញ្ជាទិញរួចរាល់",
-    hero_stat_trust: "ទំនុកចិត្ត",
+    hero_btn_support: "របៀបទិញ និងជំនួយ",
+    hero_stat_delivery: "ល្បឿនផ្ញើពេជ្រ",
+    hero_stat_orders: "ការបញ្ជាទិញជោគជ័យ",
+    hero_stat_trust: "ទំនុកចិត្ត 100%",
     
     // Hero Card
     card_game_title: "បញ្ចូលពេជ្រ Mobile Legends",
-    card_api_ready: "ប្រព័ន្ធស្វ័យប្រវត្តិកំពុងដំណើរការ",
-    card_feat_1_title: "មិនចាំបាច់ចូលគណនី (Guest)",
-    card_feat_1_desc: "ប្រើតែ Player ID និង Zone ID ប៉ុណ្ណោះ",
-    card_feat_2_title: "ទូទាត់តាម Bakong KHQR",
-    card_feat_2_desc: "គាំទ្រ ABA, Wing, ACLEDA, Canadia",
+    card_api_ready: "ប្រព័ន្ធ API ស្វ័យប្រវត្តិ",
+    card_feat_1_title: "មិនបាច់ Login គណនី (Guest)",
+    card_feat_1_desc: "បញ្ចូលផ្ទាល់ដោយប្រើត្រឹមតែ Player ID",
+    card_feat_2_title: "ទូទាត់តាម ABA PayWay",
+    card_feat_2_desc: "គាំទ្រ ABA Mobile និង KHQR គ្រប់ធនាគារ",
     card_feat_3_title: "ពិនិត្យឈ្មោះក្នុងហ្គេមផ្ទាល់",
     card_feat_3_desc: "ផ្ទៀងផ្ទាត់ឈ្មោះ Player ID មុនទូទាត់",
     card_goto_topup: "ទៅកាន់ការបញ្ចូលពេជ្រ",
@@ -309,8 +309,8 @@ export const translations = {
     step1_desc: "បញ្ចូល Player ID និង Server Zone ID របស់អ្នក។ ប្រព័ន្ធនឹងពិនិត្យឈ្មោះរបស់អ្នកស្វ័យប្រវត្តិ។",
     step2_title: "ជ្រើសរើសចំនួនពេជ្រ",
     step2_desc: "ជ្រើសរើសកញ្ចប់ពេជ្រដែលអ្នកចង់បាន ដូចជាកញ្ចប់ប្រចាំសប្តាហ៍ ឬកញ្ចប់ធំៗ។",
-    step3_title: "ស្កេន Bakong KHQR",
-    step3_desc: "ស្កេនកូដ KHQR ជាមួយ ABA Mobile, Wing, ACLEDA ឬកម្មវិធីធនាគារណាមួយ។",
+    step3_title: "ទូទាត់ជាមួយ ABA PayWay",
+    step3_desc: "ទូទាត់ភ្លាមៗជាមួយ ABA Mobile ឬស្កេនកូដ QR ជាមួយកម្មវិធីធនាគារណាមួយ។",
     step4_title: "ទទួលបានពេជ្រភ្លាមៗ",
     step4_desc: "គ្រាប់ពេជ្រនឹងចូលទៅក្នុងប្រអប់សំបុត្រហ្គេម MLBB របស់អ្នកក្នុងរយៈពេល ១០ វិនាទី!",
     
@@ -325,7 +325,7 @@ export const translations = {
     
     // TopUp Page
     topup_header_title: "Mobile Legends: Bang Bang",
-    topup_header_desc: "បញ្ចូលគ្រាប់ពេជ្រផ្ទាល់ជាមួយការផ្ទៀងផ្ទាត់ server ផ្លូវការ និងការទូទាត់លឿនតាម Bakong KHQR។",
+    topup_header_desc: "បញ្ចូលគ្រាប់ពេជ្រផ្ទាល់ជាមួយការផ្ទៀងផ្ទាត់ server ផ្លូវការ និងការទូទាត់លឿនតាម ABA PayWay។",
     topup_official: "ផ្លូវការ",
     topup_instant: "10វិ ភ្លាមៗ",
     topup_online: "ដំណើរការ",
@@ -361,10 +361,10 @@ export const translations = {
     
     // Step 3
     step_3_heading: "ជ្រើសរើសវិធីសាស្ត្រទូទាត់",
-    step_3_sub: "KHQR ផ្លូវការរបស់ធនាគារជាតិនៃកម្ពុជា",
-    khqr_title: "ទូទាត់តាម Bakong KHQR",
+    step_3_sub: "សេវាទូទាត់ផ្លូវការ ABA PayWay",
+    khqr_title: "ទូទាត់តាម ABA PayWay",
     zero_fee: "ឥតគិតថ្លៃសេវា 0%",
-    khqr_desc: "ABA Mobile, Wing, ACLEDA, Canadia, TrueMoney និងធនាគារទាំងអស់។",
+    khqr_desc: "ទូទាត់ភ្លាមៗជាមួយ ABA Mobile ឬស្កេនកូដ QR ជាមួយកម្មវិធីធនាគារណាមួយ។",
     accepted_banks: "ធនាគារគាំទ្រ៖",
     
     // Order Summary
@@ -444,8 +444,8 @@ export const translations = {
     footer_delivery_desc: "ស្វ័យប្រវត្តិផ្ទាល់ចូលក្នុងហ្គេម",
     footer_safe: "សុវត្ថិភាព ១០០%",
     footer_safe_desc: "មិនត្រូវការលេខសម្ងាត់ ត្រូវការតែ ID",
-    footer_khqr: "Bakong KHQR",
-    footer_khqr_desc: "ឥតគិតថ្លៃសេវាជាមួយធនាគារកម្ពុជាទាំងអស់",
+    footer_khqr: "ABA PayWay",
+    footer_khqr_desc: "ទូទាត់រហ័សតាម ABA Mobile & KHQR",
     footer_support: "ជំនួយ ២៤/៧",
     footer_support_desc: "ជួយរហ័សតាម Telegram & Chat",
     footer_quick_links: "តំណភ្ជាប់រហ័ស",
@@ -460,8 +460,8 @@ export const translations = {
     ticker_1_desc: "ស្វ័យប្រវត្តិផ្ទាល់ចូលក្នុងហ្គេម",
     ticker_2_title: "សុវត្ថិភាព ១០០%",
     ticker_2_desc: "មិនត្រូវការលេខសម្ងាត់ ត្រូវការតែ ID",
-    ticker_3_title: "Bakong KHQR",
-    ticker_3_desc: "ឥតគិតថ្លៃសេវាជាមួយធនាគារកម្ពុជាទាំងអស់",
+    ticker_3_title: "ABA PayWay",
+    ticker_3_desc: "ទូទាត់រហ័សតាម ABA Mobile & KHQR",
     ticker_4_title: "ជំនួយ ២៤/៧",
     ticker_4_desc: "ជួយរហ័សតាម Telegram & Chat",
 
@@ -514,7 +514,7 @@ export const translations = {
     hero_title_1: "秒级充值",
     hero_title_highlight: "MLBB 无尽对决钻石",
     hero_title_2: "极速到账",
-    hero_desc: "使用 Bakong KHQR 尊享 0 手续费便捷扫码支付。无需注册账号，100% 官方正品保障，充值直充游戏内邮箱。",
+    hero_desc: "使用 ABA PayWay 尊享 0 手续费便捷扫码与一键 App 支付。无需注册账号，100% 官方正品保障，充值直充游戏内邮箱。",
     hero_btn_topup: "立即开始充值",
     hero_btn_support: "充值教程与帮助",
     hero_stat_delivery: "平均到账速度",
@@ -526,8 +526,8 @@ export const translations = {
     card_api_ready: "官方直连接口在线",
     card_feat_1_title: "无需登录账号 (游客模式)",
     card_feat_1_desc: "仅需提供游戏 User ID 与区服 ID",
-    card_feat_2_title: "Bakong KHQR 柬埔寨银联扫码",
-    card_feat_2_desc: "支持 ABA, Wing, ACLEDA, 加华银行等",
+    card_feat_2_title: "ABA PayWay 极速安全支付",
+    card_feat_2_desc: "支持 ABA Mobile App 一键支付及 KHQR 扫码",
     card_feat_3_title: "实时游戏昵称校对",
     card_feat_3_desc: "付款前自动核对游戏角色名字防填错",
     card_goto_topup: "进入充值页面",
@@ -556,8 +556,8 @@ export const translations = {
     step1_desc: "输入您的 MLBB User ID 与 Zone ID，系统将自动核实您的游戏昵称。",
     step2_title: "选择钻石数量",
     step2_desc: "选择您需要的充值套餐，包括周卡、月卡及超值大额钻石包。",
-    step3_title: "扫码 Bakong KHQR",
-    step3_desc: "使用 ABA Mobile、Wing、ACLEDA 或任意银行 App 扫描动态二维码。",
+    step3_title: "使用 ABA PayWay 支付",
+    step3_desc: "使用 ABA Mobile App 一键支付或使用支持 KHQR 的银行 App 扫码支付。",
     step4_title: "秒级到账",
     step4_desc: "10 秒内钻石将自动直接发送至您的 MLBB 游戏内邮箱！",
     
@@ -572,7 +572,7 @@ export const translations = {
     
     // TopUp Page
     topup_header_title: "无尽对决 (Mobile Legends: Bang Bang)",
-    topup_header_desc: "直充钻石，官方服务器实时核对，Bakong KHQR 极速扫码结算。",
+    topup_header_desc: "直充钻石，官方服务器实时核对，ABA PayWay 极速安全结算。",
     topup_official: "官方正品",
     topup_instant: "10秒直充",
     topup_online: "服务在线",
@@ -608,10 +608,10 @@ export const translations = {
     
     // Step 3
     step_3_heading: "选择支付方式",
-    step_3_sub: "柬埔寨国家银行官方 KHQR",
-    khqr_title: "Bakong KHQR 扫码支付",
+    step_3_sub: "官方安全网关 ABA PayWay",
+    khqr_title: "ABA PayWay (ABA Mobile & KHQR)",
     zero_fee: "0 手续费",
-    khqr_desc: "支持 ABA Mobile、Wing、ACLEDA、加华银行、TrueMoney 等全部银行。",
+    khqr_desc: "支持 ABA Mobile App 一键支付，或任意支持 KHQR 的银行 App 扫码。",
     accepted_banks: "支持银行：",
     
     // Order Summary
@@ -624,9 +624,9 @@ export const translations = {
     summary_payment: "支付方式:",
     summary_total: "实付总额:",
     summary_total_due: "应付金额",
-    pay_khqr_btn: "使用 KHQR 支付",
+    pay_khqr_btn: "使用 ABA PayWay 支付",
     pay_now_btn: "立即付款",
-    generating_khqr: "正在生成 KHQR...",
+    generating_khqr: "正在生成 ABA 支付账单...",
     trust_official: "MLBB 官方直充认证",
     trust_instant: "10 秒自动发货到账",
     
@@ -691,8 +691,8 @@ export const translations = {
     footer_delivery_desc: "全自动直充至游戏邮箱",
     footer_safe: "100% 账号安全",
     footer_safe_desc: "无需提供密码，仅需 ID",
-    footer_khqr: "Bakong KHQR",
-    footer_khqr_desc: "柬埔寨全部银行扫码 0 手续费",
+    footer_khqr: "ABA PayWay",
+    footer_khqr_desc: "ABA Mobile 及 KHQR 极速结算",
     footer_support: "24/7 在线客服",
     footer_support_desc: "Telegram 及实时客服全天候守护",
     footer_quick_links: "快捷导航",
@@ -707,8 +707,8 @@ export const translations = {
     ticker_1_desc: "全自动直充至游戏邮箱",
     ticker_2_title: "100% 账号安全",
     ticker_2_desc: "无需提供密码，仅需 ID",
-    ticker_3_title: "Bakong KHQR",
-    ticker_3_desc: "柬埔寨全部银行扫码 0 手续费",
+    ticker_3_title: "ABA PayWay",
+    ticker_3_desc: "ABA Mobile 及 KHQR 极速结算",
     ticker_4_title: "24/7 在线客服",
     ticker_4_desc: "Telegram 及实时客服全天候守护",
 

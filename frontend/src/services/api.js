@@ -100,6 +100,14 @@ export const khqrAPI = {
   checkStatus: (md5Hash) => api.get(`/khqr/status/${md5Hash}`),
 };
 
+// ABA PayWay API
+export const paywayAPI = {
+  create: (data) => api.post('/payway/create', data),
+  checkStatus: (tranId, orderId) =>
+    api.get(`/payway/status/${tranId}${orderId ? `?orderId=${orderId}` : ''}`),
+  callback: (data) => api.post('/payway/callback', data),
+};
+
 // Bakong Gateway API
 export const bakongAPI = {
   getStatus: () => api.get('/admin/bakong/status'),

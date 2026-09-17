@@ -121,14 +121,37 @@ public class KHQRService : IKHQRService
         payload.Append("000201"); // Tag 00: Format Indicator
         payload.Append("010212"); // Tag 01: Dynamic QR
 
-        // Tag 29: Merchant Account Info
-        string sub00 = $"00{bakongId.Length:D2}{bakongId}";
-        string sub01 = $"01{name.Length:D2}{name}";
-        string sub02 = "0206Bakong";
-        string tag29Content = sub00 + sub01 + sub02;
-        payload.Append("29").Append($"{tag29Content.Length:D2}").Append(tag29Content);
+        bool isAba = bakongId.Contains("abaa", StringComparison.OrdinalIgnoreCase);
+        if (isAba)
+        {
+            string usdAcc = "004164074";
+            string khrAcc = "015499221";
+            string activeAcc = isKhr ? khrAcc : usdAcc;
 
-        payload.Append("52045999"); // Tag 52: MCC
+            // Tag 29: ABA Bank Merchant Info
+            string sub00 = "0016abaakhppxxx@abaa";
+            string sub01 = $"01{activeAcc.Length:D2}{activeAcc}";
+            string sub02 = "0208ABA Bank";
+            string tag29Content = sub00 + sub01 + sub02;
+            payload.Append("29").Append($"{tag29Content.Length:D2}").Append(tag29Content);
+
+            // Tag 40: ABA P2P Dual Account
+            string sub40 = $"0006abaP2P0112BE4DE1A15BB702{khrAcc.Length:D2}{khrAcc}03{usdAcc.Length:D2}{usdAcc}0404Dual";
+            payload.Append("40").Append($"{sub40.Length:D2}").Append(sub40);
+
+            payload.Append("52040000"); // Tag 52: MCC for ABA P2P
+        }
+        else
+        {
+            // Tag 29: Standard Bakong Account Info
+            string sub00 = $"00{bakongId.Length:D2}{bakongId}";
+            string sub01 = $"01{name.Length:D2}{name}";
+            string sub02 = "0206Bakong";
+            string tag29Content = sub00 + sub01 + sub02;
+            payload.Append("29").Append($"{tag29Content.Length:D2}").Append(tag29Content);
+
+            payload.Append("52045999"); // Tag 52: MCC
+        }
         payload.Append("5303").Append(currencyCode); // Tag 53: Currency
         payload.Append("54").Append($"{amtStr.Length:D2}").Append(amtStr); // Tag 54: Amount
         payload.Append("5802KH"); // Tag 58: Country
@@ -207,8 +230,8 @@ public class KHQRService : IKHQRService
 
         // Direct authentic EMVCo standard KHQR generation matching Restaurant Management System
         var (realQr, realMd5) = GenerateEmvCoKhqr(
-            "deth_peak3@aclb",
-            "PuDeth Smart-PAY",
+            "015499221@abaa",
+            "DETH PHEAK",
             "Phnom Penh",
             amount,
             currency

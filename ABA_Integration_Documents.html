@@ -1,0 +1,210 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ABA Integration Documents</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&family=Space+Mono:wght@700&display=swap');
+        
+        body { 
+            font-family: 'Inter', sans-serif; 
+            line-height: 1.6; 
+            color: #333; 
+            max-width: 850px; 
+            margin: 0 auto; 
+            padding: 40px 20px; 
+            background-color: #f4f7fb; 
+        }
+        
+        .document-wrapper {
+            background: white;
+            padding: 40px 50px;
+            border-radius: 12px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.05);
+        }
+
+        h1 { color: #0055a5; border-bottom: 2px solid #e1e8f0; padding-bottom: 12px; margin-top: 40px; font-weight: 800; }
+        h1:first-child { margin-top: 0; }
+        h2 { color: #1e293b; margin-top: 30px; font-size: 1.3em; font-weight: 800; }
+        p { margin-bottom: 15px; color: #475569; text-align: justify; }
+        ul { color: #475569; }
+        
+        .step { background: #f8fafc; border-left: 4px solid #0055a5; padding: 18px 20px; margin-bottom: 20px; border-radius: 0 8px 8px 0; }
+        .step-title { font-weight: 800; color: #0055a5; margin-bottom: 5px; font-size: 1.1em; }
+        
+        /* Modern Digital Receipt CSS */
+        .receipt-container {
+            display: flex;
+            justify-content: center;
+            margin: 40px 0;
+            padding: 30px;
+            background: #e2e8f0;
+            border-radius: 16px;
+        }
+
+        .receipt {
+            background: #ffffff;
+            width: 100%;
+            max-width: 380px;
+            border-radius: 16px;
+            box-shadow: 0 15px 35px rgba(0,0,0,0.1);
+            overflow: hidden;
+            position: relative;
+        }
+        
+        /* Header & Logo */
+        .receipt-header {
+            background: #0B0F19; /* Dark background to match the Tin-TOPUP logo */
+            padding: 35px 20px 25px 20px;
+            text-align: center;
+            color: white;
+            border-bottom: 3px solid #00a8ff;
+        }
+        .real-logo { width: 140px; height: auto; margin: 0 auto 10px auto; display: block; }
+        .brand-name { font-weight: 800; font-size: 24px; letter-spacing: 1px; margin: 0; line-height: 1.2; color: #facc15; }
+        .brand-sub { font-size: 11px; color: #94a3b8; margin-top: 4px; letter-spacing: 2px; text-transform: uppercase; font-weight: 600; }
+        
+        /* Body */
+        .receipt-body { padding: 25px 30px 10px 30px; }
+        .receipt-status { text-align: center; margin-bottom: 25px; }
+        .status-badge { 
+            background: #dcfce7; 
+            color: #166534; 
+            padding: 6px 14px; 
+            border-radius: 20px; 
+            font-weight: 800; 
+            font-size: 11px; 
+            letter-spacing: 0.5px; 
+            display: inline-block; 
+            text-transform: uppercase;
+        }
+        
+        /* Details */
+        .detail-row { display: flex; justify-content: space-between; margin-bottom: 12px; font-size: 14px; align-items: center; }
+        .detail-label { color: #64748b; font-weight: 600; font-size: 13px; }
+        .detail-value { color: #0f172a; font-weight: 700; text-align: right; }
+        .detail-value.mono { font-family: 'Space Mono', monospace; font-size: 13px; color: #0055a5; }
+        
+        .divider { border-top: 2px dashed #cbd5e1; margin: 20px 0; }
+        
+        /* Total Section */
+        .receipt-total { 
+            background: #f8fafc; 
+            padding: 20px 30px; 
+            display: flex; 
+            justify-content: space-between; 
+            align-items: center; 
+            border-top: 1px solid #e2e8f0;
+            border-bottom: 1px solid #e2e8f0;
+        }
+        .total-label { font-size: 14px; font-weight: 800; color: #475569; text-transform: uppercase; }
+        .total-value { font-size: 26px; font-weight: 800; color: #0055a5; }
+        
+        /* Footer */
+        .receipt-footer { padding: 25px 30px 35px 30px; text-align: center; background: #ffffff; }
+        .thank-you { font-weight: 800; color: #1e293b; margin-bottom: 5px; font-size: 15px; }
+        .sub-msg { font-size: 12px; color: #94a3b8; margin-bottom: 20px; font-weight: 600; }
+        
+        /* Fake Barcode */
+        .barcode { 
+            height: 45px; 
+            background-image: repeating-linear-gradient(90deg, #334155, #334155 2px, transparent 2px, transparent 5px, #334155 5px, #334155 6px, transparent 6px, transparent 10px, #334155 10px, #334155 14px, transparent 14px, transparent 16px); 
+            width: 85%; 
+            margin: 0 auto; 
+            opacity: 0.8; 
+        }
+    </style>
+</head>
+<body>
+    <div class="document-wrapper">
+        <h1>1. Processing Flow of the Website</h1>
+        <p>Below is the step-by-step technical and user journey for processing transactions via the ABA PayWay integration on our platform.</p>
+
+        <div class="step"><div class="step-title">Step 1: Product Selection & User Input</div><div>The customer visits our website, selects the desired digital product (e.g., Mobile Legends Diamonds), and enters their unique in-game Player ID and Zone ID. The system validates the Player ID format.</div></div>
+        <div class="step"><div class="step-title">Step 2: Checkout Initiation</div><div>The customer selects "ABA PayWay" as their preferred payment method. Our backend server securely generates an Order ID and requests a payment session from the ABA PayWay API.</div></div>
+        <div class="step"><div class="step-title">Step 3: Payment Authorization (ABA PayWay)</div><div>The customer is presented with the ABA PayWay checkout interface (either via deep-link to the ABA Mobile app or a dynamic QR code on desktop). The customer authorizes the exact USD amount.</div></div>
+        <div class="step"><div class="step-title">Step 4: Payment Confirmation (Webhook)</div><div>Upon successful payment, the ABA PayWay system sends a secure Server-to-Server callback (Webhook) to our backend API confirming the transaction status as "PAID".</div></div>
+        <div class="step"><div class="step-title">Step 5: Automated Digital Fulfillment</div><div>Once our backend receives the official confirmation from ABA, the system instantly triggers an API request to our digital goods supplier to dispatch the diamonds directly to the customer's game account.</div></div>
+        <div class="step"><div class="step-title">Step 6: Receipt & Order Completion</div><div>The customer's screen automatically transitions to a "Payment Successful" receipt. If the digital supplier is temporarily out of balance, the order is safely held in an "Awaiting Balance" state, and an administrator is alerted to manually approve the fulfillment once funds are replenished.</div></div>
+
+        <div style="page-break-after: always; padding-top: 20px;"></div>
+
+        <h1>2. Cancellation & Refund Policy</h1>
+        <h2>1. Digital Goods Delivery</h2><p>Our platform provides direct top-up services for digital game credits (Mobile Legends: Bang Bang Diamonds). Due to the immediate and automated nature of digital goods delivery, all sales are final once the transaction is completed and the digital goods have been credited to the customer's game account.</p>
+        <h2>2. Cancellations</h2><p>Customers may cancel their order at any point before completing the payment via the ABA PayWay gateway. Once the payment is authorized and processed, the order cannot be canceled as the system automatically dispatches the digital goods to the provided Player ID.</p>
+        <h2>3. Refund Conditions</h2><p>We will only issue a full refund under the following circumstances:</p><ul><li>The payment was successfully deducted from the customer's bank account, but the digital goods (diamonds) were not delivered due to a system error or supplier outage.</li><li>The customer provided an invalid Player ID, causing the delivery to fail permanently, and the funds are held in our system.</li></ul>
+        <h2>4. Refund Processing</h2><p>If a refund is eligible, the customer must contact our support team within 48 hours of the transaction, providing the Order ID and ABA transaction receipt. Eligible refunds will be credited back to the original ABA account used for the purchase within 3 to 5 business days.</p>
+
+        <div style="page-break-after: always; padding-top: 20px;"></div>
+
+        <h1>3. Sample Receipt</h1>
+        <p>Below is a representation of the digital receipt provided to the customer upon successful payment and automated delivery via our platform.</p>
+
+        <div class="receipt-container">
+            <div class="receipt">
+                
+                <!-- Receipt Header (Logo) -->
+                <div class="receipt-header">
+                    <!-- USING THE ACTUAL UPLOADED TIN-TOPUP LOGO -->
+                    <img src="C:/Users/dethp/.gemini/antigravity/brain/e8a551f2-7ea0-4c1f-878d-5f5e6a808376/.user_uploaded/media_1788512401356.jpg" alt="Tin-TOPUP Logo" class="real-logo">
+                    <h3 class="brand-name">Tin-TOPUP</h3>
+                    <div class="brand-sub">Official Store</div>
+                </div>
+
+                <!-- Receipt Body (Details) -->
+                <div class="receipt-body">
+                    <div class="receipt-status">
+                        <span class="status-badge">? Paid & Delivered</span>
+                    </div>
+
+                    <div class="detail-row">
+                        <span class="detail-label">Order Number</span>
+                        <span class="detail-value mono">#10485</span>
+                    </div>
+                    <div class="detail-row">
+                        <span class="detail-label">Payment Method</span>
+                        <span class="detail-value">ABA PayWay</span>
+                    </div>
+                    <div class="detail-row">
+                        <span class="detail-label">Transaction Date</span>
+                        <span class="detail-value" style="font-size: 13px;">Sep 4, 2026 - 15:30</span>
+                    </div>
+                    
+                    <div class="divider"></div>
+
+                    <div class="detail-row">
+                        <span class="detail-label">Product Name</span>
+                        <span class="detail-value">Mobile Legends</span>
+                    </div>
+                    <div class="detail-row">
+                        <span class="detail-label">Package</span>
+                        <span class="detail-value">86 Diamonds</span>
+                    </div>
+                    <div class="detail-row">
+                        <span class="detail-label">Player ID (Zone)</span>
+                        <span class="detail-value mono" style="color: #0f172a;">12345678 (1234)</span>
+                    </div>
+                </div>
+
+                <!-- Receipt Total -->
+                <div class="receipt-total">
+                    <span class="total-label">Total Paid</span>
+                    <span class="total-value">$1.35</span>
+                </div>
+
+                <!-- Receipt Footer -->
+                <div class="receipt-footer">
+                    <div class="thank-you">Thank you for your purchase!</div>
+                    <div class="sub-msg">Your diamonds have been successfully credited.</div>
+                    
+                </div>
+
+            </div>
+        </div>
+        
+    </div>
+</body>
+</html>
+
+
