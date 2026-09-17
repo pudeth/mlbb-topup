@@ -427,7 +427,8 @@ const TopUp = () => {
       
       let attempts = 0;
       const maxAttempts = 50; // 50 * 100ms = 5 seconds
-      
+      const scriptUrl = 'https://checkout.payway.com.kh/plugins/checkout2-0.js';
+
       const tryCheckout = () => {
         if (typeof window !== 'undefined' && window.AbaPayway) {
           window.AbaPayway.checkout();
@@ -441,6 +442,14 @@ const TopUp = () => {
         }
       };
 
+      if (!window.AbaPayway) {
+        if (!document.querySelector(`script[src="${scriptUrl}"]`)) {
+          const script = document.createElement('script');
+          script.src = scriptUrl;
+          script.async = true;
+          document.head.appendChild(script);
+        }
+      }
       tryCheckout();
     }
   }, [paymentData, paymentPaid]);
