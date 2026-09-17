@@ -424,7 +424,9 @@ const TopUp = () => {
 
   // Automatically trigger ABA Official Checkout if backend QR generation fails
   useEffect(() => {
-    if (paymentData && !paymentPaid && !paymentData.qrString && !paymentData.khqrQRCode) {
+    if (paymentPaid) {
+      setShowCustomModal(false);
+    } else if (paymentData && !paymentPaid && !paymentData.qrString && !paymentData.khqrQRCode) {
       // We explicitly bypass the flaky ABA PayWay global script to guarantee a flawless React popup
       setShowCustomModal(true);
     }
