@@ -424,41 +424,16 @@ const TopUp = () => {
   // Automatically trigger ABA Official Checkout if backend QR generation fails
   useEffect(() => {
     if (paymentData && !paymentPaid && !paymentData.qrString && !paymentData.khqrQRCode) {
-      // The backend failed to generate the QR string due to Wrong Hash (Sandbox constraints).
-      // Instantly open the official ABA checkout popup instead of showing a broken React popup.
       
-      const purchaseUrl = paymentData?.purchaseUrl || '';
-      const isSandbox = purchaseUrl.includes('sandbox');
-      const scriptUrl = isSandbox 
-        ? 'https://checkout-sandbox.payway.com.kh/plugins/checkout2-0.js'
-        : 'https://checkout.payway.com.kh/plugins/checkout2-0.js';
+      const scriptUrl = 'https://checkout.payway.com.kh/plugins/checkout2-0.js'; // Always use Production script, it handles Sandbox internally
 
       const triggerCheckout = () => {
         if (typeof window !== 'undefined' && window.AbaPayway) {
           window.AbaPayway.checkout();
         } else {
-          // Fallback to iframe to avoid new tab
+          // Fallback just in case plugin is completely blocked
           const form = document.getElementById('aba_merchant_request');
-          if (form) {
-            // Create an iframe to target so it doesn't open a new tab
-            let iframe = document.getElementById('aba_webservice');
-            if (!iframe) {
-              iframe = document.createElement('iframe');
-              iframe.name = 'aba_webservice';
-              iframe.id = 'aba_webservice';
-              iframe.style.position = 'fixed';
-              iframe.style.top = '0';
-              iframe.style.left = '0';
-              iframe.style.width = '100vw';
-              iframe.style.height = '100vh';
-              iframe.style.zIndex = '999999';
-              iframe.style.border = 'none';
-              iframe.style.backgroundColor = '#fff';
-              document.body.appendChild(iframe);
-            }
-            form.target = 'aba_webservice';
-            form.submit();
-          }
+          if (form) form.submit();
         }
       };
 
@@ -468,10 +443,10 @@ const TopUp = () => {
         script.src = scriptUrl;
         script.async = true;
         script.onload = () => {
-          setTimeout(triggerCheckout, 500); // Give it a moment to initialize
+          setTimeout(triggerCheckout, 300); // Give it a moment to initialize
         };
         script.onerror = triggerCheckout;
-        document.body.appendChild(script);
+        document.head.appendChild(script);
       } else {
         triggerCheckout();
       }

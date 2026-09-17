@@ -144,7 +144,7 @@ namespace MLBBTopUp.Infrastructure.Services
 
                     var purchaseUrl = $"{baseUrl}/api/payment-gateway/v1/payments/purchase";
                     var checkoutUrl = $"{baseUrl}/pay?tran_id={tranId}&amount={amtStr}&currency={paywayCurrency}";
-                    var popupPaymentOption = ""; 
+                    var popupPaymentOption = "abapay_khqr"; 
                     
                     var returnUrl = "http://localhost:3000/success"; // Success URL for Web Continuation
                     var continueSuccessUrl = "http://localhost:3000/success";
@@ -614,7 +614,7 @@ namespace MLBBTopUp.Infrastructure.Services
                 {
                     var purchaseUrl = $"{baseUrl}/api/payment-gateway/v1/payments/purchase";
                     var checkoutUrl = $"{baseUrl}/pay?tran_id={tranId}&amount={amtStr}&currency={paywayCurrency}";
-                    var popupPaymentOption = "";
+                    var popupPaymentOption = "abapay_khqr";
                     
                     var returnUrl = "http://localhost:3000/success";
                     var continueSuccessUrl = "http://localhost:3000/success";
