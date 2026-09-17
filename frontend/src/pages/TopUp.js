@@ -425,23 +425,8 @@ const TopUp = () => {
   // Automatically trigger ABA Official Checkout if backend QR generation fails
   useEffect(() => {
     if (paymentData && !paymentPaid && !paymentData.qrString && !paymentData.khqrQRCode) {
-      
-      let attempts = 0;
-      const maxAttempts = 30; // Wait 3s
-
-      const tryCheckout = () => {
-        if (typeof window !== 'undefined' && window.AbaPayway) {
-          window.AbaPayway.checkout();
-        } else if (attempts < maxAttempts) {
-          attempts++;
-          setTimeout(tryCheckout, 100);
-        } else {
-          // Absolute fallback: use custom React Modal overlay with iframe
-          setShowCustomModal(true);
-        }
-      };
-
-      tryCheckout();
+      // We explicitly bypass the flaky ABA PayWay global script to guarantee a flawless React popup
+      setShowCustomModal(true);
     }
   }, [paymentData, paymentPaid]);
   
@@ -2291,7 +2276,8 @@ const TopUp = () => {
           Object.entries(paymentData.formData).map(([k, v]) => (
             <input key={k} type="hidden" name={k} value={v || ''} />
           ))}
-        {/* Custom React Modal for ABA PayWay (Fallback if script blocked) */}
+              </form>
+{/* Custom React Modal for ABA PayWay (Fallback if script blocked) */}
         {showCustomModal && (
           <div className="fixed inset-0 z-[999999] flex items-end justify-center bg-black/70 backdrop-blur-sm sm:items-center">
             <div className="w-full h-[90vh] sm:h-[80vh] sm:max-w-[400px] bg-white rounded-t-3xl sm:rounded-3xl overflow-hidden flex flex-col shadow-2xl animate-[slideUp_0.3s_ease-out]">
@@ -2323,7 +2309,7 @@ const TopUp = () => {
           </div>
         )}
 
-      </form>
+
     </div>
   );
 };
