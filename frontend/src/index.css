@@ -233,6 +233,20 @@ html {
   }
 }
 
+@keyframes bannerZoomOut {
+  0% {
+    transform: scale(1.12);
+  }
+  100% {
+    transform: scale(1.0);
+  }
+}
+
+.animate-banner-zoom {
+  animation: bannerZoomOut 6s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  will-change: transform;
+}
+
 @keyframes marquee {
   0% {
     transform: translateX(0%);
