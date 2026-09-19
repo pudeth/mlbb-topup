@@ -5440,7 +5440,7 @@ const PRICING_GAMES = [
       {/* Game & Logo Customization Modal */}
       {gameModalOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-md animate-fadeIn">
-          <div className="bg-dark-card border border-dark-border rounded-3xl max-w-xl w-full max-h-[90vh] overflow-y-auto p-5 sm:p-7 space-y-5 shadow-2xl animate-scaleUp">
+          <div className="bg-dark-card border border-dark-border rounded-3xl max-w-2xl w-full max-h-[90vh] overflow-y-auto p-5 sm:p-7 space-y-5 shadow-2xl animate-scaleUp">
             
             {/* Modal Header */}
             <div className="flex justify-between items-center pb-3 border-b border-dark-border">
@@ -5664,23 +5664,24 @@ const PRICING_GAMES = [
                 </div>
 
                 {/* Step 1 Navigation Buttons */}
-                <div className="flex items-center justify-between pt-3.5 border-t border-slate-800/80 gap-3">
+                <div className="flex items-center justify-between pt-4 border-t border-slate-800/80 gap-3">
                   <button
                     type="button"
                     onClick={() => setGameModalOpen(false)}
-                    className="px-4 py-2.5 rounded-xl font-bold text-xs text-slate-400 hover:text-slate-200 bg-slate-900/60 hover:bg-slate-800/80 border border-slate-800 hover:border-slate-700 transition-all cursor-pointer select-none"
+                    className="h-10 px-4 rounded-xl font-bold text-xs text-slate-400 hover:text-slate-200 bg-slate-900/60 hover:bg-slate-800/80 border border-slate-800 hover:border-slate-700 transition-all cursor-pointer select-none"
                   >
                     Cancel
                   </button>
                   <button
                     type="button"
                     onClick={() => setGameModalStep(2)}
-                    className="group px-5 py-2.5 rounded-xl font-black text-xs uppercase tracking-wider text-slate-950 bg-gradient-to-r from-amber-300 via-amber-400 to-yellow-500 hover:from-amber-200 hover:to-amber-400 border border-amber-200/80 shadow-lg shadow-amber-500/25 hover:shadow-amber-500/40 hover:scale-[1.02] active:scale-[0.98] transition-all cursor-pointer flex items-center gap-2 whitespace-nowrap select-none"
+                    className="group h-10 px-5 rounded-xl font-black text-xs uppercase tracking-wider text-slate-950 bg-gradient-to-r from-amber-300 via-amber-400 to-yellow-500 hover:from-amber-200 hover:to-amber-300 border border-amber-200/90 shadow-md shadow-amber-500/25 hover:shadow-amber-500/40 hover:scale-[1.02] active:scale-[0.98] transition-all cursor-pointer flex items-center gap-2 whitespace-nowrap select-none"
                   >
                     <span>Next: Server Badge</span>
-                    <span className="w-5 h-5 rounded-lg bg-black/15 flex items-center justify-center text-xs transition-transform group-hover:translate-x-0.5">
-                      ➔
-                    </span>
+                    <svg className="w-3.5 h-3.5 transition-transform group-hover:translate-x-0.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                      <line x1="5" y1="12" x2="19" y2="12"></line>
+                      <polyline points="12 5 19 12 12 19"></polyline>
+                    </svg>
                   </button>
                 </div>
 
@@ -5989,26 +5990,28 @@ const PRICING_GAMES = [
                 </div>
 
                 {/* Step 2 Navigation Buttons */}
-                <div className="flex items-center justify-between pt-3.5 border-t border-slate-800/80 gap-3">
+                <div className="flex items-center justify-between pt-4 border-t border-slate-800/80 gap-3">
                   <button
                     type="button"
                     onClick={() => setGameModalStep(1)}
-                    className="group px-4 py-2.5 rounded-xl font-bold text-xs text-slate-300 hover:text-white bg-slate-900/90 hover:bg-slate-800 border border-slate-700/80 hover:border-slate-600 shadow-sm hover:scale-[1.02] active:scale-[0.98] transition-all cursor-pointer flex items-center gap-2 whitespace-nowrap select-none"
+                    className="h-10 px-4 rounded-xl font-bold text-xs text-slate-300 hover:text-white bg-slate-900/90 hover:bg-slate-800 border border-slate-700/80 hover:border-slate-600 shadow-sm hover:scale-[1.02] active:scale-[0.98] transition-all cursor-pointer flex items-center gap-2 whitespace-nowrap select-none"
                   >
-                    <span className="w-5 h-5 rounded-lg bg-slate-800 border border-slate-700/60 flex items-center justify-center text-xs text-slate-400 group-hover:text-amber-300 transition-colors">
-                      ←
-                    </span>
+                    <svg className="w-3.5 h-3.5 text-slate-400 group-hover:text-amber-300 transition-colors" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                      <line x1="19" y1="12" x2="5" y2="12"></line>
+                      <polyline points="12 19 5 12 12 5"></polyline>
+                    </svg>
                     <span>Previous: Artwork</span>
                   </button>
                   <button
                     type="button"
                     onClick={() => setGameModalStep(3)}
-                    className="group px-5 py-2.5 rounded-xl font-black text-xs uppercase tracking-wider text-slate-950 bg-gradient-to-r from-amber-300 via-amber-400 to-yellow-500 hover:from-amber-200 hover:to-amber-400 border border-amber-200/80 shadow-lg shadow-amber-500/25 hover:shadow-amber-500/40 hover:scale-[1.02] active:scale-[0.98] transition-all cursor-pointer flex items-center gap-2 whitespace-nowrap select-none"
+                    className="group h-10 px-5 rounded-xl font-black text-xs uppercase tracking-wider text-slate-950 bg-gradient-to-r from-amber-300 via-amber-400 to-yellow-500 hover:from-amber-200 hover:to-amber-300 border border-amber-200/90 shadow-md shadow-amber-500/25 hover:shadow-amber-500/40 hover:scale-[1.02] active:scale-[0.98] transition-all cursor-pointer flex items-center gap-2 whitespace-nowrap select-none"
                   >
                     <span>Next: Game Details</span>
-                    <span className="w-5 h-5 rounded-lg bg-black/15 flex items-center justify-center text-xs transition-transform group-hover:translate-x-0.5">
-                      ➔
-                    </span>
+                    <svg className="w-3.5 h-3.5 transition-transform group-hover:translate-x-0.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                      <line x1="5" y1="12" x2="19" y2="12"></line>
+                      <polyline points="12 5 19 12 12 19"></polyline>
+                    </svg>
                   </button>
                 </div>
 
@@ -6164,32 +6167,37 @@ const PRICING_GAMES = [
                 </div>
 
                 {/* Step 3 Navigation Buttons */}
-                <div className="flex items-center justify-between pt-4 border-t border-slate-800/80 gap-3">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between pt-4 border-t border-slate-800/80 gap-3">
                   <button
                     type="button"
                     onClick={() => setGameModalStep(2)}
-                    className="group px-4 py-2.5 rounded-xl font-bold text-xs text-slate-300 hover:text-white bg-slate-900/90 hover:bg-slate-800 border border-slate-700/80 hover:border-slate-600 shadow-sm hover:scale-[1.02] active:scale-[0.98] transition-all cursor-pointer flex items-center gap-2 whitespace-nowrap select-none"
+                    className="h-10 px-4 rounded-xl font-bold text-xs text-slate-300 hover:text-white bg-slate-900/90 hover:bg-slate-800 border border-slate-700/80 hover:border-slate-600 shadow-sm hover:scale-[1.02] active:scale-[0.98] transition-all cursor-pointer flex items-center justify-center gap-2 whitespace-nowrap select-none"
                   >
-                    <span className="w-5 h-5 rounded-lg bg-slate-800 border border-slate-700/60 flex items-center justify-center text-xs text-slate-400 group-hover:text-amber-300 transition-colors">
-                      ←
-                    </span>
+                    <svg className="w-3.5 h-3.5 text-slate-400 group-hover:text-amber-300 transition-colors" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                      <line x1="19" y1="12" x2="5" y2="12"></line>
+                      <polyline points="12 19 5 12 12 5"></polyline>
+                    </svg>
                     <span>Previous: Server Badge</span>
                   </button>
-                  <div className="flex items-center gap-2">
+                  <div className="flex items-center justify-end gap-2.5">
                     <button
                       type="button"
                       onClick={() => setGameModalOpen(false)}
-                      className="px-4 py-2.5 rounded-xl font-bold text-xs text-slate-400 hover:text-rose-300 bg-slate-900/80 hover:bg-rose-950/30 border border-slate-700/80 hover:border-rose-500/40 transition-all cursor-pointer select-none"
+                      className="h-10 px-4 rounded-xl font-bold text-xs text-slate-400 hover:text-rose-300 bg-slate-900/80 hover:bg-rose-950/30 border border-slate-800 hover:border-rose-500/40 transition-all cursor-pointer select-none"
                     >
                       Cancel
                     </button>
                     <button
                       type="submit"
-                      className="group px-6 py-2.5 rounded-xl font-black text-xs uppercase tracking-wider text-slate-950 bg-gradient-to-r from-amber-300 via-amber-400 to-yellow-500 hover:from-amber-200 hover:to-amber-400 border border-amber-200/90 shadow-lg shadow-amber-500/25 hover:shadow-amber-500/45 hover:scale-[1.02] active:scale-[0.98] transition-all cursor-pointer flex items-center gap-2 whitespace-nowrap select-none"
+                      className="h-10 px-5 rounded-xl font-black text-xs uppercase tracking-wider text-slate-950 bg-gradient-to-r from-amber-300 via-amber-400 to-yellow-500 hover:from-amber-200 hover:to-amber-300 border border-amber-200/90 shadow-md shadow-amber-500/25 hover:shadow-amber-500/40 hover:scale-[1.02] active:scale-[0.98] transition-all cursor-pointer flex items-center justify-center gap-2 whitespace-nowrap select-none"
                     >
-                      <span className="text-sm">💾</span>
+                      <svg className="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round">
+                        <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"></path>
+                        <polyline points="17 21 17 13 7 13 7 21"></polyline>
+                        <polyline points="7 3 7 8 15 8"></polyline>
+                      </svg>
                       <span>Save Game & Apply</span>
-                      <span className="w-5 h-5 rounded-lg bg-black/15 flex items-center justify-center text-xs transition-transform group-hover:scale-110">
+                      <span className="w-4 h-4 rounded-full bg-black/15 flex items-center justify-center text-[10px] font-black">
                         ✓
                       </span>
                     </button>
