@@ -67,7 +67,33 @@ If your payment went through or you need instant help:
 • *"How fast is delivery"*
 • *"Supported bank apps"*
 • *"Diamond prices and packages"*
-• Or tap one of the quick buttons below!`
+• *"How to top up step by step"*
+Or tap one of the quick buttons below!`,
+
+    topup_steps: `📋 **Step-by-Step: How to Top Up MLBB Diamonds**
+
+**Step 1 — Find Your Player ID & Zone ID** 🎮
+Open MLBB → tap your Avatar (top-left) → copy your **Player ID** and **Zone ID** (e.g. \`1225368571 (11446)\`)
+
+**Step 2 — Select Your Game** 💎
+Go to our website and click **"Mobile Legends"** from the game catalog.
+
+**Step 3 — Enter Your Player ID** 📝
+Paste your Player ID in the input field. Our system will verify your in-game username automatically.
+
+**Step 4 — Choose a Diamond Package** 🛒
+Pick your preferred package (e.g. 55 Diamonds \$0.95, or Weekly Diamond Pass \$1.55).
+
+**Step 5 — Choose Payment Method** 🏦
+Select **ABA PayWay** or **Bakong KHQR** and tap **"Proceed to Payment"**.
+
+**Step 6 — Scan & Pay** 📱
+Open your ABA Mobile / Wing / ACLEDA → scan the KHQR code → confirm payment.
+
+**Step 7 — Done! Diamonds Delivered** ⚡
+Within **10–30 seconds**, your diamonds will appear in your **MLBB in-game mailbox**. No password needed, 100% safe!
+
+> 💡 **Tip:** Keep MLBB open to see the diamonds land in real time!`
   },
 
   km: {
@@ -134,7 +160,33 @@ If your payment went through or you need instant help:
 • *"តើការទូទាត់ចូលលឿនទេ"*
 • *"ធនាគារណាខ្លះអាចបង់បាន"*
 • *"តម្លៃគ្រាប់ពេជ្រ"*
-ឬចុចលើប៊ូតុងសំណួររហ័សខាងក្រោម!`
+• *"ដំណើរការបញ្ចូលពេជ្រជំហានដំបូង"*
+ឬចុចលើប៊ូតុងសំណួររហ័សខាងក្រោម!`,
+
+    topup_steps: `📋 **ដំណើរការបញ្ចូលគ្រាប់ពេជ្រ MLBB ជំហានដំបូង**
+
+**ជំហានទី ១ — ស្វែងរក Player ID & Zone ID** 🎮
+បើក MLBB → ចុចរូបអ្នក (ជ្រុងខាងឆ្វេងខាងលើ) → ចម្លង **Player ID** និង **Zone ID** (ឧ. \`1225368571 (11446)\`)
+
+**ជំហានទី ២ — ជ្រើសរើសហ្គេម** 💎
+ចូលគេហទំព័ររបស់យើង ហើយជ្រើស **"Mobile Legends"** ពីបញ្ជីហ្គេម។
+
+**ជំហានទី ៣ — បញ្ចូល Player ID** 📝
+បិទភ្ជាប់ Player ID ក្នុងប្រអប់ = ប្រព័ន្ធនឹងផ្ទៀងផ្ទាត់ ឈ្មោះក្នុងហ្គេមស្វ័យប្រវត្តិ។
+
+**ជំហានទី ៤ — ជ្រើសរើសកញ្ចប់ពេជ្រ** 🛒
+ជ្រើសកញ្ចប់ដែលអ្នកចង់បាន (ឧ. 55 ពេជ្រ \$0.95 ឬ Weekly Diamond Pass \$1.55)។
+
+**ជំហានទី ៥ — ជ្រើសវិធីទូទាត់** 🏦
+ជ្រើស **ABA PayWay** ឬ **Bakong KHQR** រួចចុច **"ទូទាត់"**។
+
+**ជំហានទី ៦ — ស្កេន & ទូទាត់** 📱
+បើក ABA Mobile / Wing / ACLEDA → ស្កេន KHQR code → ឆ្លើយតប confirm ការបង់ប្រាក់។
+
+**ជំហានទី ៧ — រួចរាល់! ពេជ្រចូលហើយ** ⚡
+ក្នុងរយៈ **១០–៣០ វិនាទី** ពេជ្រ នឹងបង្ហាញក្នុង **ប្រអប់សំបុត្រ MLBB** របស់អ្នក។ មិនត្រូវការ Password ១០០% ។
+
+> 💡 **គន្លឹះ:** បើក MLBB ដើរក្រោយ ដើម្បីឃើញពេជ្រចូលភ្លាមៗ!`
   },
 
   zh: {
@@ -201,7 +253,33 @@ If your payment went through or you need instant help:
 • *"充值多久能到账"*
 • *"支持哪些银行付款"*
 • *"钻石价格与周卡优惠"*
-或直接点击下方的快捷问题按钮！`
+• *"充值详细步骤教学"*
+或直接点击下方的快捷问题按钮！`,
+
+    topup_steps: `📋 **MLBB 钻石充值详细步骤教学**
+
+**第 1 步 — 找到您的玩家 ID 和区服 ID** 🎮
+打开 MLBB → 点击左上角**头像** → 复制您的 **Player ID** 和 **Zone ID**（如：\`1225368571 (11446)\`）
+
+**第 2 步 — 选择游戏** 💎
+进入我们的充值网站，点击 **"Mobile Legends"** 进入充值页面。
+
+**第 3 步 — 输入玩家 ID** 📝
+将 Player ID 粘贴到输入框，系统将自动验证您的游戏昵称。
+
+**第 4 步 — 选择钻石套餐** 🛒
+选择您需要的套餐（如 55 钻石 \$0.95，或每周钻石通行证 \$1.55）。
+
+**第 5 步 — 选择付款方式** 🏦
+选择 **ABA PayWay** 或 **Bakong KHQR** 扫码支付，点击 **"去支付"**。
+
+**第 6 步 — 扫码支付** 📱
+打开 ABA Mobile / Wing / ACLEDA → 扫 KHQR 二维码 → 确认付款。
+
+**第 7 步 — 完成！钻石到账** ⚡
+**10–30 秒内**，钻石将发送至您的 **MLBB 游戏内邮箱**。无需密码，100% 安全！
+
+> 💡 **小提示：** 充值时保持 MLBB 在线，可以即时看到钻石到账！`
   }
 };
 
@@ -257,9 +335,15 @@ const matchIntent = (query, currentLang) => {
   }
 
   // 8. Order Issues & Support
-  const supportKeywords = ['problem', 'error', 'failed', 'issue', 'not received', 'didn\'t receive', 'missing', 'wrong id', 'help', 'support', 'telegram', 'contact', 'admin', 'call', 'បញ្ហា', 'អត់ចូល', 'បាត់ពេជ្រ', 'ខុស id', 'ជួយ', 'ជំនួយ', 'តេឡេក្រាម', '没到账', '充值失败', '未到账', '填错', '客服', '联系客服', '售后'];
+  const supportKeywords = ['problem', 'error', 'failed', 'issue', 'not received', "didn't receive", 'missing', 'wrong id', 'help', 'support', 'telegram', 'contact', 'admin', 'call', 'បញ្ហា', 'អត់ចូល', 'បាត់ពេជ្រ', 'ខុស id', 'ជួយ', 'ជំនួយ', 'តេឡេក្រាម', '没到账', '充值失败', '未到账', '填错', '客服', '联系客服', '售后'];
   if (supportKeywords.some(k => q.includes(k))) {
     return { type: 'text', reply: KNOWLEDGE_BASE[lang].support };
+  }
+
+  // 9. Top Up Steps / How To Guide
+  const stepsKeywords = ['step', 'how to', 'how do i', 'guide', 'tutorial', 'process', 'procedure', 'topup', 'top up', 'top-up', 'recharge', 'start', 'begin', 'ជំហាន', 'ដំណើរការ', 'របៀប', 'វិធីសាស្ត្រ', 'ចាប់ផ្ដើម', 'ពន្យល់', '步骤', '怎么充', '如何充', '充值教程', '充值流程', '怎么买', '教一下'];
+  if (stepsKeywords.some(k => q.includes(k))) {
+    return { type: 'text', reply: KNOWLEDGE_BASE[lang].topup_steps };
   }
 
   // Default fallback
@@ -496,6 +580,7 @@ const AiAssistant = () => {
               { label: t('ai_quick_1'), icon: '🔍', color: 'text-cyan-300 border-cyan-700/50' },
               { label: t('ai_quick_2'), icon: '⚡', color: 'text-amber-300 border-amber-700/50' },
               { label: t('ai_quick_3'), icon: '🏦', color: 'text-emerald-300 border-emerald-700/50' },
+              { label: language === 'km' ? 'ជំហានបញ្ចូលពេជ្រ' : language === 'zh' ? '充值步骤教学' : 'Top Up Steps', icon: '📋', color: 'text-violet-300 border-violet-700/50' },
             ].map(q => (
               <button key={q.label} type="button" onClick={() => handleSend(q.label)}
                 className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-slate-800/60 border ${q.color} text-[11px] font-semibold whitespace-nowrap hover:bg-slate-700/60 transition-all shrink-0`}>
