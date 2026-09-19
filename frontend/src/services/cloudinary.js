@@ -45,6 +45,83 @@ const sha1 = async (str) => {
   }
 };
 
+export const compressImage = (file, maxWidth = 1400, quality = 0.85) => {
+  return new Promise((resolve) => {
+    if (!file || typeof window === 'undefined' || !(file instanceof Blob)) {
+      return resolve(file);
+    }
+    if (file.type === 'image/svg+xml' || file.type === 'image/gif') {
+      return resolve(file);
+    }
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      const img = new Image();
+      img.onload = () => {
+        let width = img.width;
+        let height = img.height;
+        if (width > maxWidth) {
+          height = Math.round((height * maxWidth) / width);
+          width = maxWidth;
+        }
+        const canvas = document.createElement('canvas');
+        canvas.width = width;
+        canvas.height = height;
+        const ctx = canvas.getContext('2d');
+        ctx.drawImage(img, 0, 0, width, height);
+
+        canvas.toBlob(
+          (blob) => {
+            if (blob && blob.size < file.size) {
+              const compressedFile = new File(
+                [blob],
+                (file.name || 'image.jpg').replace(/\.[^.]+$/, '.jpg'),
+                { type: 'image/jpeg', lastModified: Date.now() }
+              );
+              resolve(compressedFile);
+            } else {
+              resolve(file);
+            }
+          },
+          'image/jpeg',
+          quality
+        );
+      };
+      img.onerror = () => resolve(file);
+      img.src = e.target.result;
+    };
+    reader.onerror = () => resolve(file);
+    reader.readAsDataURL(file);
+  });
+};
+
+export const readFileAsDataUrl = (file, maxWidth = 1200, quality = 0.8) => {
+  return new Promise((resolve) => {
+    if (!file || typeof window === 'undefined') return resolve('');
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      const img = new Image();
+      img.onload = () => {
+        let width = img.width;
+        let height = img.height;
+        if (width > maxWidth) {
+          height = Math.round((height * maxWidth) / width);
+          width = maxWidth;
+        }
+        const canvas = document.createElement('canvas');
+        canvas.width = width;
+        canvas.height = height;
+        const ctx = canvas.getContext('2d');
+        ctx.drawImage(img, 0, 0, width, height);
+        resolve(canvas.toDataURL('image/jpeg', quality));
+      };
+      img.onerror = () => resolve(e.target.result);
+      img.src = e.target.result;
+    };
+    reader.onerror = () => resolve('');
+    reader.readAsDataURL(file);
+  });
+};
+
 /**
  * Upload an image file directly to Cloudinary CDN with automatic API signing
  * @param {File|Blob|string} file - The file or base64 data to upload
@@ -62,9 +139,12 @@ export const uploadToCloudinary = async (file, folder = 'profile-photos') => {
       throw new Error('Cloudinary Cloud Name not set.');
     }
 
+    // Automatically compress heavy mobile smartphone photos
+    const uploadFile = await compressImage(file, 1400, 0.85);
+
     const timestamp = Math.round(Date.now() / 1000).toString();
     const formData = new FormData();
-    formData.append('file', file);
+    formData.append('file', uploadFile);
 
     // Direct Signed Upload via Cloudinary HMAC-SHA1 signature (100% reliable, zero presets needed)
     if (apiKey && apiSecret) {

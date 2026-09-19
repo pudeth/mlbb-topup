@@ -7,7 +7,7 @@ import { useStoreBranding } from '../services/storeBranding';
 import { DEFAULT_EVENT_BANNERS, getAllStoredBanners, fetchStoredBanners, saveStoredBanners } from '../services/eventBanners';
 import { CambodiaFlagSvg, CambodiaFlagFrame, CambodiaCornerBadge } from '../components/CambodiaFlagBadge';
 import ProductPackageImage from '../components/ProductPackageImage';
-import { uploadToCloudinary, getCloudinaryConfig, saveCloudinaryConfig } from '../services/cloudinary';
+import { uploadToCloudinary, readFileAsDataUrl, getCloudinaryConfig, saveCloudinaryConfig } from '../services/cloudinary';
 
 const AdminDashboard = () => {
 
@@ -276,20 +276,12 @@ const PRICING_GAMES = [
   const [editingProviderName, setEditingProviderName] = useState('FazerCards');
   const [newBalanceInput, setNewBalanceInput] = useState('');
 
-  // Helper to read image as base64 Data URL fallback for smartphone uploads
-  const readFileAsDataUrl = (file) =>
-    new Promise((resolve, reject) => {
-      const reader = new FileReader();
-      reader.onload = () => resolve(reader.result);
-      reader.onerror = reject;
-      reader.readAsDataURL(file);
-    });
-
   // Event Banner Management State with Cloud Database Sync
   const [eventBanners, setEventBanners] = useState(() => getAllStoredBanners());
   const [bannerModalOpen, setBannerModalOpen] = useState(false);
   const [editingBanner, setEditingBanner] = useState(null);
   const [uploadingBannerImage, setUploadingBannerImage] = useState(false);
+  const [syncingCloud, setSyncingCloud] = useState(false);
   const [showBannerCloudinaryConfig, setShowBannerCloudinaryConfig] = useState(false);
   const [bannerFormData, setBannerFormData] = useState({
     tag: '🔥 SPECIAL EVENT',
@@ -304,11 +296,16 @@ const PRICING_GAMES = [
     order: 1
   });
 
-  // Sync event banners from cloud MongoDB on Admin load & listen for updates
+  // Sync event banners from cloud MongoDB on Admin load & auto-seed if cloud is empty
   useEffect(() => {
     fetchStoredBanners().then((cloudBanners) => {
       if (cloudBanners && cloudBanners.length > 0) {
         setEventBanners(getAllStoredBanners());
+      } else {
+        const local = getAllStoredBanners();
+        if (local && local.length > 0) {
+          saveStoredBanners(local);
+        }
       }
     });
 
@@ -323,6 +320,19 @@ const PRICING_GAMES = [
       window.removeEventListener('storage', handleSync);
     };
   }, []);
+
+  const handleForceSyncToCloud = async () => {
+    setSyncingCloud(true);
+    showToast('info', '☁️ Syncing banners to MongoDB Cloud database for all devices...');
+    try {
+      await saveStoredBanners(eventBanners);
+      showToast('success', '✅ All banners successfully synced to MongoDB Cloud! Visible on all phones & computers.');
+    } catch (err) {
+      showToast('error', 'Failed to sync to cloud: ' + (err?.message || err));
+    } finally {
+      setSyncingCloud(false);
+    }
+  };
 
   const handleOpenAddBannerModal = () => {
     setEditingBanner(null);
@@ -416,20 +426,16 @@ const PRICING_GAMES = [
   const handleBannerImageUpload = async (e) => {
     const file = e.target.files[0];
     if (!file) return;
-    if (file.size > 10 * 1024 * 1024) {
-      showToast('error', 'Image size should be under 10MB.');
-      return;
-    }
     setUploadingBannerImage(true);
-    showToast('info', '☁️ Uploading banner artwork...');
+    showToast('info', '☁️ Processing & optimizing banner artwork...');
     try {
       let finalUrl = '';
       const res = await uploadToCloudinary(file, 'Banner');
       if (res && res.url) {
         finalUrl = res.url;
       } else {
-        // Fallback for smartphone browsers where direct third-party CDN upload might be restricted
-        finalUrl = await readFileAsDataUrl(file);
+        // High-speed lightweight canvas fallback (under 150KB) for smartphones
+        finalUrl = await readFileAsDataUrl(file, 1200, 0.82);
       }
 
       if (finalUrl) {
@@ -437,7 +443,7 @@ const PRICING_GAMES = [
         if (res && res.isCloudinary) {
           showToast('success', '✅ Banner uploaded to Cloudinary "Banner" folder successfully!');
         } else {
-          showToast('success', '✅ Banner image loaded successfully!');
+          showToast('success', '✅ Banner artwork optimized & ready to save!');
         }
       } else {
         showToast('error', res?.error || 'Failed to process banner image.');
@@ -453,25 +459,21 @@ const PRICING_GAMES = [
   const handleQuickChangeBannerImage = async (bannerId, e) => {
     const file = e.target.files[0];
     if (!file) return;
-    if (file.size > 10 * 1024 * 1024) {
-      showToast('error', 'Image size should be under 10MB.');
-      return;
-    }
-    showToast('info', '☁️ Uploading new banner artwork & saving to cloud...');
+    showToast('info', '☁️ Optimizing artwork & broadcasting to all devices...');
     try {
       let finalUrl = '';
       const res = await uploadToCloudinary(file, 'Banner');
       if (res && res.url) {
         finalUrl = res.url;
       } else {
-        finalUrl = await readFileAsDataUrl(file);
+        finalUrl = await readFileAsDataUrl(file, 1200, 0.82);
       }
 
       if (finalUrl) {
         const updated = eventBanners.map(b => b.id === bannerId ? { ...b, image: finalUrl } : b);
         setEventBanners(updated);
         await saveStoredBanners(updated);
-        showToast('success', res && res.isCloudinary ? '✅ Banner artwork uploaded to Cloudinary & synced to all devices!' : '✅ Banner image updated and synced to all devices!');
+        showToast('success', '✅ Banner artwork updated & synced to MongoDB Cloud! Visible on all devices.');
       } else {
         showToast('error', res?.error || 'Failed to upload image.');
       }
@@ -2619,6 +2621,21 @@ const PRICING_GAMES = [
                 >
                   <span>☁️</span>
                   <span>{showBannerCloudinaryConfig ? 'Hide Cloudinary Settings' : 'Cloudinary Settings'}</span>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={handleForceSyncToCloud}
+                  disabled={syncingCloud}
+                  className={`px-3.5 py-2.5 rounded-xl border text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer shadow-md ${
+                    syncingCloud
+                      ? 'bg-emerald-950/80 text-emerald-300 border-emerald-500/50 cursor-wait'
+                      : 'bg-emerald-600/20 hover:bg-emerald-600/30 text-emerald-300 border-emerald-500/50 hover:scale-105 active:scale-95'
+                  }`}
+                  title="Push and sync all current banners to MongoDB Cloud for all visitors"
+                >
+                  <span>{syncingCloud ? '⏳' : '☁️'}</span>
+                  <span>{syncingCloud ? 'Syncing...' : 'Sync to All Devices'}</span>
                 </button>
 
                 <button

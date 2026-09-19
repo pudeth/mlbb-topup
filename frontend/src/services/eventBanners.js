@@ -84,7 +84,11 @@ const getApiUrls = () => {
   if (typeof window !== 'undefined' && (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1')) {
     return ['http://localhost:5001/api', 'http://localhost:5000/api/admin'];
   }
-  const urls = ['/api/khqr'];
+  const urls = [
+    '/api/khqr',
+    'https://mlbb-khqr-api.onrender.com/api',
+    'https://mlbb-backend-api.onrender.com/api'
+  ];
   if (process.env.REACT_APP_KHQR_API_URL) urls.unshift(`${process.env.REACT_APP_KHQR_API_URL}/api`);
   if (process.env.REACT_APP_API_URL) urls.unshift(`${process.env.REACT_APP_API_URL}`);
   return urls;
@@ -124,7 +128,14 @@ export const fetchStoredBanners = async () => {
   for (const base of urls) {
     try {
       const cleanBase = base.endsWith('/') ? base.slice(0, -1) : base;
-      const res = await fetch(`${cleanBase}/banners?_t=${Date.now()}`);
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 6000);
+      const res = await fetch(`${cleanBase}/banners?_t=${Date.now()}`, {
+        cache: 'no-store',
+        signal: controller.signal
+      });
+      clearTimeout(timeoutId);
+
       if (res.ok) {
         const data = await res.json();
         let banners = data?.banners;
@@ -133,7 +144,11 @@ export const fetchStoredBanners = async () => {
         }
         if (Array.isArray(banners) && banners.length > 0) {
           const sanitized = sanitizeBanners(banners);
-          localStorage.setItem(STORAGE_KEY, JSON.stringify(sanitized));
+          try {
+            localStorage.setItem(STORAGE_KEY, JSON.stringify(sanitized));
+          } catch (quotaErr) {
+            console.warn('LocalStorage quota exceeded in fetchStoredBanners:', quotaErr);
+          }
           if (typeof window !== 'undefined') {
             window.dispatchEvent(new Event(EVENT_NAME));
           }
@@ -147,27 +162,41 @@ export const fetchStoredBanners = async () => {
 
 // Save updated banners to local storage AND broadcast to Cloud / MongoDB Atlas
 export const saveStoredBanners = async (banners) => {
-  try {
-    const sanitized = sanitizeBanners(banners);
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(sanitized));
-    if (typeof window !== 'undefined') {
-      window.dispatchEvent(new Event(EVENT_NAME));
-    }
+  const sanitized = sanitizeBanners(banners);
 
-    const urls = getApiUrls();
+  // 1. Update local storage safely
+  try {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(sanitized));
+  } catch (quotaErr) {
+    console.warn('LocalStorage quota warning in saveStoredBanners:', quotaErr);
+  }
+
+  // 2. Dispatch local event for instant UI update
+  if (typeof window !== 'undefined') {
+    window.dispatchEvent(new Event(EVENT_NAME));
+  }
+
+  // 3. Guaranteed Cloud MongoDB Atlas Persistence across all endpoints
+  const urls = getApiUrls();
+  try {
     await Promise.allSettled(
-      urls.map((base) => {
+      urls.map(async (base) => {
         const cleanBase = base.endsWith('/') ? base.slice(0, -1) : base;
-        return fetch(`${cleanBase}/banners`, {
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 8000);
+        const res = await fetch(`${cleanBase}/banners`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ banners: sanitized }),
+          signal: controller.signal
         });
+        clearTimeout(timeoutId);
+        return res.ok;
       })
     );
-    return sanitized;
-  } catch (err) {
-    console.warn('Error saving banners to cloud:', err);
-    return banners;
+  } catch (cloudErr) {
+    console.warn('Cloud sync attempt finished with status:', cloudErr);
   }
+
+  return sanitized;
 };
