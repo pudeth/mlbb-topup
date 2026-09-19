@@ -118,7 +118,47 @@ export const UniversalSphericalFlag = ({
     );
   }
 
-  // 3. Official Country Flag SVG (KH, PH, MM, ID, MY, SG, TH, VN, etc.)
+  // 3. Disabled / No Badge Orb
+  if (normType === 'none') {
+    return (
+      <svg viewBox="0 0 100 100" className={className} xmlns="http://www.w3.org/2000/svg">
+        <defs>
+          <clipPath id={clipId}>
+            <circle cx="50" cy="50" r="50" />
+          </clipPath>
+        </defs>
+        <g clipPath={`url(#${clipId})`}>
+          <circle cx="50" cy="50" r="50" fill="#0f172a" />
+          <circle cx="50" cy="50" r="32" fill="none" stroke="#e11d48" strokeWidth="5" opacity="0.8" />
+          <line x1="28" y1="28" x2="72" y2="72" stroke="#e11d48" strokeWidth="5" opacity="0.8" />
+        </g>
+      </svg>
+    );
+  }
+
+  // 4. Custom Upload Placeholder Orb
+  if (normType === 'custom' && !flagImage) {
+    return (
+      <svg viewBox="0 0 100 100" className={className} xmlns="http://www.w3.org/2000/svg">
+        <defs>
+          <clipPath id={clipId}>
+            <circle cx="50" cy="50" r="50" />
+          </clipPath>
+          <linearGradient id={`customBg_${instanceId}`} x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" stopColor="#d97706" />
+            <stop offset="100%" stopColor="#b45309" />
+          </linearGradient>
+        </defs>
+        <g clipPath={`url(#${clipId})`}>
+          <circle cx="50" cy="50" r="50" fill={`url(#customBg_${instanceId})`} />
+          <path d="M50 30 L36 48 L45 48 L45 68 L55 68 L55 48 L64 48 Z" fill="#ffffff" />
+          <circle cx="50" cy="50" r="50" fill={`url(#${glintId})`} pointerEvents="none" />
+        </g>
+      </svg>
+    );
+  }
+
+  // 5. Official Country Flag SVG (KH, PH, MM, ID, MY, SG, TH, VN, etc.)
   const flagSrc = normType === 'kh' ? '/kh.svg' : `/flags/4x3/${normType}.svg`;
 
   return (

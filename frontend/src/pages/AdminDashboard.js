@@ -5,7 +5,8 @@ import { adminAPI, bakongAPI } from '../services/api';
 import { getStoredGames, saveStoredGames, resetToDefaultGames, getMasterTopupStatus, saveMasterTopupStatus, fetchStoredGames, fetchMasterTopupStatus } from '../services/gamesConfig';
 import { useStoreBranding } from '../services/storeBranding';
 import { DEFAULT_EVENT_BANNERS, getAllStoredBanners, fetchStoredBanners, saveStoredBanners } from '../services/eventBanners';
-import { CambodiaFlagSvg, CambodiaFlagFrame, CambodiaCornerBadge, DynamicFlagMedallion, UniversalSphericalFlag, POPULAR_FLAGS, MORE_WORLD_FLAGS, ALL_FLAG_OPTIONS } from '../components/CambodiaFlagBadge';
+import { CambodiaFlagSvg, CambodiaFlagFrame, CambodiaCornerBadge, DynamicFlagMedallion, UniversalSphericalFlag, POPULAR_FLAGS, ALL_FLAG_OPTIONS } from '../components/CambodiaFlagBadge';
+import CreativeFlagDropdown from '../components/CreativeFlagDropdown';
 import ProductPackageImage from '../components/ProductPackageImage';
 import { uploadToCloudinary, readFileAsDataUrl, getCloudinaryConfig, saveCloudinaryConfig } from '../services/cloudinary';
 import { getStoredProviderSettings, fetchStoredProviderSettings, switchActiveProvider, saveStoredProviderSettings } from '../services/supplierGateway';
@@ -5811,14 +5812,14 @@ const PRICING_GAMES = [
                   </div>
 
                   {/* Clean Container: Shows ONLY Current One + Dropdown List */}
-                  <div className="p-3.5 bg-slate-950/90 rounded-2xl border border-amber-500/50 space-y-3 overflow-hidden">
+                  <div className="p-3.5 bg-slate-950/90 rounded-2xl border border-amber-500/50 space-y-3 overflow-visible relative">
                     <div className="grid grid-cols-1 md:grid-cols-12 gap-3 items-center">
                       
                       {/* Current Selected Flag Showcase (Only Current One Shown) */}
                       {(() => {
                         const currentFlag = ALL_FLAG_OPTIONS.find(f => f.id === (gameFormData.flagType || 'kh')) || POPULAR_FLAGS[0];
                         return (
-                          <div className="md:col-span-7 flex items-center gap-3 p-2.5 px-3 rounded-xl bg-gradient-to-r from-amber-500/20 via-slate-900/90 to-slate-900/90 border border-amber-400/80 min-w-0">
+                          <div className="md:col-span-6 flex items-center gap-3 p-2.5 px-3 rounded-xl bg-gradient-to-r from-amber-500/20 via-slate-900/90 to-slate-900/90 border border-amber-400/80 min-w-0">
                             <div className="w-9 h-9 rounded-full overflow-hidden shrink-0 border-2 border-amber-400 flex items-center justify-center bg-slate-950 shadow-sm">
                               {gameFormData.flagType === 'none' ? (
                                 <span className="text-base">🚫</span>
@@ -5848,41 +5849,26 @@ const PRICING_GAMES = [
                         );
                       })()}
 
-                      {/* Drop-down List to Change Selection */}
-                      <div className="md:col-span-5 min-w-0">
-                        <label className="block text-[10px] text-slate-400 font-semibold mb-1 truncate">
-                          Change by Drop-down List:
+                      {/* Creative Custom Drop-down List to Change Selection */}
+                      <div className="md:col-span-6 min-w-0 relative">
+                        <label className="block text-[10px] text-slate-400 font-semibold mb-1 truncate flex items-center justify-between">
+                          <span>Change Server Flag:</span>
+                          <span className="text-amber-400 text-[9px] font-mono">⚡ Creative Dropdown</span>
                         </label>
-                        <select
+                        <CreativeFlagDropdown
                           value={gameFormData.flagType || 'kh'}
-                          onChange={(e) => {
-                            const selectedId = e.target.value;
-                            const found = ALL_FLAG_OPTIONS.find((f) => f.id === selectedId);
+                          flagImage={gameFormData.flagImage}
+                          onChange={(found) => {
+                            if (!found) return;
                             setGameFormData((prev) => ({
                               ...prev,
-                              flagType: selectedId,
-                              flagTitle: found?.t1 || prev.flagTitle,
-                              flagSubtitle: found?.t2 !== undefined ? found.t2 : prev.flagSubtitle,
-                              flagServerText: found?.t3 || prev.flagServerText,
+                              flagType: found.id,
+                              flagTitle: found.t1 || prev.flagTitle,
+                              flagSubtitle: found.t2 !== undefined ? found.t2 : prev.flagSubtitle,
+                              flagServerText: found.t3 || prev.flagServerText,
                             }));
                           }}
-                          className="w-full max-w-full bg-slate-900 hover:bg-slate-800 text-amber-300 font-bold border-2 border-amber-400/80 rounded-xl px-2.5 py-2 text-xs focus:outline-none focus:ring-2 focus:ring-amber-400 cursor-pointer transition-colors shadow-sm truncate"
-                        >
-                          <optgroup label="⚡ Popular Regional Servers">
-                            {POPULAR_FLAGS.map((f) => (
-                              <option key={f.id} value={f.id} className="bg-slate-900 text-white py-1">
-                                {f.name} {f.local ? `(${f.local})` : ''}
-                              </option>
-                            ))}
-                          </optgroup>
-                          <optgroup label="🌐 International Game Servers">
-                            {MORE_WORLD_FLAGS.map((f) => (
-                              <option key={f.id} value={f.id} className="bg-slate-900 text-white py-1">
-                                {f.name} ({f.id.toUpperCase()})
-                              </option>
-                            ))}
-                          </optgroup>
-                        </select>
+                        />
                       </div>
 
                     </div>
