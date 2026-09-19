@@ -5460,84 +5460,171 @@ const PRICING_GAMES = [
             {/* Form */}
             <form onSubmit={handleSaveGame} className="space-y-4 text-xs">
               
-              {/* IMAGE / LOGO SELECTOR & PREVIEW */}
-              <div className="p-4 rounded-2xl bg-dark-input/80 border border-dark-border space-y-3">
-                <label className="block font-black text-amber-400 uppercase tracking-wider text-[11px]">
-                  Game Logo / Icon Image <span className="text-rose-400">*</span>
-                </label>
-
-                <div className="flex flex-col sm:flex-row items-center gap-4">
-                  {/* Live Preview Box with Flag Frame Overlay */}
-                  <div className="relative w-28 h-28 rounded-2xl overflow-hidden bg-slate-900 border-2 border-amber-400 shadow-glow-gold shrink-0 group">
-                    <img
-                      src={gameFormData.image || '/mlbb-logo.png'}
-                      alt="Preview"
-                      onError={(e) => {
-                        e.target.onerror = null;
-                        e.target.src = '/mlbb-logo.png';
-                      }}
-                      className="w-full h-full object-cover object-center"
-                    />
-
-                    {/* Server Badge Frame Overlay on Preview */}
-                    {gameFormData.flagType !== 'none' && (
-                      <div className="absolute top-1 right-1 z-10 scale-[0.62] origin-top-right">
-                        <CambodiaFlagFrame
-                          title={gameFormData.flagTitle !== undefined ? gameFormData.flagTitle : (gameFormData.badge || 'សេវើខ្មែរ')}
-                          subtitle={gameFormData.flagSubtitle !== undefined ? gameFormData.flagSubtitle : '5V5'}
-                          sub={gameFormData.flagServerText !== undefined ? gameFormData.flagServerText : 'SERVER'}
-                          flagType={gameFormData.flagType || 'kh'}
-                          flagImage={gameFormData.flagType === 'custom' ? gameFormData.flagImage : null}
-                          badgeStyle={gameFormData.flagFrameStyle || 'gold_cyber'}
-                        />
-                      </div>
-                    )}
-
-                    <div className="absolute bottom-0 inset-x-0 bg-black/75 text-[9px] text-center text-slate-300 py-0.5 font-mono">
-                      Live Store Preview
-                    </div>
+              {/* GAME LOGO & PRODUCT CARD STUDIO */}
+              <div className="p-4 sm:p-5 rounded-2xl bg-gradient-to-br from-[#0c1427] via-[#101b33] to-[#0a101f] border border-amber-500/40 space-y-4">
+                
+                {/* Header */}
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 pb-3 border-b border-slate-800">
+                  <div>
+                    <label className="font-black text-amber-300 uppercase tracking-wider text-xs flex items-center gap-2">
+                      <span className="text-base">🎮</span> Game Product Card & Artwork Studio
+                    </label>
+                    <p className="text-[11px] text-slate-400 mt-0.5">
+                      Upload high-resolution game cover artwork & see live storefront product card rendering
+                    </p>
                   </div>
-
-                  {/* Upload & URL Controls */}
-                  <div className="flex-1 space-y-2.5 w-full">
-                    <div>
-                      <label className="block text-slate-400 mb-1 text-[11px] font-semibold">
-                        Option 1: Upload from Computer (PNG, JPG, WebP)
-                      </label>
-                      <input
-                        type="file"
-                        accept="image/*"
-                        onChange={handleGameImageUpload}
-                        className="block w-full text-xs text-slate-400 file:mr-3 file:py-2 file:px-3.5 file:rounded-xl file:border-0 file:text-xs file:font-bold file:bg-amber-500 file:text-black hover:file:bg-amber-400 cursor-pointer bg-slate-900 rounded-xl border border-slate-800"
-                      />
-                    </div>
-
-                    <div>
-                      <label className="block text-slate-400 mb-1 text-[11px] font-semibold">
-                        Option 2: Paste Image URL
-                      </label>
-                      <input
-                        type="text"
-                        value={gameFormData.image}
-                        onChange={(e) =>
-                          setGameFormData({ ...gameFormData, image: e.target.value })
-                        }
-                        placeholder="https://example.com/game-logo.png or /mlbb-logo.png"
-                        className="input w-full text-xs py-2 rounded-xl"
-                      />
-                    </div>
-
-                    <div className="flex gap-2">
-                      <button
-                        type="button"
-                        onClick={() => setGameFormData({ ...gameFormData, image: '/mlbb-logo.png' })}
-                        className="px-2.5 py-1 rounded-lg bg-amber-500/20 text-amber-300 border border-amber-500/40 text-[10px] font-bold"
-                      >
-                        Use MLBB 5v5 Logo
-                      </button>
-                    </div>
-                  </div>
+                  <span className="text-[10px] text-amber-400 font-bold bg-amber-500/10 px-2.5 py-1 rounded-lg border border-amber-500/30 self-start sm:self-auto flex items-center gap-1.5">
+                    <span>🖼️</span> 1:1 Square Cover
+                  </span>
                 </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-12 gap-4 items-start">
+                  
+                  {/* Left: Authentic Storefront Product Card Mockup */}
+                  <div className="md:col-span-5 flex flex-col items-center gap-2">
+                    <div className="text-[10px] font-bold text-slate-400 uppercase tracking-wider flex items-center gap-1">
+                      <span>👁️</span> Live Storefront Card Preview
+                    </div>
+
+                    {/* The Mini Product Card Mockup */}
+                    <div className="relative w-36 sm:w-44 aspect-square rounded-2xl overflow-hidden bg-slate-950 border-2 border-amber-400/80 shadow-md group select-none">
+                      <img
+                        src={gameFormData.image || '/mlbb-logo.png'}
+                        alt={gameFormData.name || 'Preview'}
+                        onError={(e) => {
+                          e.target.onerror = null;
+                          e.target.src = '/mlbb-logo.png';
+                        }}
+                        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                      />
+
+                      {/* Server Badge Frame Overlay on Top-Right */}
+                      {gameFormData.flagType !== 'none' && (
+                        <div className="absolute top-1 right-1 z-20 scale-[0.58] sm:scale-[0.62] origin-top-right pointer-events-none">
+                          <CambodiaFlagFrame
+                            title={gameFormData.flagTitle !== undefined ? gameFormData.flagTitle : (gameFormData.badge || 'សេវើខ្មែរ')}
+                            subtitle={gameFormData.flagSubtitle !== undefined ? gameFormData.flagSubtitle : '5V5'}
+                            sub={gameFormData.flagServerText !== undefined ? gameFormData.flagServerText : 'SERVER'}
+                            flagType={gameFormData.flagType || 'kh'}
+                            flagImage={gameFormData.flagType === 'custom' ? gameFormData.flagImage : null}
+                            badgeStyle={gameFormData.flagFrameStyle || 'gold_cyber'}
+                          />
+                        </div>
+                      )}
+
+                      {/* Bottom Info Bar Overlay */}
+                      <div className="absolute bottom-0 inset-x-0 p-1.5 px-2.5 bg-gradient-to-t from-black via-black/80 to-transparent flex items-center justify-between text-[9px] font-black z-10">
+                        <span className="text-white truncate max-w-[70%]">
+                          {gameFormData.name || 'Game Title'}
+                        </span>
+                        <span className="text-emerald-400 bg-emerald-950/80 px-1.5 py-0.2 rounded border border-emerald-500/40 text-[8px] tracking-wider">
+                          ● LIVE
+                        </span>
+                      </div>
+                    </div>
+
+                    <div className="text-[10px] text-slate-400 text-center font-mono">
+                      Aspect Ratio: 1:1 (PNG, JPG, WebP)
+                    </div>
+                  </div>
+
+                  {/* Right: Upload, URL & Quick Popular Presets */}
+                  <div className="md:col-span-7 space-y-3">
+                    
+                    {/* Upload Method Button */}
+                    <div className="p-3 bg-slate-950/80 rounded-xl border border-slate-800 space-y-2">
+                      <div className="flex items-center justify-between">
+                        <label className="text-slate-300 font-bold text-[11px] flex items-center gap-1.5">
+                          <span>📤</span> Option 1: Upload Image File
+                        </label>
+                        <span className="text-[10px] text-cyan-400 font-mono">
+                          Auto-Optimized (Max 10MB)
+                        </span>
+                      </div>
+
+                      {/* Custom Upload Button Area */}
+                      <label className="flex items-center gap-3 p-2.5 rounded-xl bg-slate-900 border border-slate-800 hover:border-amber-400/60 cursor-pointer transition-all group">
+                        <div className="w-8 h-8 rounded-lg bg-amber-400 text-black font-black flex items-center justify-center shrink-0 group-hover:scale-105 transition-transform">
+                          📁
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <div className="font-bold text-xs text-slate-200 group-hover:text-amber-300 transition-colors">
+                            Click to Browse or Drag Image Here
+                          </div>
+                          <div className="text-[10px] text-slate-400 truncate">
+                            Supported: PNG, JPG, WebP, SVG
+                          </div>
+                        </div>
+                        <span className="px-2.5 py-1 rounded-lg bg-amber-500/20 text-amber-300 border border-amber-500/40 text-[10px] font-black uppercase shrink-0">
+                          Browse
+                        </span>
+                        <input
+                          type="file"
+                          accept="image/*"
+                          onChange={handleGameImageUpload}
+                          className="hidden"
+                        />
+                      </label>
+                    </div>
+
+                    {/* Paste Image URL */}
+                    <div className="p-3 bg-slate-950/80 rounded-xl border border-slate-800 space-y-1.5">
+                      <label className="block text-slate-300 font-bold text-[11px] flex items-center gap-1.5">
+                        <span>🔗</span> Option 2: Paste Direct Image URL
+                      </label>
+                      <div className="relative">
+                        <input
+                          type="text"
+                          value={gameFormData.image}
+                          onChange={(e) =>
+                            setGameFormData({ ...gameFormData, image: e.target.value })
+                          }
+                          placeholder="https://example.com/game-artwork.png or /mlbb-logo.png"
+                          className="input w-full text-xs py-2 pl-3 pr-16 rounded-xl bg-slate-900 border-slate-800 font-mono text-cyan-300"
+                        />
+                        {gameFormData.image && (
+                          <button
+                            type="button"
+                            onClick={() => setGameFormData({ ...gameFormData, image: '' })}
+                            className="absolute right-2 top-2 px-2 py-0.5 rounded text-[10px] text-slate-400 hover:text-white bg-slate-800 cursor-pointer"
+                          >
+                            Clear
+                          </button>
+                        )}
+                      </div>
+                    </div>
+
+                    {/* Quick 1-Click Game Logo Presets */}
+                    <div className="flex items-center gap-1.5 flex-wrap pt-0.5">
+                      <span className="text-[10px] text-slate-400 font-bold mr-1">
+                        Quick Presets:
+                      </span>
+                      {[
+                        { name: '⚔️ MLBB 5v5', url: '/mlbb-logo.png' },
+                        { name: '🔥 Free Fire', url: 'https://images.unsplash.com/photo-1542751371-adc38448a05e?w=500&auto=format&fit=crop&q=80' },
+                        { name: '🎫 Event Tickets', url: 'https://images.unsplash.com/photo-1538481199705-c710c4e965fc?w=500&auto=format&fit=crop&q=80' },
+                        { name: '🎮 Steam Wallet', url: 'https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?w=500&auto=format&fit=crop&q=80' },
+                        { name: '🤖 Roblox', url: 'https://images.unsplash.com/photo-1607604276583-eef5d076aa5f?w=500&auto=format&fit=crop&q=80' },
+                      ].map((preset) => (
+                        <button
+                          key={preset.name}
+                          type="button"
+                          onClick={() => setGameFormData({ ...gameFormData, image: preset.url })}
+                          className={`px-2 py-1 rounded-lg text-[10px] font-bold border transition-all cursor-pointer ${
+                            gameFormData.image === preset.url
+                              ? 'bg-amber-400 text-black border-amber-300 font-black shadow-sm'
+                              : 'bg-slate-900/90 text-slate-300 border-slate-800 hover:border-slate-700 hover:text-white'
+                          }`}
+                        >
+                          {preset.name}
+                        </button>
+                      ))}
+                    </div>
+
+                  </div>
+
+                </div>
+
               </div>
 
               {/* SERVER FLAG & BADGE CUSTOMIZER STUDIO */}
