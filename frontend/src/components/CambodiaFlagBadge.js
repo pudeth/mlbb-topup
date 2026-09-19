@@ -183,11 +183,20 @@ export const CambodiaFlagFrame = ({
   badgeStyle = "gold_cyber", // 'gold_cyber' | 'cyber_pill' | 'esports_shield'
   className = ""
 }) => {
+  // Sanitize title: strip emoji flag regional indicators (e.g. 🇵🇭 which render as letters PH) and collapse duplicates
+  const sanitizedTitle = (title || '')
+    .replace(/[\uD83C][\uDDE6-\uDDFF]{2}/g, '')
+    .replace(/\bPH\s+PH\b/gi, 'PH')
+    .replace(/\bID\s+ID\b/gi, 'ID')
+    .replace(/\bKH\s+KH\b/gi, 'KH')
+    .replace(/\bMM\s+MM\b/gi, 'MM')
+    .trim() || 'សេវើខ្មែរ 5v5';
+
   // If user explicitly requests full badge PNG or provides a custom transparent PNG
   if (isFullBadgePng && flagImage) {
     return (
       <div className={`relative inline-block overflow-hidden ${className}`}>
-        <img src={flagImage} alt={title || "Server Badge"} className="h-10 sm:h-12 md:h-14 w-auto object-contain" />
+        <img src={flagImage} alt={sanitizedTitle || "Server Badge"} className="h-10 sm:h-12 md:h-14 w-auto object-contain" />
       </div>
     );
   }
@@ -208,7 +217,7 @@ export const CambodiaFlagFrame = ({
 
         {/* Title */}
         <span className="font-black text-[9px] sm:text-[10px] tracking-wider uppercase truncate text-amber-300 font-khmer">
-          {title}
+          {sanitizedTitle}
         </span>
 
         {/* Subtitle / Tag */}
@@ -237,7 +246,7 @@ export const CambodiaFlagFrame = ({
         {/* Stacked Text Labels */}
         <div className="flex flex-col text-left leading-tight">
           <span className="font-black text-[9px] sm:text-[10px] uppercase tracking-wide text-amber-300 font-khmer truncate">
-            {title}
+            {sanitizedTitle}
           </span>
           <div className="flex items-center gap-1">
             {subtitle && (
@@ -306,7 +315,7 @@ export const CambodiaFlagFrame = ({
           filter: 'drop-shadow(0 1px 0px #78350F)'
         }}
       >
-        {title}
+        {sanitizedTitle}
       </div>
 
       {/* 4. Glowing Cyan Capsule Text ("SERVER") */}

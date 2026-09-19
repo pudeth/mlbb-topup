@@ -1135,10 +1135,10 @@ const TopUp = () => {
               {/* Top-Right Server Badge Frame */}
               <div className="absolute top-2.5 right-2.5 sm:top-3 sm:right-3 z-20">
                 <CambodiaFlagFrame
-                  title={selectedGame.flagTitle || selectedGame.badge || "សេវើខ្មែរ 5v5"}
-                  subtitle={selectedGame.flagSubtitle || (selectedGame.id === 'mlbb' ? "5V5" : "")}
-                  sub={selectedGame.flagServerText || "SERVER"}
-                  flagType={selectedGame.flagType || (selectedGame.badge?.includes('ខ្មែរ') ? 'kh' : 'kh')}
+                  title={selectedGame.flagTitle || (selectedGame.id?.includes('ph') ? 'PH SERVER' : selectedGame.id?.includes('id') ? 'ID SERVER' : selectedGame.badge || "សេវើខ្មែរ 5v5")}
+                  subtitle={selectedGame.flagSubtitle || (selectedGame.id?.startsWith('mlbb') ? "5V5" : "")}
+                  sub={selectedGame.flagServerText || (selectedGame.id?.includes('ph') ? 'OFFICIAL' : selectedGame.id?.includes('id') ? 'FAST' : 'SERVER')}
+                  flagType={selectedGame.flagType || (selectedGame.id?.includes('ph') || selectedGame.name?.includes('(PH)') ? 'ph' : selectedGame.id?.includes('id') || selectedGame.name?.includes('(ID)') ? 'id' : selectedGame.badge?.includes('ខ្មែរ') ? 'kh' : 'kh')}
                   flagImage={selectedGame.flagImage || null}
                   isFullBadgePng={selectedGame.isFullBadgePng || false}
                   badgeStyle={selectedGame.flagFrameStyle || 'gold_cyber'}

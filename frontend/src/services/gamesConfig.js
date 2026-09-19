@@ -32,6 +32,11 @@ export const DEFAULT_GAMES = [
     localFallbackImage: '/mlbb-logo.png',
     badge: 'សេវើខ្មែរ 5v5',
     badgeColor: 'gold',
+    flagType: 'kh',
+    flagTitle: 'សេវើខ្មែរ 5v5',
+    flagSubtitle: '5V5',
+    flagServerText: 'SERVER',
+    flagFrameStyle: 'gold_cyber',
     rating: '5.0 ⭐',
     deliveryTime: '10 - 30s',
     route: '/topup',
@@ -84,8 +89,13 @@ export const DEFAULT_GAMES = [
     currency: 'Diamonds',
     image: '/mlbb-logo.png',
     localFallbackImage: '/mlbb-logo.png',
-    badge: '🇵🇭 PH SERVER',
+    badge: 'PH SERVER',
     badgeColor: 'cyan',
+    flagType: 'ph',
+    flagTitle: 'PH SERVER',
+    flagSubtitle: '5V5',
+    flagServerText: 'OFFICIAL',
+    flagFrameStyle: 'gold_cyber',
     rating: '4.9 ⭐',
     deliveryTime: '10 - 30s',
     route: '/topup?game=mlbb_ph',
@@ -120,8 +130,13 @@ export const DEFAULT_GAMES = [
     currency: 'Diamonds',
     image: '/mlbb-logo.png',
     localFallbackImage: '/mlbb-logo.png',
-    badge: '🇮🇩 ID SERVER',
+    badge: 'ID SERVER',
     badgeColor: 'cyan',
+    flagType: 'id',
+    flagTitle: 'ID SERVER',
+    flagSubtitle: '5V5',
+    flagServerText: 'FAST',
+    flagFrameStyle: 'gold_cyber',
     rating: '4.9 ⭐',
     deliveryTime: '10 - 30s',
     route: '/topup?game=mlbb_id',
@@ -462,19 +477,74 @@ const getApiUrls = () => {
   return urls;
 };
 
+export const normalizeGameFlags = (game) => {
+  if (!game) return game;
+  const clone = { ...game };
+  const combined = `${clone.id || ''} ${clone.name || ''} ${clone.badge || ''}`.toLowerCase();
+
+  // 1. Resolve flagType accurately
+  if (!clone.flagType || clone.flagType === 'none' || (clone.flagType === 'kh' && (clone.id === 'mlbb_ph' || combined.includes('(ph)')))) {
+    if (combined.includes('(ph)') || combined.includes('ph server') || clone.id === 'mlbb_ph') clone.flagType = 'ph';
+    else if (combined.includes('(id)') || combined.includes('id server') || clone.id === 'mlbb_id') clone.flagType = 'id';
+    else if (combined.includes('myanmar') || combined.includes('mm server')) clone.flagType = 'mm';
+    else if (combined.includes('malaysia') || combined.includes('my server')) clone.flagType = 'my';
+    else if (combined.includes('singapore') || combined.includes('sg server')) clone.flagType = 'sg';
+    else if (combined.includes('thailand') || combined.includes('th server')) clone.flagType = 'th';
+    else if (combined.includes('vietnam') || combined.includes('vn server')) clone.flagType = 'vn';
+    else if (combined.includes('brazil') || combined.includes('br server')) clone.flagType = 'br';
+    else if (combined.includes('global')) clone.flagType = 'global';
+    else if (combined.includes('ខ្មែរ') || combined.includes('kh') || clone.id === 'mlbb') clone.flagType = 'kh';
+  }
+
+  // 2. Clean flagTitle (remove emoji flag letters and duplicate tokens)
+  let rawTitle = clone.flagTitle || clone.badge || '';
+  let cleanTitle = rawTitle
+    .replace(/[\uD83C][\uDDE6-\uDDFF]{2}/g, '')
+    .replace(/\bPH\s+PH\b/gi, 'PH')
+    .replace(/\bID\s+ID\b/gi, 'ID')
+    .replace(/\bKH\s+KH\b/gi, 'KH')
+    .trim();
+
+  if (!cleanTitle || cleanTitle === 'PH' || cleanTitle === 'ID') {
+    if (clone.flagType === 'ph') cleanTitle = 'PH SERVER';
+    else if (clone.flagType === 'id') cleanTitle = 'ID SERVER';
+    else if (clone.flagType === 'global') cleanTitle = 'GLOBAL UC';
+    else cleanTitle = 'សេវើខ្មែរ 5v5';
+  }
+
+  clone.flagTitle = cleanTitle;
+
+  // 3. Defaults for subtitle and server text
+  if (clone.flagSubtitle === undefined) {
+    clone.flagSubtitle = '5V5';
+  }
+  if (!clone.flagServerText) {
+    if (clone.flagType === 'ph') clone.flagServerText = 'OFFICIAL';
+    else if (clone.flagType === 'id') clone.flagServerText = 'FAST';
+    else if (clone.flagType === 'global') clone.flagServerText = 'DIRECT';
+    else clone.flagServerText = 'SERVER';
+  }
+
+  if (!clone.flagFrameStyle) {
+    clone.flagFrameStyle = 'gold_cyber';
+  }
+
+  return clone;
+};
+
 export const getStoredGames = () => {
   try {
     const cached = localStorage.getItem(STORAGE_KEY);
     if (cached) {
       const parsed = JSON.parse(cached);
       if (Array.isArray(parsed) && parsed.length > 0) {
-        return parsed;
+        return parsed.map(g => normalizeGameFlags(g));
       }
     }
   } catch (err) {
     console.warn('Error reading stored games:', err);
   }
-  return DEFAULT_GAMES;
+  return DEFAULT_GAMES.map(g => normalizeGameFlags(g));
 };
 
 export const fetchStoredGames = async () => {
@@ -485,11 +555,12 @@ export const fetchStoredGames = async () => {
       if (res.ok) {
         const data = await res.json();
         if (data?.success && Array.isArray(data.games) && data.games.length > 0) {
-          localStorage.setItem(STORAGE_KEY, JSON.stringify(data.games));
+          const normalized = data.games.map(g => normalizeGameFlags(g));
+          localStorage.setItem(STORAGE_KEY, JSON.stringify(normalized));
           if (typeof window !== 'undefined') {
             window.dispatchEvent(new Event('gamesConfigUpdated'));
           }
-          return data.games;
+          return normalized;
         }
       }
     } catch (e) {}

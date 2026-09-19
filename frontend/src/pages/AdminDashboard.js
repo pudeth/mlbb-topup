@@ -5664,21 +5664,23 @@ const PRICING_GAMES = [
                 </div>
 
                 {/* Step 1 Navigation Buttons */}
-                <div className="flex items-center justify-between pt-3 border-t border-slate-800/80">
+                <div className="flex items-center justify-between pt-3.5 border-t border-slate-800/80 gap-3">
                   <button
                     type="button"
                     onClick={() => setGameModalOpen(false)}
-                    className="btn btn-secondary text-xs py-2 px-4 cursor-pointer"
+                    className="px-4 py-2.5 rounded-xl font-bold text-xs text-slate-400 hover:text-slate-200 bg-slate-900/60 hover:bg-slate-800/80 border border-slate-800 hover:border-slate-700 transition-all cursor-pointer select-none"
                   >
                     Cancel
                   </button>
                   <button
                     type="button"
                     onClick={() => setGameModalStep(2)}
-                    className="btn btn-gold text-xs py-2 px-5 font-black uppercase tracking-wider shadow-glow-gold flex items-center gap-1.5 cursor-pointer"
+                    className="group px-5 py-2.5 rounded-xl font-black text-xs uppercase tracking-wider text-slate-950 bg-gradient-to-r from-amber-300 via-amber-400 to-yellow-500 hover:from-amber-200 hover:to-amber-400 border border-amber-200/80 shadow-lg shadow-amber-500/25 hover:shadow-amber-500/40 hover:scale-[1.02] active:scale-[0.98] transition-all cursor-pointer flex items-center gap-2 whitespace-nowrap select-none"
                   >
-                    <span>Next: Server Badge (Layout 2)</span>
-                    <span>➔</span>
+                    <span>Next: Server Badge</span>
+                    <span className="w-5 h-5 rounded-lg bg-black/15 flex items-center justify-center text-xs transition-transform group-hover:translate-x-0.5">
+                      ➔
+                    </span>
                   </button>
                 </div>
 
@@ -5987,22 +5989,26 @@ const PRICING_GAMES = [
                 </div>
 
                 {/* Step 2 Navigation Buttons */}
-                <div className="flex items-center justify-between pt-3 border-t border-slate-800/80">
+                <div className="flex items-center justify-between pt-3.5 border-t border-slate-800/80 gap-3">
                   <button
                     type="button"
                     onClick={() => setGameModalStep(1)}
-                    className="btn btn-secondary text-xs py-2 px-4 cursor-pointer flex items-center gap-1.5 font-bold"
+                    className="group px-4 py-2.5 rounded-xl font-bold text-xs text-slate-300 hover:text-white bg-slate-900/90 hover:bg-slate-800 border border-slate-700/80 hover:border-slate-600 shadow-sm hover:scale-[1.02] active:scale-[0.98] transition-all cursor-pointer flex items-center gap-2 whitespace-nowrap select-none"
                   >
-                    <span>⬅</span>
-                    <span>Previous: Artwork (Layout 1)</span>
+                    <span className="w-5 h-5 rounded-lg bg-slate-800 border border-slate-700/60 flex items-center justify-center text-xs text-slate-400 group-hover:text-amber-300 transition-colors">
+                      ←
+                    </span>
+                    <span>Previous: Artwork</span>
                   </button>
                   <button
                     type="button"
                     onClick={() => setGameModalStep(3)}
-                    className="btn btn-gold text-xs py-2 px-5 font-black uppercase tracking-wider shadow-glow-gold flex items-center gap-1.5 cursor-pointer"
+                    className="group px-5 py-2.5 rounded-xl font-black text-xs uppercase tracking-wider text-slate-950 bg-gradient-to-r from-amber-300 via-amber-400 to-yellow-500 hover:from-amber-200 hover:to-amber-400 border border-amber-200/80 shadow-lg shadow-amber-500/25 hover:shadow-amber-500/40 hover:scale-[1.02] active:scale-[0.98] transition-all cursor-pointer flex items-center gap-2 whitespace-nowrap select-none"
                   >
-                    <span>Next: Game Details (Layout 3)</span>
-                    <span>➔</span>
+                    <span>Next: Game Details</span>
+                    <span className="w-5 h-5 rounded-lg bg-black/15 flex items-center justify-center text-xs transition-transform group-hover:translate-x-0.5">
+                      ➔
+                    </span>
                   </button>
                 </div>
 
@@ -6158,28 +6164,30 @@ const PRICING_GAMES = [
                 </div>
 
                 {/* Step 3 Navigation Buttons */}
-                <div className="flex items-center justify-between pt-4 border-t border-slate-800/80">
+                <div className="flex items-center justify-between pt-4 border-t border-slate-800/80 gap-3">
                   <button
                     type="button"
                     onClick={() => setGameModalStep(2)}
-                    className="btn btn-secondary text-xs py-2 px-4 cursor-pointer flex items-center gap-1.5 font-bold"
+                    className="group px-4 py-2.5 rounded-xl font-bold text-xs text-slate-300 hover:text-white bg-slate-900/90 hover:bg-slate-800 border border-slate-700/80 hover:border-slate-600 shadow-sm hover:scale-[1.02] active:scale-[0.98] transition-all cursor-pointer flex items-center gap-2 whitespace-nowrap select-none"
                   >
-                    <span>⬅</span>
-                    <span>Previous: Server Badge (Layout 2)</span>
+                    <span className="w-5 h-5 rounded-lg bg-slate-800 border border-slate-700/60 flex items-center justify-center text-xs text-slate-400 group-hover:text-amber-300 transition-colors">
+                      ←
+                    </span>
+                    <span>Previous: Server Badge</span>
                   </button>
                   <div className="flex items-center gap-2.5">
                     <button
                       type="button"
                       onClick={() => setGameModalOpen(false)}
-                      className="btn btn-secondary text-xs py-2 px-4 cursor-pointer"
+                      className="px-4 py-2.5 rounded-xl font-bold text-xs text-slate-400 hover:text-slate-200 bg-slate-900/60 hover:bg-slate-800/80 border border-slate-800 hover:border-slate-700 transition-all cursor-pointer select-none"
                     >
                       Cancel
                     </button>
                     <button
                       type="submit"
-                      className="btn btn-gold text-xs py-2 px-5 font-black uppercase tracking-wider shadow-glow-gold flex items-center gap-1.5 cursor-pointer"
+                      className="group px-6 py-2.5 rounded-xl font-black text-xs uppercase tracking-wider text-slate-950 bg-gradient-to-r from-amber-300 via-amber-400 to-yellow-500 hover:from-amber-200 hover:to-amber-400 border border-amber-200/80 shadow-lg shadow-amber-500/25 hover:shadow-amber-500/40 hover:scale-[1.02] active:scale-[0.98] transition-all cursor-pointer flex items-center gap-2 whitespace-nowrap select-none"
                     >
-                      <span>💾</span>
+                      <span className="text-sm">💾</span>
                       <span>Save Game & Apply</span>
                     </button>
                   </div>
