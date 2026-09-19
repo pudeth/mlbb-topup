@@ -44,7 +44,9 @@ module.exports = {
         }
       },
       fontFamily: {
-        sans: ['"Kantumruy Pro"', 'Kantumruy', 'Inter', 'system-ui', 'sans-serif'],
+        sans: ['"Kantumruy Pro"', 'Kantumruy', 'Battambang', '"Noto Sans Khmer"', '"Khmer OS Content"', '"Khmer OS Battambang"', '"Khmer OS"', 'Inter', 'system-ui', 'sans-serif'],
+        khmer: ['"Kantumruy Pro"', 'Kantumruy', 'Battambang', '"Noto Sans Khmer"', '"Khmer OS Content"', '"Khmer OS Battambang"', '"Khmer OS"', 'sans-serif'],
+        mono: ['ui-monospace', 'SFMono-Regular', 'Menlo', 'Monaco', 'Consolas', '"Liberation Mono"', '"Kantumruy Pro"', 'monospace'],
       },
       boxShadow: {
         'glow-cyan': '0 0 25px rgba(6, 182, 212, 0.25)',

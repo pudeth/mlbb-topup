@@ -5,8 +5,8 @@ import React from 'react';
  * Strictly complying with ABA Bank Merchant Integration Guideline v2.11
  */
 
-export const AbaPayLogo = ({ className = "h-5 w-auto" }) => (
-  <svg viewBox="0 0 120 40" fill="none" xmlns="http://www.w3.org/2000/svg" className={className} aria-label="ABA PAY">
+export const AbaPayLogo = ({ className = "h-5 w-auto", style = {} }) => (
+  <svg viewBox="0 0 120 40" fill="none" xmlns="http://www.w3.org/2000/svg" className={`${className} shrink-0`} style={{ maxHeight: '24px', width: 'auto', display: 'inline-block', verticalAlign: 'middle', ...style }} aria-label="ABA PAY">
     <rect width="120" height="40" rx="8" fill="#003B70" />
     {/* ABA Letters */}
     <path d="M16 28L21.5 12H27L32.5 28H27.5L26.3 24.2H22.2L21 28H16ZM23.2 20.8H25.3L24.2 16.5L23.2 20.8Z" fill="white" />
@@ -20,9 +20,9 @@ export const AbaPayLogo = ({ className = "h-5 w-auto" }) => (
   </svg>
 );
 
-export const AbaPaywayLogo = ({ className = "h-7 w-auto", dark = false }) => (
-  <div className={`inline-flex items-center gap-1.5 ${className}`}>
-    <svg viewBox="0 0 140 38" fill="none" xmlns="http://www.w3.org/2000/svg" className="h-full w-auto">
+export const AbaPaywayLogo = ({ className = "h-7 w-auto", dark = false, style = {} }) => (
+  <div className={`inline-flex items-center gap-1.5 shrink-0 ${className}`} style={{ maxHeight: '28px', ...style }}>
+    <svg viewBox="0 0 140 38" fill="none" xmlns="http://www.w3.org/2000/svg" className="h-full w-auto" style={{ maxHeight: '28px' }}>
       <rect width="140" height="38" rx="7" fill={dark ? "#002B52" : "#0055A5"} />
       {/* ABA */}
       <text x="12" y="25" fill="#FFFFFF" fontSize="17" fontWeight="900" fontFamily="system-ui, sans-serif" letterSpacing="0.5">
@@ -38,8 +38,8 @@ export const AbaPaywayLogo = ({ className = "h-7 w-auto", dark = false }) => (
   </div>
 );
 
-export const KhqrLogo = ({ className = "h-5 w-auto" }) => (
-  <svg viewBox="0 0 85 36" fill="none" xmlns="http://www.w3.org/2000/svg" className={className} aria-label="KHQR">
+export const KhqrLogo = ({ className = "h-5 w-auto", style = {} }) => (
+  <svg viewBox="0 0 85 36" fill="none" xmlns="http://www.w3.org/2000/svg" className={`${className} shrink-0`} style={{ maxHeight: '24px', width: 'auto', display: 'inline-block', verticalAlign: 'middle', ...style }} aria-label="KHQR">
     <rect width="85" height="36" rx="6" fill="#E21A1A" />
     {/* KHQR Text */}
     <text x="10" y="24" fill="#FFFFFF" fontSize="15" fontWeight="900" fontFamily="system-ui, -apple-system, sans-serif" letterSpacing="0.5">
@@ -99,16 +99,16 @@ export const AbaPaywayVoucherHeader = () => (
   </div>
 );
 
-export const VisaLogo = ({ className = "h-5 w-auto" }) => (
-  <svg viewBox="0 0 60 22" fill="none" xmlns="http://www.w3.org/2000/svg" className={className} aria-label="Visa">
+export const VisaLogo = ({ className = "h-5 w-auto", style = {} }) => (
+  <svg viewBox="0 0 60 22" fill="none" xmlns="http://www.w3.org/2000/svg" className={`${className} shrink-0`} style={{ maxHeight: '20px', width: 'auto', display: 'inline-block', verticalAlign: 'middle', ...style }} aria-label="Visa">
     <rect width="60" height="22" rx="4" fill="#FFFFFF" />
     <path d="M23.1 3.5L18.4 18.5H14.8L12.1 6.8C11.9 6 11.7 5.7 11 5.3C9.8 4.6 8.1 4.1 6.8 3.8L7.1 2.5H13.6C14.7 2.5 15.6 3.3 15.8 4.6L17.2 13.5L20.9 2.5H24.5M30.6 12.8C30.6 8.8 25.1 8.6 25.2 6.6C25.2 6 25.8 5.4 27 5.2C27.6 5.1 29.3 5.1 31.1 6L31.8 2.8C30.8 2.4 29.5 2.1 27.9 2.1C23.6 2.1 20.6 4.4 20.6 7.7C20.6 10.2 22.8 11.6 24.5 12.5C26.3 13.4 26.9 14 26.9 14.8C26.9 16.1 25.3 16.6 23.9 16.6C22.1 16.6 21 16.3 19.5 15.6L18.8 18.9C20.1 19.5 22.3 20 24.6 20C29.2 20 32.2 17.7 32.2 14.2M42.2 18.5H45.8L43.6 2.5H40.2C39.4 2.5 38.7 3 38.4 3.7L32.8 18.5H36.6L37.4 16.3H41.8L42.2 18.5ZM38.4 13.4L40.2 8.3L41.2 13.4H38.4ZM56.8 2.5L53.9 18.5H50.5L53.4 2.5H56.8Z" fill="#1434CB" />
     <path d="M12.1 6.8L9.9 2.5H6.8L6.6 3.6C8.8 4.2 10.8 5 12.1 6.8Z" fill="#F7B600" />
   </svg>
 );
 
-export const MastercardLogo = ({ className = "h-5 w-auto" }) => (
-  <svg viewBox="0 0 60 36" fill="none" xmlns="http://www.w3.org/2000/svg" className={className} aria-label="Mastercard">
+export const MastercardLogo = ({ className = "h-5 w-auto", style = {} }) => (
+  <svg viewBox="0 0 60 36" fill="none" xmlns="http://www.w3.org/2000/svg" className={`${className} shrink-0`} style={{ maxHeight: '20px', width: 'auto', display: 'inline-block', verticalAlign: 'middle', ...style }} aria-label="Mastercard">
     <rect width="60" height="36" rx="4" fill="#FFFFFF" />
     <circle cx="23" cy="18" r="12" fill="#EB001B" />
     <circle cx="37" cy="18" r="12" fill="#F79E1B" />
@@ -116,8 +116,8 @@ export const MastercardLogo = ({ className = "h-5 w-auto" }) => (
   </svg>
 );
 
-export const UnionPayLogo = ({ className = "h-5 w-auto" }) => (
-  <svg viewBox="0 0 60 36" fill="none" xmlns="http://www.w3.org/2000/svg" className={className} aria-label="UnionPay">
+export const UnionPayLogo = ({ className = "h-5 w-auto", style = {} }) => (
+  <svg viewBox="0 0 60 36" fill="none" xmlns="http://www.w3.org/2000/svg" className={`${className} shrink-0`} style={{ maxHeight: '20px', width: 'auto', display: 'inline-block', verticalAlign: 'middle', ...style }} aria-label="UnionPay">
     <rect width="60" height="36" rx="4" fill="#FFFFFF" />
     {/* 3 slanted blocks */}
     <path d="M14 6H25L20 30H9L14 6Z" fill="#C8102E" />
@@ -129,8 +129,8 @@ export const UnionPayLogo = ({ className = "h-5 w-auto" }) => (
   </svg>
 );
 
-export const JcbLogo = ({ className = "h-5 w-auto" }) => (
-  <svg viewBox="0 0 54 36" fill="none" xmlns="http://www.w3.org/2000/svg" className={className} aria-label="JCB">
+export const JcbLogo = ({ className = "h-5 w-auto", style = {} }) => (
+  <svg viewBox="0 0 54 36" fill="none" xmlns="http://www.w3.org/2000/svg" className={`${className} shrink-0`} style={{ maxHeight: '20px', width: 'auto', display: 'inline-block', verticalAlign: 'middle', ...style }} aria-label="JCB">
     <rect width="54" height="36" rx="4" fill="#FFFFFF" />
     <rect x="7" y="6" width="12" height="24" rx="2" fill="#0E4C92" />
     <rect x="21" y="6" width="12" height="24" rx="2" fill="#D3202A" />
@@ -146,24 +146,24 @@ export const JcbLogo = ({ className = "h-5 w-auto" }) => (
  * Shows all supported payment schemes processed via ABA PayWay
  */
 export const AbaAcceptanceMarks = ({ className = "" }) => (
-  <div className={`flex flex-wrap items-center gap-1.5 sm:gap-2 ${className}`}>
-    <span title="ABA PAY (ABA Mobile)">
-      <AbaPayLogo className="h-5 sm:h-6 w-auto shadow-sm rounded" />
+  <div className={`flex flex-wrap items-center gap-1.5 ${className}`}>
+    <span title="ABA PAY" className="inline-flex items-center px-1.5 py-0.5 rounded-md bg-white/5 border border-white/10 hover:border-white/20 transition-colors">
+      <AbaPayLogo className="h-4 sm:h-4.5 w-auto" />
     </span>
-    <span title="KHQR (National QR Standard)">
-      <KhqrLogo className="h-5 sm:h-6 w-auto shadow-sm rounded" />
+    <span title="KHQR" className="inline-flex items-center px-1.5 py-0.5 rounded-md bg-white/5 border border-white/10 hover:border-white/20 transition-colors">
+      <KhqrLogo className="h-4 sm:h-4.5 w-auto" />
     </span>
-    <span title="Visa Card">
-      <VisaLogo className="h-5 sm:h-6 w-auto shadow-sm rounded" />
+    <span title="Visa Card" className="inline-flex items-center px-1.5 py-0.5 rounded-md bg-white/5 border border-white/10 hover:border-white/20 transition-colors">
+      <VisaLogo className="h-3.5 sm:h-4 w-auto" />
     </span>
-    <span title="Mastercard">
-      <MastercardLogo className="h-5 sm:h-6 w-auto shadow-sm rounded" />
+    <span title="Mastercard" className="inline-flex items-center px-1.5 py-0.5 rounded-md bg-white/5 border border-white/10 hover:border-white/20 transition-colors">
+      <MastercardLogo className="h-3.5 sm:h-4 w-auto" />
     </span>
-    <span title="UnionPay">
-      <UnionPayLogo className="h-5 sm:h-6 w-auto shadow-sm rounded" />
+    <span title="UnionPay" className="inline-flex items-center px-1.5 py-0.5 rounded-md bg-white/5 border border-white/10 hover:border-white/20 transition-colors">
+      <UnionPayLogo className="h-3.5 sm:h-4 w-auto" />
     </span>
-    <span title="JCB">
-      <JcbLogo className="h-5 sm:h-6 w-auto shadow-sm rounded" />
+    <span title="JCB" className="inline-flex items-center px-1.5 py-0.5 rounded-md bg-white/5 border border-white/10 hover:border-white/20 transition-colors">
+      <JcbLogo className="h-3.5 sm:h-4 w-auto" />
     </span>
   </div>
 );
@@ -173,29 +173,35 @@ export const AbaAcceptanceMarks = ({ className = "" }) => (
  * Displays security guarantee, authorized merchant info, and schemes
  */
 export const AbaPaywayTrustBox = ({ merchantName = "Pu Deth", className = "" }) => (
-  <div className={`p-3.5 sm:p-4 rounded-2xl bg-gradient-to-r from-[#00264d]/60 via-slate-900/90 to-[#001f3f]/60 border border-sky-500/30 text-slate-300 text-xs shadow-lg space-y-2.5 ${className}`}>
-    <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 border-b border-slate-800 pb-2">
+  <div className={`rounded-2xl bg-gradient-to-r from-[#091120]/90 via-[#0d182e]/90 to-[#091120]/90 border border-sky-500/25 p-3 sm:p-3.5 shadow-lg space-y-2.5 backdrop-blur-sm ${className}`}>
+    {/* Top Row: Official Gateway & Security Badges */}
+    <div className="flex flex-wrap items-center justify-between gap-2 border-b border-slate-800/80 pb-2.5">
       <div className="flex items-center gap-2">
-        <AbaPaywayLogo className="h-6 w-auto" />
-        <span className="text-[10px] px-2 py-0.5 rounded-full bg-sky-500/20 text-sky-300 font-bold border border-sky-400/30">
+        <AbaPaywayLogo className="h-5 sm:h-6 w-auto" />
+        <span className="text-[10px] sm:text-[10.5px] px-2 py-0.5 rounded-full bg-sky-500/15 text-sky-300 font-bold border border-sky-400/30">
           Official Payment Gateway
         </span>
       </div>
-      <div className="text-[11px] font-mono text-slate-400 flex items-center gap-1.5">
-        <span>🔒 256-bit SSL Secure</span>
-        <span>•</span>
+      <div className="flex items-center gap-2 text-[10.5px] sm:text-[11px] font-mono text-slate-400">
+        <span className="flex items-center gap-1 text-slate-300">
+          <span>🔒</span> 256-bit SSL Secure
+        </span>
+        <span className="text-slate-600">•</span>
         <span className="text-emerald-400 font-bold">0% Fee</span>
       </div>
     </div>
 
-    <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 pt-0.5">
-      <div className="space-y-1">
-        <span className="text-[10px] text-slate-400 uppercase font-bold tracking-wider block">We Accept</span>
+    {/* Bottom Row: Acceptance Marks & Merchant Endorsement */}
+    <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2.5 pt-0.5">
+      <div className="flex flex-col sm:flex-row sm:items-center gap-1.5 sm:gap-2.5 w-full sm:w-auto">
+        <span className="text-[10px] text-slate-400 uppercase font-black tracking-wider shrink-0">
+          We Accept:
+        </span>
         <AbaAcceptanceMarks />
       </div>
-      <div className="text-left sm:text-right text-[10px] text-slate-400">
-        <div>Authorized Merchant: <strong className="text-white">{merchantName}</strong></div>
-        <div className="text-slate-500">Processed by Advanced Bank of Asia Ltd. (ABA Bank)</div>
+      <div className="text-left sm:text-right text-[10.5px] text-slate-400 w-full sm:w-auto border-t sm:border-t-0 border-slate-800/60 pt-2 sm:pt-0">
+        <div>Authorized Merchant: <strong className="text-white font-bold">{merchantName}</strong></div>
+        <div className="text-[10px] text-slate-500">Processed by Advanced Bank of Asia Ltd. (ABA Bank)</div>
       </div>
     </div>
   </div>

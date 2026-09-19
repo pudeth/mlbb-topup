@@ -187,7 +187,7 @@ const playSuccessSound = () => {
 };
 
 const TopUp = () => {
-  const { t } = useLanguage();
+  const { t, language } = useLanguage();
   const [searchParams, setSearchParams] = useSearchParams();
   const navigate = useNavigate();
 
@@ -1034,11 +1034,15 @@ const TopUp = () => {
       {/* Top Game Switcher Carousel */}
       <div className="mb-6 space-y-3">
           <div className="flex items-center justify-between">
-            <span className="text-xs font-black uppercase tracking-widest text-slate-500 flex items-center gap-2">
-              <span className="text-purple-400">ðŸŽ®</span> SELECT GAME OR SERVICE:
+            <span className="text-xs font-black uppercase tracking-widest text-slate-400 flex items-center gap-2 font-khmer">
+              <svg className="w-4 h-4 text-purple-400 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+                <rect x="2" y="6" width="20" height="12" rx="4" />
+                <path d="M6 12h4m-2-2v4m7-2h.01m3-2h.01" />
+              </svg>
+              <span>{language === 'km' ? 'ជ្រើសរើសហ្គេម ឬសេវាកម្ម៖' : 'SELECT GAME OR SERVICE:'}</span>
             </span>
-            <span className="text-[10px] text-amber-500/80 font-black uppercase tracking-wider bg-amber-500/10 px-2.5 py-1 rounded-full border border-amber-500/20">
-              {allGames.length} Upstream Titles Available
+            <span className="text-[10px] text-amber-500/80 font-black uppercase tracking-wider bg-amber-500/10 px-2.5 py-1 rounded-full border border-amber-500/20 font-khmer">
+              {allGames.length} {language === 'km' ? 'ហ្គេម & សេវាកម្ម' : 'Upstream Titles Available'}
             </span>
           </div>
   
@@ -1564,102 +1568,123 @@ const TopUp = () => {
             {/* STEP 3: SELECT PAYMENT METHOD (ABA PAYWAY COMPLIANCE v2.11) */}
             {/* Strictly adhering to Figma Guideline Node 18242-814 */}
             {/* ======================================================== */}
-            <div className="pt-4 border-t border-slate-800/90 space-y-3">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-2">
-                  <span className="w-6 h-6 rounded-full bg-gradient-to-r from-sky-500 to-blue-600 text-white font-black text-xs flex items-center justify-center shadow-md">
+            <div className="pt-4 border-t border-slate-800/90 space-y-3.5 font-khmer">
+              <div className="flex items-center justify-between gap-2 flex-wrap">
+                <div className="flex items-center gap-2.5">
+                  <span className="w-7 h-7 rounded-xl bg-gradient-to-br from-sky-400 to-blue-600 text-white font-black text-xs flex items-center justify-center shadow-md shadow-sky-500/25 shrink-0">
                     3
                   </span>
                   <div>
-                    <h3 className="text-sm font-black text-white tracking-wide flex items-center gap-1.5">
-                      <span>Select Payment Method</span>
-                      <span className="text-[10px] text-sky-400 font-semibold">(វិធីសាស្ត្រទូទាត់)</span>
+                    <h3 className="text-sm sm:text-base font-black text-white tracking-wide flex items-center gap-1.5 flex-wrap font-khmer">
+                      <span>{language === 'km' ? 'ជ្រើសរើសវិធីសាស្ត្រទូទាត់' : 'Select Payment Method'}</span>
+                      <span className="text-[11px] text-sky-400 font-semibold font-khmer">
+                        {language === 'km' ? '(Payment Methods)' : '(វិធីសាស្ត្រទូទាត់)'}
+                      </span>
                     </h3>
-                    <p className="text-[10.5px] text-slate-400">
-                      Official payment gateway powered by Advanced Bank of Asia Ltd. (ABA Bank)
+                    <p className="text-[10.5px] sm:text-xs text-slate-400 font-khmer">
+                      {language === 'km'
+                        ? 'សេវាទូទាត់ប្រាក់ផ្លូវការដំណើរការដោយ ធនាគារ វឌ្ឍនៈ អាស៊ី ចំកាត់ (ABA Bank)'
+                        : 'Official payment gateway powered by Advanced Bank of Asia Ltd. (ABA Bank)'}
                     </p>
                   </div>
                 </div>
-                <span className="px-2 py-0.5 rounded-full bg-emerald-500/15 border border-emerald-500/40 text-emerald-400 text-[10px] font-bold">
-                  0% Fee
+                <span className="px-2.5 py-0.5 rounded-full bg-emerald-500/15 border border-emerald-500/40 text-emerald-400 text-[10px] sm:text-[11px] font-bold shrink-0 font-khmer">
+                  ⚡ {language === 'km' ? 'ឥតគិតថ្លៃសេវា 0%' : '0% Fee'}
                 </span>
               </div>
 
-              {/* Payment Method Cards Container */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+              {/* Payment Method Cards Container - Responsive Mobile First */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 {/* Option A: ABA PAY & KHQR */}
                 <div
                   onClick={() => setSelectedPaymentOption('abapay_khqr')}
-                  className={`relative p-3.5 rounded-2xl border transition-all cursor-pointer ${
+                  className={`relative p-3.5 sm:p-4 rounded-2xl border transition-all cursor-pointer select-none active:scale-[0.985] touch-manipulation ${
                     selectedPaymentOption === 'abapay_khqr'
-                      ? 'bg-gradient-to-b from-[#002b52]/50 via-[#0B1528] to-[#0A101E] border-sky-400 shadow-lg shadow-sky-950/60 ring-1 ring-sky-400/40'
-                      : 'bg-[#0B0F19] border-slate-800 hover:border-slate-700 opacity-80'
+                      ? 'bg-gradient-to-b from-[#002f5a]/60 via-[#0b162c] to-[#070e1c] border-sky-400 shadow-xl shadow-sky-950/70 ring-1 ring-sky-400/40'
+                      : 'bg-[#090e1a]/90 border-slate-800/90 hover:border-slate-700 hover:bg-[#0d1424] opacity-90'
                   }`}
                 >
                   <div className="flex items-start justify-between gap-2">
-                    <div className="space-y-1.5">
-                      <div className="flex items-center gap-1.5">
+                    <div className="flex items-center gap-2">
+                      <div className="flex items-center gap-1.5 bg-[#030d1a] px-2.5 py-1 rounded-xl border border-sky-900/60 shadow-inner">
                         <AbaPayLogo className="h-5 w-auto" />
-                        <span className="text-slate-600 text-xs">•</span>
-                        <KhqrLogo className="h-4.5 w-auto" />
+                        <span className="text-slate-600 text-xs font-bold">•</span>
+                        <KhqrLogo className="h-5 w-auto" />
                       </div>
-                      <div>
-                        <span className="text-xs font-black text-white block">ABA PAYWAY (ABA Mobile & KHQR)</span>
-                        <p className="text-[10px] text-slate-400 leading-tight">
-                          Scan with ABA Mobile App or any mobile banking app via ABA PayWay
-                        </p>
-                      </div>
+                      <span className="px-2 py-0.5 rounded-full text-[9px] font-black uppercase tracking-wider bg-emerald-500/15 text-emerald-400 border border-emerald-500/30 font-khmer">
+                        {language === 'km' ? 'លឿនបំផុត' : 'Fastest'}
+                      </span>
                     </div>
+
                     {/* Radio Indicator */}
                     <div className={`w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-black shrink-0 transition-all ${
                       selectedPaymentOption === 'abapay_khqr'
-                        ? 'bg-sky-500 text-white shadow-md'
-                        : 'border border-slate-700 text-transparent'
+                        ? 'bg-gradient-to-tr from-sky-500 to-cyan-400 text-white shadow-md shadow-sky-500/50 ring-2 ring-sky-400/40'
+                        : 'border border-slate-700 bg-slate-900/60 text-transparent'
                     }`}>
                       ✓
                     </div>
                   </div>
-                  <div className="mt-2.5 pt-2 border-t border-slate-800/80 flex items-center justify-between text-[9.5px]">
-                    <span className="text-emerald-400 font-bold">⚡ Instant 10s Delivery</span>
-                    <span className="text-sky-300 font-mono font-semibold">0% Transaction Fee</span>
+
+                  <div className="mt-2.5">
+                    <span className="text-xs sm:text-[13px] font-black text-white block">ABA PAYWAY (ABA Mobile & KHQR)</span>
+                    <p className="text-[10.5px] text-slate-400 leading-snug mt-0.5 font-khmer">
+                      {language === 'km'
+                        ? 'ស្កេនជាមួយ ABA Mobile ឬកម្មវិធីធនាគារទាំងអស់តាមរយៈ Bakong KHQR'
+                        : 'Scan with ABA Mobile or any banking app via Bakong KHQR'}
+                    </p>
+                  </div>
+
+                  <div className="mt-3 pt-2.5 border-t border-slate-800/80 flex items-center justify-between text-[10px] font-khmer">
+                    <span className="text-emerald-400 font-bold flex items-center gap-1">
+                      <span>⚡</span> {language === 'km' ? 'ផ្ញើជូនភ្លាមៗ ១០វិនាទី' : 'Instant 10s Delivery'}
+                    </span>
+                    <span className="text-sky-300 font-mono font-semibold bg-sky-950/60 px-2 py-0.5 rounded-md border border-sky-800/40">
+                      {language === 'km' ? 'សេវា 0%' : '0% Surcharge'}
+                    </span>
                   </div>
                 </div>
 
                 {/* Option B: Credit / Debit Cards via ABA PayWay */}
                 <div
                   onClick={() => setSelectedPaymentOption('cards')}
-                  className={`relative p-3.5 rounded-2xl border transition-all cursor-pointer ${
+                  className={`relative p-3.5 sm:p-4 rounded-2xl border transition-all cursor-pointer select-none active:scale-[0.985] touch-manipulation ${
                     selectedPaymentOption === 'cards'
-                      ? 'bg-gradient-to-b from-[#002b52]/50 via-[#0B1528] to-[#0A101E] border-sky-400 shadow-lg shadow-sky-950/60 ring-1 ring-sky-400/40'
-                      : 'bg-[#0B0F19] border-slate-800 hover:border-slate-700 opacity-80'
+                      ? 'bg-gradient-to-b from-[#002f5a]/60 via-[#0b162c] to-[#070e1c] border-sky-400 shadow-xl shadow-sky-950/70 ring-1 ring-sky-400/40'
+                      : 'bg-[#090e1a]/90 border-slate-800/90 hover:border-slate-700 hover:bg-[#0d1424] opacity-90'
                   }`}
                 >
                   <div className="flex items-start justify-between gap-2">
-                    <div className="space-y-1.5">
-                      <div className="flex items-center gap-1 flex-wrap">
-                        <VisaLogo className="h-4 w-auto" />
-                        <MastercardLogo className="h-4 w-auto" />
-                        <UnionPayLogo className="h-4 w-auto" />
-                        <JcbLogo className="h-4 w-auto" />
-                      </div>
-                      <div>
-                        <span className="text-xs font-black text-white block">Credit / Debit Cards</span>
-                        <p className="text-[10px] text-slate-400 leading-tight">
-                          Visa, Mastercard, UnionPay & JCB via ABA PayWay 3D-Secure
-                        </p>
-                      </div>
+                    <div className="flex items-center gap-1.5 bg-[#030d1a] px-2 py-1 rounded-xl border border-sky-900/60 shadow-inner flex-wrap">
+                      <VisaLogo className="h-4 w-auto" />
+                      <MastercardLogo className="h-4 w-auto" />
+                      <UnionPayLogo className="h-4 w-auto" />
+                      <JcbLogo className="h-4 w-auto" />
                     </div>
+
                     {/* Radio Indicator */}
                     <div className={`w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-black shrink-0 transition-all ${
                       selectedPaymentOption === 'cards'
-                        ? 'bg-sky-500 text-white shadow-md'
-                        : 'border border-slate-700 text-transparent'
+                        ? 'bg-gradient-to-tr from-sky-500 to-cyan-400 text-white shadow-md shadow-sky-500/50 ring-2 ring-sky-400/40'
+                        : 'border border-slate-700 bg-slate-900/60 text-transparent'
                     }`}>
                       ✓
                     </div>
                   </div>
-                  <div className="mt-2.5 pt-2 border-t border-slate-800/80 flex items-center justify-between text-[9.5px]">
-                    <span className="text-sky-400 font-semibold">🔒 3D-Secure Protected</span>
+
+                  <div className="mt-2.5">
+                    <span className="text-xs sm:text-[13px] font-black text-white block font-khmer">
+                      {language === 'km' ? 'កាតឥណទាន / ឥណពន្ធ (Credit / Debit Cards)' : 'Credit / Debit Cards'}
+                    </span>
+                    <p className="text-[10.5px] text-slate-400 leading-snug mt-0.5 font-khmer">
+                      Visa, Mastercard, UnionPay & JCB via ABA PayWay 3D-Secure
+                    </p>
+                  </div>
+
+                  <div className="mt-3 pt-2.5 border-t border-slate-800/80 flex items-center justify-between text-[10px] font-khmer">
+                    <span className="text-sky-400 font-semibold flex items-center gap-1">
+                      <span>🔒</span> {language === 'km' ? 'ការពារសុវត្ថិភាព 3D-Secure' : '3D-Secure Protected'}
+                    </span>
                     <span className="text-slate-400 font-mono">ABA PayWay</span>
                   </div>
                 </div>
@@ -1670,85 +1695,115 @@ const TopUp = () => {
             </div>
 
             {/* Review & Pay Bar */}
-            <div ref={checkoutSectionRef} className="pt-4 border-t border-slate-800 space-y-4">
-              <div className="flex flex-col sm:flex-row items-center justify-between gap-3 p-4 rounded-2xl bg-[#111728] border border-slate-700">
-                <div>
-                  <span className="text-[10px] text-slate-400 uppercase font-bold block">Selected Item & Total</span>
-                  <span className="font-black text-amber-300 text-sm sm:text-base">
-                    {selectedProduct.name}
-                  </span>
+            <div ref={checkoutSectionRef} className="pt-4 border-t border-slate-800 space-y-4 font-khmer">
+              <div className="p-3.5 sm:p-4 rounded-2xl bg-gradient-to-br from-[#0b1220] via-[#0f172a] to-[#0b1220] border border-slate-700/80 shadow-xl space-y-3 sm:space-y-0 sm:flex sm:items-center sm:justify-between sm:gap-4">
+                {/* Product Summary */}
+                <div className="space-y-0.5">
+                  <div className="flex items-center gap-1.5">
+                    <span className="text-[10px] text-slate-400 uppercase font-black tracking-wider block font-khmer">
+                      {language === 'km' ? 'កញ្ចប់ដែលបានជ្រើសរើស & សរុប' : 'Selected Item & Total'}
+                    </span>
+                    {selectedProduct.tag && (
+                      <span className="px-2 py-0.2 rounded-full text-[9px] font-bold bg-amber-400/15 text-amber-300 border border-amber-400/30 font-khmer">
+                        {selectedProduct.tag}
+                      </span>
+                    )}
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <span className="text-base">💎</span>
+                    <span className="font-black text-amber-300 text-sm sm:text-base tracking-wide font-khmer">
+                      {selectedProduct.name}
+                    </span>
+                  </div>
                 </div>
                 
-                {/* Currency Switcher on Checkout Bar */}
-                <div className="flex items-center gap-3">
-                  <div className="flex items-center p-1 bg-slate-900 rounded-xl border border-slate-700">
+                {/* Currency Switcher & Price Display */}
+                <div className="flex items-center justify-between sm:justify-end gap-3 pt-2 sm:pt-0 border-t sm:border-t-0 border-slate-800">
+                  {/* Currency Switcher Pill */}
+                  <div className="flex items-center p-1 bg-slate-900/90 rounded-xl border border-slate-700/90 shadow-inner">
                     <button
                       type="button"
                       onClick={() => handleSwitchCurrency('USD')}
-                      className={`py-1 px-2.5 rounded-lg text-xs font-black transition-all cursor-pointer ${currency === 'USD' ? 'bg-amber-400 text-slate-950 shadow-sm' : 'text-slate-400 hover:text-white'}`}
+                      className={`py-1 px-2.5 rounded-lg text-xs font-black transition-all cursor-pointer ${
+                        currency === 'USD'
+                          ? 'bg-amber-400 text-slate-950 shadow-md font-black'
+                          : 'text-slate-400 hover:text-white'
+                      }`}
                     >
                       USD ($)
                     </button>
                     <button
                       type="button"
                       onClick={() => handleSwitchCurrency('KHR')}
-                      className={`py-1 px-2.5 rounded-lg text-xs font-black transition-all cursor-pointer ${currency === 'KHR' ? 'bg-emerald-400 text-slate-950 shadow-sm' : 'text-slate-400 hover:text-white'}`}
+                      className={`py-1 px-2.5 rounded-lg text-xs font-black transition-all cursor-pointer font-khmer ${
+                        currency === 'KHR'
+                          ? 'bg-emerald-400 text-slate-950 shadow-md font-black'
+                          : 'text-slate-400 hover:text-white'
+                      }`}
                     >
                       KHR (៛)
                     </button>
                   </div>
 
+                  {/* Price Block */}
                   <div className="text-right">
-                    <span className="font-mono font-black text-emerald-400 text-xl block">
+                    <span className="font-mono font-black text-emerald-400 text-xl sm:text-2xl block leading-tight drop-shadow-sm">
                       {currency === 'KHR'
-                        ? `${Math.round(selectedProduct.price * 4100).toLocaleString()} ៛`
+                        ? <span>{Math.round(selectedProduct.price * 4100).toLocaleString()} <span className="font-khmer font-bold">៛</span></span>
                         : `$${selectedProduct.price.toFixed(2)} USD`}
                     </span>
-                    <span className="text-[10px] text-slate-400 font-mono">
+                    <span className="text-[10px] text-slate-400 font-mono block">
                       {currency === 'KHR'
                         ? `~$${selectedProduct.price.toFixed(2)} USD`
-                        : `~${Math.round(selectedProduct.price * 4100).toLocaleString()} ៛`}
+                        : <span>~{Math.round(selectedProduct.price * 4100).toLocaleString()} <span className="font-khmer">៛</span></span>}
                     </span>
                   </div>
                 </div>
               </div>
 
               {error && (
-                <div className="p-3 bg-rose-950/60 border border-rose-500/40 rounded-xl text-rose-300 text-xs font-bold">
-                  ⚠️ {error}
+                <div className="p-3 bg-rose-950/60 border border-rose-500/40 rounded-xl text-rose-300 text-xs font-bold flex items-center gap-2 animate-pulse font-khmer">
+                  <span>⚠️</span>
+                  <span>{error}</span>
                 </div>
               )}
 
-              {/* Pay Button (ABA PayWay Branded CTA strictly matching Figma v2.11) */}
+              {/* Pay Button (ABA PayWay Branded CTA) */}
               {!paymentData && !paymentPaid && (
                 <div className="space-y-2.5">
                   <button
                     onClick={handleProceedToPayment}
                     disabled={loading || isTopupDisabled}
-                    className={`w-full py-4 rounded-2xl font-black text-base uppercase tracking-wider flex items-center justify-center gap-2.5 transition-all cursor-pointer ${
+                    className={`w-full py-4 px-5 rounded-2xl font-black text-sm sm:text-base uppercase tracking-wider flex items-center justify-center gap-2.5 transition-all cursor-pointer shadow-xl active:scale-[0.985] touch-manipulation ${
                       isTopupDisabled
                         ? 'bg-slate-800 text-slate-400 border border-slate-700 cursor-not-allowed opacity-80'
-                        : 'bg-gradient-to-r from-[#0055a5] via-[#00488d] to-[#003870] hover:from-[#0066cc] hover:to-[#004d99] text-white shadow-xl shadow-sky-950/50 border border-sky-400/40 active:scale-[0.99]'
+                        : 'bg-gradient-to-r from-[#0055a5] via-[#0066cc] to-[#00488d] hover:from-[#0062be] hover:to-[#0052a3] text-white shadow-sky-950/60 border border-sky-400/40 hover:shadow-sky-500/20'
                     }`}
                   >
-                    <span>{isTopupDisabled ? '⚠️' : loading ? '⏳' : '💳'}</span>
-                    <span>
+                    <span className="text-lg">{isTopupDisabled ? '⚠️' : loading ? '⏳' : '💳'}</span>
+                    <span className="truncate font-khmer">
                       {isTopupDisabled
-                        ? (selectedGame?.status === 'Closed' || masterStatus?.status === 'Closed' ? 'Top-Up Temporarily Closed' : 'Top-Up Temporarily Paused')
+                        ? (selectedGame?.status === 'Closed' || masterStatus?.status === 'Closed' ? (language === 'km' ? 'ការបញ្ចូលពេជ្រត្រូវបានបិទបណ្តោះអាសន្ន' : 'Top-Up Temporarily Closed') : (language === 'km' ? 'ការបញ្ចូលពេជ្រត្រូវបានផ្អាកបណ្តោះអាសន្ន' : 'Top-Up Temporarily Paused'))
                         : loading
-                        ? 'Connecting ABA PayWay...'
-                        : `Pay ${currency === 'KHR' ? `${Math.round(selectedProduct.price * 4100).toLocaleString()} ៛` : `$${selectedProduct.price.toFixed(2)} USD`} with ABA PayWay`}
+                        ? (language === 'km' ? 'កំពុងភ្ជាប់ទៅកាន់ ABA PayWay...' : 'Connecting ABA PayWay...')
+                        : selectedPaymentOption === 'cards'
+                        ? (language === 'km'
+                            ? `ទូទាត់ ${currency === 'KHR' ? `${Math.round(selectedProduct.price * 4100).toLocaleString()} ៛` : `$${selectedProduct.price.toFixed(2)} USD`} ជាមួយ Card`
+                            : `Pay ${currency === 'KHR' ? `${Math.round(selectedProduct.price * 4100).toLocaleString()} ៛` : `$${selectedProduct.price.toFixed(2)} USD`} with Card`)
+                        : (language === 'km'
+                            ? `ទូទាត់ ${currency === 'KHR' ? `${Math.round(selectedProduct.price * 4100).toLocaleString()} ៛` : `$${selectedProduct.price.toFixed(2)} USD`} ជាមួយ ABA PayWay`
+                            : `Pay ${currency === 'KHR' ? `${Math.round(selectedProduct.price * 4100).toLocaleString()} ៛` : `$${selectedProduct.price.toFixed(2)} USD`} with ABA PayWay`)}
                     </span>
                   </button>
 
-                  <div className="flex flex-col sm:flex-row items-center justify-between gap-1.5 text-[10.5px] text-slate-400 px-1 pt-0.5">
+                  <div className="flex flex-col sm:flex-row items-center justify-between gap-1.5 text-[10.5px] text-slate-400 px-1 pt-0.5 text-center sm:text-left font-khmer">
                     <span className="flex items-center gap-1.5">
                       <span>🛡️</span>
-                      <span>Processed securely by <strong>Advanced Bank of Asia Ltd. (ABA Bank)</strong></span>
+                      <span>{language === 'km' ? 'ប្រព័ន្ធទូទាត់មានសុវត្ថិភាពខ្ពស់ដោយ ' : 'Processed securely by '}<strong>Advanced Bank of Asia Ltd. (ABA Bank)</strong></span>
                     </span>
                     <span>
-                      <Link to="/privacy" target="_blank" className="text-cyan-400 hover:underline">
-                        Terms & Privacy Policy
+                      <Link to="/privacy" target="_blank" className="text-cyan-400 hover:underline font-khmer">
+                        {language === 'km' ? 'លក្ខខណ្ឌ & ឯកជនភាព' : 'Terms & Privacy Policy'}
                       </Link>
                     </span>
                   </div>

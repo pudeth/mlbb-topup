@@ -218,10 +218,15 @@ const Navbar = () => {
             {/* Desktop Top Up CTA */}
             <Link
               to="/topup"
-              className="btn btn-gold text-xs sm:text-sm px-4 sm:px-6 py-2 sm:py-2.5 rounded-xl hidden sm:flex items-center gap-1.5 shadow-glow-gold hover:scale-105 transition-all font-black"
+              className="btn btn-gold text-xs sm:text-sm px-4 sm:px-5 py-2 sm:py-2.5 rounded-xl hidden sm:inline-flex items-center gap-2 group font-khmer cursor-pointer"
             >
-              <span>⚡</span>
-              <span>{t('nav_instant_btn')}</span>
+              <svg 
+                className="w-4 h-4 shrink-0 text-slate-950 fill-current drop-shadow-[0_1px_0_rgba(255,255,255,0.4)] transition-transform duration-200 group-hover:scale-125 group-hover:rotate-6" 
+                viewBox="0 0 24 24"
+              >
+                <path d="M13 2L3 14h8l-2 8 11-12h-8l2-8z" />
+              </svg>
+              <span className="font-black tracking-tight">{t('nav_instant_btn')}</span>
             </Link>
 
             {isAuthenticated() && (
@@ -427,9 +432,14 @@ const Navbar = () => {
             <Link
               to="/topup"
               onClick={() => setMobileMenuOpen(false)}
-              className="btn btn-gold w-full text-center font-black py-3.5 rounded-2xl shadow-glow-gold hover:scale-[1.02] active:scale-95 transition-all uppercase tracking-wider text-xs sm:text-sm flex items-center justify-center gap-2"
+              className="btn btn-gold w-full text-center font-black py-3.5 rounded-2xl transition-all uppercase tracking-wider text-xs sm:text-sm flex items-center justify-center gap-2 group font-khmer cursor-pointer"
             >
-              <span>⚡</span>
+              <svg 
+                className="w-4 h-4 shrink-0 text-slate-950 fill-current drop-shadow-[0_1px_0_rgba(255,255,255,0.4)] transition-transform duration-200 group-hover:scale-125 group-hover:rotate-6" 
+                viewBox="0 0 24 24"
+              >
+                <path d="M13 2L3 14h8l-2 8 11-12h-8l2-8z" />
+              </svg>
               <span>{t('nav_instant_btn')} ({t('nav_guest')})</span>
             </Link>
 
