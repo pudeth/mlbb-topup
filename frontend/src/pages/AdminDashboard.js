@@ -5473,18 +5473,18 @@ const PRICING_GAMES = [
                     key={s.step}
                     type="button"
                     onClick={() => setGameModalStep(s.step)}
-                    className={`flex-1 flex items-center justify-center gap-2 py-2 px-2 rounded-xl text-xs font-bold transition-all cursor-pointer ${
+                    className={`flex-1 flex items-center justify-center gap-2 py-2.5 px-3 rounded-xl text-xs font-bold transition-all cursor-pointer ${
                       isActive
-                        ? 'bg-amber-400 text-black font-black shadow-md scale-[1.02]'
+                        ? 'bg-gradient-to-r from-amber-300 via-amber-400 to-yellow-500 text-slate-950 font-black shadow-lg shadow-amber-500/25 ring-1 ring-amber-200/80 scale-[1.01]'
                         : isCompleted
-                        ? 'bg-slate-900 text-amber-300 border border-amber-500/30 hover:border-amber-400/50'
-                        : 'bg-transparent text-slate-400 hover:text-slate-200 hover:bg-slate-900/50'
+                        ? 'bg-slate-900/90 text-amber-300 border border-amber-500/40 hover:border-amber-400/60 hover:bg-slate-800/90'
+                        : 'bg-transparent text-slate-400 hover:text-slate-200 hover:bg-slate-900/60'
                     }`}
                   >
                     <span className="text-sm">{s.icon}</span>
                     <div className="text-left hidden sm:block">
-                      <div className="text-[9px] uppercase tracking-wider opacity-75">{s.label}</div>
-                      <div className="text-[11px] leading-none truncate">{s.name}</div>
+                      <div className="text-[9px] uppercase tracking-wider opacity-80">{s.label}</div>
+                      <div className="text-[11px] leading-none truncate font-black">{s.name}</div>
                     </div>
                     <div className="sm:hidden font-black text-[10px]">
                       {s.label}
@@ -6029,9 +6029,9 @@ const PRICING_GAMES = [
                       Configure title, publisher, category, delivery speed, and in-game currency
                     </p>
                   </div>
-                  <span className="text-[10px] text-emerald-300 font-bold bg-emerald-950/80 px-2.5 py-1 rounded-lg border border-emerald-500/40 self-start sm:self-auto flex items-center gap-1.5">
-                    <span className="w-1.5 h-1.5 rounded-full bg-emerald-400" />
-                    Final Step 3 of 3
+                  <span className="text-[10px] text-emerald-300 font-bold bg-emerald-950/90 px-3 py-1 rounded-full border border-emerald-500/50 self-start sm:self-auto flex items-center gap-1.5 whitespace-nowrap shrink-0 shadow-sm">
+                    <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
+                    Step 3 of 3
                   </span>
                 </div>
 
@@ -6175,20 +6175,23 @@ const PRICING_GAMES = [
                     </span>
                     <span>Previous: Server Badge</span>
                   </button>
-                  <div className="flex items-center gap-2.5">
+                  <div className="flex items-center gap-2">
                     <button
                       type="button"
                       onClick={() => setGameModalOpen(false)}
-                      className="px-4 py-2.5 rounded-xl font-bold text-xs text-slate-400 hover:text-slate-200 bg-slate-900/60 hover:bg-slate-800/80 border border-slate-800 hover:border-slate-700 transition-all cursor-pointer select-none"
+                      className="px-4 py-2.5 rounded-xl font-bold text-xs text-slate-400 hover:text-rose-300 bg-slate-900/80 hover:bg-rose-950/30 border border-slate-700/80 hover:border-rose-500/40 transition-all cursor-pointer select-none"
                     >
                       Cancel
                     </button>
                     <button
                       type="submit"
-                      className="group px-6 py-2.5 rounded-xl font-black text-xs uppercase tracking-wider text-slate-950 bg-gradient-to-r from-amber-300 via-amber-400 to-yellow-500 hover:from-amber-200 hover:to-amber-400 border border-amber-200/80 shadow-lg shadow-amber-500/25 hover:shadow-amber-500/40 hover:scale-[1.02] active:scale-[0.98] transition-all cursor-pointer flex items-center gap-2 whitespace-nowrap select-none"
+                      className="group px-6 py-2.5 rounded-xl font-black text-xs uppercase tracking-wider text-slate-950 bg-gradient-to-r from-amber-300 via-amber-400 to-yellow-500 hover:from-amber-200 hover:to-amber-400 border border-amber-200/90 shadow-lg shadow-amber-500/25 hover:shadow-amber-500/45 hover:scale-[1.02] active:scale-[0.98] transition-all cursor-pointer flex items-center gap-2 whitespace-nowrap select-none"
                     >
                       <span className="text-sm">💾</span>
                       <span>Save Game & Apply</span>
+                      <span className="w-5 h-5 rounded-lg bg-black/15 flex items-center justify-center text-xs transition-transform group-hover:scale-110">
+                        ✓
+                      </span>
                     </button>
                   </div>
                 </div>
