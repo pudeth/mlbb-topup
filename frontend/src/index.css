@@ -233,18 +233,68 @@ html {
   }
 }
 
-@keyframes bannerZoomOut {
+@keyframes banner-badge {
   0% {
-    transform: scale(1.12);
+    opacity: 0;
+    transform: translateY(-8px);
   }
   100% {
-    transform: scale(1.0);
+    opacity: 1;
+    transform: translateY(0);
   }
 }
 
-.animate-banner-zoom {
-  animation: bannerZoomOut 6s cubic-bezier(0.16, 1, 0.3, 1) forwards;
-  will-change: transform;
+@keyframes banner-zoom-out {
+  0% {
+    transform: scale(1.18);
+    opacity: 0;
+  }
+  25% {
+    opacity: 1;
+  }
+  100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+.animate-zoom-out {
+  animation: banner-zoom-out 1.2s cubic-bezier(0.16, 1, 0.3, 1) both;
+  will-change: transform, opacity;
+}
+
+@keyframes banner-text {
+  0% {
+    opacity: 0;
+    transform: translateY(14px) scale(0.98);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+@keyframes banner-btn {
+  0% {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-banner-badge {
+  animation: banner-badge 0.4s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+.animate-banner-text {
+  animation: banner-text 0.5s cubic-bezier(0.16, 1, 0.3, 1) 0.05s both;
+}
+
+.animate-banner-btn {
+  animation: banner-btn 0.5s cubic-bezier(0.16, 1, 0.3, 1) 0.1s both;
 }
 
 @keyframes marquee {
