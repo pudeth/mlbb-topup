@@ -5,7 +5,7 @@ import { adminAPI, bakongAPI } from '../services/api';
 import { getStoredGames, saveStoredGames, resetToDefaultGames, getMasterTopupStatus, saveMasterTopupStatus, fetchStoredGames, fetchMasterTopupStatus } from '../services/gamesConfig';
 import { useStoreBranding } from '../services/storeBranding';
 import { DEFAULT_EVENT_BANNERS, getAllStoredBanners, fetchStoredBanners, saveStoredBanners } from '../services/eventBanners';
-import { CambodiaFlagSvg, CambodiaFlagFrame, CambodiaCornerBadge, POPULAR_FLAGS, MORE_WORLD_FLAGS, ALL_FLAG_OPTIONS } from '../components/CambodiaFlagBadge';
+import { CambodiaFlagSvg, CambodiaFlagFrame, CambodiaCornerBadge, DynamicFlagMedallion, UniversalSphericalFlag, POPULAR_FLAGS, MORE_WORLD_FLAGS, ALL_FLAG_OPTIONS } from '../components/CambodiaFlagBadge';
 import ProductPackageImage from '../components/ProductPackageImage';
 import { uploadToCloudinary, readFileAsDataUrl, getCloudinaryConfig, saveCloudinaryConfig } from '../services/cloudinary';
 import { getStoredProviderSettings, fetchStoredProviderSettings, switchActiveProvider, saveStoredProviderSettings } from '../services/supplierGateway';
@@ -5817,14 +5817,14 @@ const PRICING_GAMES = [
                         return (
                           <div className="md:col-span-7 flex items-center gap-3 p-2.5 px-3 rounded-xl bg-gradient-to-r from-amber-500/20 via-slate-900/90 to-slate-900/90 border border-amber-400/80 min-w-0">
                             <div className="w-9 h-9 rounded-full overflow-hidden shrink-0 border-2 border-amber-400 flex items-center justify-center bg-slate-950 shadow-sm">
-                              {gameFormData.flagType === 'custom' && gameFormData.flagImage ? (
-                                <img src={gameFormData.flagImage} alt="Custom Flag" className="w-full h-full object-cover" />
-                              ) : gameFormData.flagType === 'global' ? (
-                                <span className="text-base">🌐</span>
-                              ) : gameFormData.flagType === 'none' ? (
+                              {gameFormData.flagType === 'none' ? (
                                 <span className="text-base">🚫</span>
                               ) : (
-                                <span className={`fi fi-${gameFormData.flagType || 'kh'} fis w-full h-full block bg-center bg-cover`} />
+                                <UniversalSphericalFlag
+                                  flagType={gameFormData.flagType || 'kh'}
+                                  flagImage={gameFormData.flagType === 'custom' ? gameFormData.flagImage : null}
+                                  className="w-full h-full"
+                                />
                               )}
                             </div>
 

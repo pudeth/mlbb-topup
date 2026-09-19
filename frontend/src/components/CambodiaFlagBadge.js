@@ -42,39 +42,121 @@ export const CambodiaFlagSvg = ({ className = "w-full h-full" }) => (
   <span className={`fi fi-kh ${className} inline-block bg-center bg-cover rounded-xs`} />
 );
 
+let flagUniqueCounter = 0;
+
 /**
- * 3D Spherical Cambodia Flag Orb Component
- * Fills 100% of the circle with genuine Cambodian royal blue and red stripes,
- * centered Angkor Wat, and soft clean highlight (zero shadow).
+ * Universal 3D Spherical Full-Frame Country Flag Orb
+ * Fills 100% edge-to-edge of the circular frame for ALL countries (Cambodia, Philippines, Myanmar, etc.)
+ * Pure vector rendering, zero shadow box, with clean crystal glass sheen highlight.
+ */
+export const UniversalSphericalFlag = ({
+  flagType = 'kh',
+  flagImage = null,
+  className = "w-full h-full"
+}) => {
+  const normType = (flagType || 'kh').toLowerCase();
+  const instanceId = React.useMemo(() => ++flagUniqueCounter, []);
+  const clipId = `sphereClip_${normType}_${instanceId}`;
+  const glintId = `sphereGlint_${normType}_${instanceId}`;
+
+  // 1. Custom uploaded flag image
+  if (flagImage) {
+    return (
+      <svg viewBox="0 0 100 100" className={className} xmlns="http://www.w3.org/2000/svg">
+        <defs>
+          <clipPath id={clipId}>
+            <circle cx="50" cy="50" r="50" />
+          </clipPath>
+          <radialGradient id={glintId} cx="35%" cy="25%" r="60%">
+            <stop offset="0%" stopColor="#FFFFFF" stopOpacity="0.38" />
+            <stop offset="25%" stopColor="#FFFFFF" stopOpacity="0.1" />
+            <stop offset="50%" stopColor="#FFFFFF" stopOpacity="0" />
+          </radialGradient>
+        </defs>
+        <g clipPath={`url(#${clipId})`}>
+          <image
+            href={flagImage}
+            x="0"
+            y="0"
+            width="100"
+            height="100"
+            preserveAspectRatio="xMidYMid slice"
+          />
+          <circle cx="50" cy="50" r="50" fill={`url(#${glintId})`} pointerEvents="none" />
+        </g>
+      </svg>
+    );
+  }
+
+  // 2. Global Esports server sphere
+  if (normType === 'global') {
+    return (
+      <svg viewBox="0 0 100 100" className={className} xmlns="http://www.w3.org/2000/svg">
+        <defs>
+          <clipPath id={clipId}>
+            <circle cx="50" cy="50" r="50" />
+          </clipPath>
+          <radialGradient id={glintId} cx="35%" cy="25%" r="60%">
+            <stop offset="0%" stopColor="#FFFFFF" stopOpacity="0.45" />
+            <stop offset="25%" stopColor="#FFFFFF" stopOpacity="0.12" />
+            <stop offset="50%" stopColor="#FFFFFF" stopOpacity="0" />
+          </radialGradient>
+          <linearGradient id={`globalBg_${instanceId}`} x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" stopColor="#0284c7" />
+            <stop offset="50%" stopColor="#2563eb" />
+            <stop offset="100%" stopColor="#4338ca" />
+          </linearGradient>
+        </defs>
+        <g clipPath={`url(#${clipId})`}>
+          <rect width="100" height="100" fill={`url(#globalBg_${instanceId})`} />
+          <circle cx="50" cy="50" r="36" fill="none" stroke="#FFFFFF" strokeWidth="3.2" opacity="0.85" />
+          <line x1="14" y1="50" x2="86" y2="50" stroke="#FFFFFF" strokeWidth="3.2" opacity="0.85" />
+          <ellipse cx="50" cy="50" rx="18" ry="36" fill="none" stroke="#FFFFFF" strokeWidth="3.2" opacity="0.85" />
+          <circle cx="50" cy="50" r="50" fill={`url(#${glintId})`} pointerEvents="none" />
+        </g>
+      </svg>
+    );
+  }
+
+  // 3. Official Country Flag SVG (KH, PH, MM, ID, MY, SG, TH, VN, etc.)
+  const flagSrc = normType === 'kh' ? '/kh.svg' : `/flags/4x3/${normType}.svg`;
+
+  return (
+    <svg viewBox="0 0 100 100" className={className} xmlns="http://www.w3.org/2000/svg">
+      <defs>
+        <clipPath id={clipId}>
+          <circle cx="50" cy="50" r="50" />
+        </clipPath>
+        {/* Soft Clean Glass Highlight - zero dark shadows */}
+        <radialGradient id={glintId} cx="35%" cy="25%" r="60%">
+          <stop offset="0%" stopColor="#FFFFFF" stopOpacity="0.4" />
+          <stop offset="25%" stopColor="#FFFFFF" stopOpacity="0.1" />
+          <stop offset="50%" stopColor="#FFFFFF" stopOpacity="0" />
+        </radialGradient>
+      </defs>
+
+      <g clipPath={`url(#${clipId})`}>
+        {/* Full-Frame Flag SVG - 100% edge-to-edge spherical filling */}
+        <image
+          href={flagSrc}
+          x="0"
+          y="0"
+          width="100"
+          height="100"
+          preserveAspectRatio="xMidYMid slice"
+        />
+        {/* Light Clean Shine Overlay Only */}
+        <circle cx="50" cy="50" r="50" fill={`url(#${glintId})`} pointerEvents="none" />
+      </g>
+    </svg>
+  );
+};
+
+/**
+ * 3D Spherical Cambodia Flag Orb Component (Kept for backwards compatibility)
  */
 export const CambodiaSphericalFlag = ({ className = "w-full h-full" }) => (
-  <svg viewBox="0 0 100 100" className={className} xmlns="http://www.w3.org/2000/svg">
-    <defs>
-      <clipPath id="cambodiaSphereClip">
-        <circle cx="50" cy="50" r="50" />
-      </clipPath>
-      {/* Soft Clean Glass Highlight - zero dark shadows */}
-      <radialGradient id="sphereGlint" cx="35%" cy="25%" r="60%">
-        <stop offset="0%" stopColor="#FFFFFF" stopOpacity="0.4" />
-        <stop offset="25%" stopColor="#FFFFFF" stopOpacity="0.1" />
-        <stop offset="50%" stopColor="#FFFFFF" stopOpacity="0" />
-      </radialGradient>
-    </defs>
-
-    <g clipPath="url(#cambodiaSphereClip)">
-      {/* Full-Frame Cambodia Flag - Pure, clean, bright colors with no shadow */}
-      <image
-        href="/kh.svg"
-        x="0"
-        y="0"
-        width="100"
-        height="100"
-        preserveAspectRatio="xMidYMid slice"
-      />
-      {/* Light Clean Shine Overlay Only */}
-      <circle cx="50" cy="50" r="50" fill="url(#sphereGlint)" pointerEvents="none" />
-    </g>
-  </svg>
+  <UniversalSphericalFlag flagType="kh" className={className} />
 );
 
 /**
@@ -82,32 +164,7 @@ export const CambodiaSphericalFlag = ({ className = "w-full h-full" }) => (
  * Renders any chosen country flag, custom image, or global esports icon inside the badge frame medallion
  */
 export const DynamicFlagMedallion = ({ flagType = 'kh', flagImage = null, className = "w-full h-full" }) => {
-  if (flagImage) {
-    return <img src={flagImage} alt="Custom Flag" className={`${className} object-cover`} />;
-  }
-
-  if (!flagType || flagType === 'kh') {
-    return <CambodiaSphericalFlag className={className} />;
-  }
-
-  if (flagType === 'global') {
-    return (
-      <div className={`w-full h-full rounded-full bg-gradient-to-tr from-sky-600 via-blue-600 to-indigo-600 flex items-center justify-center text-white ${className}`}>
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" className="w-3/5 h-3/5">
-          <circle cx="12" cy="12" r="10"></circle>
-          <line x1="2" y1="12" x2="22" y2="12"></line>
-          <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"></path>
-        </svg>
-      </div>
-    );
-  }
-
-  // Any international country supported by flag-icons
-  return (
-    <div className={`w-full h-full rounded-full overflow-hidden flex items-center justify-center bg-slate-900 ${className}`}>
-      <span className={`fi fi-${flagType} fis w-full h-full block bg-center bg-cover`} />
-    </div>
-  );
+  return <UniversalSphericalFlag flagType={flagType} flagImage={flagImage} className={className} />;
 };
 
 /**
