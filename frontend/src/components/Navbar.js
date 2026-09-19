@@ -100,102 +100,125 @@ const Navbar = () => {
             </Link>
           </div>
 
-          {/* Desktop Navigation Links */}
-          <nav className="hidden lg:flex items-center gap-1.5 bg-[#0e1424]/90 backdrop-blur-md p-1.5 rounded-2xl border border-slate-800/90 shadow-inner font-khmer">
-            <Link
-              to="/"
-              className={`px-3.5 py-2 rounded-xl text-xs sm:text-sm font-semibold transition-all flex items-center gap-1.5 ${
-                isActive('/') 
-                  ? 'bg-gradient-to-r from-cyan-500/20 to-blue-500/20 text-cyan-300 border border-cyan-400/40 shadow-[0_0_15px_rgba(6,182,212,0.2)] font-bold' 
-                  : 'text-slate-300 hover:text-white hover:bg-slate-800/60'
-              }`}
-            >
-              <span>🏠</span>
-              <span>{t('nav_home')}</span>
-            </Link>
-            <Link
-              to="/topup"
-              className={`px-3.5 py-2 rounded-xl text-xs sm:text-sm font-semibold transition-all flex items-center gap-1.5 ${
-                isActive('/topup') 
-                  ? 'bg-gradient-to-r from-amber-500/20 to-yellow-500/20 text-amber-300 border border-amber-400/40 shadow-[0_0_15px_rgba(245,158,11,0.2)] font-bold' 
-                  : 'text-slate-300 hover:text-white hover:bg-slate-800/60'
-              }`}
-            >
-              <span>💎</span>
-              <span>{t('nav_topup')}</span>
-            </Link>
-            <Link
-              to="/support"
-              className={`px-3.5 py-2 rounded-xl text-xs sm:text-sm font-semibold transition-all flex items-center gap-1.5 ${
-                isActive('/support') 
-                  ? 'bg-gradient-to-r from-purple-500/20 to-pink-500/20 text-purple-300 border border-purple-400/40 shadow-[0_0_15px_rgba(168,85,247,0.2)] font-bold' 
-                  : 'text-slate-300 hover:text-white hover:bg-slate-800/60'
-              }`}
-            >
-              <span>🎧</span>
-              <span>{t('nav_support')}</span>
-            </Link>
-            <Link
-              to="/privacy"
-              className={`px-3.5 py-2 rounded-xl text-xs sm:text-sm font-semibold transition-all flex items-center gap-1.5 ${
-                isActive('/privacy') || isActive('/terms')
-                  ? 'bg-gradient-to-r from-emerald-500/20 to-teal-500/20 text-emerald-300 border border-emerald-400/40 shadow-[0_0_15px_rgba(16,185,129,0.2)] font-bold' 
-                  : 'text-slate-300 hover:text-white hover:bg-slate-800/60'
-              }`}
-            >
-              <span>📜</span>
-              <span>{t('nav_privacy')}</span>
-            </Link>
-            {isAdmin() && (
+          {/* Desktop Navigation Links - Ultra Sleek Design */}
+            <nav className="hidden lg:flex items-center gap-1 bg-[#0b0f19]/80 backdrop-blur-xl p-1.5 rounded-full border border-slate-800/60 shadow-[0_4px_30px_rgba(0,0,0,0.3)] font-khmer">
               <Link
-                to="/admin"
-                className={`px-3.5 py-2 rounded-xl text-xs sm:text-sm font-semibold transition-all flex items-center gap-1.5 ${
-                  isActive('/admin') 
-                    ? 'bg-red-500/20 text-red-400 border border-red-500/40 font-bold' 
-                    : 'text-slate-300 hover:text-white hover:bg-slate-800/60'
+                to="/"
+                className={`px-4 py-1.5 rounded-full text-xs font-bold transition-all duration-300 flex items-center gap-2 ${
+                  isActive('/') 
+                    ? 'bg-[#182035] text-cyan-400 border border-cyan-500/20 shadow-sm' 
+                    : 'text-slate-400 hover:text-white hover:bg-slate-800/40'
                 }`}
               >
-                <span>⚙️</span>
-                <span>{t('nav_admin')}</span>
+                <span>{t('nav_home')}</span>
               </Link>
-            )}
-          </nav>
+              <Link
+                to="/topup"
+                className={`px-4 py-1.5 rounded-full text-xs font-bold transition-all duration-300 flex items-center gap-2 ${
+                  isActive('/topup') 
+                    ? 'bg-[#21182c] text-amber-400 border border-amber-500/20 shadow-sm' 
+                    : 'text-slate-400 hover:text-white hover:bg-slate-800/40'
+                }`}
+              >
+                <span>{t('nav_topup')}</span>
+              </Link>
+              <Link
+                to="/support"
+                className={`px-4 py-1.5 rounded-full text-xs font-bold transition-all duration-300 flex items-center gap-2 ${
+                  isActive('/support') 
+                    ? 'bg-slate-800/80 text-white shadow-sm border border-slate-600/50' 
+                    : 'text-slate-400 hover:text-white hover:bg-slate-800/40'
+                }`}
+              >
+                <span>{t('nav_support')}</span>
+              </Link>
+              <Link
+                to="/terms"
+                className={`px-4 py-1.5 rounded-full text-xs font-bold transition-all duration-300 flex items-center gap-2 ${
+                  isActive('/terms') 
+                    ? 'bg-slate-800/80 text-white shadow-sm border border-slate-600/50' 
+                    : 'text-slate-400 hover:text-white hover:bg-slate-800/40'
+                }`}
+              >
+                <span>{t('nav_policy')}</span>
+              </Link>
+              
+              {isAdmin() && (
+                <>
+                  <div className="w-px h-4 bg-slate-700/50 mx-1"></div>
+                  <Link
+                    to="/admin/setup"
+                    className={`px-4 py-1.5 rounded-full text-xs font-bold transition-all duration-300 flex items-center gap-2 ${
+                      isActive('/admin/setup') 
+                        ? 'bg-purple-900/40 text-purple-300 border border-purple-500/30 shadow-sm' 
+                        : 'text-slate-400 hover:text-purple-300 hover:bg-slate-800/40'
+                    }`}
+                  >
+                    <span>ðŸ”§ {t('nav_admin')}</span>
+                  </Link>
+                  <Link
+                    to="/admin/orders"
+                    className={`px-4 py-1.5 rounded-full text-xs font-bold transition-all duration-300 flex items-center gap-2 ${
+                      isActive('/admin/orders') 
+                        ? 'bg-purple-900/40 text-purple-300 border border-purple-500/30 shadow-sm' 
+                        : 'text-slate-400 hover:text-purple-300 hover:bg-slate-800/40'
+                    }`}
+                  >
+                    <span>ðŸ“Š {t('nav_orders')}</span>
+                  </Link>
+                </>
+              )}
+            </nav>
 
-          {/* Right Action: Admin Quick Button + AI Language Switcher + CTA */}
-          <div className="flex items-center gap-2 sm:gap-2.5">
-            
-            {/* Admin Button - Uniform height & sleek horizontal layout */}
-            <Link
-              to="/admin"
-              className={`h-10 px-3 sm:px-3.5 rounded-xl border transition-all flex items-center gap-1.5 select-none active:scale-95 text-xs sm:text-sm font-bold font-khmer shadow-sm ${
-                isActive('/admin')
-                  ? 'bg-gradient-to-r from-red-500/20 to-rose-500/20 text-red-300 border-red-500/50 shadow-[0_0_15px_rgba(239,68,68,0.25)]'
-                  : 'bg-slate-900/90 hover:bg-slate-800 border-slate-700/80 text-slate-200 hover:text-white hover:border-slate-600'
-              }`}
-              title={t('nav_admin')}
-            >
-              <span className="text-sm">⚙️</span>
-              <span className="leading-none">{t('nav_admin')}</span>
-            </Link>
+          {/* Right Action: Language Switcher + CTA + Logout */}
+          <div className="flex items-center gap-2 sm:gap-3">
+
+            {/* Admin Links (Desktop only) - shown only to admin */}
+            {isAdmin() && (
+              <div className="hidden lg:flex items-center gap-1.5">
+                <Link
+                  to="/admin/setup"
+                  className={`h-9 px-3.5 rounded-full text-[12px] font-bold border transition-all flex items-center gap-1.5 font-khmer ${
+                    isActive('/admin/setup')
+                      ? 'bg-purple-950/50 text-purple-400 border-purple-500/40 shadow-sm'
+                      : 'bg-slate-900/80 text-slate-400 border-slate-800 hover:text-purple-300 hover:border-purple-700/50'
+                  }`}
+                >
+                  <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" /><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" /></svg>
+                  <span>{t('nav_admin')}</span>
+                </Link>
+                <Link
+                  to="/admin/orders"
+                  className={`h-9 px-3.5 rounded-full text-[12px] font-bold border transition-all flex items-center gap-1.5 font-khmer ${
+                    isActive('/admin/orders')
+                      ? 'bg-purple-950/50 text-purple-400 border-purple-500/40 shadow-sm'
+                      : 'bg-slate-900/80 text-slate-400 border-slate-800 hover:text-purple-300 hover:border-purple-700/50'
+                  }`}
+                >
+                  <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" /></svg>
+                  <span>{t('nav_orders')}</span>
+                </Link>
+              </div>
+            )}
 
             {/* Language Selector Dropdown */}
             <div className="relative">
               <button
                 type="button"
                 onClick={() => setLangDropdownOpen(!langDropdownOpen)}
-                className="h-10 px-3 sm:px-3.5 rounded-xl bg-slate-900/90 hover:bg-slate-800 border border-slate-700/80 hover:border-cyan-500/40 text-slate-200 text-xs sm:text-sm font-bold flex items-center gap-1.5 transition-all shadow-sm active:scale-95 font-khmer"
+                className="h-9 px-3 rounded-full bg-slate-900/80 hover:bg-slate-800/80 border border-slate-800 hover:border-slate-700 text-slate-300 text-[12px] font-bold flex items-center gap-1.5 transition-all"
               >
                 <span className="text-base">{currentLang.flag}</span>
                 <span className="hidden sm:inline font-bold">{currentLang.short}</span>
-                <svg className={`w-3 h-3 text-cyan-400 transition-transform ${langDropdownOpen ? 'rotate-180' : ''}`} viewBox="0 0 20 20" fill="currentColor">
+                <svg className={`w-3 h-3 text-slate-500 transition-transform ${langDropdownOpen ? 'rotate-180' : ''}`} viewBox="0 0 20 20" fill="currentColor">
                   <path fillRule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clipRule="evenodd" />
                 </svg>
               </button>
 
               {langDropdownOpen && (
-                <div className="absolute right-0 mt-2 w-44 bg-slate-950/95 backdrop-blur-xl border border-cyan-500/30 rounded-2xl p-1.5 shadow-2xl z-50 animate-fadeIn font-khmer">
-                  <div className="px-3 py-1.5 text-[10px] font-extrabold text-cyan-400 uppercase tracking-wider border-b border-slate-800/80 mb-1 flex items-center gap-1">
-                    <span>🌐</span> AI Translate
+                <div className="absolute right-0 mt-2 w-44 bg-slate-950/95 backdrop-blur-xl border border-slate-700/80 rounded-2xl p-1.5 shadow-2xl z-50 animate-fadeIn font-khmer">
+                  <div className="px-3 py-1.5 text-[10px] font-extrabold text-slate-400 uppercase tracking-wider border-b border-slate-800/80 mb-1 flex items-center gap-1">
+                    <span>🌐</span> Language
                   </div>
                   {languages.map((l) => (
                     <button
@@ -207,7 +230,7 @@ const Navbar = () => {
                       }}
                       className={`w-full text-left px-3 py-2 rounded-xl text-xs font-bold flex items-center justify-between transition-colors ${
                         language === l.code
-                          ? 'bg-gradient-to-r from-cyan-500/20 to-blue-500/20 text-cyan-300 border border-cyan-500/40'
+                          ? 'bg-cyan-950/30 text-cyan-400'
                           : 'text-slate-300 hover:bg-slate-900 hover:text-white'
                       }`}
                     >
@@ -222,26 +245,30 @@ const Navbar = () => {
               )}
             </div>
 
-            {/* Desktop Top Up CTA */}
+            {/* Desktop Top Up CTA - Golden Pill */}
             <Link
               to="/topup"
-              className="btn btn-gold h-10 text-xs sm:text-sm px-4 sm:px-5 rounded-xl hidden sm:inline-flex items-center gap-2 group font-khmer cursor-pointer shadow-md"
+              className="hidden sm:flex items-center gap-2 h-9 px-5 bg-gradient-to-r from-amber-500 to-yellow-400 hover:from-amber-400 hover:to-yellow-300 text-slate-950 text-[13px] font-black tracking-wide rounded-full shadow-[0_0_15px_rgba(251,191,36,0.2)] hover:shadow-[0_0_22px_rgba(251,191,36,0.35)] transition-all duration-300 hover:scale-[1.03] group font-khmer cursor-pointer"
             >
               <svg 
-                className="w-4 h-4 shrink-0 text-slate-950 fill-current drop-shadow-[0_1px_0_rgba(255,255,255,0.4)] transition-transform duration-200 group-hover:scale-125 group-hover:rotate-6" 
+                className="w-4 h-4 fill-current transition-transform duration-300 group-hover:rotate-12" 
                 viewBox="0 0 24 24"
               >
                 <path d="M13 2L3 14h8l-2 8 11-12h-8l2-8z" />
               </svg>
-              <span className="font-black tracking-tight">{t('nav_instant_btn')}</span>
+              <span>{t('nav_instant_btn')}</span>
             </Link>
 
+            {/* Logout Button - Pill */}
             {isAuthenticated() && (
               <button
                 onClick={logout}
-                className="h-10 px-3 rounded-xl bg-slate-900 hover:bg-slate-800 border border-slate-700/80 text-slate-300 text-xs font-bold hidden lg:block transition-all"
+                className="hidden lg:flex items-center gap-2 h-9 px-3.5 bg-slate-900/80 hover:bg-red-950/40 border border-slate-800 hover:border-red-500/30 text-slate-400 hover:text-red-400 text-[12px] font-bold rounded-full transition-all duration-300"
               >
-                Logout ({user?.name})
+                <svg className="w-3.5 h-3.5 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+                </svg>
+                <span>Logout</span>
               </button>
             )}
           </div>
