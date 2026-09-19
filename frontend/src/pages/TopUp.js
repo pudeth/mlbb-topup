@@ -1111,8 +1111,8 @@ const TopUp = () => {
         {/* ========================================== */}
         <div className="lg:col-span-4 space-y-4">
           {/* Game Artwork Card with Back, Favorite button & Cambodia Flag Frame */}
-          <div className="bg-slate-900/40 border border-slate-800/80 rounded-[24px] p-4 sm:p-5 shadow-2xl backdrop-blur-md space-y-5">
-            <div className="relative aspect-square w-full rounded-[20px] overflow-hidden bg-slate-950 border border-slate-700/60 shadow-[0_12px_36px_rgba(0,0,0,0.85),0_0_24px_rgba(6,182,212,0.14)] ring-1 ring-white/10 group">
+          <div className="bg-slate-900/40 border border-slate-800/80 rounded-[24px] p-4 sm:p-5 backdrop-blur-md space-y-5">
+            <div className="relative aspect-square w-full rounded-[20px] overflow-hidden bg-slate-950 border border-slate-700/60 ring-1 ring-white/10 group">
               <img
                 src={selectedGame.image}
                 alt={selectedGame.name}
@@ -1122,14 +1122,11 @@ const TopUp = () => {
                 }}
                 className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
               />
-              
-              {/* Top Contrast Vignette */}
-              <div className="absolute inset-x-0 top-0 h-20 bg-gradient-to-b from-black/80 via-black/35 to-transparent pointer-events-none z-10" />
 
-              {/* Back Button (‹) - High Contrast Glassmorphic Pill */}
+              {/* Back Button (‹) - High Contrast Clean Glassmorphic Pill */}
               <button
                 onClick={() => navigate('/')}
-                className="absolute top-3 left-3 w-8 h-8 sm:w-9 sm:h-9 rounded-full bg-slate-950/85 hover:bg-slate-900 backdrop-blur-xl text-white hover:text-cyan-300 flex items-center justify-center text-lg font-black border border-white/20 hover:border-cyan-400/80 shadow-[0_4px_12px_rgba(0,0,0,0.8)] cursor-pointer transition-all duration-300 hover:scale-110 active:scale-95 z-30"
+                className="absolute top-3 left-3 w-8 h-8 sm:w-9 sm:h-9 rounded-full bg-slate-950/85 hover:bg-slate-900 backdrop-blur-xl text-white hover:text-cyan-300 flex items-center justify-center text-lg font-black border border-white/20 hover:border-cyan-400/80 cursor-pointer transition-all duration-300 hover:scale-110 active:scale-95 z-30"
                 title="Back to Home"
               >
                 ‹
@@ -1143,12 +1140,8 @@ const TopUp = () => {
                   sub={selectedGame.flagServerText || "SERVER"}
                   flagImage={selectedGame.flagImage || null}
                   isFullBadgePng={selectedGame.isFullBadgePng || false}
-                  className="shadow-2xl"
                 />
               </div>
-
-              {/* Bottom Ambient Glow Gradient */}
-              <div className="absolute inset-x-0 bottom-0 h-16 bg-gradient-to-t from-[#0B0F19] via-[#0B0F19]/70 to-transparent pointer-events-none z-10" />
             </div>
 
             {/* Game Title & Cambodia Server Badge */}

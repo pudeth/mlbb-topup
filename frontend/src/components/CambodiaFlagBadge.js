@@ -57,7 +57,7 @@ export const CambodiaFlagFrame = ({
   // If user explicitly requests full badge PNG or provides a custom image
   if (isFullBadgePng && flagImage) {
     return (
-      <div className={`relative inline-block overflow-hidden filter drop-shadow-[0_8px_20px_rgba(0,0,0,0.65)] ${className}`}>
+      <div className={`relative inline-block overflow-hidden ${className}`}>
         <img src={flagImage} alt={title || "Server Badge"} className="h-10 sm:h-12 md:h-14 w-auto object-contain" />
       </div>
     );
@@ -65,7 +65,7 @@ export const CambodiaFlagFrame = ({
 
   return (
     <div
-      className={`relative inline-block select-none filter drop-shadow-[0_6px_20px_rgba(0,0,0,0.85)] transition-transform duration-300 hover:scale-[1.03] ${className}`}
+      className={`relative inline-block select-none transition-transform duration-300 hover:scale-[1.03] ${className}`}
       style={{
         width: 'clamp(155px, 22vw, 230px)',
         aspectRatio: '1024 / 397'
