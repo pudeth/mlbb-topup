@@ -411,13 +411,8 @@ const AiAssistant = () => {
           <img
             src="/ai-bot-icon.png"
             alt="AI Assistant"
-            className="w-full h-full object-contain drop-shadow-[0_0_14px_rgba(56,189,248,0.5)] group-hover:drop-shadow-[0_0_24px_rgba(56,189,248,0.9)] transition-all duration-300"
+            className="w-full h-full object-contain transition-all duration-300"
           />
-          {/* Pulsing Live Dot */}
-          <span className="absolute top-1 right-1 flex h-3.5 w-3.5">
-            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
-            <span className="relative inline-flex rounded-full h-3.5 w-3.5 bg-gradient-to-r from-emerald-400 to-cyan-400 border-2 border-slate-950 shadow-sm"></span>
-          </span>
         </div>
       </button>
 
