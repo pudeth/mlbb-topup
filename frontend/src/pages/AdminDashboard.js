@@ -5632,15 +5632,15 @@ const PRICING_GAMES = [
                   </div>
 
                   {/* Clean Container: Shows ONLY Current One + Dropdown List */}
-                  <div className="p-3.5 bg-slate-950/90 rounded-2xl border border-amber-500/50 space-y-3">
-                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                  <div className="p-3.5 bg-slate-950/90 rounded-2xl border border-amber-500/50 space-y-3 overflow-hidden">
+                    <div className="grid grid-cols-1 md:grid-cols-12 gap-3 items-center">
                       
                       {/* Current Selected Flag Showcase (Only Current One Shown) */}
                       {(() => {
                         const currentFlag = ALL_FLAG_OPTIONS.find(f => f.id === (gameFormData.flagType || 'kh')) || POPULAR_FLAGS[0];
                         return (
-                          <div className="flex items-center gap-3 p-2.5 px-3.5 rounded-xl bg-gradient-to-r from-amber-500/20 via-slate-900/90 to-slate-900/90 border border-amber-400/80 flex-1">
-                            <div className="w-10 h-10 rounded-full overflow-hidden shrink-0 border-2 border-amber-400 flex items-center justify-center bg-slate-950 shadow-sm">
+                          <div className="md:col-span-7 flex items-center gap-3 p-2.5 px-3 rounded-xl bg-gradient-to-r from-amber-500/20 via-slate-900/90 to-slate-900/90 border border-amber-400/80 min-w-0">
+                            <div className="w-9 h-9 rounded-full overflow-hidden shrink-0 border-2 border-amber-400 flex items-center justify-center bg-slate-950 shadow-sm">
                               {gameFormData.flagType === 'custom' && gameFormData.flagImage ? (
                                 <img src={gameFormData.flagImage} alt="Custom Flag" className="w-full h-full object-cover" />
                               ) : gameFormData.flagType === 'global' ? (
@@ -5653,16 +5653,16 @@ const PRICING_GAMES = [
                             </div>
 
                             <div className="flex-1 min-w-0">
-                              <div className="flex items-center gap-2">
+                              <div className="flex items-center gap-1.5 flex-wrap">
                                 <span className="font-black text-xs sm:text-sm text-white truncate">
                                   {currentFlag?.name || 'Cambodia'}
                                 </span>
-                                <span className="px-2 py-0.5 rounded bg-amber-400 text-black text-[9px] font-black uppercase shrink-0">
-                                  Current Active
+                                <span className="px-1.5 py-0.2 rounded bg-amber-400 text-black text-[8.5px] font-black uppercase shrink-0">
+                                  Active
                                 </span>
                               </div>
-                              <div className="text-[11px] text-amber-300 font-khmer truncate mt-0.5">
-                                {currentFlag?.local ? `${currentFlag.local} • ` : ''}Default Title: "{currentFlag?.t1 || 'សេវើខ្មែរ 5v5'}"
+                              <div className="text-[10px] text-amber-300 font-khmer truncate mt-0.5">
+                                {currentFlag?.local ? `${currentFlag.local} • ` : ''}Title: "{currentFlag?.t1 || 'សេវើខ្មែរ 5v5'}"
                               </div>
                             </div>
                           </div>
@@ -5670,8 +5670,8 @@ const PRICING_GAMES = [
                       })()}
 
                       {/* Drop-down List to Change Selection */}
-                      <div className="sm:w-64 shrink-0">
-                        <label className="block text-[10px] text-slate-400 font-semibold mb-1">
+                      <div className="md:col-span-5 min-w-0">
+                        <label className="block text-[10px] text-slate-400 font-semibold mb-1 truncate">
                           Change by Drop-down List:
                         </label>
                         <select
@@ -5687,7 +5687,7 @@ const PRICING_GAMES = [
                               flagServerText: found?.t3 || prev.flagServerText,
                             }));
                           }}
-                          className="w-full bg-slate-900 hover:bg-slate-800 text-amber-300 font-bold border-2 border-amber-400/80 rounded-xl px-3 py-2.5 text-xs focus:outline-none focus:ring-2 focus:ring-amber-400 cursor-pointer transition-colors shadow-sm"
+                          className="w-full max-w-full bg-slate-900 hover:bg-slate-800 text-amber-300 font-bold border-2 border-amber-400/80 rounded-xl px-2.5 py-2 text-xs focus:outline-none focus:ring-2 focus:ring-amber-400 cursor-pointer transition-colors shadow-sm truncate"
                         >
                           <optgroup label="⚡ Popular Regional Servers">
                             {POPULAR_FLAGS.map((f) => (
