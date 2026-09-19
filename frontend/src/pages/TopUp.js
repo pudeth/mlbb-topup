@@ -1340,8 +1340,8 @@ const TopUp = () => {
                     }`}
                     title="Tiles View"
                   >
-                    <span>âŠž</span>
-                    <span className="text-[11px] font-semibold">{t('layout_tiles')}</span>
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/></svg>
+                      <span className="text-[11px] font-semibold">{t('layout_tiles')}</span>
                   </button>
   
                   <button
@@ -1354,8 +1354,8 @@ const TopUp = () => {
                     }`}
                     title="Large Icons View"
                   >
-                    <span>ðŸ”²</span>
-                    <span className="text-[11px] font-semibold">{t('layout_large_icons')}</span>
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><path d="M3 9h18"/><path d="M9 21V9"/></svg>
+                      <span className="text-[11px] font-semibold">{t('layout_large_icons')}</span>
                   </button>
   
                   <button
@@ -1368,8 +1368,8 @@ const TopUp = () => {
                     }`}
                     title="List Rows View"
                   >
-                    <span>â˜°</span>
-                    <span className="text-[11px] font-semibold">{t('layout_list')}</span>
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg>
+                      <span className="text-[11px] font-semibold">{t('layout_list')}</span>
                   </button>
                 </div>
               </div>
