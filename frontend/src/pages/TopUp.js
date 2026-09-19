@@ -1329,52 +1329,52 @@ const TopUp = () => {
               </span>
 
               {/* View Layout Switcher (Tiles vs Large Icons vs List) */}
-              <div className="flex items-center gap-1 p-0.5 bg-slate-950 rounded-xl border border-slate-800">
-                <button
-                  type="button"
-                  onClick={() => setLayoutMode('tiles')}
-                  className={`py-1 px-2.5 rounded-lg text-xs font-bold flex items-center gap-1 transition-all cursor-pointer ${
-                    layoutMode === 'tiles'
-                      ? 'bg-slate-800 text-cyan-300 border border-slate-700 shadow-sm'
-                      : 'text-slate-400 hover:text-white'
-                  }`}
-                  title="Tiles View"
-                >
-                  <span>⊞</span>
-                  <span className="text-[11px] font-semibold">{t('layout_tiles')}</span>
-                </button>
-
-                <button
-                  type="button"
-                  onClick={() => setLayoutMode('grid')}
-                  className={`py-1 px-2.5 rounded-lg text-xs font-bold flex items-center gap-1 transition-all cursor-pointer ${
-                    layoutMode === 'grid'
-                      ? 'bg-slate-800 text-cyan-300 border border-slate-700 shadow-sm'
-                      : 'text-slate-400 hover:text-white'
-                  }`}
-                  title="Large Icons View"
-                >
-                  <span>🔲</span>
-                  <span className="text-[11px] font-semibold">{t('layout_large_icons')}</span>
-                </button>
-
-                <button
-                  type="button"
-                  onClick={() => setLayoutMode('list')}
-                  className={`py-1 px-2.5 rounded-lg text-xs font-bold flex items-center gap-1 transition-all cursor-pointer ${
-                    layoutMode === 'list'
-                      ? 'bg-slate-800 text-cyan-300 border border-slate-700 shadow-sm'
-                      : 'text-slate-400 hover:text-white'
-                  }`}
-                  title="List Rows View"
-                >
-                  <span>☰</span>
-                  <span className="text-[11px] font-semibold">{t('layout_list')}</span>
-                </button>
+                <div className="flex items-center gap-1 p-1 bg-[#0b0f19] rounded-xl border border-slate-800 shadow-inner">
+                  <button
+                    type="button"
+                    onClick={() => setLayoutMode('tiles')}
+                    className={`py-1.5 px-3 rounded-lg text-xs font-bold flex items-center gap-1.5 transition-all cursor-pointer ${
+                      layoutMode === 'tiles'
+                        ? 'bg-[#1a2538] text-[#38bdf8] border border-[#38bdf8]/40 shadow-sm'
+                        : 'text-slate-400 hover:text-white border border-transparent'
+                    }`}
+                    title="Tiles View"
+                  >
+                    <span>âŠž</span>
+                    <span className="text-[11px] font-semibold">{t('layout_tiles')}</span>
+                  </button>
+  
+                  <button
+                    type="button"
+                    onClick={() => setLayoutMode('grid')}
+                    className={`py-1.5 px-3 rounded-lg text-xs font-bold flex items-center gap-1.5 transition-all cursor-pointer ${
+                      layoutMode === 'grid'
+                        ? 'bg-[#1a2538] text-[#38bdf8] border border-[#38bdf8]/40 shadow-sm'
+                        : 'text-slate-400 hover:text-white border border-transparent'
+                    }`}
+                    title="Large Icons View"
+                  >
+                    <span>ðŸ”²</span>
+                    <span className="text-[11px] font-semibold">{t('layout_large_icons')}</span>
+                  </button>
+  
+                  <button
+                    type="button"
+                    onClick={() => setLayoutMode('list')}
+                    className={`py-1.5 px-3 rounded-lg text-xs font-bold flex items-center gap-1.5 transition-all cursor-pointer ${
+                      layoutMode === 'list'
+                        ? 'bg-[#1a2538] text-[#38bdf8] border border-[#38bdf8]/40 shadow-sm'
+                        : 'text-slate-400 hover:text-white border border-transparent'
+                    }`}
+                    title="List Rows View"
+                  >
+                    <span>â˜°</span>
+                    <span className="text-[11px] font-semibold">{t('layout_list')}</span>
+                  </button>
+                </div>
               </div>
-            </div>
-
-            {/* Products Display Container */}
+  
+              {/* Products Display Container */}
             <div className="max-h-[520px] overflow-y-auto pr-1 smooth-scroll scrollbar-thin scrollbar-thumb-slate-700 hover:scrollbar-thumb-amber-500/80 transition-colors">
               {(() => {
                 const isPassItem = (p) => p.isPass || p.name?.toLowerCase().includes('pass') || p.name?.toLowerCase().includes('bundle') || [210, 440, 660, 880, 1100, 1320, 605, 500].includes(p.diamondAmount);
@@ -1403,25 +1403,23 @@ const TopUp = () => {
                             <div
                               key={pkg.productId}
                               onClick={() => setSelectedProduct(pkg)}
-                              className={`group relative rounded-[20px] p-3 cursor-pointer select-none transition-all duration-300 flex flex-col justify-between overflow-hidden active:scale-[0.98] ${
+                              className={`group relative rounded-[20px] p-3 cursor-pointer select-none transition-all duration-300 flex flex-col justify-between overflow-hidden ${
                                 isSelected
-                                  ? 'bg-[#181335]/80 border-transparent ring-1 ring-purple-500/60 shadow-[0_0_25px_rgba(109,40,217,0.2)] scale-[1.02]'
-                                  : 'bg-slate-900/40 border border-slate-800/50 hover:bg-slate-800/40 hover:border-slate-700/60'
+                                  ? 'bg-[#1a1133] border border-[#563b9e] shadow-[0_0_20px_rgba(109,40,217,0.15)]'
+                                  : 'bg-[#0f1523] border border-[#1e293b] hover:bg-[#141b2d] hover:border-[#334155]'
                               }`}
                             >
-                              {isSelected && <div className="absolute inset-0 bg-gradient-to-br from-purple-500/10 to-indigo-500/10 pointer-events-none" />}
-                              
                               {/* Top Row: Icon & Tag */}
                               <div className="flex items-start justify-between mb-3 relative z-10">
-                                <ProductPackageImage pkg={pkg} size="md" className="group-hover:scale-110 transition-transform duration-300 drop-shadow-md" />
+                                <ProductPackageImage pkg={pkg} size="md" className="group-hover:scale-105 transition-transform duration-300 drop-shadow-md" />
                                 
                                 {pkg.tag && (
-                                  <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-[9px] font-black tracking-wider shadow-sm truncate max-w-[50%] ${
-                                    pkg.tag.includes('ticket')
-                                      ? 'bg-purple-900/40 text-purple-300 border border-purple-700/50'
+                                  <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-[9px] font-black tracking-wider shadow-sm truncate max-w-[60%] ${
+                                    pkg.tag.includes('ticket') || pkg.tag.includes('Starter')
+                                      ? 'bg-cyan-950/40 text-[#38bdf8] border border-[#0284c7]'
                                       : pkg.tag.includes('arura') || pkg.tag.includes('BEST') || pkg.tag.includes('Bonus')
-                                      ? 'bg-amber-500/20 text-amber-300 border border-amber-500/40'
-                                      : 'bg-cyan-500/20 text-cyan-300 border border-cyan-500/40'
+                                      ? 'bg-amber-950/40 text-amber-400 border border-amber-600/60'
+                                      : 'bg-emerald-950/40 text-emerald-400 border border-emerald-600/60'
                                   }`}>
                                     {pkg.tag}
                                   </span>
@@ -1429,20 +1427,20 @@ const TopUp = () => {
                               </div>
   
                               {/* Middle: Name */}
-                              <div className="mb-3 relative z-10">
-                                <span className={`font-black text-xs sm:text-sm leading-tight line-clamp-2 transition-colors ${isSelected ? 'text-white' : 'text-slate-300 group-hover:text-slate-200'}`}>
+                              <div className="mb-4 relative z-10">
+                                <span className="font-black text-xs sm:text-[13px] leading-tight line-clamp-2 text-white">
                                   {pkg.name}
                                 </span>
                               </div>
   
                               {/* Bottom: Price Pill */}
-                              <div className={`mt-auto relative z-10 flex items-center justify-between px-2.5 py-1.5 rounded-xl transition-all ${
-                                isSelected ? 'bg-purple-950/40 border border-purple-500/30' : 'bg-slate-950/50 border border-slate-800/60'
+                              <div className={`mt-auto relative z-10 flex items-center justify-between px-3 py-1.5 rounded-[12px] transition-all ${
+                                isSelected ? 'bg-[#140b2e] border border-[#4c2d96]/30' : 'bg-[#0a0d16] border border-transparent'
                               }`}>
-                                <span className={`text-[9px] sm:text-[10px] font-mono font-medium ${isSelected ? 'text-purple-300/80' : 'text-slate-500'}`}>
+                                <span className={`text-[10px] font-mono font-medium ${isSelected ? 'text-[#a855f7]' : 'text-slate-500'}`}>
                                   ~{Math.round(pkg.price * 4100).toLocaleString()} ៛
                                 </span>
-                                <span className={`font-black text-xs sm:text-sm font-mono ${isSelected ? 'text-emerald-400' : 'text-slate-300 group-hover:text-emerald-400/80'}`}>
+                                <span className={`font-black text-sm font-mono ${isSelected ? 'text-[#22c55e]' : 'text-white'}`}>
                                   ${pkg.price.toFixed(2)}
                                 </span>
                               </div>
