@@ -322,28 +322,28 @@ const matchIntent = (query, currentLang) => {
     return { type: 'text', reply: KNOWLEDGE_BASE[lang].banks };
   }
 
-  // 6. Pricing & Packages
-  const priceKeywords = ['price', 'how much', 'cost', 'diamond', 'dollar', 'khr', 'cheap', 'discount', 'bonus', 'pass', 'weekly', 'package', 'promo', 'rate', 'តម្លៃ', 'ប៉ុន្មាន', 'ថ្លៃ', 'កញ្ចប់', 'ប្រូម៉ូសិន', 'ប្រចាំសប្តាហ៍', '多少钱', '价格', '周卡', '月卡', '充值表', '优惠', '首充', '钻石套餐'];
+  // 6. Top Up Steps / How To Guide — checked FIRST before pricing to avoid false matches
+  const stepsKeywords = ['step', 'how to', 'how do i', 'guide', 'tutorial', 'process', 'procedure', 'topup', 'top up', 'top-up', 'recharge', 'start', 'begin', 'ជំហាន', 'ដំណើរការ', 'របៀប', 'វិធីសាស្ត្រ', 'ចាប់ផ្ដើម', 'ពន្យល់', '步骤', '怎么充', '如何充', '充值教程', '充值流程', '怎么买', '教一下', 'ជំហានបញ្ចូលពេជ្រ', '充值步骤教学'];
+  if (stepsKeywords.some(k => q.includes(k))) {
+    return { type: 'text', reply: KNOWLEDGE_BASE[lang].topup_steps };
+  }
+
+  // 7. Pricing & Packages
+  const priceKeywords = ['price', 'how much', 'cost', 'dollar', 'khr', 'cheap', 'discount', 'bonus', 'pass', 'weekly', 'package', 'promo', 'rate', 'pricing', 'diamond price', 'diamond cost', 'តម្លៃ', 'ប៉ុន្មាន', 'ថ្លៃ', 'កញ្ចប់', 'ប្រូម៉ូសិន', 'ប្រចាំសប្តាហ៍', '多少钱', '价格', '周卡', '月卡', '充值表', '优惠', '首充', '钻石套餐'];
   if (priceKeywords.some(k => q.includes(k))) {
     return { type: 'text', reply: KNOWLEDGE_BASE[lang].pricing };
   }
 
-  // 7. Safety, Ban & Password
+  // 8. Safety, Ban & Password
   const safeKeywords = ['safe', 'safety', 'ban', 'password', 'hack', 'scam', 'legal', 'official', 'moonton', 'trust', 'secure', 'សុវត្ថិភាព', 'លេខសម្ងាត់', 'បាត់', 'ត្រូវគេបោក', 'ផ្លូវការ', '安全', '封号', '要密码吗', '密码', '会封号吗', '官方', '靠谱吗'];
   if (safeKeywords.some(k => q.includes(k))) {
     return { type: 'text', reply: KNOWLEDGE_BASE[lang].security };
   }
 
-  // 8. Order Issues & Support
+  // 9. Order Issues & Support
   const supportKeywords = ['problem', 'error', 'failed', 'issue', 'not received', "didn't receive", 'missing', 'wrong id', 'help', 'support', 'telegram', 'contact', 'admin', 'call', 'បញ្ហា', 'អត់ចូល', 'បាត់ពេជ្រ', 'ខុស id', 'ជួយ', 'ជំនួយ', 'តេឡេក្រាម', '没到账', '充值失败', '未到账', '填错', '客服', '联系客服', '售后'];
   if (supportKeywords.some(k => q.includes(k))) {
     return { type: 'text', reply: KNOWLEDGE_BASE[lang].support };
-  }
-
-  // 9. Top Up Steps / How To Guide
-  const stepsKeywords = ['step', 'how to', 'how do i', 'guide', 'tutorial', 'process', 'procedure', 'topup', 'top up', 'top-up', 'recharge', 'start', 'begin', 'ជំហាន', 'ដំណើរការ', 'របៀប', 'វិធីសាស្ត្រ', 'ចាប់ផ្ដើម', 'ពន្យល់', '步骤', '怎么充', '如何充', '充值教程', '充值流程', '怎么买', '教一下'];
-  if (stepsKeywords.some(k => q.includes(k))) {
-    return { type: 'text', reply: KNOWLEDGE_BASE[lang].topup_steps };
   }
 
   // Default fallback
