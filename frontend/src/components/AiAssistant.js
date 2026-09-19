@@ -418,152 +418,114 @@ const AiAssistant = () => {
 
       {/* AI Assistant Chat Modal Drawer */}
       {isOpen && (
-        <div className="fixed bottom-20 right-2 sm:right-6 w-[95vw] sm:w-[440px] max-h-[600px] h-[82vh] bg-slate-950/95 backdrop-blur-2xl border-2 border-cyan-500/40 rounded-3xl shadow-2xl z-50 flex flex-col overflow-hidden animate-fadeIn">
-          
-          {/* Header */}
-          <div className="bg-gradient-to-r from-slate-900 via-cyan-950 to-slate-900 p-3.5 sm:p-4 border-b border-cyan-500/20 flex items-center justify-between">
-            <div className="flex items-center gap-2.5">
-              <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-slate-900/90 border border-cyan-400/50 p-1 flex items-center justify-center shadow-glow-cyan shrink-0">
-                <AiLogoIcon className="w-full h-full" />
-              </div>
-              <div>
-                <div className="flex items-center gap-1.5">
-                  <h3 className="font-extrabold text-white text-xs sm:text-sm">{t('ai_title')}</h3>
-                  <span className="badge badge-info text-[7px] sm:text-[8px] px-1.5 py-0.5">{t('ai_badge')}</span>
-                </div>
-                <span className="text-[9px] sm:text-[10px] text-slate-400 block">{t('ai_sub')}</span>
-              </div>
+        <div className="fixed bottom-24 right-2 sm:right-5 w-[95vw] sm:w-[400px] max-h-[620px] h-[80vh] z-50 flex flex-col rounded-[24px] overflow-hidden shadow-[0_20px_60px_rgba(0,0,0,0.5)] animate-fadeIn border border-slate-800/60">
+
+          {/* ── HEADER (Messenger style) ── */}
+          <div className="bg-[#0f1724] px-4 py-3 flex items-center gap-3 border-b border-slate-800/60 shrink-0">
+            {/* Avatar */}
+            <div className="relative shrink-0">
+              <img src="/ai-bot-icon.png" alt="AI" className="w-11 h-11 object-contain" />
+              <span className="absolute bottom-0 right-0 w-3 h-3 bg-emerald-400 rounded-full border-2 border-[#0f1724]"></span>
             </div>
-
-            {/* Quick Language Switcher Inside AI */}
-            <div className="flex items-center gap-1 bg-slate-900/90 p-1 rounded-xl border border-slate-800">
-              <button
-                type="button"
-                onClick={() => setLanguage('en')}
-                className={`px-1.5 py-0.5 rounded text-[10px] font-bold transition-all ${language === 'en' ? 'bg-cyan-500 text-slate-950 font-black' : 'text-slate-400'}`}
-                title="English"
-              >
-                🇬🇧 EN
-              </button>
-              <button
-                type="button"
-                onClick={() => setLanguage('km')}
-                className={`px-1.5 py-0.5 rounded text-[10px] font-bold transition-all ${language === 'km' ? 'bg-cyan-500 text-slate-950 font-black' : 'text-slate-400'}`}
-                title="Khmer"
-              >
-                🇰🇭 ខ្មែរ
-              </button>
-              <button
-                type="button"
-                onClick={() => setLanguage('zh')}
-                className={`px-1.5 py-0.5 rounded text-[10px] font-bold transition-all ${language === 'zh' ? 'bg-cyan-500 text-slate-950 font-black' : 'text-slate-400'}`}
-                title="Chinese"
-              >
-                🇨🇳 中文
-              </button>
-
-              <button
-                type="button"
-                onClick={() => setIsOpen(false)}
-                className="w-6 h-6 rounded-lg text-slate-400 hover:text-white flex items-center justify-center text-sm ml-0.5"
-              >
-                ✕
+            {/* Name & status */}
+            <div className="flex-1 min-w-0">
+              <p className="text-white font-black text-sm leading-none truncate">{t('ai_title')}</p>
+              <p className="text-emerald-400 text-[11px] font-medium mt-0.5">● Online • ឆ្លើយតបភ្លាមៗ</p>
+            </div>
+            {/* Language pills + close */}
+            <div className="flex items-center gap-1">
+              {[{code:'en',label:'EN'},{code:'km',label:'ខ្មែរ'},{code:'zh',label:'中文'}].map(l => (
+                <button key={l.code} type="button" onClick={() => setLanguage(l.code)}
+                  className={`px-2 py-0.5 rounded-full text-[10px] font-bold transition-all ${language === l.code ? 'bg-[#4f9de8] text-white' : 'text-slate-400 hover:text-white'}`}>
+                  {l.label}
+                </button>
+              ))}
+              <button type="button" onClick={() => setIsOpen(false)}
+                className="ml-1 w-7 h-7 rounded-full bg-slate-800/80 hover:bg-slate-700 text-slate-400 hover:text-white flex items-center justify-center transition-all">
+                <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M6 18L18 6M6 6l12 12"/></svg>
               </button>
             </div>
           </div>
 
-          {/* Messages Body */}
-          <div className="flex-1 p-3.5 sm:p-4 overflow-y-auto space-y-3 text-xs">
+          {/* ── MESSAGES AREA ── */}
+          <div
+            className="flex-1 overflow-y-auto px-3 py-4 space-y-2 text-[13px]"
+            style={{ background: 'linear-gradient(180deg, #0b1120 0%, #0d1526 100%)' }}
+          >
+            {/* Subtle dot pattern overlay */}
             {messages.map((msg, idx) => (
-              <div
-                key={idx}
-                className={`flex gap-2.5 ${msg.sender === 'user' ? 'justify-end' : 'justify-start'}`}
-              >
+              <div key={idx} className={`flex items-end gap-2 ${msg.sender === 'user' ? 'justify-end' : 'justify-start'}`}>
+                {/* AI avatar on left */}
                 {msg.sender === 'ai' && (
-                  <div className="w-7 h-7 rounded-lg bg-cyan-500/20 border border-cyan-500/40 text-cyan-300 flex items-center justify-center text-xs shrink-0 font-bold mt-0.5">
-                    ✨
-                  </div>
+                  <img src="/ai-bot-icon.png" alt="AI" className="w-8 h-8 object-contain shrink-0 mb-0.5" />
                 )}
-                <div
-                  className={`p-3 sm:p-3.5 rounded-2xl max-w-[85%] leading-relaxed whitespace-pre-line ${
-                    msg.sender === 'user'
-                      ? 'bg-gradient-to-r from-cyan-500 to-sky-500 text-slate-950 font-bold rounded-tr-none shadow-md'
-                      : 'bg-slate-900/90 border border-slate-800 text-slate-200 rounded-tl-none shadow-sm'
-                  }`}
-                >
+                {/* Bubble */}
+                <div className={`relative max-w-[78%] px-3.5 py-2.5 leading-relaxed whitespace-pre-line break-words ${
+                  msg.sender === 'user'
+                    ? 'bg-[#4f9de8] text-white rounded-[18px] rounded-br-[4px] shadow-md'
+                    : 'bg-[#1e2d45] text-slate-100 rounded-[18px] rounded-bl-[4px] shadow-md border border-slate-700/30'
+                }`}>
                   {msg.text}
                 </div>
+                {/* User avatar on right */}
+                {msg.sender === 'user' && (
+                  <div className="w-8 h-8 rounded-full bg-[#4f9de8]/20 border border-[#4f9de8]/40 flex items-center justify-center shrink-0 mb-0.5">
+                    <svg className="w-4 h-4 text-[#4f9de8]" fill="currentColor" viewBox="0 0 24 24"><path d="M12 12c2.7 0 4.8-2.1 4.8-4.8S14.7 2.4 12 2.4 7.2 4.5 7.2 7.2 9.3 12 12 12zm0 2.4c-3.2 0-9.6 1.6-9.6 4.8v2.4h19.2v-2.4c0-3.2-6.4-4.8-9.6-4.8z"/></svg>
+                  </div>
+                )}
               </div>
             ))}
 
+            {/* Typing indicator */}
             {isTyping && (
-              <div className="flex gap-2.5 items-center text-slate-400 text-[11px]">
-                <div className="w-7 h-7 rounded-lg bg-cyan-500/20 text-cyan-300 flex items-center justify-center text-xs shrink-0">
-                  ✨
-                </div>
-                <div className="p-2.5 bg-slate-900 border border-slate-800 rounded-2xl rounded-tl-none flex items-center gap-1.5">
-                  <span className="w-1.5 h-1.5 rounded-full bg-cyan-400 animate-bounce"></span>
-                  <span className="w-1.5 h-1.5 rounded-full bg-cyan-400 animate-bounce" style={{ animationDelay: '0.2s' }}></span>
-                  <span className="w-1.5 h-1.5 rounded-full bg-cyan-400 animate-bounce" style={{ animationDelay: '0.4s' }}></span>
+              <div className="flex items-end gap-2 justify-start">
+                <img src="/ai-bot-icon.png" alt="AI" className="w-8 h-8 object-contain shrink-0 mb-0.5" />
+                <div className="bg-[#1e2d45] border border-slate-700/30 rounded-[18px] rounded-bl-[4px] px-4 py-3 flex items-center gap-1.5 shadow-md">
+                  <span className="w-2 h-2 rounded-full bg-slate-400 animate-bounce"></span>
+                  <span className="w-2 h-2 rounded-full bg-slate-400 animate-bounce" style={{ animationDelay: '0.15s' }}></span>
+                  <span className="w-2 h-2 rounded-full bg-slate-400 animate-bounce" style={{ animationDelay: '0.3s' }}></span>
                 </div>
               </div>
             )}
             <div ref={chatEndRef} />
           </div>
 
-          {/* Quick Prompts Bar */}
-          <div className="px-3 py-2 bg-slate-900/80 border-t border-slate-800/80 flex items-center gap-1.5 overflow-x-auto text-[11px]">
-            <button
-              type="button"
-              onClick={() => handleSend(t('ai_quick_1'))}
-              className="px-2.5 py-1 rounded-lg bg-slate-800 hover:bg-slate-750 text-cyan-300 border border-slate-700 whitespace-nowrap transition-colors flex items-center gap-1"
-            >
-              <span>🔍</span> <span>{t('ai_quick_1')}</span>
-            </button>
-            <button
-              type="button"
-              onClick={() => handleSend(t('ai_quick_2'))}
-              className="px-2.5 py-1 rounded-lg bg-slate-800 hover:bg-slate-750 text-amber-300 border border-slate-700 whitespace-nowrap transition-colors flex items-center gap-1"
-            >
-              <span>⚡</span> <span>{t('ai_quick_2')}</span>
-            </button>
-            <button
-              type="button"
-              onClick={() => handleSend(t('ai_quick_3'))}
-              className="px-2.5 py-1 rounded-lg bg-slate-800 hover:bg-slate-750 text-emerald-300 border border-slate-700 whitespace-nowrap transition-colors flex items-center gap-1"
-            >
-              <span>🏦</span> <span>{t('ai_quick_3')}</span>
-            </button>
-            <Link
-              to="/topup"
-              onClick={() => setIsOpen(false)}
-              className="px-2.5 py-1 rounded-lg bg-amber-500 text-slate-950 font-bold whitespace-nowrap"
-            >
+          {/* ── QUICK CHIPS ── */}
+          <div className="bg-[#0f1724] px-3 py-2 border-t border-slate-800/40 flex items-center gap-2 overflow-x-auto scrollbar-none shrink-0">
+            {[
+              { label: t('ai_quick_1'), icon: '🔍', color: 'text-cyan-300 border-cyan-700/50' },
+              { label: t('ai_quick_2'), icon: '⚡', color: 'text-amber-300 border-amber-700/50' },
+              { label: t('ai_quick_3'), icon: '🏦', color: 'text-emerald-300 border-emerald-700/50' },
+            ].map(q => (
+              <button key={q.label} type="button" onClick={() => handleSend(q.label)}
+                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-slate-800/60 border ${q.color} text-[11px] font-semibold whitespace-nowrap hover:bg-slate-700/60 transition-all shrink-0`}>
+                <span>{q.icon}</span><span>{q.label}</span>
+              </button>
+            ))}
+            <Link to="/topup" onClick={() => setIsOpen(false)}
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-amber-500/90 text-slate-950 text-[11px] font-black whitespace-nowrap hover:bg-amber-400 transition-all shrink-0">
               💎 {t('nav_topup')}
             </Link>
           </div>
 
-          {/* Input Form */}
+          {/* ── INPUT BAR ── */}
           <form
-            onSubmit={(e) => {
-              e.preventDefault();
-              handleSend();
-            }}
-            className="p-2.5 sm:p-3 bg-slate-950 border-t border-slate-800 flex items-center gap-2"
+            onSubmit={(e) => { e.preventDefault(); handleSend(); }}
+            className="bg-[#0f1724] px-3 pb-3 pt-2 flex items-center gap-2 shrink-0"
           >
             <input
               type="text"
               value={input}
               onChange={(e) => setInput(e.target.value)}
               placeholder={t('ai_ask_placeholder')}
-              className="input text-xs py-2.5 sm:py-3 flex-1 bg-slate-900 border-slate-800"
+              className="flex-1 bg-[#1e2d45] border border-slate-700/50 rounded-full px-4 py-2.5 text-[13px] text-white placeholder-slate-500 focus:outline-none focus:border-[#4f9de8]/60 transition-all"
             />
             <button
               type="submit"
               disabled={!input.trim()}
-              className="btn btn-primary text-xs py-2.5 sm:py-3 px-4 font-bold disabled:opacity-40"
+              className="w-10 h-10 rounded-full bg-[#4f9de8] hover:bg-[#3b8fd8] disabled:opacity-40 disabled:cursor-not-allowed flex items-center justify-center transition-all shadow-md shrink-0"
             >
-              {t('ai_send')}
+              <svg className="w-4 h-4 text-white -rotate-45" fill="currentColor" viewBox="0 0 24 24"><path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"/></svg>
             </button>
           </form>
         </div>
