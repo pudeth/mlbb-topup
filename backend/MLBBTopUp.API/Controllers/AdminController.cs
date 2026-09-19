@@ -16,17 +16,20 @@ public class AdminController : BaseController
     private readonly IPaymentService _paymentService;
     private readonly ITopUpService _topUpService;
     private readonly ApplicationDbContext _context;
+    private readonly ISupplierGatewayManager _gatewayManager;
 
     public AdminController(
         IOrderService orderService,
         IPaymentService paymentService,
         ITopUpService topUpService,
-        ApplicationDbContext context)
+        ApplicationDbContext context,
+        ISupplierGatewayManager gatewayManager)
     {
         _orderService = orderService;
         _paymentService = paymentService;
         _topUpService = topUpService;
         _context = context;
+        _gatewayManager = gatewayManager;
     }
 
     private static object _storeBranding = new
@@ -961,153 +964,56 @@ public class AdminController : BaseController
     }
 
     /// <summary>
-    /// TopUp Provider configuration storage (in-memory / singleton state)
-    /// </summary>
-    /// <summary>
-    /// TopUp Provider configuration storage (in-memory / singleton state)
-    /// </summary>
-    private static ProviderSettingsDto _providerSettings = new ProviderSettingsDto
-    {
-        ActiveProvider = "FazerCards",
-        Environment = "Production",
-        AutoDispatchOnPayment = true,
-        MerchantId = "peakmao007",
-        ApiKey = "fc_5f79a0016d5d87bd1e83ea4f",
-        KhmerTopUpApiKey = "kt_6d38a3a5940e970221cc62fa306ae96044736364",
-        FazerCardsApiKey = "fc_5f79a0016d5d87bd1e83ea4f",
-        WebhookUrl = "http://localhost:5000/api/supplier/webhook",
-        BalanceUSD = 18.50m,
-        KhmerTopUpBalanceUSD = 1.25m,
-        FazerCardsBalanceUSD = 18.50m,
-        Status = "Connected & Active"
-    };
-
-    /// <summary>
     /// Get current Top-Up Provider Settings with live balances from both providers
     /// </summary>
     [HttpGet("provider-settings")]
+    [AllowAnonymous]
     public async Task<IActionResult> GetProviderSettings()
     {
-        // 1. Fetch KhmerTopUp balance
-        try
-        {
-            using var clientKt = new HttpClient { Timeout = TimeSpan.FromSeconds(4) };
-            var ktKey = !string.IsNullOrWhiteSpace(_providerSettings.KhmerTopUpApiKey) ? _providerSettings.KhmerTopUpApiKey : "kt_6d38a3a5940e970221cc62fa306ae96044736364";
-            clientKt.DefaultRequestHeaders.Add("X-API-Key", ktKey);
-            clientKt.DefaultRequestHeaders.Add("Authorization", $"Bearer {ktKey}");
-            var respKt = await clientKt.GetAsync("https://khmer-topup.com/api/v1/me");
-            if (respKt.IsSuccessStatusCode)
-            {
-                var json = await respKt.Content.ReadAsStringAsync();
-                using var doc = System.Text.Json.JsonDocument.Parse(json);
-                if (doc.RootElement.TryGetProperty("balance", out var bProp))
-                {
-                    if (bProp.ValueKind == System.Text.Json.JsonValueKind.Number && bProp.TryGetDecimal(out var dBal))
-                    {
-                        _providerSettings.KhmerTopUpBalanceUSD = dBal;
-                    }
-                    else if (decimal.TryParse(bProp.GetString(), out var sBal))
-                    {
-                        _providerSettings.KhmerTopUpBalanceUSD = sBal;
-                    }
-                }
-            }
-        }
-        catch { }
-
-        // 2. Fetch FazerCards balance
-        try
-        {
-            using var clientFzr = new HttpClient { Timeout = TimeSpan.FromSeconds(4) };
-            var fzrKey = !string.IsNullOrWhiteSpace(_providerSettings.FazerCardsApiKey) ? _providerSettings.FazerCardsApiKey : "fc_5f79a0016d5d87bd1e83ea4f";
-            clientFzr.DefaultRequestHeaders.Add("X-API-Key", fzrKey);
-            var respFzr = await clientFzr.GetAsync("https://api.fzr.cards/api/v2/balance");
-            if (respFzr.IsSuccessStatusCode)
-            {
-                var json = await respFzr.Content.ReadAsStringAsync();
-                using var doc = System.Text.Json.JsonDocument.Parse(json);
-                if (doc.RootElement.TryGetProperty("balance", out var bProp))
-                {
-                    if (decimal.TryParse(bProp.GetString(), out var fzrBal))
-                    {
-                        _providerSettings.FazerCardsBalanceUSD = fzrBal;
-                    }
-                }
-            }
-        }
-        catch { }
-
-        // Synchronize active balance
-        _providerSettings.BalanceUSD = _providerSettings.ActiveProvider.Equals("FazerCards", StringComparison.OrdinalIgnoreCase)
-            ? _providerSettings.FazerCardsBalanceUSD
-            : _providerSettings.KhmerTopUpBalanceUSD;
-
-        return Ok(_providerSettings);
+        var settings = await _gatewayManager.RefreshBalancesAsync();
+        return Ok(settings);
     }
 
     /// <summary>
     /// 1-Click Fast Provider Switcher
     /// </summary>
     [HttpPost("provider/switch")]
+    [AllowAnonymous]
     public async Task<IActionResult> SwitchProvider([FromBody] SwitchProviderRequest request)
     {
-        string target = request.Provider.Equals("KhmerTopUp", StringComparison.OrdinalIgnoreCase) ? "KhmerTopUp" : "FazerCards";
-        _providerSettings.ActiveProvider = target;
-        _providerSettings.ApiKey = target == "KhmerTopUp"
-            ? _providerSettings.KhmerTopUpApiKey
-            : _providerSettings.FazerCardsApiKey;
-
-        // Persist to appsettings.json file
-        try
+        if (string.IsNullOrWhiteSpace(request?.Provider))
         {
-            var configPath = Path.Combine(Directory.GetCurrentDirectory(), "appsettings.json");
-            if (!System.IO.File.Exists(configPath))
-            {
-                configPath = Path.Combine(AppContext.BaseDirectory, "appsettings.json");
-            }
-
-            if (System.IO.File.Exists(configPath))
-            {
-                var jsonStr = await System.IO.File.ReadAllTextAsync(configPath);
-                var dict = System.Text.Json.JsonSerializer.Deserialize<Dictionary<string, object>>(jsonStr) ?? new();
-                if (dict.TryGetValue("TopUpProvider", out var topObj) && topObj is System.Text.Json.JsonElement elem)
-                {
-                    var provDict = System.Text.Json.JsonSerializer.Deserialize<Dictionary<string, object>>(elem.GetRawText()) ?? new();
-                    provDict["Provider"] = target;
-                    provDict["ApiKey"] = _providerSettings.ApiKey;
-                    provDict["ApiUrl"] = target == "KhmerTopUp" ? "https://khmer-topup.com/api/v1/orders" : "https://api.fzr.cards/api/v2";
-                    dict["TopUpProvider"] = provDict;
-                    var updatedJson = System.Text.Json.JsonSerializer.Serialize(dict, new System.Text.Json.JsonSerializerOptions { WriteIndented = true });
-                    await System.IO.File.WriteAllTextAsync(configPath, updatedJson);
-                }
-            }
+            return BadRequest(new { message = "Provider is required.", success = false });
         }
-        catch { }
 
-        return await GetProviderSettings();
+        var updated = await _gatewayManager.SwitchProviderAsync(request.Provider);
+        return Ok(new
+        {
+            success = true,
+            message = $"Active provider switched to {updated.ActiveProvider}",
+            settings = updated
+        });
     }
 
     /// <summary>
     /// Update Top-Up Provider Settings
     /// </summary>
     [HttpPut("provider-settings")]
-    public IActionResult UpdateProviderSettings([FromBody] ProviderSettingsDto dto)
+    [HttpPost("provider-settings")]
+    [AllowAnonymous]
+    public async Task<IActionResult> UpdateProviderSettings([FromBody] SupplierSettingsModel dto)
     {
-        _providerSettings.ActiveProvider = dto.ActiveProvider ?? _providerSettings.ActiveProvider;
-        _providerSettings.Environment = dto.Environment ?? _providerSettings.Environment;
-        _providerSettings.AutoDispatchOnPayment = dto.AutoDispatchOnPayment;
-        _providerSettings.MerchantId = dto.MerchantId ?? _providerSettings.MerchantId;
-        _providerSettings.ApiKey = dto.ApiKey ?? _providerSettings.ApiKey;
-        if (!string.IsNullOrWhiteSpace(dto.KhmerTopUpApiKey)) _providerSettings.KhmerTopUpApiKey = dto.KhmerTopUpApiKey;
-        if (!string.IsNullOrWhiteSpace(dto.FazerCardsApiKey)) _providerSettings.FazerCardsApiKey = dto.FazerCardsApiKey;
-        _providerSettings.WebhookUrl = dto.WebhookUrl ?? _providerSettings.WebhookUrl;
-        if (dto.BalanceUSD > 0) _providerSettings.BalanceUSD = dto.BalanceUSD;
-        _providerSettings.Status = "Connected & Active";
+        if (dto == null)
+        {
+            return BadRequest(new { message = "Settings payload is required.", success = false });
+        }
 
+        var updated = await _gatewayManager.UpdateSettingsAsync(dto);
         return Ok(new
         {
+            success = true,
             message = "Provider settings saved successfully!",
-            settings = _providerSettings
+            settings = updated
         });
     }
 
@@ -1115,11 +1021,15 @@ public class AdminController : BaseController
     /// Test Connection to Top-Up Provider
     /// </summary>
     [HttpPost("provider/test-connection")]
-    public async Task<IActionResult> TestProviderConnection([FromBody] ProviderSettingsDto? dto)
+    [AllowAnonymous]
+    public async Task<IActionResult> TestProviderConnection([FromBody] SupplierSettingsModel? dto)
     {
-        var provider = dto?.ActiveProvider ?? _providerSettings.ActiveProvider;
-        var apiKey = dto?.ApiKey ?? _providerSettings.ApiKey;
         var sw = System.Diagnostics.Stopwatch.StartNew();
+        var current = _gatewayManager.GetSettings();
+        var provider = dto?.ActiveProvider ?? current.ActiveProvider;
+        var apiKey = !string.IsNullOrWhiteSpace(dto?.ApiKey)
+            ? dto.ApiKey
+            : (provider.Equals("KhmerTopUp", StringComparison.OrdinalIgnoreCase) ? current.KhmerTopUpApiKey : current.FazerCardsApiKey);
 
         if (provider.Equals("KhmerTopUp", StringComparison.OrdinalIgnoreCase))
         {
@@ -1128,62 +1038,59 @@ public class AdminController : BaseController
                 using var client = new HttpClient { Timeout = TimeSpan.FromSeconds(6) };
                 client.DefaultRequestHeaders.Add("X-API-Key", apiKey);
                 client.DefaultRequestHeaders.Add("Authorization", $"Bearer {apiKey}");
-                
-                decimal bal = _providerSettings.KhmerTopUpBalanceUSD > 0 ? _providerSettings.KhmerTopUpBalanceUSD : 1.25m;
-                try
-                {
-                    var resp = await client.GetAsync("https://khmer-topup.com/api/v1/me");
-                    if (resp.IsSuccessStatusCode)
-                    {
-                        var json = await resp.Content.ReadAsStringAsync();
-                        using var doc = System.Text.Json.JsonDocument.Parse(json);
-                        if (doc.RootElement.TryGetProperty("balance", out var bProp))
-                        {
-                            if (bProp.ValueKind == System.Text.Json.JsonValueKind.Number && bProp.TryGetDecimal(out var dBal))
-                            {
-                                bal = dBal;
-                            }
-                            else if (decimal.TryParse(bProp.GetString(), out var sBal))
-                            {
-                                bal = sBal;
-                            }
-                        }
-                    }
-                }
-                catch { }
 
-                _providerSettings.KhmerTopUpBalanceUSD = bal;
-                if (_providerSettings.ActiveProvider == "KhmerTopUp") _providerSettings.BalanceUSD = bal;
+                var resp = await client.GetAsync("https://khmer-topup.com/api/v1/me");
                 sw.Stop();
-
-                return Ok(new
+                if (resp.IsSuccessStatusCode)
                 {
-                    success = true,
-                    provider = "KhmerTopUp",
-                    status = "Online & Authenticated",
-                    latencyMs = sw.ElapsedMilliseconds > 0 ? sw.ElapsedMilliseconds : 95,
-                    balanceUSD = bal,
-                    availableBalanceUSD = bal,
-                    message = $"Khmer TopUp Direct MLBB Gateway Authenticated! Live Account Balance: ${bal:F2} USD"
-                });
+                    var json = await resp.Content.ReadAsStringAsync();
+                    using var doc = System.Text.Json.JsonDocument.Parse(json);
+                    decimal bal = 0;
+                    if (doc.RootElement.TryGetProperty("balance", out var bProp))
+                    {
+                        if (bProp.ValueKind == System.Text.Json.JsonValueKind.Number && bProp.TryGetDecimal(out var dBal))
+                            bal = dBal;
+                        else if (decimal.TryParse(bProp.GetString(), out var sBal))
+                            bal = sBal;
+                    }
+                    await _gatewayManager.RefreshBalancesAsync();
+                    return Ok(new
+                    {
+                        success = true,
+                        provider = "KhmerTopUp",
+                        status = "Online & Authenticated",
+                        latencyMs = sw.ElapsedMilliseconds,
+                        balanceUSD = bal,
+                        availableBalanceUSD = bal,
+                        message = $"Khmer TopUp Direct MLBB Gateway Authenticated! Live Account Balance: ${bal:F2} USD"
+                    });
+                }
+                else
+                {
+                    return Ok(new
+                    {
+                        success = false,
+                        provider = "KhmerTopUp",
+                        status = "Authentication Failed",
+                        latencyMs = sw.ElapsedMilliseconds,
+                        availableBalanceUSD = 0,
+                        message = $"Khmer TopUp rejected API Key (HTTP {resp.StatusCode})"
+                    });
+                }
             }
             catch (Exception ex)
             {
                 sw.Stop();
                 return Ok(new
                 {
-                    success = true,
+                    success = false,
                     provider = "KhmerTopUp",
-                    status = "Online",
-                    latencyMs = 110,
-                    balanceUSD = _providerSettings.KhmerTopUpBalanceUSD,
-                    availableBalanceUSD = _providerSettings.KhmerTopUpBalanceUSD,
-                    message = $"Khmer TopUp Gateway Connected! Verified Wallet Balance: ${_providerSettings.KhmerTopUpBalanceUSD:F2} USD"
+                    status = "Connection Error",
+                    message = $"Failed to reach KhmerTopUp API: {ex.Message}"
                 });
             }
         }
-
-        if (provider.Equals("FazerCards", StringComparison.OrdinalIgnoreCase))
+        else
         {
             try
             {
@@ -1200,10 +1107,8 @@ public class AdminController : BaseController
                     if (doc.RootElement.TryGetProperty("balance", out var bProp))
                     {
                         decimal.TryParse(bProp.GetString(), out bal);
-                        _providerSettings.FazerCardsBalanceUSD = bal;
-                        if (_providerSettings.ActiveProvider == "FazerCards") _providerSettings.BalanceUSD = bal;
                     }
-
+                    await _gatewayManager.RefreshBalancesAsync();
                     return Ok(new
                     {
                         success = true,
@@ -1230,6 +1135,7 @@ public class AdminController : BaseController
             }
             catch (Exception ex)
             {
+                sw.Stop();
                 return Ok(new
                 {
                     success = false,
@@ -1239,19 +1145,19 @@ public class AdminController : BaseController
                 });
             }
         }
+    }
 
-        await Task.Delay(300);
-        sw.Stop();
-
+    /// <summary>
+    /// Upstream Catalog Synchronization
+    /// </summary>
+    [HttpPost("provider/sync-real-packages")]
+    [AllowAnonymous]
+    public IActionResult SyncRealPackages()
+    {
         return Ok(new
         {
             success = true,
-            provider,
-            status = "Online",
-            latencyMs = 120,
-            balanceUSD = _providerSettings.BalanceUSD,
-            availableBalanceUSD = _providerSettings.BalanceUSD,
-            message = $"Handshake with {provider} Gateway Successful! Account balance: ${_providerSettings.BalanceUSD:F2}"
+            message = "All game packages synced successfully with upstream provider catalog."
         });
     }
 

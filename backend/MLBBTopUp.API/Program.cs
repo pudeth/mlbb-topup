@@ -126,6 +126,9 @@ builder.Services.AddScoped<IKHQRService, KHQRService>();
 builder.Services.AddHttpClient<IAbaPayWayService, AbaPayWayService>();
 builder.Services.AddScoped<IAbaPayWayService, AbaPayWayService>();
 
+// Register supplier gateway manager (singleton across entire app)
+builder.Services.AddSingleton<MLBBTopUp.Core.Interfaces.ISupplierGatewayManager, MLBBTopUp.Infrastructure.Services.SupplierGatewayManager>();
+
 // Register payment gateway and top-up provider
 builder.Services.AddScoped<MLBBTopUp.Infrastructure.PaymentGateways.IPaymentGatewayClient, 
     MLBBTopUp.Infrastructure.PaymentGateways.MockPaymentGateway>();

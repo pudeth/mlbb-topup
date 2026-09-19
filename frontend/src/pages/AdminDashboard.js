@@ -315,6 +315,36 @@ const PRICING_GAMES = [
 
     window.addEventListener('eventBannersUpdated', handleSync);
     window.addEventListener('storage', handleSync);
+
+    // Initial sync of live Top-Up Provider Settings across all devices
+    adminAPI.getProviderSettings().then((res) => {
+      if (res?.data) {
+        const d = res.data;
+        const currentActive = d.activeProvider || d.ActiveProvider || 'FazerCards';
+        const bal = currentActive.toLowerCase().includes('khmer')
+          ? (d.khmerTopUpBalanceUSD ?? d.KhmerTopUpBalanceUSD ?? 1.25)
+          : (d.fazerCardsBalanceUSD ?? d.FazerCardsBalanceUSD ?? 18.50);
+
+        setProviderSettings((prev) => ({
+          ...prev,
+          activeProvider: currentActive,
+          apiKey: d.apiKey || d.ApiKey || prev.apiKey,
+          khmerTopUpApiKey: d.khmerTopUpApiKey || d.KhmerTopUpApiKey || prev.khmerTopUpApiKey,
+          fazerCardsApiKey: d.fazerCardsApiKey || d.FazerCardsApiKey || prev.fazerCardsApiKey,
+          khmerTopUpBalanceUSD: d.khmerTopUpBalanceUSD ?? d.KhmerTopUpBalanceUSD ?? prev.khmerTopUpBalanceUSD,
+          fazerCardsBalanceUSD: d.fazerCardsBalanceUSD ?? d.FazerCardsBalanceUSD ?? prev.fazerCardsBalanceUSD,
+          balanceUSD: bal,
+        }));
+        try {
+          localStorage.setItem('admin_provider_settings', JSON.stringify({
+            ...d,
+            activeProvider: currentActive,
+            balanceUSD: bal
+          }));
+        } catch (e) {}
+      }
+    }).catch(() => {});
+
     return () => {
       window.removeEventListener('eventBannersUpdated', handleSync);
       window.removeEventListener('storage', handleSync);
@@ -488,15 +518,20 @@ const PRICING_GAMES = [
     setSwitchingProvider(true);
     try {
       showToast('info', `⚡ Switching active supplier to ${targetProvider}...`);
+      const res = await adminAPI.switchProvider(targetProvider);
+      const serverSettings = res?.data?.settings;
+
       const targetKey = targetProvider === 'FazerCards'
-        ? (providerSettings.fazerCardsApiKey || 'fc_5f79a0016d5d87bd1e83ea4f')
-        : (providerSettings.khmerTopUpApiKey || 'kt_6d38a3a5940e970221cc62fa306ae96044736364');
+        ? (serverSettings?.fazerCardsApiKey || serverSettings?.FazerCardsApiKey || providerSettings.fazerCardsApiKey || 'fc_5f79a0016d5d87bd1e83ea4f')
+        : (serverSettings?.khmerTopUpApiKey || serverSettings?.KhmerTopUpApiKey || providerSettings.khmerTopUpApiKey || 'kt_6d38a3a5940e970221cc62fa306ae96044736364');
+      
       const targetBal = targetProvider === 'FazerCards'
-        ? (providerSettings.fazerCardsBalanceUSD || 18.50)
-        : (providerSettings.khmerTopUpBalanceUSD || 1.45);
+        ? (serverSettings?.fazerCardsBalanceUSD ?? serverSettings?.FazerCardsBalanceUSD ?? providerSettings.fazerCardsBalanceUSD ?? 18.50)
+        : (serverSettings?.khmerTopUpBalanceUSD ?? serverSettings?.KhmerTopUpBalanceUSD ?? providerSettings.khmerTopUpBalanceUSD ?? 1.45);
 
       const updated = {
         ...providerSettings,
+        ...(serverSettings || {}),
         activeProvider: targetProvider,
         apiKey: targetKey,
         balanceUSD: targetBal,
@@ -507,8 +542,7 @@ const PRICING_GAMES = [
         localStorage.setItem('admin_provider_settings', JSON.stringify(updated));
       } catch (e) {}
 
-      await adminAPI.switchProvider(targetProvider).catch(() => {});
-      showToast('success', `✅ Active Gateway switched to ${targetProvider}! Live Balance: $${targetBal.toFixed(2)} USD (~${(targetBal * 4100).toLocaleString()} ៛)`);
+      showToast('success', `✅ Active Gateway switched to ${targetProvider}! Live Balance: $${Number(targetBal).toFixed(2)} USD (~${(Number(targetBal) * 4100).toLocaleString()} ៛)`);
     } catch (err) {
       showToast('error', err.response?.data?.message || `Failed to switch to ${targetProvider}`);
     } finally {

@@ -1337,6 +1337,36 @@ def handle_event_banners():
         except Exception as e:
             return jsonify({'success': False, 'error': str(e)}), 500
 
+@app.route('/api/provider-settings', methods=['GET', 'POST', 'PUT'])
+@app.route('/api/admin/provider-settings', methods=['GET', 'POST', 'PUT'])
+def handle_provider_settings():
+    """Fetch or update active supplier gateway settings persisted in MongoDB Atlas settings collection"""
+    if request.method == 'GET':
+        if mongo_db is not None:
+            try:
+                doc = mongo_db.settings.find_one({'type': 'supplier_gateway_settings'})
+                if doc:
+                    doc.pop('_id', None)
+                    return jsonify({'success': True, 'settings': doc.get('data')})
+            except Exception as e:
+                print(f"[-] MongoDB provider settings fetch error: {e}")
+        return jsonify({'success': True, 'settings': None})
+
+    if request.method in ['POST', 'PUT']:
+        try:
+            data = request.get_json() or {}
+            settings_payload = data.get('settings') if isinstance(data, dict) and 'settings' in data else data
+            if mongo_db is not None:
+                mongo_db.settings.update_one(
+                    {'type': 'supplier_gateway_settings'},
+                    {'$set': {'type': 'supplier_gateway_settings', 'data': settings_payload, 'updated_at': datetime.utcnow().isoformat()}},
+                    upsert=True
+                )
+                print("[+] Saved supplier gateway settings to MongoDB Atlas settings collection!")
+            return jsonify({'success': True, 'settings': settings_payload})
+        except Exception as e:
+            return jsonify({'success': False, 'error': str(e)}), 500
+
 @app.route('/api/games', methods=['GET', 'POST', 'PUT'])
 @app.route('/api/admin/games', methods=['GET', 'POST', 'PUT'])
 def handle_games_config():

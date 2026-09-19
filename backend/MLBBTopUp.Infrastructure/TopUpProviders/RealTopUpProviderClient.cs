@@ -4,20 +4,22 @@ using System.Text;
 using System.Text.Json;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
+using MLBBTopUp.Core.Interfaces;
 
 namespace MLBBTopUp.Infrastructure.TopUpProviders;
 
 /// <summary>
 /// Production-grade Real MLBB Top-Up Provider Client
-/// Supports Smile.One, VIP-Reseller, Digiflazz, Lapakgaming, UniPin, and Custom Aggregators
+/// Supports FazerCards B2B, KhmerTopUp, and Automatic Dual-Provider Failover
 /// </summary>
 public class RealTopUpProviderClient : ITopUpProviderClient
 {
     private readonly ILogger<RealTopUpProviderClient> _logger;
     private readonly IConfiguration _configuration;
+    private readonly ISupplierGatewayManager _gatewayManager;
     private readonly HttpClient _httpClient;
 
-    // Standard MLBB Product / SKU Mapping table
+    // Comprehensive MLBB Product / SKU Mapping table covering all store packages
     private static readonly Dictionary<int, (string Sku, string SmileOneId, string DigiflazzSku, string FazerOfferId, string Name)> ProductCatalog = new()
     {
         { 5, ("mlbb_5", "5", "mlbb-5", "5_diamonds", "5 Diamonds") },
@@ -36,27 +38,38 @@ public class RealTopUpProviderClient : ITopUpProviderClient
         { 78, ("mlbb_78", "23", "mlbb-78", "78_8_diamonds", "78 Diamonds (78+8 Bonus)") },
         { 86, ("mlbb_86", "23", "mlbb-86", "78_8_diamonds", "86 Diamonds (78+8 Bonus)") },
         { 102, ("mlbb_102", "112", "mlbb-102", "102_10_diamonds", "102 Diamonds (102+10 Bonus)") },
+        { 110, ("mlbb_110", "112", "mlbb-110", "102_10_diamonds", "110 Diamonds") },
         { 112, ("mlbb_112", "112", "mlbb-112", "102_10_diamonds", "112 Diamonds (102+10 Bonus)") },
         { 140, ("mlbb_140", "140", "mlbb-140", "140_diamonds", "140 Diamonds") },
         { 156, ("mlbb_156", "27", "mlbb-156", "156_16_diamonds", "156 Diamonds (156+16 Bonus)") },
+        { 165, ("mlbb_165", "165", "mlbb-165", "156_16_diamonds", "165 Diamonds") },
         { 172, ("mlbb_172", "27", "mlbb-172", "156_16_diamonds", "172 Diamonds (156+16 Bonus)") },
         { 210, ("mlbb_wdp", "pass_weekly", "mlbb-wdp", "weekly_pass", "Weekly Diamond Pass (210 Total)") },
         { 234, ("mlbb_234", "30", "mlbb-234", "234_23_diamonds", "234 Diamonds (234+23 Bonus)") },
         { 257, ("mlbb_257", "30", "mlbb-257", "234_23_diamonds", "257 Diamonds (234+23 Bonus)") },
+        { 275, ("mlbb_275", "275", "mlbb-275", "250_25_diamonds", "275 Diamonds") },
         { 284, ("mlbb_284", "284", "mlbb-284", "284_diamonds", "284 Diamonds") },
+        { 312, ("mlbb_312", "312", "mlbb-312", "284_28_diamonds", "312 Diamonds") },
+        { 343, ("mlbb_343", "343", "mlbb-343", "312_31_diamonds", "343 Diamonds") },
         { 344, ("mlbb_344", "344", "mlbb-344", "284_diamonds", "344 Diamonds (312+32 Bonus)") },
         { 355, ("mlbb_355", "355", "mlbb-355", "355_diamonds", "355 Diamonds") },
-        { 429, ("mlbb_429", "429", "mlbb-429", "429_diamonds", "429 Diamonds (390+39 Bonus)") },
+        { 429, ("mlbb_429", "429", "mlbb-429", "390_39_diamonds", "429 Diamonds (390+39 Bonus)") },
+        { 440, ("mlbb_2wdp", "pass_weekly", "mlbb-2wdp", "weekly_pass", "2x Weekly Diamond Pass") },
         { 500, ("mlbb_twilight", "pass_twilight", "mlbb-twilight", "twilight_pass", "Twilight Pass (Instant 500)") },
         { 504, ("mlbb_504", "35", "mlbb-504", "504_66_diamonds", "504 Diamonds (504+66 Bonus)") },
         { 514, ("mlbb_514", "35", "mlbb-514", "504_66_diamonds", "514 Diamonds (468+46 Bonus)") },
+        { 565, ("mlbb_565", "565", "mlbb-565", "504_66_diamonds", "565 Diamonds") },
+        { 600, ("mlbb_600", "600", "mlbb-600", "504_66_diamonds", "600 Diamonds") },
         { 625, ("mlbb_625", "38", "mlbb-625", "625_81_diamonds", "625 Diamonds (625+81 Bonus)") },
+        { 660, ("mlbb_3wdp", "pass_weekly", "mlbb-3wdp", "weekly_pass", "3x Weekly Diamond Pass") },
         { 706, ("mlbb_706", "38", "mlbb-706", "625_81_diamonds", "706 Diamonds (625+81 Bonus)") },
         { 716, ("mlbb_716", "716", "mlbb-716", "716_diamonds", "716 Diamonds") },
+        { 878, ("mlbb_878", "878", "mlbb-878", "780_78_diamonds", "878 Diamonds") },
+        { 963, ("mlbb_963", "963", "mlbb-963", "858_86_diamonds", "963 Diamonds") },
         { 1007, ("mlbb_1007", "1050", "mlbb-1007", "1007_156_diamonds", "1007 Diamonds (1007+156 Bonus)") },
-        { 1050, ("mlbb_1050", "1050", "mlbb-1050", "1084_diamonds", "1050 Diamonds (933+117 Bonus)") },
+        { 1050, ("mlbb_1050", "1050", "mlbb-1050", "933_117_diamonds", "1050 Diamonds (933+117 Bonus)") },
         { 1084, ("mlbb_1084", "1084", "mlbb-1084", "1084_diamonds", "1084 Diamonds") },
-        { 1412, ("mlbb_1412", "1412", "mlbb-1412", "1446_diamonds", "1412 Diamonds (1250+162 Bonus)") },
+        { 1412, ("mlbb_1412", "1412", "mlbb-1412", "1250_162_diamonds", "1412 Diamonds (1250+162 Bonus)") },
         { 1446, ("mlbb_1446", "1446", "mlbb-1446", "1446_diamonds", "1446 Diamonds") },
         { 1860, ("mlbb_1860", "46", "mlbb-1860", "1860_335_diamonds", "1860 Diamonds (1860+335 Bonus)") },
         { 2015, ("mlbb_2015", "2015", "mlbb-2015", "2015_383_diamonds", "2015 Diamonds (2015+383 Bonus)") },
@@ -74,11 +87,62 @@ public class RealTopUpProviderClient : ITopUpProviderClient
     public RealTopUpProviderClient(
         ILogger<RealTopUpProviderClient> logger,
         IConfiguration configuration,
+        ISupplierGatewayManager gatewayManager,
         HttpClient? httpClient = null)
     {
         _logger = logger;
         _configuration = configuration;
+        _gatewayManager = gatewayManager;
         _httpClient = httpClient ?? new HttpClient { Timeout = TimeSpan.FromSeconds(15) };
+    }
+
+    private static string ResolveFazerOfferId(int diamondAmount)
+    {
+        if (ProductCatalog.TryGetValue(diamondAmount, out var p) && !string.IsNullOrEmpty(p.FazerOfferId))
+        {
+            return p.FazerOfferId;
+        }
+
+        return diamondAmount switch
+        {
+            <= 11 => "10_1_diamonds",
+            <= 14 => "14_diamonds",
+            <= 20 => "20_2_diamonds",
+            <= 55 => "50_5_diamonds_first_top_up_bonus",
+            <= 86 => "78_8_diamonds",
+            <= 120 => "102_10_diamonds",
+            <= 172 => "156_16_diamonds",
+            <= 215 => "weekly_pass",
+            <= 275 => "250_25_diamonds",
+            <= 344 => "312_31_diamonds",
+            <= 435 => "390_39_diamonds",
+            <= 515 => "504_66_diamonds",
+            <= 600 => "504_66_diamonds",
+            <= 706 => "625_81_diamonds",
+            <= 878 => "780_78_diamonds",
+            <= 963 => "858_86_diamonds",
+            <= 1084 => "1007_156_diamonds",
+            <= 2195 => "1860_335_diamonds",
+            <= 3688 => "3099_589_diamonds",
+            <= 5532 => "4649_883_diamonds",
+            _ => "7740_1548_diamonds"
+        };
+    }
+
+    private static bool IsFailoverCandidate(string? msg)
+    {
+        if (string.IsNullOrWhiteSpace(msg)) return false;
+        var lower = msg.ToLowerInvariant();
+        return lower.Contains("balance") ||
+               lower.Contains("insufficient") ||
+               lower.Contains("fund") ||
+               lower.Contains("timeout") ||
+               lower.Contains("500") ||
+               lower.Contains("502") ||
+               lower.Contains("503") ||
+               lower.Contains("504") ||
+               lower.Contains("connection") ||
+               lower.Contains("network");
     }
 
     public async Task<TopUpResult> SendTopUpAsync(
@@ -87,19 +151,24 @@ public class RealTopUpProviderClient : ITopUpProviderClient
         int diamondAmount,
         string orderId)
     {
-        var provider = _configuration["TopUpProvider:Provider"] ?? "SmileOne";
-        var apiUrl = _configuration["TopUpProvider:ApiUrl"];
-        var apiKey = _configuration["TopUpProvider:ApiKey"];
-        var secretKey = _configuration["TopUpProvider:SecretKey"] ?? _configuration["TopUpProvider:WebhookSecret"];
-        var merchantId = _configuration["TopUpProvider:MerchantId"] ?? _configuration["TopUpProvider:Uid"];
-
-        _logger.LogInformation(
-            "Initiating REAL Mobile Legends Top-Up | Provider: {Provider} | Order #{OrderId} | Player: {PlayerId} ({ServerId}) | Diamonds: {DiamondAmount}",
-            provider, orderId, playerId, serverId, diamondAmount);
+        var settings = _gatewayManager.GetSettings();
+        var provider = !string.IsNullOrWhiteSpace(settings.ActiveProvider) ? settings.ActiveProvider : (_configuration["TopUpProvider:Provider"] ?? "FazerCards");
+        var activeKey = provider.Equals("KhmerTopUp", StringComparison.OrdinalIgnoreCase)
+            ? settings.KhmerTopUpApiKey
+            : settings.FazerCardsApiKey;
+        var activeUrl = provider.Equals("KhmerTopUp", StringComparison.OrdinalIgnoreCase)
+            ? settings.KhmerTopUpApiUrl
+            : settings.FazerCardsApiUrl;
+        var secretKey = activeKey;
+        var merchantId = settings.MerchantId;
 
         // Sanitize player & server IDs
         var cleanPlayerId = playerId?.Trim() ?? string.Empty;
         var cleanServerId = serverId?.Trim() ?? string.Empty;
+
+        _logger.LogInformation(
+            "Initiating REAL Mobile Legends Top-Up | Active Supplier: {Provider} | Order #{OrderId} | Player: {PlayerId} ({ServerId}) | Diamonds: {DiamondAmount}",
+            provider, orderId, cleanPlayerId, cleanServerId, diamondAmount);
 
         if (string.IsNullOrWhiteSpace(cleanPlayerId) || string.IsNullOrWhiteSpace(cleanServerId))
         {
@@ -113,30 +182,21 @@ public class RealTopUpProviderClient : ITopUpProviderClient
         // Get product SKU mapping
         ProductCatalog.TryGetValue(diamondAmount, out var productInfo);
         var sku = !string.IsNullOrEmpty(productInfo.Sku) ? productInfo.Sku : $"mlbb_{diamondAmount}";
-        var fazerOfferId = !string.IsNullOrEmpty(productInfo.FazerOfferId) ? productInfo.FazerOfferId : "10_1_diamonds";
+        var fazerOfferId = ResolveFazerOfferId(diamondAmount);
 
         // Check environment mode (Sandbox / Demo / Production)
-        var env = _configuration["TopUpProvider:Environment"] ?? "Production";
+        var env = settings.Environment ?? _configuration["TopUpProvider:Environment"] ?? "Production";
         bool isSandbox = env.Equals("Sandbox", StringComparison.OrdinalIgnoreCase) ||
                          env.Equals("Demo", StringComparison.OrdinalIgnoreCase) ||
                          env.Equals("Development", StringComparison.OrdinalIgnoreCase);
 
-        // If credentials are placeholder or demo mode is active, simulate successful delivery
-        bool isPlaceholder = isSandbox ||
-                             string.IsNullOrWhiteSpace(apiKey) || 
-                             apiKey.Contains("your-", StringComparison.OrdinalIgnoreCase) ||
-                             string.IsNullOrWhiteSpace(apiUrl) || 
-                             apiUrl.Contains("api.topupprovider.com", StringComparison.OrdinalIgnoreCase) ||
-                             provider.Equals("Mock", StringComparison.OrdinalIgnoreCase) ||
-                             provider.Equals("Sandbox", StringComparison.OrdinalIgnoreCase);
-
-        if (isPlaceholder)
+        if (isSandbox)
         {
             _logger.LogInformation(
                 "[Sandbox / Demo Mode] Executing simulated Real MLBB Direct Top-Up: {Diamonds} Diamonds delivered to {PlayerId}({ServerId}) for Order {OrderId}",
                 diamondAmount, cleanPlayerId, cleanServerId, orderId);
 
-            await Task.Delay(1200);
+            await Task.Delay(1000);
 
             var demoTxId = $"MLBB-REAL-{DateTime.UtcNow:yyyyMMddHHmmss}-{orderId}";
             return new TopUpResult
@@ -147,15 +207,42 @@ public class RealTopUpProviderClient : ITopUpProviderClient
             };
         }
 
-        // Handle Real Provider Integrations
+        // Real Provider Integrations with Intelligent Dual Failover
         try
         {
-            return provider.ToLower() switch
+            TopUpResult result;
+            if (provider.Equals("KhmerTopUp", StringComparison.OrdinalIgnoreCase))
             {
-                "khmertopup" or "khmer-topup" or "khmer_topup" => await ProcessKhmerTopUpAsync(cleanPlayerId, cleanServerId, diamondAmount, sku, orderId, merchantId, apiKey, secretKey, apiUrl),
-                "fazercards" or "fazer-cards" or "fzr" => await ProcessFazerCardsTopUpAsync(cleanPlayerId, cleanServerId, diamondAmount, fazerOfferId, orderId, apiKey, apiUrl),
-                _ => await ProcessKhmerTopUpAsync(cleanPlayerId, cleanServerId, diamondAmount, sku, orderId, merchantId, apiKey, secretKey, apiUrl)
-            };
+                result = await ProcessKhmerTopUpAsync(cleanPlayerId, cleanServerId, diamondAmount, sku, orderId, merchantId, settings.KhmerTopUpApiKey, secretKey, settings.KhmerTopUpApiUrl);
+
+                if (!result.Success && settings.AutoFailoverEnabled && IsFailoverCandidate(result.ErrorMessage))
+                {
+                    _logger.LogWarning("KhmerTopUp reported '{Reason}'. Automatically failing over to FazerCards for Order #{OrderId}...", result.ErrorMessage, orderId);
+                    var fzrBackup = await ProcessFazerCardsTopUpAsync(cleanPlayerId, cleanServerId, diamondAmount, fazerOfferId, orderId, settings.FazerCardsApiKey, settings.FazerCardsApiUrl);
+                    if (fzrBackup.Success)
+                    {
+                        _logger.LogInformation("Order #{OrderId} fulfilled successfully via backup provider FazerCards!", orderId);
+                        return fzrBackup;
+                    }
+                }
+                return result;
+            }
+            else
+            {
+                result = await ProcessFazerCardsTopUpAsync(cleanPlayerId, cleanServerId, diamondAmount, fazerOfferId, orderId, settings.FazerCardsApiKey, settings.FazerCardsApiUrl);
+
+                if (!result.Success && settings.AutoFailoverEnabled && IsFailoverCandidate(result.ErrorMessage))
+                {
+                    _logger.LogWarning("FazerCards reported '{Reason}'. Automatically failing over to KhmerTopUp for Order #{OrderId}...", result.ErrorMessage, orderId);
+                    var ktBackup = await ProcessKhmerTopUpAsync(cleanPlayerId, cleanServerId, diamondAmount, sku, orderId, merchantId, settings.KhmerTopUpApiKey, secretKey, settings.KhmerTopUpApiUrl);
+                    if (ktBackup.Success)
+                    {
+                        _logger.LogInformation("Order #{OrderId} fulfilled successfully via backup provider KhmerTopUp!", orderId);
+                        return ktBackup;
+                    }
+                }
+                return result;
+            }
         }
         catch (Exception ex)
         {
@@ -205,7 +292,8 @@ public class RealTopUpProviderClient : ITopUpProviderClient
         {
             Content = JsonContent.Create(payload)
         };
-        request.Headers.Add("X-API-Key", apiKey);
+        var activeKey = !string.IsNullOrWhiteSpace(apiKey) ? apiKey : "fc_5f79a0016d5d87bd1e83ea4f";
+        request.Headers.Add("X-API-Key", activeKey);
         request.Headers.Add("Idempotency-Key", $"ord-{orderId}-{DateTimeOffset.UtcNow.ToUnixTimeSeconds()}");
 
         var response = await _httpClient.SendAsync(request);
