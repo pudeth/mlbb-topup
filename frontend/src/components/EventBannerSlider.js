@@ -277,8 +277,6 @@ const EventBannerSlider = ({ className = '' }) => {
         )}
       </div>
     </div>
-      </div>
-    </div>
   );
 };
 
