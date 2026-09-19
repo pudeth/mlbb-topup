@@ -399,39 +399,24 @@ const AiAssistant = () => {
 
   return (
     <>
-      {/* Futuristic Floating AI Trigger Button */}
+      {/* Clean Floating AI Trigger - No background, just the icon */}
       <button
         type="button"
         onClick={() => setIsOpen(!isOpen)}
-        className="ai-assistant-widget fixed bottom-5 right-4 sm:right-6 z-40 p-2 sm:px-4 sm:py-2.5 rounded-2xl bg-gradient-to-r from-slate-950 via-[#0D1527] to-slate-950 border border-cyan-500/50 hover:border-amber-400 text-white font-black shadow-[0_0_25px_rgba(6,182,212,0.35)] hover:shadow-[0_0_35px_rgba(251,191,36,0.45)] hover:scale-105 active:scale-95 transition-all duration-300 flex items-center gap-2.5 group select-none backdrop-blur-xl cursor-pointer"
+        className="ai-assistant-widget fixed bottom-5 right-4 sm:right-5 z-40 w-16 h-16 sm:w-20 sm:h-20 hover:scale-110 active:scale-95 transition-all duration-300 group select-none cursor-pointer bg-transparent border-0 outline-none p-0"
         aria-label="Open AI Assistant"
       >
-        {/* MLBB Bot Badge Icon - Natural frame preserved via object-contain */}
-        <div className="relative w-10 h-10 sm:w-12 sm:h-12 shrink-0 group-hover:scale-110 transition-transform duration-300">
+        {/* MLBB Bot Badge - Full icon, no wrapper box */}
+        <div className="relative w-full h-full">
           <img
             src="/ai-bot-icon.jpg"
             alt="AI Assistant"
-            className="w-full h-full object-contain drop-shadow-[0_0_10px_rgba(56,189,248,0.6)] group-hover:drop-shadow-[0_0_18px_rgba(251,191,36,0.7)] transition-all duration-300"
+            className="w-full h-full object-contain drop-shadow-[0_0_14px_rgba(56,189,248,0.5)] group-hover:drop-shadow-[0_0_24px_rgba(56,189,248,0.9)] transition-all duration-300"
           />
           {/* Pulsing Live Dot */}
-          <span className="absolute -top-0.5 -right-0.5 flex h-3.5 w-3.5">
-            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-cyan-400 opacity-75"></span>
-            <span className="relative inline-flex rounded-full h-3.5 w-3.5 bg-gradient-to-r from-emerald-400 to-cyan-400 border-2 border-slate-950"></span>
-          </span>
-        </div>
-
-        {/* Text for Desktop / Tablet */}
-        <div className="text-left hidden xs:block pr-1 leading-tight">
-          <div className="flex items-center gap-1">
-            <span className="text-xs font-black tracking-wider uppercase bg-gradient-to-r from-cyan-300 via-white to-amber-300 bg-clip-text text-transparent group-hover:from-amber-300 group-hover:to-yellow-200">
-              {language === 'km' ? 'ជំនួយការ AI' : language === 'zh' ? 'AI 智能助手' : 'AI Assistant'}
-            </span>
-            <span className="text-[9px] px-1.5 py-0.5 rounded-full bg-cyan-500/20 border border-cyan-400/40 text-cyan-300 font-bold uppercase">
-              24/7
-            </span>
-          </div>
-          <span className="text-[9px] text-slate-400 font-medium block">
-            {language === 'km' ? 'ឆ្លើយតបរហ័ស 10s' : language === 'zh' ? '秒级智能解答' : 'Instant Help & Top-Up'}
+          <span className="absolute top-1 right-1 flex h-3.5 w-3.5">
+            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+            <span className="relative inline-flex rounded-full h-3.5 w-3.5 bg-gradient-to-r from-emerald-400 to-cyan-400 border-2 border-slate-950 shadow-sm"></span>
           </span>
         </div>
       </button>
