@@ -14,24 +14,18 @@ export const CambodiaSphericalFlag = ({ className = "w-full h-full" }) => (
   <svg viewBox="0 0 100 100" className={className} xmlns="http://www.w3.org/2000/svg">
     <defs>
       <clipPath id="cambodiaSphereClip">
-        <circle cx="50" cy="50" r="49.5" />
+        <circle cx="50" cy="50" r="50" />
       </clipPath>
-      {/* 3D Convex Glass Dome Specular Glint */}
+      {/* Soft Clean Glass Highlight - zero dark shadows */}
       <radialGradient id="sphereGlint" cx="35%" cy="25%" r="60%">
-        <stop offset="0%" stopColor="#FFFFFF" stopOpacity="0.8" />
-        <stop offset="25%" stopColor="#FFFFFF" stopOpacity="0.22" />
-        <stop offset="55%" stopColor="#FFFFFF" stopOpacity="0" />
-      </radialGradient>
-      {/* 3D Spherical Edge Shadow & Ambient Occlusion */}
-      <radialGradient id="sphereEdgeDepth" cx="50%" cy="50%" r="50%">
-        <stop offset="68%" stopColor="#000000" stopOpacity="0" />
-        <stop offset="90%" stopColor="#000000" stopOpacity="0.35" />
-        <stop offset="100%" stopColor="#000000" stopOpacity="0.75" />
+        <stop offset="0%" stopColor="#FFFFFF" stopOpacity="0.4" />
+        <stop offset="25%" stopColor="#FFFFFF" stopOpacity="0.1" />
+        <stop offset="50%" stopColor="#FFFFFF" stopOpacity="0" />
       </radialGradient>
     </defs>
 
     <g clipPath="url(#cambodiaSphereClip)">
-      {/* Full-Frame Cambodia Flag */}
+      {/* Full-Frame Cambodia Flag - Pure, clean, bright colors with no shadow */}
       <image
         href="/kh.svg"
         x="0"
@@ -40,9 +34,8 @@ export const CambodiaSphericalFlag = ({ className = "w-full h-full" }) => (
         height="100"
         preserveAspectRatio="xMidYMid slice"
       />
-      {/* 3D Spherical Lighting Overlay */}
-      <circle cx="50" cy="50" r="49.5" fill="url(#sphereGlint)" pointerEvents="none" />
-      <circle cx="50" cy="50" r="49.5" fill="url(#sphereEdgeDepth)" pointerEvents="none" />
+      {/* Light Clean Shine Overlay Only */}
+      <circle cx="50" cy="50" r="50" fill="url(#sphereGlint)" pointerEvents="none" />
     </g>
   </svg>
 );
@@ -78,9 +71,9 @@ export const CambodiaFlagFrame = ({
         aspectRatio: '1024 / 397'
       }}
     >
-      {/* 1. Full-Frame 3D Spherical Cambodia Flag inside the circular medallion */}
+      {/* 1. Full-Frame Clean Cambodia Flag inside the circular medallion (No shadows) */}
       <div
-        className="absolute rounded-full overflow-hidden flex items-center justify-center z-0 shadow-lg"
+        className="absolute rounded-full overflow-hidden flex items-center justify-center z-0"
         style={{
           left: '10.3%',
           top: '16.1%',
