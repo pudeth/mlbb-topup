@@ -8,6 +8,7 @@ import { DEFAULT_EVENT_BANNERS, getAllStoredBanners, fetchStoredBanners, saveSto
 import { CambodiaFlagSvg, CambodiaFlagFrame, CambodiaCornerBadge } from '../components/CambodiaFlagBadge';
 import ProductPackageImage from '../components/ProductPackageImage';
 import { uploadToCloudinary, readFileAsDataUrl, getCloudinaryConfig, saveCloudinaryConfig } from '../services/cloudinary';
+import { getStoredProviderSettings, fetchStoredProviderSettings, switchActiveProvider, saveStoredProviderSettings } from '../services/supplierGateway';
 
 const AdminDashboard = () => {
 
@@ -243,33 +244,8 @@ const PRICING_GAMES = [
   const [userSearch, setUserSearch] = useState('');
   const [userRoleModal, setUserRoleModal] = useState(null);
 
-    // Provider Management State
-  const [providerSettings, setProviderSettings] = useState(() => {
-    try {
-      const saved = localStorage.getItem('admin_provider_settings');
-      if (saved) {
-        const parsed = JSON.parse(saved);
-        const activeB = parsed.activeProvider === 'FazerCards'
-          ? (parsed.fazerCardsBalanceUSD || 18.50)
-          : (parsed.khmerTopUpBalanceUSD || 1.45);
-        return { ...parsed, balanceUSD: activeB };
-      }
-    } catch (e) {}
-    return {
-      activeProvider: 'FazerCards',
-      environment: 'Production',
-      autoDispatchOnPayment: true,
-      merchantId: 'peakmao007',
-      apiKey: 'fc_5f79a0016d5d87bd1e83ea4f',
-      khmerTopUpApiKey: 'kt_6d38a3a5940e970221cc62fa306ae96044736364',
-      fazerCardsApiKey: 'fc_5f79a0016d5d87bd1e83ea4f',
-      webhookUrl: 'http://localhost:5000/api/supplier/webhook',
-      balanceUSD: 18.50,
-      khmerTopUpBalanceUSD: 1.45,
-      fazerCardsBalanceUSD: 18.50,
-      status: 'Connected & Active',
-    };
-  });
+  // Provider Management State backed by Persistent Pinned Storage & Cloud Sync
+  const [providerSettings, setProviderSettings] = useState(() => getStoredProviderSettings());
   const [providerTesting, setProviderTesting] = useState(false);
   const [switchingProvider, setSwitchingProvider] = useState(false);
   const [balanceEditModalOpen, setBalanceEditModalOpen] = useState(false);
@@ -316,38 +292,25 @@ const PRICING_GAMES = [
     window.addEventListener('eventBannersUpdated', handleSync);
     window.addEventListener('storage', handleSync);
 
-    // Initial sync of live Top-Up Provider Settings across all devices
-    adminAPI.getProviderSettings().then((res) => {
-      if (res?.data) {
-        const d = res.data;
-        const currentActive = d.activeProvider || d.ActiveProvider || 'FazerCards';
-        const bal = currentActive.toLowerCase().includes('khmer')
-          ? (d.khmerTopUpBalanceUSD ?? d.KhmerTopUpBalanceUSD ?? 1.25)
-          : (d.fazerCardsBalanceUSD ?? d.FazerCardsBalanceUSD ?? 18.50);
-
-        setProviderSettings((prev) => ({
-          ...prev,
-          activeProvider: currentActive,
-          apiKey: d.apiKey || d.ApiKey || prev.apiKey,
-          khmerTopUpApiKey: d.khmerTopUpApiKey || d.KhmerTopUpApiKey || prev.khmerTopUpApiKey,
-          fazerCardsApiKey: d.fazerCardsApiKey || d.FazerCardsApiKey || prev.fazerCardsApiKey,
-          khmerTopUpBalanceUSD: d.khmerTopUpBalanceUSD ?? d.KhmerTopUpBalanceUSD ?? prev.khmerTopUpBalanceUSD,
-          fazerCardsBalanceUSD: d.fazerCardsBalanceUSD ?? d.FazerCardsBalanceUSD ?? prev.fazerCardsBalanceUSD,
-          balanceUSD: bal,
-        }));
-        try {
-          localStorage.setItem('admin_provider_settings', JSON.stringify({
-            ...d,
-            activeProvider: currentActive,
-            balanceUSD: bal
-          }));
-        } catch (e) {}
+    // Initial sync of live Top-Up Provider Settings & live balances from cloud across all devices
+    fetchStoredProviderSettings().then((cloudSettings) => {
+      if (cloudSettings) {
+        setProviderSettings(cloudSettings);
       }
-    }).catch(() => {});
+    });
+
+    const handleProviderSync = () => {
+      setProviderSettings(getStoredProviderSettings());
+    };
+
+    window.addEventListener('providerSettingsUpdated', handleProviderSync);
+    window.addEventListener('storage', handleProviderSync);
 
     return () => {
       window.removeEventListener('eventBannersUpdated', handleSync);
       window.removeEventListener('storage', handleSync);
+      window.removeEventListener('providerSettingsUpdated', handleProviderSync);
+      window.removeEventListener('storage', handleProviderSync);
     };
   }, []);
 
@@ -518,29 +481,12 @@ const PRICING_GAMES = [
     setSwitchingProvider(true);
     try {
       showToast('info', `⚡ Switching active supplier to ${targetProvider}...`);
-      const res = await adminAPI.switchProvider(targetProvider);
-      const serverSettings = res?.data?.settings;
-
-      const targetKey = targetProvider === 'FazerCards'
-        ? (serverSettings?.fazerCardsApiKey || serverSettings?.FazerCardsApiKey || providerSettings.fazerCardsApiKey || 'fc_5f79a0016d5d87bd1e83ea4f')
-        : (serverSettings?.khmerTopUpApiKey || serverSettings?.KhmerTopUpApiKey || providerSettings.khmerTopUpApiKey || 'kt_6d38a3a5940e970221cc62fa306ae96044736364');
-      
-      const targetBal = targetProvider === 'FazerCards'
-        ? (serverSettings?.fazerCardsBalanceUSD ?? serverSettings?.FazerCardsBalanceUSD ?? providerSettings.fazerCardsBalanceUSD ?? 18.50)
-        : (serverSettings?.khmerTopUpBalanceUSD ?? serverSettings?.KhmerTopUpBalanceUSD ?? providerSettings.khmerTopUpBalanceUSD ?? 1.45);
-
-      const updated = {
-        ...providerSettings,
-        ...(serverSettings || {}),
-        activeProvider: targetProvider,
-        apiKey: targetKey,
-        balanceUSD: targetBal,
-      };
-
+      const updated = await switchActiveProvider(targetProvider);
       setProviderSettings(updated);
-      try {
-        localStorage.setItem('admin_provider_settings', JSON.stringify(updated));
-      } catch (e) {}
+
+      const targetBal = updated.activeProvider === 'KhmerTopUp'
+        ? (updated.khmerTopUpBalanceUSD ?? 1.25)
+        : (updated.fazerCardsBalanceUSD ?? 18.50);
 
       showToast('success', `✅ Active Gateway switched to ${targetProvider}! Live Balance: $${Number(targetBal).toFixed(2)} USD (~${(Number(targetBal) * 4100).toLocaleString()} ៛)`);
     } catch (err) {
@@ -556,7 +502,7 @@ const PRICING_GAMES = [
     setBalanceEditModalOpen(true);
   };
 
-  const handleSaveAdjustedBalance = (e) => {
+  const handleSaveAdjustedBalance = async (e) => {
     e.preventDefault();
     const val = parseFloat(newBalanceInput);
     if (isNaN(val) || val < 0) {
@@ -578,11 +524,7 @@ const PRICING_GAMES = [
     }
 
     setProviderSettings(updated);
-    try {
-      localStorage.setItem('admin_provider_settings', JSON.stringify(updated));
-    } catch (e) {}
-
-    adminAPI.updateProviderSettings(updated).catch(() => {});
+    await saveStoredProviderSettings(updated).catch(() => {});
     showToast('success', `Updated ${editingProviderName} balance to $${val.toFixed(2)} USD (~${(val * 4100).toLocaleString()} ៛)!`);
     setBalanceEditModalOpen(false);
   };
@@ -1418,7 +1360,7 @@ const PRICING_GAMES = [
     }
   };
 
-    const handleSaveProviderSettings = async (e) => {
+  const handleSaveProviderSettings = async (e) => {
     e.preventDefault();
     try {
       const activeBal = providerSettings.activeProvider === 'FazerCards'
@@ -1430,13 +1372,9 @@ const PRICING_GAMES = [
         balanceUSD: activeBal,
       };
 
-      setProviderSettings(payload);
-      try {
-        localStorage.setItem('admin_provider_settings', JSON.stringify(payload));
-      } catch (e) {}
-
-      await adminAPI.updateProviderSettings(payload).catch(() => {});
-      showToast('success', `Upstream Provider updated to ${payload.activeProvider}! Live Balance: $${activeBal.toFixed(2)} USD`);
+      const saved = await saveStoredProviderSettings(payload);
+      setProviderSettings(saved);
+      showToast('success', `Upstream Provider updated to ${saved.activeProvider}! Live Balance: $${activeBal.toFixed(2)} USD`);
       loadData(true);
     } catch (err) {
       showToast('error', err.response?.data?.message || 'Failed to save settings');

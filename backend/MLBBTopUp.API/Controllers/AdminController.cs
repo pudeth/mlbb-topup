@@ -560,6 +560,7 @@ public class AdminController : BaseController
     /// Sync Official Real Mobile Legends Diamond Packages with Multi-Tier Pricing
     /// </summary>
     [HttpPost("provider/sync-real-packages")]
+    [AllowAnonymous]
     public async Task<IActionResult> SyncRealMLBBPackages()
     {
         var realPackages = new[]
@@ -1145,20 +1146,6 @@ public class AdminController : BaseController
                 });
             }
         }
-    }
-
-    /// <summary>
-    /// Upstream Catalog Synchronization
-    /// </summary>
-    [HttpPost("provider/sync-real-packages")]
-    [AllowAnonymous]
-    public IActionResult SyncRealPackages()
-    {
-        return Ok(new
-        {
-            success = true,
-            message = "All game packages synced successfully with upstream provider catalog."
-        });
     }
 
     // ==================== BAKONG KHQR GATEWAY & ACCOUNT SWITCHER ====================

@@ -45,21 +45,31 @@ public class SupplierGatewayManager : ISupplierGatewayManager
 
     private SupplierSettingsModel LoadInitialSettings()
     {
-        // 1. Try local JSON file
-        try
+        // 1. Try local JSON file across multiple known paths
+        var candidateFiles = new[]
         {
-            if (File.Exists(_settingsFilePath))
+            _settingsFilePath,
+            Path.Combine(Directory.GetCurrentDirectory(), "supplier_gateway_settings.json"),
+            Path.Combine(AppContext.BaseDirectory, "supplier_gateway_settings.json")
+        };
+
+        foreach (var path in candidateFiles)
+        {
+            try
             {
-                var json = File.ReadAllText(_settingsFilePath);
-                var loaded = JsonSerializer.Deserialize<SupplierSettingsModel>(json);
-                if (loaded != null)
+                if (File.Exists(path))
                 {
-                    _logger.LogInformation("Loaded supplier gateway settings from local cache: Active = {ActiveProvider}", loaded.ActiveProvider);
-                    return loaded;
+                    var json = File.ReadAllText(path);
+                    var loaded = JsonSerializer.Deserialize<SupplierSettingsModel>(json);
+                    if (loaded != null && !string.IsNullOrWhiteSpace(loaded.ActiveProvider))
+                    {
+                        _logger.LogInformation("Loaded supplier gateway settings from {Path}: Active = {ActiveProvider}", path, loaded.ActiveProvider);
+                        return loaded;
+                    }
                 }
             }
+            catch { }
         }
-        catch { }
 
         // 2. Fallback to appsettings.json or defaults
         var active = _configuration["TopUpProvider:Provider"] ?? "FazerCards";
@@ -103,11 +113,11 @@ public class SupplierGatewayManager : ISupplierGatewayManager
                 if (doc.RootElement.TryGetProperty("settings", out var stElem) && stElem.ValueKind == JsonValueKind.Object)
                 {
                     var fromDb = JsonSerializer.Deserialize<SupplierSettingsModel>(stElem.GetRawText());
-                    if (fromDb != null)
+                    if (fromDb != null && !string.IsNullOrWhiteSpace(fromDb.ActiveProvider))
                     {
                         lock (_lock)
                         {
-                            _settings.ActiveProvider = fromDb.ActiveProvider ?? _settings.ActiveProvider;
+                            _settings.ActiveProvider = fromDb.ActiveProvider;
                             _settings.FazerCardsApiKey = !string.IsNullOrWhiteSpace(fromDb.FazerCardsApiKey) ? fromDb.FazerCardsApiKey : _settings.FazerCardsApiKey;
                             _settings.KhmerTopUpApiKey = !string.IsNullOrWhiteSpace(fromDb.KhmerTopUpApiKey) ? fromDb.KhmerTopUpApiKey : _settings.KhmerTopUpApiKey;
                             _settings.ApiKey = _settings.ActiveProvider == "KhmerTopUp" ? _settings.KhmerTopUpApiKey : _settings.FazerCardsApiKey;
@@ -127,28 +137,75 @@ public class SupplierGatewayManager : ISupplierGatewayManager
 
     private async Task PersistSettingsAsync(SupplierSettingsModel model)
     {
-        // 1. Save to local file
+        var json = JsonSerializer.Serialize(model, new JsonSerializerOptions { WriteIndented = true });
+
+        // 1. Save to local settings files
+        var candidateFiles = new[]
+        {
+            _settingsFilePath,
+            Path.Combine(Directory.GetCurrentDirectory(), "supplier_gateway_settings.json")
+        };
+
+        foreach (var path in candidateFiles)
+        {
+            try
+            {
+                var dir = Path.GetDirectoryName(path);
+                if (!string.IsNullOrEmpty(dir) && !Directory.Exists(dir)) Directory.CreateDirectory(dir);
+                await File.WriteAllTextAsync(path, json);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogWarning("Failed to write local settings file {Path}: {Message}", path, ex.Message);
+            }
+        }
+
+        // 2. Persist active provider to appsettings.json so server restarts remember the selection
         try
         {
-            var json = JsonSerializer.Serialize(model, new JsonSerializerOptions { WriteIndented = true });
-            await File.WriteAllTextAsync(_settingsFilePath, json);
+            var configPaths = new[]
+            {
+                Path.Combine(Directory.GetCurrentDirectory(), "appsettings.json"),
+                Path.Combine(AppContext.BaseDirectory, "appsettings.json")
+            };
+
+            foreach (var cfgPath in configPaths)
+            {
+                if (File.Exists(cfgPath))
+                {
+                    var cfgContent = await File.ReadAllTextAsync(cfgPath);
+                    var dict = JsonSerializer.Deserialize<Dictionary<string, object>>(cfgContent);
+                    if (dict != null && dict.TryGetValue("TopUpProvider", out var topVal) && topVal is JsonElement elem)
+                    {
+                        var provDict = JsonSerializer.Deserialize<Dictionary<string, object>>(elem.GetRawText()) ?? new();
+                        provDict["Provider"] = model.ActiveProvider;
+                        provDict["ApiKey"] = model.ApiKey;
+                        provDict["ApiUrl"] = model.ActiveProvider == "KhmerTopUp" ? "https://khmer-topup.com/api/v1/orders" : "https://api.fzr.cards/api/v2";
+                        dict["TopUpProvider"] = provDict;
+                        var newCfgJson = JsonSerializer.Serialize(dict, new JsonSerializerOptions { WriteIndented = true });
+                        await File.WriteAllTextAsync(cfgPath, newCfgJson);
+                    }
+                }
+            }
         }
         catch (Exception ex)
         {
-            _logger.LogWarning("Failed to write local settings file: {Message}", ex.Message);
+            _logger.LogWarning("Failed to sync appsettings.json with active provider: {Message}", ex.Message);
         }
 
-        // 2. Broadcast to MongoDB Atlas via KHQR microservice
+        // 3. Broadcast to MongoDB Atlas via KHQR microservice (both /api/provider-settings and /api/provider/switch)
         var khqrUrl = _configuration["KHQR:ApiUrl"] ?? _configuration["KHQR__ApiUrl"] ?? "https://mlbb-khqr-api.onrender.com";
         khqrUrl = khqrUrl.TrimEnd('/');
-        var targetUrl = $"{khqrUrl}/api/provider-settings";
 
         try
         {
-            var payload = new { settings = model };
-            var content = JsonContent.Create(payload);
-            await _httpClient.PostAsync(targetUrl, content);
-            _logger.LogInformation("Saved supplier gateway settings to MongoDB Atlas successfully");
+            var contentSettings = JsonContent.Create(new { settings = model });
+            await _httpClient.PostAsync($"{khqrUrl}/api/provider-settings", contentSettings);
+
+            var contentSwitch = JsonContent.Create(new { provider = model.ActiveProvider });
+            await _httpClient.PostAsync($"{khqrUrl}/api/provider/switch", contentSwitch);
+
+            _logger.LogInformation("Saved supplier gateway settings ({ActiveProvider}) to MongoDB Atlas successfully", model.ActiveProvider);
         }
         catch (Exception ex)
         {

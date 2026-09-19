@@ -1364,8 +1364,40 @@ def handle_provider_settings():
                 )
                 print("[+] Saved supplier gateway settings to MongoDB Atlas settings collection!")
             return jsonify({'success': True, 'settings': settings_payload})
-        except Exception as e:
-            return jsonify({'success': False, 'error': str(e)}), 500
+@app.route('/api/provider/switch', methods=['POST'])
+@app.route('/api/admin/provider/switch', methods=['POST'])
+def handle_provider_switch():
+    """1-Click switch active supplier gateway and persist permanently in MongoDB Atlas"""
+    try:
+        data = request.get_json() or {}
+        target = data.get('provider', 'FazerCards')
+        normalized = 'KhmerTopUp' if str(target).lower() == 'khmertopup' else 'FazerCards'
+
+        current_doc = None
+        if mongo_db is not None:
+            current_doc = mongo_db.settings.find_one({'type': 'supplier_gateway_settings'})
+
+        settings_data = (current_doc.get('data') if current_doc else {}) or {}
+        settings_data['activeProvider'] = normalized
+        settings_data['apiKey'] = settings_data.get('khmerTopUpApiKey', 'kt_6d38a3a5940e970221cc62fa306ae96044736364') if normalized == 'KhmerTopUp' else settings_data.get('fazerCardsApiKey', 'fc_5f79a0016d5d87bd1e83ea4f')
+        settings_data['balanceUSD'] = settings_data.get('khmerTopUpBalanceUSD', 1.25) if normalized == 'KhmerTopUp' else settings_data.get('fazerCardsBalanceUSD', 18.50)
+        settings_data['updatedAt'] = datetime.utcnow().isoformat()
+
+        if mongo_db is not None:
+            mongo_db.settings.update_one(
+                {'type': 'supplier_gateway_settings'},
+                {'$set': {'type': 'supplier_gateway_settings', 'data': settings_data, 'updated_at': datetime.utcnow().isoformat()}},
+                upsert=True
+            )
+            print(f"[+] Switched supplier gateway to {normalized} and persisted in MongoDB Atlas!")
+
+        return jsonify({
+            'success': True,
+            'message': f'Active provider switched to {normalized}',
+            'settings': settings_data
+        })
+    except Exception as e:
+        return jsonify({'success': False, 'error': str(e)}), 500
 
 @app.route('/api/games', methods=['GET', 'POST', 'PUT'])
 @app.route('/api/admin/games', methods=['GET', 'POST', 'PUT'])
