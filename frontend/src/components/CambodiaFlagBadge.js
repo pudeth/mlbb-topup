@@ -198,22 +198,22 @@ export const CambodiaFlagFrame = ({
   if (badgeStyle === 'cyber_pill') {
     return (
       <div
-        className={`relative inline-flex items-center gap-1.5 sm:gap-2 px-2.5 py-1 sm:py-1.5 rounded-full bg-slate-950/90 border border-amber-400/80 backdrop-blur-md select-none transition-transform duration-300 hover:scale-[1.03] ${className}`}
-        style={{ maxWidth: '240px' }}
+        className={`relative inline-flex items-center gap-1.5 px-2 py-0.5 sm:py-1 rounded-full bg-slate-950/90 border border-amber-400/80 backdrop-blur-md select-none transition-transform duration-300 hover:scale-[1.03] ${className}`}
+        style={{ maxWidth: '175px' }}
       >
         {/* Left Flag Orb */}
-        <div className="w-5 h-5 sm:w-6 sm:h-6 rounded-full ring-1 ring-amber-300 shrink-0 overflow-hidden flex items-center justify-center">
+        <div className="w-4 h-4 sm:w-5 sm:h-5 rounded-full ring-1 ring-amber-300 shrink-0 overflow-hidden flex items-center justify-center">
           <DynamicFlagMedallion flagType={flagType} flagImage={flagImage} />
         </div>
 
         {/* Title */}
-        <span className="font-black text-[10px] sm:text-xs tracking-wider uppercase truncate text-amber-300 font-khmer">
+        <span className="font-black text-[9px] sm:text-[10px] tracking-wider uppercase truncate text-amber-300 font-khmer">
           {title}
         </span>
 
         {/* Subtitle / Tag */}
         {sub && (
-          <span className="px-1.5 py-0.5 rounded-md bg-cyan-950/90 text-cyan-300 border border-cyan-500/50 text-[8px] sm:text-[9px] font-black font-mono tracking-widest uppercase shrink-0">
+          <span className="px-1.5 py-0.2 rounded-md bg-cyan-950/90 text-cyan-300 border border-cyan-500/50 text-[7px] sm:text-[8px] font-black font-mono tracking-widest uppercase shrink-0">
             {sub}
           </span>
         )}
@@ -227,25 +227,25 @@ export const CambodiaFlagFrame = ({
   if (badgeStyle === 'esports_shield') {
     return (
       <div
-        className={`relative inline-flex items-center gap-2 p-1.5 pr-3 rounded-2xl bg-gradient-to-r from-[#10192e] via-[#0b1222] to-[#121c33] border-2 border-amber-400/90 select-none transition-transform duration-300 hover:scale-[1.03] ${className}`}
+        className={`relative inline-flex items-center gap-1.5 p-1 pr-2 rounded-xl bg-gradient-to-r from-[#10192e] via-[#0b1222] to-[#121c33] border border-amber-400/90 select-none transition-transform duration-300 hover:scale-[1.03] ${className}`}
       >
         {/* Shield Hex / Circle Medallion */}
-        <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-full ring-2 ring-amber-400/80 overflow-hidden shrink-0 flex items-center justify-center bg-slate-900">
+        <div className="w-5 h-5 sm:w-6 sm:h-6 rounded-full ring-1.5 ring-amber-400/80 overflow-hidden shrink-0 flex items-center justify-center bg-slate-900">
           <DynamicFlagMedallion flagType={flagType} flagImage={flagImage} />
         </div>
 
         {/* Stacked Text Labels */}
         <div className="flex flex-col text-left leading-tight">
-          <span className="font-black text-[10px] sm:text-[11px] uppercase tracking-wide text-amber-300 font-khmer truncate">
+          <span className="font-black text-[9px] sm:text-[10px] uppercase tracking-wide text-amber-300 font-khmer truncate">
             {title}
           </span>
           <div className="flex items-center gap-1">
             {subtitle && (
-              <span className="text-[8px] font-black text-amber-400 font-mono">
+              <span className="text-[7px] font-black text-amber-400 font-mono">
                 {subtitle}
               </span>
             )}
-            <span className="text-[8px] font-black tracking-widest text-cyan-400 font-mono uppercase">
+            <span className="text-[7px] font-black tracking-widest text-cyan-400 font-mono uppercase">
               {sub || 'SERVER'}
             </span>
           </div>
@@ -261,7 +261,7 @@ export const CambodiaFlagFrame = ({
     <div
       className={`relative inline-block select-none transition-transform duration-300 hover:scale-[1.03] ${className}`}
       style={{
-        width: 'clamp(155px, 22vw, 230px)',
+        width: 'clamp(105px, 14vw, 150px)',
         aspectRatio: '1024 / 397'
       }}
     >
@@ -298,12 +298,12 @@ export const CambodiaFlagFrame = ({
           top: '44.5%',
           transform: 'translate(-50%, -50%)',
           width: '54%',
-          fontSize: 'clamp(9.5px, 1.35vw, 15.5px)',
+          fontSize: 'clamp(7.5px, 0.95vw, 11px)',
           letterSpacing: '0.02em',
           background: 'linear-gradient(180deg, #FFFFFF 0%, #FFF4B8 22%, #FBBF24 52%, #D97706 78%, #78350F 100%)',
           WebkitBackgroundClip: 'text',
           WebkitTextFillColor: 'transparent',
-          filter: 'drop-shadow(0 1.5px 0px #78350F)'
+          filter: 'drop-shadow(0 1px 0px #78350F)'
         }}
       >
         {title}
@@ -317,10 +317,10 @@ export const CambodiaFlagFrame = ({
           top: '70.8%',
           transform: 'translate(-50%, -50%)',
           width: '42%',
-          fontSize: 'clamp(6.5px, 0.85vw, 10px)',
-          letterSpacing: '0.22em',
+          fontSize: 'clamp(5px, 0.62vw, 7px)',
+          letterSpacing: '0.2em',
           color: '#7DD3FC',
-          textShadow: '0 0 6px rgba(56, 189, 248, 0.95)'
+          textShadow: '0 0 5px rgba(56, 189, 248, 0.95)'
         }}
       >
         {sub}

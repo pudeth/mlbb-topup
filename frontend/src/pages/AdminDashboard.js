@@ -5538,7 +5538,7 @@ const PRICING_GAMES = [
 
                       {/* Server Badge Frame Overlay on Top-Right */}
                       {gameFormData.flagType !== 'none' && (
-                        <div className="absolute top-1 right-1 z-20 scale-[0.58] sm:scale-[0.62] origin-top-right pointer-events-none">
+                        <div className="absolute top-1 right-1 z-20 scale-[0.8] sm:scale-[0.85] origin-top-right pointer-events-none">
                           <CambodiaFlagFrame
                             title={gameFormData.flagTitle !== undefined ? gameFormData.flagTitle : (gameFormData.badge || 'សេវើខ្មែរ')}
                             subtitle={gameFormData.flagSubtitle !== undefined ? gameFormData.flagSubtitle : '5V5'}
