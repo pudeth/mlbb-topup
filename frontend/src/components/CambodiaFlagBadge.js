@@ -32,45 +32,38 @@ export const CambodiaFlagFrame = ({
     <div
       className={`relative inline-block select-none filter drop-shadow-[0_8px_24px_rgba(0,0,0,0.85)] transition-transform duration-300 hover:scale-[1.03] ${className}`}
       style={{
-        width: 'clamp(200px, 24vw, 290px)',
+        width: 'clamp(210px, 25vw, 300px)',
         aspectRatio: '1024 / 397'
       }}
     >
-      {/* 1. Underlying Cambodia Flag inside the circular medallion */}
-      <div
-        className="absolute rounded-full overflow-hidden flex items-center justify-center z-0"
-        style={{
-          left: '10.45%',
-          top: '16.37%',
-          width: '22.26%',
-          height: '57.43%'
-        }}
-      >
-        {flagImage ? (
-          <img src={flagImage} alt="Server Flag" className="w-full h-full object-cover" />
-        ) : (
-          <span className="fi fi-kh fis w-full h-full block bg-center bg-cover scale-105" />
-        )}
-
-        {/* 3D Convex Glass Dome Specular Reflection Highlight */}
+      {/* 1. If custom flagImage is provided, render inside circular cutout */}
+      {flagImage && (
         <div
-          className="absolute inset-0 pointer-events-none rounded-full"
+          className="absolute rounded-full overflow-hidden flex items-center justify-center z-0"
           style={{
-            background: 'radial-gradient(circle at 38% 26%, rgba(255,255,255,0.7) 0%, rgba(255,255,255,0.12) 38%, transparent 65%)'
+            left: '10.45%',
+            top: '16.37%',
+            width: '22.26%',
+            height: '57.43%'
           }}
-        />
-        {/* Spherical edge shadow (vignette) */}
-        <div className="absolute inset-0 pointer-events-none rounded-full shadow-[inset_0_0_8px_rgba(0,0,0,0.8)]" />
-      </div>
+        >
+          <img src={flagImage} alt="Server Flag" className="w-full h-full object-cover" />
+          <div
+            className="absolute inset-0 pointer-events-none rounded-full"
+            style={{
+              background: 'radial-gradient(circle at 38% 26%, rgba(255,255,255,0.7) 0%, rgba(255,255,255,0.12) 38%, transparent 65%)'
+            }}
+          />
+        </div>
+      )}
 
-      {/* 2. Pristine 3D Chiseled Gold & Navy Frame Template */}
+      {/* 2. Pristine 3D Chiseled Gold & Navy Frame Template with Full Cambodia Flag */}
       <img
-        src="/mlbb-server-frame-cutout.png"
+        src={flagImage ? '/mlbb-server-frame-cutout.png' : '/mlbb-server-frame-with-flag.png'}
         alt="MLBB Server Frame"
         className="relative z-10 w-full h-full object-contain pointer-events-none"
         draggable={false}
         onError={(e) => {
-          // Fallback to intact template if cutout is missing
           e.target.onerror = null;
           e.target.src = '/mlbb-server-frame-template.png';
         }}
@@ -84,7 +77,7 @@ export const CambodiaFlagFrame = ({
           top: '44.5%',
           transform: 'translate(-50%, -50%)',
           width: '54%',
-          fontSize: 'clamp(11px, 1.4vw, 17px)',
+          fontSize: 'clamp(11.5px, 1.45vw, 17.5px)',
           letterSpacing: '0.02em',
           background: 'linear-gradient(180deg, #FFFFFF 0%, #FFF4B8 22%, #FBBF24 52%, #D97706 78%, #78350F 100%)',
           WebkitBackgroundClip: 'text',
