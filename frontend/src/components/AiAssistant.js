@@ -409,9 +409,8 @@ const AiAssistant = () => {
         {/* MLBB Bot Badge - Full icon, no wrapper box */}
         <div className="relative w-full h-full">
           <img
-            src="/ai-bot-icon.jpg"
+            src="/ai-bot-icon.png"
             alt="AI Assistant"
-            style={{ mixBlendMode: 'screen' }}
             className="w-full h-full object-contain drop-shadow-[0_0_14px_rgba(56,189,248,0.5)] group-hover:drop-shadow-[0_0_24px_rgba(56,189,248,0.9)] transition-all duration-300"
           />
           {/* Pulsing Live Dot */}
