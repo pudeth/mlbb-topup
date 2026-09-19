@@ -323,7 +323,19 @@ const matchIntent = (query, currentLang) => {
   }
 
   // 6. Top Up Steps / How To Guide — checked FIRST before pricing to avoid false matches
-  const stepsKeywords = ['step', 'how to', 'how do i', 'guide', 'tutorial', 'process', 'procedure', 'topup', 'top up', 'top-up', 'recharge', 'start', 'begin', 'ជំហាន', 'ដំណើរការ', 'របៀប', 'វិធីសាស្ត្រ', 'ចាប់ផ្ដើម', 'ពន្យល់', '步骤', '怎么充', '如何充', '充值教程', '充值流程', '怎么买', '教一下', 'ជំហានបញ្ចូលពេជ្រ', '充值步骤教学'];
+  const stepsKeywords = [
+    // English
+    'step', 'how to', 'how do i', 'guide', 'tutorial', 'process', 'procedure',
+    'topup', 'top up', 'top-up', 'recharge', 'start', 'begin', 'buy', 'purchase', 'order',
+    // Khmer
+    'ជំហាន', 'ដំណើរការ', 'របៀប', 'វិធីសាស្ត្រ', 'ចាប់ផ្ដើម', 'ពន្យល់',
+    'ទិញ', 'ទិញពេជ្រ', 'គេទិញ', 'ចង់ទិញ', 'ត្រូវធ្វើអ្វី', 'ត្រូវធ្វើម្ដេច',
+    'ទិញមិច', 'ទិញយ៉ាងម៉េច', 'ដំណើរការទិញ', 'បញ្ចូលពេជ្រ', 'ការបញ្ចូល',
+    // Chinese
+    '步骤', '怎么充', '如何充', '充值教程', '充值流程', '怎么买', '教一下', '购买',
+    // Button labels
+    'ជំហានបញ្ចូលពេជ្រ', '充值步骤教学', 'top up steps',
+  ];
   if (stepsKeywords.some(k => q.includes(k))) {
     return { type: 'text', reply: KNOWLEDGE_BASE[lang].topup_steps };
   }
