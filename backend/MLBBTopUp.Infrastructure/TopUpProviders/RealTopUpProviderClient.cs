@@ -187,8 +187,7 @@ public class RealTopUpProviderClient : ITopUpProviderClient
         // Check environment mode (Sandbox / Demo / Production)
         var env = settings.Environment ?? _configuration["TopUpProvider:Environment"] ?? "Production";
         bool isSandbox = env.Equals("Sandbox", StringComparison.OrdinalIgnoreCase) ||
-                         env.Equals("Demo", StringComparison.OrdinalIgnoreCase) ||
-                         env.Equals("Development", StringComparison.OrdinalIgnoreCase);
+                         env.Equals("Demo", StringComparison.OrdinalIgnoreCase);
 
         if (isSandbox)
         {
