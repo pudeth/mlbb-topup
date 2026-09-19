@@ -1032,53 +1032,53 @@ const TopUp = () => {
   return (
     <div className="max-w-6xl mx-auto px-3 sm:px-6 py-6 animate-fadeIn pb-28">
       {/* Top Game Switcher Carousel */}
-      <div className="mb-6 space-y-2">
-        <div className="flex items-center justify-between">
-          <span className="text-xs font-black uppercase tracking-wider text-slate-400 flex items-center gap-1.5">
-            <span>🎮</span> Select Game or Service:
-          </span>
-          <span className="text-[10px] text-amber-400 font-bold">
-            {allGames.length} Upstream Titles Available
-          </span>
+      <div className="mb-6 space-y-3">
+          <div className="flex items-center justify-between">
+            <span className="text-xs font-black uppercase tracking-widest text-slate-500 flex items-center gap-2">
+              <span className="text-purple-400">ðŸŽ®</span> SELECT GAME OR SERVICE:
+            </span>
+            <span className="text-[10px] text-amber-500/80 font-black uppercase tracking-wider bg-amber-500/10 px-2.5 py-1 rounded-full border border-amber-500/20">
+              {allGames.length} Upstream Titles Available
+            </span>
+          </div>
+  
+          <div className="flex items-center gap-3 overflow-x-auto pb-2 pt-1 scrollbar-none">
+            {allGames.map((game) => {
+              const isSelected = selectedGame.id === game.id;
+              return (
+                <button
+                  key={game.id}
+                  onClick={() => handleSelectGame(game)}
+                  className={`flex items-center gap-2.5 p-1.5 pr-4 rounded-full border transition-all duration-300 shrink-0 select-none cursor-pointer ${
+                    isSelected
+                      ? 'bg-[#181335]/80 border-purple-500/60 text-white shadow-[0_0_15px_rgba(109,40,217,0.2)] scale-[1.02]'
+                      : 'bg-slate-900/40 border-slate-800/60 text-slate-400 hover:bg-slate-800/60 hover:text-slate-200 hover:border-slate-700/80'
+                  }`}
+                >
+                  <div className={`w-9 h-9 rounded-full overflow-hidden shrink-0 transition-transform duration-300 ${isSelected ? 'shadow-md border border-purple-500/40 scale-105' : 'border border-slate-700/40'}`}>
+                    <img
+                      src={game.image}
+                      alt={game.name}
+                      onError={(e) => {
+                        e.target.onerror = null;
+                        e.target.src = game.localFallbackImage || '/mlbb-logo.png';
+                      }}
+                      className="w-full h-full object-cover"
+                    />
+                  </div>
+                  <div className="text-left">
+                    <span className={`text-[11px] font-black block truncate max-w-[130px] sm:max-w-[160px] uppercase tracking-wide transition-colors ${isSelected ? 'text-white' : 'text-slate-300'}`}>
+                      {game.name}
+                    </span>
+                    <span className={`text-[9px] block uppercase font-bold tracking-widest ${isSelected ? 'text-purple-300/80' : 'text-slate-500'}`}>
+                      {game.currency}
+                    </span>
+                  </div>
+                </button>
+              );
+            })}
+          </div>
         </div>
-
-        <div className="flex items-center gap-2.5 overflow-x-auto pb-2 scrollbar-none">
-          {allGames.map((game) => {
-            const isSelected = selectedGame.id === game.id;
-            return (
-              <button
-                key={game.id}
-                onClick={() => handleSelectGame(game)}
-                className={`flex items-center gap-2 p-2 rounded-2xl border transition-all shrink-0 select-none cursor-pointer ${
-                  isSelected
-                    ? 'bg-gradient-to-r from-amber-500/20 to-yellow-500/20 border-amber-400 text-white shadow-glow-gold scale-[1.03]'
-                    : 'bg-[#111728]/80 hover:bg-[#182035] border-slate-800 text-slate-400 hover:text-slate-200'
-                }`}
-              >
-                <div className="w-8 h-8 rounded-xl overflow-hidden bg-slate-950 shrink-0 border border-slate-700/60">
-                  <img
-                    src={game.image}
-                    alt={game.name}
-                    onError={(e) => {
-                      e.target.onerror = null;
-                      e.target.src = game.localFallbackImage || '/mlbb-logo.png';
-                    }}
-                    className="w-full h-full object-cover"
-                  />
-                </div>
-                <div className="text-left pr-1">
-                  <span className="text-xs font-extrabold block truncate max-w-[130px] sm:max-w-[160px]">
-                    {game.name}
-                  </span>
-                  <span className="text-[9px] text-slate-500 block uppercase font-semibold">
-                    {game.currency}
-                  </span>
-                </div>
-              </button>
-            );
-          })}
-        </div>
-      </div>
 
       {/* Top-Up Paused / Closed Maintenance Notice Banner */}
       {isTopupDisabled && (
@@ -1107,8 +1107,8 @@ const TopUp = () => {
         {/* ========================================== */}
         <div className="lg:col-span-4 space-y-4">
           {/* Game Artwork Card with Back, Favorite button & Cambodia Flag Frame */}
-          <div className="bg-[#0B0F19] border border-slate-800 rounded-3xl p-4 sm:p-5 shadow-2xl space-y-4">
-            <div className="relative aspect-square w-full rounded-2xl overflow-hidden bg-slate-950 border border-slate-800 shadow-xl group">
+          <div className="bg-slate-900/30 border border-slate-800/50 rounded-[24px] p-4 sm:p-5 shadow-2xl backdrop-blur-md space-y-5">
+            <div className="relative aspect-square w-full rounded-[16px] overflow-hidden bg-slate-950 border border-slate-800/40 shadow-inner group">
               <img
                 src={selectedGame.image}
                 alt={selectedGame.name}
@@ -1122,7 +1122,7 @@ const TopUp = () => {
               {/* Back Button (<) */}
               <button
                 onClick={() => navigate('/')}
-                className="absolute top-3 left-3 w-8 h-8 rounded-xl bg-slate-900/90 hover:bg-slate-800 text-white flex items-center justify-center font-bold border border-slate-700 shadow-md cursor-pointer transition-all z-10"
+                className="absolute top-3 left-3 w-8 h-8 rounded-full bg-slate-950/60 hover:bg-slate-900/80 backdrop-blur-md text-slate-300 hover:text-white flex items-center justify-center font-bold border border-slate-700/50 shadow-md cursor-pointer transition-all z-10"
                 title="Back to Home"
               >
                 ‹
@@ -1147,10 +1147,10 @@ const TopUp = () => {
             {/* Game Title & Cambodia Server Badge */}
             <div className="space-y-1">
               <div className="flex items-center justify-between gap-2">
-                <h2 className="text-lg sm:text-xl font-black text-white leading-tight">
+                <h2 className="text-xl sm:text-2xl font-black text-white leading-none tracking-wide uppercase">
                   {selectedGame.name}
                 </h2>
-                <span className="px-2 py-0.5 rounded-lg bg-emerald-500/20 text-emerald-300 border border-emerald-500/40 text-[10px] font-black uppercase tracking-wider">
+                <span className="px-2.5 py-1 rounded-full bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 text-[9px] font-black uppercase tracking-widest shadow-sm">
                   ● 10s API
                 </span>
               </div>
@@ -1178,7 +1178,7 @@ const TopUp = () => {
                 value={formData.playerID}
                 onChange={handlePlayerIdChange}
                 placeholder={isTelegram ? '@username' : isSteam ? 'steam_username' : isGiftCard ? 'email@domain.com' : 'e.g. 1225368571'}
-                className="w-full bg-[#111728] border border-slate-700 rounded-2xl px-4 py-3 text-sm text-white font-mono placeholder-slate-500 focus:outline-none focus:border-amber-400 focus:ring-1 focus:ring-amber-400 transition-all shadow-inner"
+                className="w-full bg-slate-950/50 border border-slate-700/60 rounded-xl px-4 py-3.5 text-sm font-mono text-white placeholder-slate-600 focus:outline-none focus:border-purple-500/60 focus:ring-1 focus:ring-purple-500/50 transition-all shadow-inner"
               />
 
               {isMlbb && (
@@ -1191,7 +1191,7 @@ const TopUp = () => {
                     value={formData.serverID}
                     onChange={(e) => setFormData(prev => ({ ...prev, serverID: e.target.value }))}
                     placeholder="e.g. 11446"
-                    className="w-full bg-[#111728] border border-slate-700 rounded-2xl px-4 py-3 text-sm text-white font-mono placeholder-slate-500 focus:outline-none focus:border-amber-400 transition-all shadow-inner"
+                    className="w-full bg-slate-950/50 border border-slate-700/60 rounded-xl px-4 py-3.5 text-sm font-mono text-white placeholder-slate-600 focus:outline-none focus:border-purple-500/60 focus:ring-1 focus:ring-purple-500/50 transition-all shadow-inner"
                   />
                 </div>
               )}
@@ -1271,7 +1271,7 @@ const TopUp = () => {
         {/* RIGHT COLUMN: PRODUCTS LIST (2 LAYOUT SYSTEM: WEEKLY PASS & DIAMONDS) */}
         {/* ========================================== */}
         <div className="lg:col-span-8 space-y-4">
-          <div className="bg-[#0B0F19] border border-slate-800 rounded-3xl p-3.5 sm:p-5 shadow-2xl space-y-3.5">
+          <div className="bg-slate-900/30 border border-slate-800/50 rounded-[24px] p-3.5 sm:p-5 shadow-2xl backdrop-blur-md space-y-5">
             
             {/* Header: Row 1 - Category Sub-Tabs (All / Weekly Pass / Diamond Package) */}
             <div className="grid grid-cols-3 gap-1.5 p-1 bg-slate-950/90 rounded-2xl border border-slate-800/90 shadow-inner">
