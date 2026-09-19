@@ -5,7 +5,7 @@ import { adminAPI, bakongAPI } from '../services/api';
 import { getStoredGames, saveStoredGames, resetToDefaultGames, getMasterTopupStatus, saveMasterTopupStatus, fetchStoredGames, fetchMasterTopupStatus } from '../services/gamesConfig';
 import { useStoreBranding } from '../services/storeBranding';
 import { DEFAULT_EVENT_BANNERS, getAllStoredBanners, fetchStoredBanners, saveStoredBanners } from '../services/eventBanners';
-import { CambodiaFlagSvg, CambodiaFlagFrame, CambodiaCornerBadge } from '../components/CambodiaFlagBadge';
+import { CambodiaFlagSvg, CambodiaFlagFrame, CambodiaCornerBadge, POPULAR_FLAGS, MORE_WORLD_FLAGS } from '../components/CambodiaFlagBadge';
 import ProductPackageImage from '../components/ProductPackageImage';
 import { uploadToCloudinary, readFileAsDataUrl, getCloudinaryConfig, saveCloudinaryConfig } from '../services/cloudinary';
 import { getStoredProviderSettings, fetchStoredProviderSettings, switchActiveProvider, saveStoredProviderSettings } from '../services/supplierGateway';
@@ -641,6 +641,8 @@ const PRICING_GAMES = [
     status: 'Active',
     description: '',
   });
+  const [flagTabMode, setFlagTabMode] = useState('popular'); // 'popular' | 'all' | 'custom'
+  const [flagSearchQuery, setFlagSearchQuery] = useState('');
 
   const showToast = (type, message) => {
     setToast({ type, message });
@@ -5481,13 +5483,14 @@ const PRICING_GAMES = [
 
                     {/* Server Badge Frame Overlay on Preview */}
                     {gameFormData.flagType !== 'none' && (
-                      <div className="absolute top-1 right-1 z-10 scale-[0.65] origin-top-right">
+                      <div className="absolute top-1 right-1 z-10 scale-[0.62] origin-top-right">
                         <CambodiaFlagFrame
                           title={gameFormData.flagTitle !== undefined ? gameFormData.flagTitle : (gameFormData.badge || 'សេវើខ្មែរ')}
                           subtitle={gameFormData.flagSubtitle !== undefined ? gameFormData.flagSubtitle : '5V5'}
                           sub={gameFormData.flagServerText !== undefined ? gameFormData.flagServerText : 'SERVER'}
+                          flagType={gameFormData.flagType || 'kh'}
                           flagImage={gameFormData.flagType === 'custom' ? gameFormData.flagImage : null}
-                          className="shadow-xl"
+                          badgeStyle={gameFormData.flagFrameStyle || 'gold_cyber'}
                         />
                       </div>
                     )}
@@ -5539,131 +5542,341 @@ const PRICING_GAMES = [
                 </div>
               </div>
 
-              {/* SERVER FLAG & CYBER FRAME CUSTOMIZER */}
-              <div className="p-4 rounded-2xl bg-gradient-to-r from-[#0c1427] to-[#12192e] border border-amber-500/40 space-y-3.5 shadow-lg">
-                <div className="flex items-center justify-between">
-                  <label className="block font-black text-amber-300 uppercase tracking-wider text-[11px] flex items-center gap-1.5">
-                    <span>🇰🇭</span> Server PNG Badge & Frame (រូប PNG សេវើ & ស៊ុម)
-                  </label>
-                  <span className="text-[10px] text-cyan-300 font-bold bg-cyan-950/80 px-2 py-0.5 rounded-lg border border-cyan-500/30">
-                    Upload Transparent PNG Supported
+              {/* SERVER FLAG & BADGE CUSTOMIZER STUDIO */}
+              <div className="p-4 sm:p-5 rounded-2xl bg-gradient-to-br from-[#0c1427] via-[#101b33] to-[#0a101f] border border-amber-500/40 space-y-4">
+                
+                {/* Header with Title and Mode Indicator */}
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 pb-3 border-b border-slate-800">
+                  <div>
+                    <label className="font-black text-amber-300 uppercase tracking-wider text-xs flex items-center gap-2">
+                      <span className="text-base">🏆</span> Server Flag Badge & Frame Studio
+                    </label>
+                    <p className="text-[11px] text-slate-400 mt-0.5">
+                      Select official country flag, badge frame style & customize 3D typography
+                    </p>
+                  </div>
+                  <span className="text-[10px] text-cyan-300 font-bold bg-cyan-950/80 px-2.5 py-1 rounded-lg border border-cyan-500/40 self-start sm:self-auto flex items-center gap-1.5">
+                    <span className="w-1.5 h-1.5 rounded-full bg-cyan-400 animate-ping" />
+                    Live SVG & 3D Vector
                   </span>
                 </div>
 
-                {/* Flag Preset Buttons */}
-                <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
-                  {[
-                    { id: 'kh', label: '🇰🇭 Cambodia (សេវើខ្មែរ)', t1: 'សេវើខ្មែរ', t2: '5V5', t3: 'SERVER' },
-                    { id: 'ph', label: '🇵🇭 Philippines (PH)', t1: 'PH SERVER', t2: '5V5', t3: 'OFFICIAL' },
-                    { id: 'id', label: '🇮🇩 Indonesia (ID)', t1: 'ID SERVER', t2: '5V5', t3: 'FAST' },
-                    { id: 'global', label: '🌐 Global Server', t1: 'GLOBAL UC', t2: '⚡', t3: 'DIRECT' },
-                    { id: 'custom', label: '📁 Upload Custom PNG', t1: 'CUSTOM', t2: '', t3: 'SERVER' },
-                    { id: 'none', label: '🚫 No Flag', t1: '', t2: '', t3: '' },
-                  ].map((flag) => (
-                    <button
-                      key={flag.id}
-                      type="button"
-                      onClick={() => {
-                        setGameFormData((prev) => ({
-                          ...prev,
-                          flagType: flag.id,
-                          flagTitle: prev.flagTitle || flag.t1,
-                          flagSubtitle: prev.flagSubtitle !== undefined ? prev.flagSubtitle : flag.t2,
-                          flagServerText: prev.flagServerText || flag.t3,
-                        }));
-                      }}
-                      className={`p-2 rounded-xl text-[11px] font-bold border transition-all text-left flex items-center justify-between ${
-                        gameFormData.flagType === flag.id
-                          ? 'bg-amber-500 text-black border-amber-300 font-black shadow-glow-gold scale-[1.02]'
-                          : 'bg-slate-900/90 text-slate-300 border-slate-800 hover:border-slate-700'
-                      }`}
-                    >
-                      <span className="truncate">{flag.label}</span>
-                      {gameFormData.flagType === flag.id && <span>✓</span>}
-                    </button>
-                  ))}
+                {/* ── 1. SELECT BADGE FRAME LAYOUT (3 Distinct Layouts) ── */}
+                <div className="space-y-2">
+                  <label className="block text-[11px] font-black uppercase tracking-wider text-slate-300">
+                    Step 1: Choose Badge Frame Layout (ម៉ូតស៊ុម ៣ បែប)
+                  </label>
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
+                    {[
+                      {
+                        id: 'gold_cyber',
+                        name: '3D Gold Frame',
+                        desc: 'MLBB 3D Chiseled Gold Esports Cutout',
+                        icon: '🏆',
+                        badge: 'Official 5v5'
+                      },
+                      {
+                        id: 'cyber_pill',
+                        name: 'Cyber Glass Pill',
+                        desc: 'Floating Translucent Neon Capsule Ribbon',
+                        icon: '💎',
+                        badge: 'Modern Sleek'
+                      },
+                      {
+                        id: 'esports_shield',
+                        name: 'Esports Crest',
+                        desc: 'Compact Gaming Tournament Medallion',
+                        icon: '🛡️',
+                        badge: 'Esports Shield'
+                      }
+                    ].map((layout) => {
+                      const isSelected = (gameFormData.flagFrameStyle || 'gold_cyber') === layout.id;
+                      return (
+                        <button
+                          key={layout.id}
+                          type="button"
+                          onClick={() => setGameFormData((prev) => ({ ...prev, flagFrameStyle: layout.id }))}
+                          className={`p-2.5 rounded-xl border text-left transition-all cursor-pointer relative overflow-hidden ${
+                            isSelected
+                              ? 'bg-gradient-to-r from-amber-500/25 via-amber-500/15 to-transparent border-amber-400 shadow-md ring-1 ring-amber-400/50'
+                              : 'bg-slate-900/80 border-slate-800 hover:border-slate-700 text-slate-400'
+                          }`}
+                        >
+                          <div className="flex items-center justify-between mb-1">
+                            <span className="text-sm">{layout.icon}</span>
+                            <span className={`text-[9px] font-black px-1.5 py-0.5 rounded-md ${
+                              isSelected ? 'bg-amber-400 text-black' : 'bg-slate-800 text-slate-400'
+                            }`}>
+                              {layout.badge}
+                            </span>
+                          </div>
+                          <div className={`font-black text-xs ${isSelected ? 'text-amber-300' : 'text-slate-200'}`}>
+                            {layout.name}
+                          </div>
+                          <div className="text-[10px] text-slate-400 leading-tight line-clamp-1 mt-0.5">
+                            {layout.desc}
+                          </div>
+                        </button>
+                      );
+                    })}
+                  </div>
                 </div>
 
-                {/* Upload PNG Server Image Controls */}
-                <div className="p-3.5 bg-slate-950/90 rounded-xl border border-slate-800 space-y-3">
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                    <div>
-                      <label className="block text-slate-300 font-semibold text-[11px] mb-1">
-                        Option 1: Upload Server PNG Image (Logo / Flag)
-                      </label>
-                      <input
-                        type="file"
-                        accept="image/png,image/svg+xml,image/webp,image/*"
-                        onChange={handleGameFlagUpload}
-                        className="block w-full text-xs text-slate-400 file:mr-3 file:py-1.5 file:px-3 file:rounded-xl file:border-0 file:text-xs file:font-bold file:bg-amber-500 file:text-black hover:file:bg-amber-400 cursor-pointer bg-slate-900 rounded-xl border border-slate-800"
-                      />
-                    </div>
+                {/* ── 2. SELECT COUNTRY FLAG (Tabbed Modes) ── */}
+                <div className="space-y-2.5 pt-1">
+                  <div className="flex items-center justify-between">
+                    <label className="block text-[11px] font-black uppercase tracking-wider text-slate-300">
+                      Step 2: Select Server Flag (ជ្រើសរើសទង់ជាតិសេវើ)
+                    </label>
 
+                    {/* Mode Navigation Tabs */}
+                    <div className="flex items-center gap-1 p-0.5 bg-slate-950/90 rounded-xl border border-slate-800">
+                      <button
+                        type="button"
+                        onClick={() => setFlagTabMode('popular')}
+                        className={`px-2.5 py-1 rounded-lg text-[10px] font-bold transition-all cursor-pointer ${
+                          flagTabMode === 'popular'
+                            ? 'bg-amber-400 text-black font-black shadow-sm'
+                            : 'text-slate-400 hover:text-white'
+                        }`}
+                      >
+                        ⚡ Popular Regions
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setFlagTabMode('all')}
+                        className={`px-2.5 py-1 rounded-lg text-[10px] font-bold transition-all cursor-pointer ${
+                          flagTabMode === 'all'
+                            ? 'bg-amber-400 text-black font-black shadow-sm'
+                            : 'text-slate-400 hover:text-white'
+                        }`}
+                      >
+                        🌐 More Countries
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setFlagTabMode('custom')}
+                        className={`px-2.5 py-1 rounded-lg text-[10px] font-bold transition-all cursor-pointer ${
+                          flagTabMode === 'custom'
+                            ? 'bg-amber-400 text-black font-black shadow-sm'
+                            : 'text-slate-400 hover:text-white'
+                        }`}
+                      >
+                        📁 Custom PNG
+                      </button>
+                    </div>
+                  </div>
+
+                  {/* TAB 1: Popular Regional Flags Grid */}
+                  {flagTabMode === 'popular' && (
+                    <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+                      {POPULAR_FLAGS.map((flag) => {
+                        const isSelected = gameFormData.flagType === flag.id;
+                        return (
+                          <button
+                            key={flag.id}
+                            type="button"
+                            onClick={() => {
+                              setGameFormData((prev) => ({
+                                ...prev,
+                                flagType: flag.id,
+                                flagTitle: flag.t1 || prev.flagTitle,
+                                flagSubtitle: flag.t2 !== undefined ? flag.t2 : prev.flagSubtitle,
+                                flagServerText: flag.t3 || prev.flagServerText,
+                              }));
+                            }}
+                            className={`p-2 rounded-xl text-left border transition-all flex items-center gap-2.5 cursor-pointer ${
+                              isSelected
+                                ? 'bg-amber-500 text-black border-amber-300 font-black ring-2 ring-amber-400/40 shadow-sm scale-[1.02]'
+                                : 'bg-slate-900/90 text-slate-300 border-slate-800 hover:border-slate-700 hover:bg-slate-800/80'
+                            }`}
+                          >
+                            {/* Flag Icon Preview */}
+                            <div className="w-5 h-5 rounded-full overflow-hidden shrink-0 border border-white/20 flex items-center justify-center bg-slate-950">
+                              {flag.id === 'kh' ? (
+                                <span className="fi fi-kh fis w-full h-full block bg-center bg-cover" />
+                              ) : flag.id === 'global' ? (
+                                <span className="text-xs">🌐</span>
+                              ) : flag.id === 'custom' ? (
+                                <span className="text-xs">📁</span>
+                              ) : flag.id === 'none' ? (
+                                <span className="text-xs">🚫</span>
+                              ) : (
+                                <span className={`fi fi-${flag.id} fis w-full h-full block bg-center bg-cover`} />
+                              )}
+                            </div>
+
+                            <div className="flex-1 min-w-0">
+                              <div className="text-[11px] font-bold truncate leading-tight">
+                                {flag.name}
+                              </div>
+                              <div className={`text-[9px] truncate ${isSelected ? 'text-slate-900 font-semibold' : 'text-slate-400'}`}>
+                                {flag.local}
+                              </div>
+                            </div>
+
+                            {isSelected && (
+                              <span className="text-xs font-black shrink-0">✓</span>
+                            )}
+                          </button>
+                        );
+                      })}
+                    </div>
+                  )}
+
+                  {/* TAB 2: More World Countries Searchable List */}
+                  {flagTabMode === 'all' && (
+                    <div className="space-y-2 p-3 bg-slate-950/80 rounded-xl border border-slate-800">
+                      <div className="relative">
+                        <input
+                          type="text"
+                          value={flagSearchQuery}
+                          onChange={(e) => setFlagSearchQuery(e.target.value)}
+                          placeholder="Search country name or code (e.g. US, Japan, Korea, Laos)..."
+                          className="input w-full text-xs py-1.5 pl-8 rounded-lg bg-slate-900 border-slate-800 text-white placeholder-slate-500"
+                        />
+                        <span className="absolute left-2.5 top-2 text-slate-500 text-xs">🔍</span>
+                      </div>
+
+                      <div className="grid grid-cols-2 sm:grid-cols-3 gap-1.5 max-h-48 overflow-y-auto pr-1">
+                        {MORE_WORLD_FLAGS
+                          .filter(f => !flagSearchQuery || f.name.toLowerCase().includes(flagSearchQuery.toLowerCase()) || f.id.toLowerCase().includes(flagSearchQuery.toLowerCase()))
+                          .map((flag) => {
+                            const isSelected = gameFormData.flagType === flag.id;
+                            return (
+                              <button
+                                key={flag.id}
+                                type="button"
+                                onClick={() => {
+                                  setGameFormData((prev) => ({
+                                    ...prev,
+                                    flagType: flag.id,
+                                    flagTitle: flag.t1 || prev.flagTitle,
+                                    flagSubtitle: flag.t2 || prev.flagSubtitle,
+                                    flagServerText: flag.t3 || prev.flagServerText,
+                                  }));
+                                }}
+                                className={`p-1.5 rounded-lg text-left border transition-all flex items-center gap-2 cursor-pointer ${
+                                  isSelected
+                                    ? 'bg-amber-400 text-black border-amber-300 font-black'
+                                    : 'bg-slate-900/90 text-slate-300 border-slate-800/80 hover:border-slate-700'
+                                }`}
+                              >
+                                <div className="w-4 h-4 rounded-full overflow-hidden shrink-0 border border-white/20">
+                                  <span className={`fi fi-${flag.id} fis w-full h-full block bg-center bg-cover`} />
+                                </div>
+                                <span className="text-[11px] truncate flex-1 font-semibold">{flag.name}</span>
+                                {isSelected && <span className="text-xs font-black">✓</span>}
+                              </button>
+                            );
+                          })}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* TAB 3: Custom PNG Asset Studio */}
+                  {flagTabMode === 'custom' && (
+                    <div className="p-3.5 bg-slate-950/90 rounded-xl border border-slate-800 space-y-3">
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                        <div>
+                          <label className="block text-slate-300 font-semibold text-[11px] mb-1">
+                            Option 1: Upload Transparent PNG Image (Logo / Flag)
+                          </label>
+                          <input
+                            type="file"
+                            accept="image/png,image/svg+xml,image/webp,image/*"
+                            onChange={handleGameFlagUpload}
+                            className="block w-full text-xs text-slate-400 file:mr-3 file:py-1.5 file:px-3 file:rounded-xl file:border-0 file:text-xs file:font-bold file:bg-amber-500 file:text-black hover:file:bg-amber-400 cursor-pointer bg-slate-900 rounded-xl border border-slate-800"
+                          />
+                        </div>
+
+                        <div>
+                          <label className="block text-slate-300 font-semibold text-[11px] mb-1">
+                            Option 2: Paste PNG Image URL
+                          </label>
+                          <input
+                            type="text"
+                            value={gameFormData.flagImage || ''}
+                            onChange={(e) =>
+                              setGameFormData({
+                                ...gameFormData,
+                                flagImage: e.target.value,
+                                flagType: e.target.value ? 'custom' : gameFormData.flagType,
+                              })
+                            }
+                            placeholder="https://example.com/custom-badge.png"
+                            className="input w-full text-xs py-1.5 rounded-xl"
+                          />
+                        </div>
+                      </div>
+                    </div>
+                  )}
+                </div>
+
+                {/* ── 3. BADGE TEXT TYPOGRAPHY (3 Lines with Quick Presets) ── */}
+                <div className="p-3.5 bg-slate-950/90 rounded-xl border border-slate-800/90 space-y-2.5">
+                  <div className="flex items-center justify-between">
+                    <label className="block text-amber-300 font-bold text-[11px]">
+                      Step 3: Badge Text Lines (អក្សរក្នុងផ្លាកសេវើ ៣ ជួរ):
+                    </label>
+                    <div className="flex items-center gap-1">
+                      <button
+                        type="button"
+                        onClick={() => setGameFormData(prev => ({ ...prev, flagTitle: 'សេវើខ្មែរ 5v5', flagSubtitle: '5V5', flagServerText: 'SERVER' }))}
+                        className="px-2 py-0.5 rounded-md bg-amber-500/20 text-amber-300 border border-amber-500/30 text-[9px] font-bold hover:bg-amber-500/30 cursor-pointer"
+                      >
+                        🇰🇭 MLBB 5v5
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setGameFormData(prev => ({ ...prev, flagTitle: 'SEVER ខ្មែរ', flagSubtitle: 'KH', flagServerText: 'DIRECT' }))}
+                        className="px-2 py-0.5 rounded-md bg-cyan-500/20 text-cyan-300 border border-cyan-500/30 text-[9px] font-bold hover:bg-cyan-500/30 cursor-pointer"
+                      >
+                        🔥 FreeFire KH
+                      </button>
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-3 gap-2">
                     <div>
-                      <label className="block text-slate-300 font-semibold text-[11px] mb-1">
-                        Option 2: Paste PNG Image URL
-                      </label>
+                      <span className="text-[10px] text-slate-400 block mb-0.5">Line 1 (Title):</span>
                       <input
                         type="text"
-                        value={gameFormData.flagImage || ''}
+                        value={gameFormData.flagTitle !== undefined ? gameFormData.flagTitle : (gameFormData.badge || 'សេវើខ្មែរ')}
                         onChange={(e) =>
-                          setGameFormData({
-                            ...gameFormData,
-                            flagImage: e.target.value,
-                            flagType: e.target.value ? 'custom' : gameFormData.flagType,
-                          })
+                          setGameFormData({ ...gameFormData, flagTitle: e.target.value })
                         }
-                        placeholder="https://example.com/server-flag.png"
-                        className="input w-full text-xs py-1.5 rounded-xl"
+                        placeholder="សេវើខ្មែរ"
+                        className="input w-full text-xs py-1.5 rounded-lg font-bold text-amber-300"
+                      />
+                    </div>
+                    <div>
+                      <span className="text-[10px] text-slate-400 block mb-0.5">Line 2 (Subtitle):</span>
+                      <input
+                        type="text"
+                        value={gameFormData.flagSubtitle !== undefined ? gameFormData.flagSubtitle : '5V5'}
+                        onChange={(e) =>
+                          setGameFormData({ ...gameFormData, flagSubtitle: e.target.value })
+                        }
+                        placeholder="5V5"
+                        className="input w-full text-xs py-1.5 rounded-lg font-bold text-amber-300"
+                      />
+                    </div>
+                    <div>
+                      <span className="text-[10px] text-slate-400 block mb-0.5">Line 3 (Tag):</span>
+                      <input
+                        type="text"
+                        value={gameFormData.flagServerText !== undefined ? gameFormData.flagServerText : 'SERVER'}
+                        onChange={(e) =>
+                          setGameFormData({ ...gameFormData, flagServerText: e.target.value })
+                        }
+                        placeholder="SERVER"
+                        className="input w-full text-xs py-1.5 rounded-lg font-bold text-cyan-300"
                       />
                     </div>
                   </div>
-
-                  {/* 3-Line Badge Typography Customizer (Matching Screenshot) */}
-                  <div className="pt-2 border-t border-slate-800/80">
-                    <label className="block text-amber-300 font-bold text-[11px] mb-2">
-                      Badge Text Lines (អក្សរក្នុងផ្លាកសេវើ ៣ ជួរ):
-                    </label>
-                    <div className="grid grid-cols-3 gap-2">
-                      <div>
-                        <span className="text-[10px] text-slate-400 block mb-0.5">Line 1 (Title):</span>
-                        <input
-                          type="text"
-                          value={gameFormData.flagTitle !== undefined ? gameFormData.flagTitle : (gameFormData.badge || 'សេវើខ្មែរ')}
-                          onChange={(e) =>
-                            setGameFormData({ ...gameFormData, flagTitle: e.target.value })
-                          }
-                          placeholder="សេវើខ្មែរ"
-                          className="input w-full text-xs py-1.5 rounded-lg font-bold text-amber-300"
-                        />
-                      </div>
-                      <div>
-                        <span className="text-[10px] text-slate-400 block mb-0.5">Line 2 (Subtitle):</span>
-                        <input
-                          type="text"
-                          value={gameFormData.flagSubtitle !== undefined ? gameFormData.flagSubtitle : '5V5'}
-                          onChange={(e) =>
-                            setGameFormData({ ...gameFormData, flagSubtitle: e.target.value })
-                          }
-                          placeholder="5V5"
-                          className="input w-full text-xs py-1.5 rounded-lg font-bold text-amber-300"
-                        />
-                      </div>
-                      <div>
-                        <span className="text-[10px] text-slate-400 block mb-0.5">Line 3 (Tag):</span>
-                        <input
-                          type="text"
-                          value={gameFormData.flagServerText !== undefined ? gameFormData.flagServerText : 'SERVER'}
-                          onChange={(e) =>
-                            setGameFormData({ ...gameFormData, flagServerText: e.target.value })
-                          }
-                          placeholder="SERVER"
-                          className="input w-full text-xs py-1.5 rounded-lg font-bold text-cyan-300"
-                        />
-                      </div>
-                    </div>
-                  </div>
                 </div>
+
               </div>
 
               {/* Game Name & Publisher */}

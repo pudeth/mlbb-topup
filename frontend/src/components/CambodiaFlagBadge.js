@@ -1,5 +1,37 @@
 import React from 'react';
 
+// Popular gaming country flags catalog
+export const POPULAR_FLAGS = [
+  { id: 'kh', name: 'Cambodia', local: 'កម្ពុជា', t1: 'សេវើខ្មែរ 5v5', t2: '5V5', t3: 'SERVER' },
+  { id: 'ph', name: 'Philippines', local: 'Pilipinas', t1: 'PH SERVER', t2: '5V5', t3: 'OFFICIAL' },
+  { id: 'id', name: 'Indonesia', local: 'Indonesia', t1: 'ID SERVER', t2: '5V5', t3: 'FAST' },
+  { id: 'my', name: 'Malaysia', local: 'Malaysia', t1: 'MY SERVER', t2: '5V5', t3: 'DIRECT' },
+  { id: 'sg', name: 'Singapore', local: 'Singapore', t1: 'SG SERVER', t2: '5V5', t3: 'INSTANT' },
+  { id: 'th', name: 'Thailand', local: 'ไทย', t1: 'TH SERVER', t2: '5V5', t3: 'OFFICIAL' },
+  { id: 'vn', name: 'Vietnam', local: 'Việt Nam', t1: 'VN SERVER', t2: '5V5', t3: 'VIP' },
+  { id: 'mm', name: 'Myanmar', local: 'မြန်မာ', t1: 'MM SERVER', t2: '5V5', t3: 'DIRECT' },
+  { id: 'br', name: 'Brazil', local: 'Brasil', t1: 'BR SERVER', t2: '5V5', t3: 'FAST' },
+  { id: 'global', name: 'Global Server', local: 'Worldwide', t1: 'GLOBAL UC', t2: '⚡', t3: 'DIRECT' },
+  { id: 'custom', name: 'Custom Upload', local: 'Custom File', t1: 'CUSTOM', t2: '', t3: 'SERVER' },
+  { id: 'none', name: 'No Badge', local: 'Disabled', t1: '', t2: '', t3: '' },
+];
+
+export const MORE_WORLD_FLAGS = [
+  { id: 'us', name: 'United States', t1: 'US SERVER', t2: 'NA', t3: 'OFFICIAL' },
+  { id: 'jp', name: 'Japan', t1: 'JP SERVER', t2: 'ASIA', t3: 'DIRECT' },
+  { id: 'kr', name: 'South Korea', t1: 'KR SERVER', t2: 'ASIA', t3: 'FAST' },
+  { id: 'la', name: 'Laos', t1: 'LAOS SERVER', t2: 'SEA', t3: 'DIRECT' },
+  { id: 'in', name: 'India', t1: 'IN SERVER', t2: 'SA', t3: 'OFFICIAL' },
+  { id: 'cn', name: 'China', t1: 'CN SERVER', t2: 'ASIA', t3: 'FAST' },
+  { id: 'gb', name: 'United Kingdom', t1: 'UK SERVER', t2: 'EU', t3: 'DIRECT' },
+  { id: 'de', name: 'Germany', t1: 'DE SERVER', t2: 'EU', t3: 'OFFICIAL' },
+  { id: 'fr', name: 'France', t1: 'FR SERVER', t2: 'EU', t3: 'DIRECT' },
+  { id: 'ru', name: 'Russia', t1: 'RU SERVER', t2: 'CIS', t3: 'FAST' },
+  { id: 'tr', name: 'Turkey', t1: 'TR SERVER', t2: 'MENA', t3: 'DIRECT' },
+  { id: 'sa', name: 'Saudi Arabia', t1: 'SA SERVER', t2: 'MENA', t3: 'OFFICIAL' },
+  { id: 'ae', name: 'UAE (Dubai)', t1: 'UAE SERVER', t2: 'MENA', t3: 'FAST' },
+];
+
 // Accurate Cambodia Flag using official flag-icons package
 export const CambodiaFlagSvg = ({ className = "w-full h-full" }) => (
   <span className={`fi fi-kh ${className} inline-block bg-center bg-cover rounded-xs`} />
@@ -8,7 +40,7 @@ export const CambodiaFlagSvg = ({ className = "w-full h-full" }) => (
 /**
  * 3D Spherical Cambodia Flag Orb Component
  * Fills 100% of the circle with genuine Cambodian royal blue and red stripes,
- * centered Angkor Wat, 3D specular convex glass highlight, and depth vignette.
+ * centered Angkor Wat, and soft clean highlight (zero shadow).
  */
 export const CambodiaSphericalFlag = ({ className = "w-full h-full" }) => (
   <svg viewBox="0 0 100 100" className={className} xmlns="http://www.w3.org/2000/svg">
@@ -41,20 +73,55 @@ export const CambodiaSphericalFlag = ({ className = "w-full h-full" }) => (
 );
 
 /**
- * MLBB Esports Cyber Metallic Cambodia Flag & Server Badge Frame
- * Uses the authentic high-resolution frame template provided by the user,
- * perfectly aligning the official full-frame 3D Cambodia flag in the medallion,
- * with gold chrome typography and glowing cyan SERVER capsule.
+ * Dynamic Universal Flag Medallion
+ * Renders any chosen country flag, custom image, or global esports icon inside the badge frame medallion
+ */
+export const DynamicFlagMedallion = ({ flagType = 'kh', flagImage = null, className = "w-full h-full" }) => {
+  if (flagImage) {
+    return <img src={flagImage} alt="Custom Flag" className={`${className} object-cover`} />;
+  }
+
+  if (!flagType || flagType === 'kh') {
+    return <CambodiaSphericalFlag className={className} />;
+  }
+
+  if (flagType === 'global') {
+    return (
+      <div className={`w-full h-full rounded-full bg-gradient-to-tr from-sky-600 via-blue-600 to-indigo-600 flex items-center justify-center text-white ${className}`}>
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" className="w-3/5 h-3/5">
+          <circle cx="12" cy="12" r="10"></circle>
+          <line x1="2" y1="12" x2="22" y2="12"></line>
+          <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"></path>
+        </svg>
+      </div>
+    );
+  }
+
+  // Any international country supported by flag-icons
+  return (
+    <div className={`w-full h-full rounded-full overflow-hidden flex items-center justify-center bg-slate-900 ${className}`}>
+      <span className={`fi fi-${flagType} fis w-full h-full block bg-center bg-cover`} />
+    </div>
+  );
+};
+
+/**
+ * MLBB Esports Server Badge Frame with 3 Selectable Layouts:
+ * - 'gold_cyber' (Layout 1): Classic MLBB 3D chiseled gold frame template with flag medallion and 3 text lines
+ * - 'cyber_pill' (Layout 2): Modern sleek glass capsule ribbon with cyber neon accents
+ * - 'esports_shield' (Layout 3): Compact tournament shield crest with golden bezel
  */
 export const CambodiaFlagFrame = ({
   title = "សេវើខ្មែរ 5v5",
   subtitle = "5V5",
   sub = "SERVER",
+  flagType = "kh",
   flagImage = null,
   isFullBadgePng = false,
+  badgeStyle = "gold_cyber", // 'gold_cyber' | 'cyber_pill' | 'esports_shield'
   className = ""
 }) => {
-  // If user explicitly requests full badge PNG or provides a custom image
+  // If user explicitly requests full badge PNG or provides a custom transparent PNG
   if (isFullBadgePng && flagImage) {
     return (
       <div className={`relative inline-block overflow-hidden ${className}`}>
@@ -63,6 +130,71 @@ export const CambodiaFlagFrame = ({
     );
   }
 
+  // ----------------------------------------------------
+  // LAYOUT 2: Cyber Glass Pill Ribbon (Sleek Modern Capsule)
+  // ----------------------------------------------------
+  if (badgeStyle === 'cyber_pill') {
+    return (
+      <div
+        className={`relative inline-flex items-center gap-1.5 sm:gap-2 px-2.5 py-1 sm:py-1.5 rounded-full bg-slate-950/90 border border-amber-400/80 backdrop-blur-md select-none transition-transform duration-300 hover:scale-[1.03] ${className}`}
+        style={{ maxWidth: '240px' }}
+      >
+        {/* Left Flag Orb */}
+        <div className="w-5 h-5 sm:w-6 sm:h-6 rounded-full ring-1 ring-amber-300 shrink-0 overflow-hidden flex items-center justify-center">
+          <DynamicFlagMedallion flagType={flagType} flagImage={flagImage} />
+        </div>
+
+        {/* Title */}
+        <span className="font-black text-[10px] sm:text-xs tracking-wider uppercase truncate text-amber-300 font-khmer">
+          {title}
+        </span>
+
+        {/* Subtitle / Tag */}
+        {sub && (
+          <span className="px-1.5 py-0.5 rounded-md bg-cyan-950/90 text-cyan-300 border border-cyan-500/50 text-[8px] sm:text-[9px] font-black font-mono tracking-widest uppercase shrink-0">
+            {sub}
+          </span>
+        )}
+      </div>
+    );
+  }
+
+  // ----------------------------------------------------
+  // LAYOUT 3: Esports Tournament Shield Crest
+  // ----------------------------------------------------
+  if (badgeStyle === 'esports_shield') {
+    return (
+      <div
+        className={`relative inline-flex items-center gap-2 p-1.5 pr-3 rounded-2xl bg-gradient-to-r from-[#10192e] via-[#0b1222] to-[#121c33] border-2 border-amber-400/90 select-none transition-transform duration-300 hover:scale-[1.03] ${className}`}
+      >
+        {/* Shield Hex / Circle Medallion */}
+        <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-full ring-2 ring-amber-400/80 overflow-hidden shrink-0 flex items-center justify-center bg-slate-900">
+          <DynamicFlagMedallion flagType={flagType} flagImage={flagImage} />
+        </div>
+
+        {/* Stacked Text Labels */}
+        <div className="flex flex-col text-left leading-tight">
+          <span className="font-black text-[10px] sm:text-[11px] uppercase tracking-wide text-amber-300 font-khmer truncate">
+            {title}
+          </span>
+          <div className="flex items-center gap-1">
+            {subtitle && (
+              <span className="text-[8px] font-black text-amber-400 font-mono">
+                {subtitle}
+              </span>
+            )}
+            <span className="text-[8px] font-black tracking-widest text-cyan-400 font-mono uppercase">
+              {sub || 'SERVER'}
+            </span>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // ----------------------------------------------------
+  // LAYOUT 1: Authentic MLBB 3D Chiseled Gold Frame (Default)
+  // ----------------------------------------------------
   return (
     <div
       className={`relative inline-block select-none transition-transform duration-300 hover:scale-[1.03] ${className}`}
@@ -71,7 +203,7 @@ export const CambodiaFlagFrame = ({
         aspectRatio: '1024 / 397'
       }}
     >
-      {/* 1. Full-Frame Clean Cambodia Flag inside the circular medallion (No shadows) */}
+      {/* 1. Dynamic Country Flag Medallion inside the circular bezel */}
       <div
         className="absolute rounded-full overflow-hidden flex items-center justify-center z-0"
         style={{
@@ -81,11 +213,7 @@ export const CambodiaFlagFrame = ({
           height: '57.8%'
         }}
       >
-        {flagImage ? (
-          <img src={flagImage} alt="Server Flag" className="w-full h-full object-cover" />
-        ) : (
-          <CambodiaSphericalFlag className="w-full h-full block" />
-        )}
+        <DynamicFlagMedallion flagType={flagType} flagImage={flagImage} />
       </div>
 
       {/* 2. Pristine 3D Chiseled Gold & Navy Frame Template */}
@@ -113,7 +241,7 @@ export const CambodiaFlagFrame = ({
           background: 'linear-gradient(180deg, #FFFFFF 0%, #FFF4B8 22%, #FBBF24 52%, #D97706 78%, #78350F 100%)',
           WebkitBackgroundClip: 'text',
           WebkitTextFillColor: 'transparent',
-          filter: 'drop-shadow(0 1.5px 0px #78350F) drop-shadow(0 3px 6px rgba(0,0,0,0.9))'
+          filter: 'drop-shadow(0 1.5px 0px #78350F)'
         }}
       >
         {title}
@@ -130,7 +258,7 @@ export const CambodiaFlagFrame = ({
           fontSize: 'clamp(6.5px, 0.85vw, 10px)',
           letterSpacing: '0.22em',
           color: '#7DD3FC',
-          textShadow: '0 0 6px rgba(56, 189, 248, 0.95), 0 0 12px rgba(56, 189, 248, 0.6)'
+          textShadow: '0 0 6px rgba(56, 189, 248, 0.95)'
         }}
       >
         {sub}
@@ -140,14 +268,10 @@ export const CambodiaFlagFrame = ({
 };
 
 // Compact Corner Flag Badge
-export const CambodiaCornerBadge = ({ flagImage = null, label = "សេវើខ្មែរ 🇰🇭", className = "" }) => (
-  <div className={`flex items-center gap-1.5 px-2.5 py-1 rounded-xl bg-slate-950/95 border border-amber-400/90 shadow-[0_0_12px_rgba(245,158,11,0.4)] backdrop-blur-md ${className}`}>
+export const CambodiaCornerBadge = ({ flagType = "kh", flagImage = null, label = "សេវើខ្មែរ 🇰🇭", className = "" }) => (
+  <div className={`flex items-center gap-1.5 px-2.5 py-1 rounded-xl bg-slate-950/95 border border-amber-400/90 backdrop-blur-md ${className}`}>
     <div className="w-5 h-5 rounded-full overflow-hidden ring-1 ring-amber-300 shrink-0 flex items-center justify-center">
-      {flagImage ? (
-        <img src={flagImage} alt="Server Flag" className="w-full h-full object-cover" />
-      ) : (
-        <span className="fi fi-kh fis w-full h-full block bg-center bg-cover" />
-      )}
+      <DynamicFlagMedallion flagType={flagType} flagImage={flagImage} />
     </div>
     <span className="text-[9px] sm:text-[10px] font-black uppercase tracking-wider text-amber-300">
       {label}
@@ -156,4 +280,3 @@ export const CambodiaCornerBadge = ({ flagImage = null, label = "សេវើខ
 );
 
 export default CambodiaFlagFrame;
-

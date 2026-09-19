@@ -2,7 +2,6 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useLanguage } from '../context/LanguageContext';
 import { getStoredGames, getMasterTopupStatus, fetchStoredGames, fetchMasterTopupStatus } from '../services/gamesConfig';
-import { CambodiaFlagSvg } from './CambodiaFlagBadge';
 
 const GameSelection = () => {
   const { t } = useLanguage();
@@ -278,13 +277,19 @@ const GameSelection = () => {
                             }`}
                           >
                             {game.flagImage ? (
-                              <span className="w-3 h-3 rounded-full overflow-hidden inline-block shrink-0">
+                              <span className="w-3.5 h-3.5 rounded-full overflow-hidden inline-block shrink-0 border border-white/20">
                                 <img src={game.flagImage} alt="Flag" className="w-full h-full object-cover" />
                               </span>
-                            ) : (game.badge?.includes('áž áŸ’áž˜áŸ‚ážš') || game.flagType === 'kh') ? (
-                              <span className="w-3 h-3 rounded-full overflow-hidden inline-block shrink-0">
-                                <CambodiaFlagSvg className="w-full h-full object-cover" />
+                            ) : (game.flagType && game.flagType !== 'none' && game.flagType !== 'global') ? (
+                              <span className="w-3.5 h-3.5 rounded-full overflow-hidden inline-block shrink-0 border border-white/20">
+                                <span className={`fi fi-${game.flagType} fis w-full h-full block bg-center bg-cover`} />
                               </span>
+                            ) : (game.badge?.includes('ខ្មែរ') || game.flagType === 'kh') ? (
+                              <span className="w-3.5 h-3.5 rounded-full overflow-hidden inline-block shrink-0 border border-white/20">
+                                <span className="fi fi-kh fis w-full h-full block bg-center bg-cover" />
+                              </span>
+                            ) : game.flagType === 'global' ? (
+                              <span className="text-xs leading-none">🌐</span>
                             ) : null}
                             <span>{game.flagTitle || game.badge}</span>
                           </span>
