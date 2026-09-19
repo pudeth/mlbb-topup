@@ -179,6 +179,18 @@ const Navbar = () => {
           {/* Right: Language + CTA + Logout */}
           <div className="flex items-center gap-2">
 
+            {/* Refresh Button */}
+            <button
+              type="button"
+              onClick={() => window.location.reload()}
+              title="Refresh Page"
+              className="h-9 w-9 rounded-full bg-slate-900/80 hover:bg-slate-800 border border-slate-800 hover:border-slate-600 text-slate-400 hover:text-white flex items-center justify-center transition-all duration-300 hover:rotate-180 group"
+            >
+              <svg className="w-4 h-4 transition-transform duration-500 group-hover:rotate-180" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+              </svg>
+            </button>
+
             {/* Language Selector Dropdown */}
             <div className="relative">
               <button
