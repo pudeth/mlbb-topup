@@ -67,12 +67,12 @@ const Navbar = () => {
           
           {/* Logo */}
           <div className="flex items-center gap-3">
-            <Link to="/" className="flex items-center gap-2.5 group">
-              <div className="h-10 sm:h-12 w-10 sm:w-12 flex items-center justify-center shrink-0 group-hover:scale-105 transition-all">
+            <Link to="/" className="flex items-center gap-3 group">
+              <div className="h-11 w-11 rounded-xl bg-slate-900/90 border border-slate-700/80 p-1 flex items-center justify-center shrink-0 group-hover:border-amber-400/60 group-hover:shadow-[0_0_15px_rgba(245,158,11,0.25)] transition-all overflow-hidden shadow-md">
                 <img
                   src={branding.logoImage || '/tin-logo.png'}
                   alt={branding.storeName || 'Tin-Topup'}
-                  className="w-full h-full object-contain"
+                  className="w-full h-full object-contain group-hover:scale-105 transition-transform"
                   onError={(e) => {
                     e.target.onerror = null;
                     e.target.src = '/tin-logo.png';
@@ -80,19 +80,19 @@ const Navbar = () => {
                 />
               </div>
               <div className="flex flex-col">
-                <div className="flex items-center gap-1.5">
-                  <span className="text-lg sm:text-xl font-black tracking-wider text-white group-hover:text-amber-400 transition-colors">
+                <div className="flex items-center gap-2">
+                  <span className="text-lg sm:text-xl font-black tracking-wide text-white group-hover:text-amber-400 transition-colors">
                     {branding.storeName || 'Tin-Topup'}
                   </span>
                   {branding.badgeText && (
-                    <span className="bg-gradient-to-r from-cyan-500 to-blue-500 text-slate-950 text-[9px] sm:text-[10px] font-black px-1.5 py-0.5 rounded tracking-widest uppercase">
+                    <span className="bg-gradient-to-r from-cyan-400 to-blue-500 text-slate-950 text-[9px] font-black px-2 py-0.5 rounded-full tracking-wider uppercase shadow-sm">
                       {branding.badgeText}
                     </span>
                   )}
                 </div>
-                <div className="flex items-center gap-1.5">
-                  <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
-                  <span className="text-[10px] sm:text-[11px] font-bold text-slate-300">
+                <div className="flex items-center gap-1.5 mt-0.5">
+                  <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse shadow-[0_0_8px_rgba(52,211,153,0.6)]"></span>
+                  <span className="text-[10px] sm:text-[11px] font-bold text-slate-400">
                     {branding.versionText || 'Enterprise Hub v2.5'}
                   </span>
                 </div>
@@ -101,76 +101,81 @@ const Navbar = () => {
           </div>
 
           {/* Desktop Navigation Links */}
-          <nav className="hidden lg:flex items-center gap-1 bg-slate-900/60 p-1.5 rounded-2xl border border-slate-800/80">
+          <nav className="hidden lg:flex items-center gap-1.5 bg-[#0e1424]/90 backdrop-blur-md p-1.5 rounded-2xl border border-slate-800/90 shadow-inner font-khmer">
             <Link
               to="/"
-              className={`px-4 py-2 rounded-xl text-sm font-semibold transition-all ${
+              className={`px-3.5 py-2 rounded-xl text-xs sm:text-sm font-semibold transition-all flex items-center gap-1.5 ${
                 isActive('/') 
-                  ? 'bg-gradient-to-r from-cyan-500/20 to-blue-500/20 text-cyan-400 border border-cyan-500/30 shadow-sm' 
-                  : 'text-slate-300 hover:text-white hover:bg-slate-800/50'
+                  ? 'bg-gradient-to-r from-cyan-500/20 to-blue-500/20 text-cyan-300 border border-cyan-400/40 shadow-[0_0_15px_rgba(6,182,212,0.2)] font-bold' 
+                  : 'text-slate-300 hover:text-white hover:bg-slate-800/60'
               }`}
             >
-              🏠 {t('nav_home')}
+              <span>🏠</span>
+              <span>{t('nav_home')}</span>
             </Link>
             <Link
               to="/topup"
-              className={`px-4 py-2 rounded-xl text-sm font-semibold transition-all ${
+              className={`px-3.5 py-2 rounded-xl text-xs sm:text-sm font-semibold transition-all flex items-center gap-1.5 ${
                 isActive('/topup') 
-                  ? 'bg-gradient-to-r from-amber-500/20 to-yellow-500/20 text-amber-400 border border-amber-500/30 shadow-sm' 
-                  : 'text-slate-300 hover:text-white hover:bg-slate-800/50'
+                  ? 'bg-gradient-to-r from-amber-500/20 to-yellow-500/20 text-amber-300 border border-amber-400/40 shadow-[0_0_15px_rgba(245,158,11,0.2)] font-bold' 
+                  : 'text-slate-300 hover:text-white hover:bg-slate-800/60'
               }`}
             >
-              💎 {t('nav_topup')}
+              <span>💎</span>
+              <span>{t('nav_topup')}</span>
             </Link>
             <Link
               to="/support"
-              className={`px-4 py-2 rounded-xl text-sm font-semibold transition-all ${
+              className={`px-3.5 py-2 rounded-xl text-xs sm:text-sm font-semibold transition-all flex items-center gap-1.5 ${
                 isActive('/support') 
-                  ? 'bg-gradient-to-r from-purple-500/20 to-pink-500/20 text-purple-400 border border-purple-500/30 shadow-sm' 
-                  : 'text-slate-300 hover:text-white hover:bg-slate-800/50'
+                  ? 'bg-gradient-to-r from-purple-500/20 to-pink-500/20 text-purple-300 border border-purple-400/40 shadow-[0_0_15px_rgba(168,85,247,0.2)] font-bold' 
+                  : 'text-slate-300 hover:text-white hover:bg-slate-800/60'
               }`}
             >
-              🎧 {t('nav_support')}
+              <span>🎧</span>
+              <span>{t('nav_support')}</span>
             </Link>
             <Link
               to="/privacy"
-              className={`px-4 py-2 rounded-xl text-sm font-semibold transition-all ${
+              className={`px-3.5 py-2 rounded-xl text-xs sm:text-sm font-semibold transition-all flex items-center gap-1.5 ${
                 isActive('/privacy') || isActive('/terms')
-                  ? 'bg-gradient-to-r from-emerald-500/20 to-teal-500/20 text-emerald-400 border border-emerald-500/30 shadow-sm' 
-                  : 'text-slate-300 hover:text-white hover:bg-slate-800/50'
+                  ? 'bg-gradient-to-r from-emerald-500/20 to-teal-500/20 text-emerald-300 border border-emerald-400/40 shadow-[0_0_15px_rgba(16,185,129,0.2)] font-bold' 
+                  : 'text-slate-300 hover:text-white hover:bg-slate-800/60'
               }`}
             >
-              📜 {t('nav_privacy')}
+              <span>📜</span>
+              <span>{t('nav_privacy')}</span>
             </Link>
             {isAdmin() && (
               <Link
                 to="/admin"
-                className={`px-4 py-2 rounded-xl text-sm font-semibold transition-all ${
+                className={`px-3.5 py-2 rounded-xl text-xs sm:text-sm font-semibold transition-all flex items-center gap-1.5 ${
                   isActive('/admin') 
-                    ? 'bg-red-500/20 text-red-400 border border-red-500/30' 
-                    : 'text-slate-300 hover:text-white hover:bg-slate-800/50'
+                    ? 'bg-red-500/20 text-red-400 border border-red-500/40 font-bold' 
+                    : 'text-slate-300 hover:text-white hover:bg-slate-800/60'
                 }`}
               >
-                ⚙️ {t('nav_admin')}
+                <span>⚙️</span>
+                <span>{t('nav_admin')}</span>
               </Link>
             )}
           </nav>
 
           {/* Right Action: Admin Quick Button + AI Language Switcher + CTA */}
-          <div className="flex items-center gap-2 sm:gap-3">
+          <div className="flex items-center gap-2 sm:gap-2.5">
             
-            {/* Admin Button - Always visible on mobile & login */}
+            {/* Admin Button - Uniform height & sleek horizontal layout */}
             <Link
               to="/admin"
-              className={`px-2.5 sm:px-3 py-1 sm:py-1.5 rounded-xl border transition-all flex flex-col items-center justify-center text-center select-none active:scale-95 ${
+              className={`h-10 px-3 sm:px-3.5 rounded-xl border transition-all flex items-center gap-1.5 select-none active:scale-95 text-xs sm:text-sm font-bold font-khmer shadow-sm ${
                 isActive('/admin')
-                  ? 'bg-red-500/20 text-red-400 border-red-500/50 shadow-glow-red'
-                  : 'bg-[#0e1320] hover:bg-slate-800 border-slate-700/80 text-slate-200 hover:text-white shadow-sm'
+                  ? 'bg-gradient-to-r from-red-500/20 to-rose-500/20 text-red-300 border-red-500/50 shadow-[0_0_15px_rgba(239,68,68,0.25)]'
+                  : 'bg-slate-900/90 hover:bg-slate-800 border-slate-700/80 text-slate-200 hover:text-white hover:border-slate-600'
               }`}
               title={t('nav_admin')}
             >
-              <span className="text-xs sm:text-sm leading-none">⚙️</span>
-              <span className="text-[10px] sm:text-xs font-bold leading-tight mt-0.5">{t('nav_admin')}</span>
+              <span className="text-sm">⚙️</span>
+              <span className="leading-none">{t('nav_admin')}</span>
             </Link>
 
             {/* Language Selector Dropdown */}
@@ -178,15 +183,17 @@ const Navbar = () => {
               <button
                 type="button"
                 onClick={() => setLangDropdownOpen(!langDropdownOpen)}
-                className="px-2.5 sm:px-3 py-1.5 sm:py-2 rounded-xl bg-slate-900/90 hover:bg-slate-800 border border-cyan-500/30 text-slate-200 text-xs sm:text-sm font-bold flex items-center gap-1.5 transition-all shadow-sm"
+                className="h-10 px-3 sm:px-3.5 rounded-xl bg-slate-900/90 hover:bg-slate-800 border border-slate-700/80 hover:border-cyan-500/40 text-slate-200 text-xs sm:text-sm font-bold flex items-center gap-1.5 transition-all shadow-sm active:scale-95 font-khmer"
               >
-                <span>{currentLang.flag}</span>
-                <span className="hidden sm:inline">{currentLang.short}</span>
-                <span className="text-[10px] text-cyan-400">▼</span>
+                <span className="text-base">{currentLang.flag}</span>
+                <span className="hidden sm:inline font-bold">{currentLang.short}</span>
+                <svg className={`w-3 h-3 text-cyan-400 transition-transform ${langDropdownOpen ? 'rotate-180' : ''}`} viewBox="0 0 20 20" fill="currentColor">
+                  <path fillRule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clipRule="evenodd" />
+                </svg>
               </button>
 
               {langDropdownOpen && (
-                <div className="absolute right-0 mt-2 w-44 bg-slate-950 border-2 border-cyan-500/30 rounded-2xl p-1.5 shadow-2xl z-50 animate-fadeIn">
+                <div className="absolute right-0 mt-2 w-44 bg-slate-950/95 backdrop-blur-xl border border-cyan-500/30 rounded-2xl p-1.5 shadow-2xl z-50 animate-fadeIn font-khmer">
                   <div className="px-3 py-1.5 text-[10px] font-extrabold text-cyan-400 uppercase tracking-wider border-b border-slate-800/80 mb-1 flex items-center gap-1">
                     <span>🌐</span> AI Translate
                   </div>
@@ -218,7 +225,7 @@ const Navbar = () => {
             {/* Desktop Top Up CTA */}
             <Link
               to="/topup"
-              className="btn btn-gold text-xs sm:text-sm px-4 sm:px-5 py-2 sm:py-2.5 rounded-xl hidden sm:inline-flex items-center gap-2 group font-khmer cursor-pointer"
+              className="btn btn-gold h-10 text-xs sm:text-sm px-4 sm:px-5 rounded-xl hidden sm:inline-flex items-center gap-2 group font-khmer cursor-pointer shadow-md"
             >
               <svg 
                 className="w-4 h-4 shrink-0 text-slate-950 fill-current drop-shadow-[0_1px_0_rgba(255,255,255,0.4)] transition-transform duration-200 group-hover:scale-125 group-hover:rotate-6" 
@@ -232,14 +239,11 @@ const Navbar = () => {
             {isAuthenticated() && (
               <button
                 onClick={logout}
-                className="btn btn-secondary text-xs py-2 px-3 hidden lg:block"
+                className="h-10 px-3 rounded-xl bg-slate-900 hover:bg-slate-800 border border-slate-700/80 text-slate-300 text-xs font-bold hidden lg:block transition-all"
               >
                 Logout ({user?.name})
               </button>
             )}
-
-            {/* Mobile menu button hidden (mobile uses bottom dock) */}
-            {/* <div className="hidden">...</div> */}
           </div>
         </div>
       </div>
