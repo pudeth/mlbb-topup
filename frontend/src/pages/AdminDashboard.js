@@ -641,6 +641,7 @@ const PRICING_GAMES = [
     status: 'Active',
     description: '',
   });
+  const [gameModalStep, setGameModalStep] = useState(1); // 1: Layout 1 | 2: Layout 2 | 3: Layout 3
 
   const showToast = (type, message) => {
     setToast({ type, message });
@@ -1066,6 +1067,7 @@ const PRICING_GAMES = [
         description: '',
       });
     }
+    setGameModalStep(1);
     setGameModalOpen(true);
   };
 
@@ -5457,11 +5459,47 @@ const PRICING_GAMES = [
               </button>
             </div>
 
+            {/* Step Navigation Bar: Layout 1 -> Layout 2 -> Layout 3 */}
+            <div className="flex items-center justify-between p-1.5 bg-slate-950/90 rounded-2xl border border-slate-800 gap-1.5">
+              {[
+                { step: 1, label: 'Layout 1', name: 'Artwork & Card', icon: '🎮' },
+                { step: 2, label: 'Layout 2', name: 'Server Badge & Flag', icon: '🏆' },
+                { step: 3, label: 'Layout 3', name: 'Game Details & Save', icon: '⚙️' },
+              ].map((s) => {
+                const isActive = gameModalStep === s.step;
+                const isCompleted = gameModalStep > s.step;
+                return (
+                  <button
+                    key={s.step}
+                    type="button"
+                    onClick={() => setGameModalStep(s.step)}
+                    className={`flex-1 flex items-center justify-center gap-2 py-2 px-2 rounded-xl text-xs font-bold transition-all cursor-pointer ${
+                      isActive
+                        ? 'bg-amber-400 text-black font-black shadow-md scale-[1.02]'
+                        : isCompleted
+                        ? 'bg-slate-900 text-amber-300 border border-amber-500/30 hover:border-amber-400/50'
+                        : 'bg-transparent text-slate-400 hover:text-slate-200 hover:bg-slate-900/50'
+                    }`}
+                  >
+                    <span className="text-sm">{s.icon}</span>
+                    <div className="text-left hidden sm:block">
+                      <div className="text-[9px] uppercase tracking-wider opacity-75">{s.label}</div>
+                      <div className="text-[11px] leading-none truncate">{s.name}</div>
+                    </div>
+                    <div className="sm:hidden font-black text-[10px]">
+                      {s.label}
+                    </div>
+                  </button>
+                );
+              })}
+            </div>
+
             {/* Form */}
             <form onSubmit={handleSaveGame} className="space-y-4 text-xs">
               
-              {/* GAME LOGO & PRODUCT CARD STUDIO */}
-              <div className="p-4 sm:p-5 rounded-2xl bg-gradient-to-br from-[#0c1427] via-[#101b33] to-[#0a101f] border border-amber-500/40 space-y-4">
+              {/* LAYOUT 1: GAME LOGO & PRODUCT CARD STUDIO */}
+              {gameModalStep === 1 && (
+                <div className="p-4 sm:p-5 rounded-2xl bg-gradient-to-br from-[#0c1427] via-[#101b33] to-[#0a101f] border border-amber-500/40 space-y-4 animate-fadeIn">
                 
                 {/* Header */}
                 <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 pb-3 border-b border-slate-800">
@@ -5625,10 +5663,31 @@ const PRICING_GAMES = [
 
                 </div>
 
-              </div>
+                {/* Step 1 Navigation Buttons */}
+                <div className="flex items-center justify-between pt-3 border-t border-slate-800/80">
+                  <button
+                    type="button"
+                    onClick={() => setGameModalOpen(false)}
+                    className="btn btn-secondary text-xs py-2 px-4 cursor-pointer"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setGameModalStep(2)}
+                    className="btn btn-gold text-xs py-2 px-5 font-black uppercase tracking-wider shadow-glow-gold flex items-center gap-1.5 cursor-pointer"
+                  >
+                    <span>Next: Server Badge (Layout 2)</span>
+                    <span>➔</span>
+                  </button>
+                </div>
 
-              {/* SERVER FLAG & BADGE CUSTOMIZER STUDIO */}
-              <div className="p-4 sm:p-5 rounded-2xl bg-gradient-to-br from-[#0c1427] via-[#101b33] to-[#0a101f] border border-amber-500/40 space-y-4">
+              </div>
+            )}
+
+            {/* LAYOUT 2: SERVER FLAG & BADGE CUSTOMIZER STUDIO */}
+            {gameModalStep === 2 && (
+              <div className="p-4 sm:p-5 rounded-2xl bg-gradient-to-br from-[#0c1427] via-[#101b33] to-[#0a101f] border border-amber-500/40 space-y-4 animate-fadeIn">
                 
                 {/* Header with Title and Mode Indicator */}
                 <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 pb-3 border-b border-slate-800">
@@ -5648,9 +5707,39 @@ const PRICING_GAMES = [
 
                 {/* ── 1. SELECT BADGE FRAME LAYOUT (3 Distinct Layouts) ── */}
                 <div className="space-y-2">
-                  <label className="block text-[11px] font-black uppercase tracking-wider text-slate-300">
-                    Step 1: Choose Badge Frame Layout (ម៉ូតស៊ុម ៣ បែប)
-                  </label>
+                  <div className="flex items-center justify-between">
+                    <label className="block text-[11px] font-black uppercase tracking-wider text-slate-300">
+                      Step 1: Choose Badge Frame Layout (ម៉ូតស៊ុម ៣ បែប)
+                    </label>
+                    <div className="flex items-center gap-1.5">
+                      <button
+                        type="button"
+                        onClick={() => {
+                          const frames = ['gold_cyber', 'cyber_pill', 'esports_shield'];
+                          const cur = frames.indexOf(gameFormData.flagFrameStyle || 'gold_cyber');
+                          const prev = cur <= 0 ? frames.length - 1 : cur - 1;
+                          setGameFormData((p) => ({ ...p, flagFrameStyle: frames[prev] }));
+                        }}
+                        className="px-2 py-0.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-[10px] text-amber-300 hover:text-amber-200 cursor-pointer font-bold border border-slate-700 flex items-center gap-1"
+                        title="Previous Frame Style"
+                      >
+                        <span>‹</span> Prev Frame
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          const frames = ['gold_cyber', 'cyber_pill', 'esports_shield'];
+                          const cur = frames.indexOf(gameFormData.flagFrameStyle || 'gold_cyber');
+                          const next = (cur + 1) % frames.length;
+                          setGameFormData((p) => ({ ...p, flagFrameStyle: frames[next] }));
+                        }}
+                        className="px-2 py-0.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-[10px] text-amber-300 hover:text-amber-200 cursor-pointer font-bold border border-slate-700 flex items-center gap-1"
+                        title="Next Frame Style"
+                      >
+                        Next Frame <span>›</span>
+                      </button>
+                    </div>
+                  </div>
                   <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
                     {[
                       {
@@ -5897,152 +5986,207 @@ const PRICING_GAMES = [
                   </div>
                 </div>
 
-              </div>
-
-              {/* Game Name & Publisher */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                <div>
-                  <label className="block text-slate-400 mb-1 font-semibold">
-                    Game Name <span className="text-rose-400">*</span>
-                  </label>
-                  <input
-                    type="text"
-                    required
-                    value={gameFormData.name}
-                    onChange={(e) =>
-                      setGameFormData({ ...gameFormData, name: e.target.value })
-                    }
-                    className="input w-full text-xs py-2 rounded-xl"
-                    placeholder="e.g. Mobile Legends: Bang Bang"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-slate-400 mb-1 font-semibold">Publisher</label>
-                  <input
-                    type="text"
-                    value={gameFormData.publisher}
-                    onChange={(e) =>
-                      setGameFormData({ ...gameFormData, publisher: e.target.value })
-                    }
-                    className="input w-full text-xs py-2 rounded-xl"
-                    placeholder="e.g. Moonton"
-                  />
-                </div>
-              </div>
-
-              {/* Category & Currency */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                <div>
-                  <label className="block text-slate-400 mb-1 font-semibold">Category</label>
-                  <select
-                    value={gameFormData.category}
-                    onChange={(e) =>
-                      setGameFormData({ ...gameFormData, category: e.target.value })
-                    }
-                    className="input w-full text-xs py-2 rounded-xl"
+                {/* Step 2 Navigation Buttons */}
+                <div className="flex items-center justify-between pt-3 border-t border-slate-800/80">
+                  <button
+                    type="button"
+                    onClick={() => setGameModalStep(1)}
+                    className="btn btn-secondary text-xs py-2 px-4 cursor-pointer flex items-center gap-1.5 font-bold"
                   >
-                    <option value="MOBA">MOBA</option>
-                    <option value="Battle Royale">Battle Royale</option>
-                    <option value="RPG / Action">RPG / Action</option>
-                    <option value="Sandbox / Arcade">Sandbox / Arcade</option>
-                    <option value="Shooter">Shooter</option>
-                  </select>
-                </div>
-
-                <div>
-                  <label className="block text-slate-400 mb-1 font-semibold">In-Game Currency Name</label>
-                  <input
-                    type="text"
-                    value={gameFormData.currency}
-                    onChange={(e) =>
-                      setGameFormData({ ...gameFormData, currency: e.target.value })
-                    }
-                    className="input w-full text-xs py-2 rounded-xl"
-                    placeholder="e.g. Diamonds, UC, Tokens"
-                  />
-                </div>
-              </div>
-
-              {/* Badge Text & Badge Color */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                <div>
-                  <label className="block text-slate-400 mb-1 font-semibold">Badge Label</label>
-                  <input
-                    type="text"
-                    value={gameFormData.badge}
-                    onChange={(e) =>
-                      setGameFormData({ ...gameFormData, badge: e.target.value })
-                    }
-                    className="input w-full text-xs py-2 rounded-xl"
-                    placeholder="e.g. Instant Delivery, HOT, Official"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-slate-400 mb-1 font-semibold">Badge Theme</label>
-                  <select
-                    value={gameFormData.badgeColor}
-                    onChange={(e) =>
-                      setGameFormData({ ...gameFormData, badgeColor: e.target.value })
-                    }
-                    className="input w-full text-xs py-2 rounded-xl"
+                    <span>⬅</span>
+                    <span>Previous: Artwork (Layout 1)</span>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setGameModalStep(3)}
+                    className="btn btn-gold text-xs py-2 px-5 font-black uppercase tracking-wider shadow-glow-gold flex items-center gap-1.5 cursor-pointer"
                   >
-                    <option value="gold">Gold (Featured)</option>
-                    <option value="cyan">Cyan (Instant)</option>
-                    <option value="emerald">Emerald (Verified)</option>
-                    <option value="purple">Purple (Special)</option>
-                  </select>
+                    <span>Next: Game Details (Layout 3)</span>
+                    <span>➔</span>
+                  </button>
                 </div>
+
               </div>
+            )}
 
-              {/* Delivery Speed & Status */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                <div>
-                  <label className="block text-slate-400 mb-1 font-semibold">Delivery Time Note</label>
-                  <input
-                    type="text"
-                    value={gameFormData.deliveryTime}
-                    onChange={(e) =>
-                      setGameFormData({ ...gameFormData, deliveryTime: e.target.value })
-                    }
-                    className="input w-full text-xs py-2 rounded-xl"
-                    placeholder="e.g. 10 - 30s"
-                  />
+            {/* LAYOUT 3: GAME INFORMATION & SETTINGS */}
+            {gameModalStep === 3 && (
+              <div className="p-4 sm:p-5 rounded-2xl bg-gradient-to-br from-[#0c1427] via-[#101b33] to-[#0a101f] border border-amber-500/40 space-y-4 animate-fadeIn">
+                
+                {/* Header */}
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 pb-3 border-b border-slate-800">
+                  <div>
+                    <label className="font-black text-amber-300 uppercase tracking-wider text-xs flex items-center gap-2">
+                      <span className="text-base">⚙️</span> Game Information & Settings (Layout 3)
+                    </label>
+                    <p className="text-[11px] text-slate-400 mt-0.5">
+                      Configure title, publisher, category, delivery speed, and in-game currency
+                    </p>
+                  </div>
+                  <span className="text-[10px] text-emerald-300 font-bold bg-emerald-950/80 px-2.5 py-1 rounded-lg border border-emerald-500/40 self-start sm:self-auto flex items-center gap-1.5">
+                    <span className="w-1.5 h-1.5 rounded-full bg-emerald-400" />
+                    Final Step 3 of 3
+                  </span>
                 </div>
 
-                <div>
-                  <label className="block text-slate-400 mb-1 font-semibold">Status</label>
-                  <select
-                    value={gameFormData.status}
-                    onChange={(e) =>
-                      setGameFormData({ ...gameFormData, status: e.target.value })
-                    }
-                    className="input w-full text-xs py-2 rounded-xl"
+                {/* Game Name & Publisher */}
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  <div>
+                    <label className="block text-slate-400 mb-1 font-semibold">
+                      Game Name <span className="text-rose-400">*</span>
+                    </label>
+                    <input
+                      type="text"
+                      required
+                      value={gameFormData.name}
+                      onChange={(e) =>
+                        setGameFormData({ ...gameFormData, name: e.target.value })
+                      }
+                      className="input w-full text-xs py-2 rounded-xl"
+                      placeholder="e.g. Mobile Legends: Bang Bang"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-slate-400 mb-1 font-semibold">Publisher</label>
+                    <input
+                      type="text"
+                      value={gameFormData.publisher}
+                      onChange={(e) =>
+                        setGameFormData({ ...gameFormData, publisher: e.target.value })
+                      }
+                      className="input w-full text-xs py-2 rounded-xl"
+                      placeholder="e.g. Moonton"
+                    />
+                  </div>
+                </div>
+
+                {/* Category & Currency */}
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  <div>
+                    <label className="block text-slate-400 mb-1 font-semibold">Category</label>
+                    <select
+                      value={gameFormData.category}
+                      onChange={(e) =>
+                        setGameFormData({ ...gameFormData, category: e.target.value })
+                      }
+                      className="input w-full text-xs py-2 rounded-xl"
+                    >
+                      <option value="MOBA">MOBA</option>
+                      <option value="Battle Royale">Battle Royale</option>
+                      <option value="RPG / Action">RPG / Action</option>
+                      <option value="Sandbox / Arcade">Sandbox / Arcade</option>
+                      <option value="Shooter">Shooter</option>
+                    </select>
+                  </div>
+
+                  <div>
+                    <label className="block text-slate-400 mb-1 font-semibold">In-Game Currency Name</label>
+                    <input
+                      type="text"
+                      value={gameFormData.currency}
+                      onChange={(e) =>
+                        setGameFormData({ ...gameFormData, currency: e.target.value })
+                      }
+                      className="input w-full text-xs py-2 rounded-xl"
+                      placeholder="e.g. Diamonds, UC, Tokens"
+                    />
+                  </div>
+                </div>
+
+                {/* Badge Text & Badge Color */}
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  <div>
+                    <label className="block text-slate-400 mb-1 font-semibold">Badge Label</label>
+                    <input
+                      type="text"
+                      value={gameFormData.badge}
+                      onChange={(e) =>
+                        setGameFormData({ ...gameFormData, badge: e.target.value })
+                      }
+                      className="input w-full text-xs py-2 rounded-xl"
+                      placeholder="e.g. Instant Delivery, HOT, Official"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-slate-400 mb-1 font-semibold">Badge Theme</label>
+                    <select
+                      value={gameFormData.badgeColor}
+                      onChange={(e) =>
+                        setGameFormData({ ...gameFormData, badgeColor: e.target.value })
+                      }
+                      className="input w-full text-xs py-2 rounded-xl"
+                    >
+                      <option value="gold">Gold (Featured)</option>
+                      <option value="cyan">Cyan (Instant)</option>
+                      <option value="emerald">Emerald (Verified)</option>
+                      <option value="purple">Purple (Special)</option>
+                    </select>
+                  </div>
+                </div>
+
+                {/* Delivery Speed & Status */}
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  <div>
+                    <label className="block text-slate-400 mb-1 font-semibold">Delivery Time Note</label>
+                    <input
+                      type="text"
+                      value={gameFormData.deliveryTime}
+                      onChange={(e) =>
+                        setGameFormData({ ...gameFormData, deliveryTime: e.target.value })
+                      }
+                      className="input w-full text-xs py-2 rounded-xl"
+                      placeholder="e.g. 10 - 30s"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-slate-400 mb-1 font-semibold">Status</label>
+                    <select
+                      value={gameFormData.status}
+                      onChange={(e) =>
+                        setGameFormData({ ...gameFormData, status: e.target.value })
+                      }
+                      className="input w-full text-xs py-2 rounded-xl"
+                    >
+                      <option value="Active">Active (Accepts Orders)</option>
+                      <option value="Coming Soon">Coming Soon</option>
+                      <option value="Maintenance">Maintenance</option>
+                    </select>
+                  </div>
+                </div>
+
+                {/* Step 3 Navigation Buttons */}
+                <div className="flex items-center justify-between pt-4 border-t border-slate-800/80">
+                  <button
+                    type="button"
+                    onClick={() => setGameModalStep(2)}
+                    className="btn btn-secondary text-xs py-2 px-4 cursor-pointer flex items-center gap-1.5 font-bold"
                   >
-                    <option value="Active">Active (Accepts Orders)</option>
-                    <option value="Coming Soon">Coming Soon</option>
-                    <option value="Maintenance">Maintenance</option>
-                  </select>
+                    <span>⬅</span>
+                    <span>Previous: Server Badge (Layout 2)</span>
+                  </button>
+                  <div className="flex items-center gap-2.5">
+                    <button
+                      type="button"
+                      onClick={() => setGameModalOpen(false)}
+                      className="btn btn-secondary text-xs py-2 px-4 cursor-pointer"
+                    >
+                      Cancel
+                    </button>
+                    <button
+                      type="submit"
+                      className="btn btn-gold text-xs py-2 px-5 font-black uppercase tracking-wider shadow-glow-gold flex items-center gap-1.5 cursor-pointer"
+                    >
+                      <span>💾</span>
+                      <span>Save Game & Apply</span>
+                    </button>
+                  </div>
                 </div>
-              </div>
 
-              {/* Modal Buttons */}
-              <div className="flex justify-end gap-2.5 pt-4 border-t border-dark-border">
-                <button
-                  type="button"
-                  onClick={() => setGameModalOpen(false)}
-                  className="btn btn-secondary text-xs py-2 px-4"
-                >
-                  Cancel
-                </button>
-                <button
-                  type="submit"
-                  className="btn btn-gold text-xs py-2 px-5 font-black uppercase tracking-wider shadow-glow-gold"
-                >
-                  Save Game & Apply
-                </button>
               </div>
+            )}
             </form>
           </div>
         </div>
