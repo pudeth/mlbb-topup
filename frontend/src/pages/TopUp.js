@@ -1393,105 +1393,161 @@ const TopUp = () => {
                 }
 
                 // ==================== MODE 1: TILES VIEW (2-3 COLUMNS) ====================
-                if (layoutMode === 'tiles') {
-                  return (
-                    <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 gap-2.5">
-                      {filtered.map((pkg) => {
-                        const isSelected = selectedProduct.productId === pkg.productId;
-
-                        return (
-                          <div
-                            key={pkg.productId}
-                            onClick={() => setSelectedProduct(pkg)}
-                            className={`relative p-3 rounded-2xl border cursor-pointer select-none transition-all flex flex-col justify-between group active:scale-[0.98] ${
-                              isSelected
-                                ? 'bg-gradient-to-b from-[#182035] to-[#12192e] border-cyan-400 shadow-[0_0_18px_rgba(34,211,238,0.25)] ring-1 ring-cyan-400'
-                                : 'bg-[#111728]/95 border-slate-800/90 hover:border-slate-700 hover:bg-[#161f36]'
-                            }`}
-                          >
-                            {/* Promo Badge Pill */}
-                            {pkg.tag ? (
-                              <div className="mb-2">
-                                <span className={`inline-block px-2 py-0.5 rounded-lg text-[9px] sm:text-[10px] font-black truncate max-w-full ${
-                                  pkg.tag.includes('ticket')
-                                    ? 'bg-purple-900/60 text-purple-300 border border-purple-500/40'
-                                    : pkg.tag.includes('arura') || pkg.tag.includes('BEST')
-                                    ? 'bg-amber-500/20 text-amber-300 border border-amber-500/40'
-                                    : 'bg-cyan-500/20 text-cyan-300 border border-cyan-500/40'
-                                }`}>
-                                  {pkg.tag}
+                  if (layoutMode === 'tiles') {
+                    return (
+                      <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 gap-3">
+                        {filtered.map((pkg) => {
+                          const isSelected = selectedProduct.productId === pkg.productId;
+  
+                          return (
+                            <div
+                              key={pkg.productId}
+                              onClick={() => setSelectedProduct(pkg)}
+                              className={`group relative rounded-[20px] p-3 cursor-pointer select-none transition-all duration-300 flex flex-col justify-between overflow-hidden active:scale-[0.98] ${
+                                isSelected
+                                  ? 'bg-[#181335]/80 border-transparent ring-1 ring-purple-500/60 shadow-[0_0_25px_rgba(109,40,217,0.2)] scale-[1.02]'
+                                  : 'bg-slate-900/40 border border-slate-800/50 hover:bg-slate-800/40 hover:border-slate-700/60'
+                              }`}
+                            >
+                              {isSelected && <div className="absolute inset-0 bg-gradient-to-br from-purple-500/10 to-indigo-500/10 pointer-events-none" />}
+                              
+                              {/* Top Row: Icon & Tag */}
+                              <div className="flex items-start justify-between mb-3 relative z-10">
+                                <ProductPackageImage pkg={pkg} size="md" className="group-hover:scale-110 transition-transform duration-300 drop-shadow-md" />
+                                
+                                {pkg.tag && (
+                                  <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-[9px] font-black tracking-wider shadow-sm truncate max-w-[50%] ${
+                                    pkg.tag.includes('ticket')
+                                      ? 'bg-purple-900/40 text-purple-300 border border-purple-700/50'
+                                      : pkg.tag.includes('arura') || pkg.tag.includes('BEST') || pkg.tag.includes('Bonus')
+                                      ? 'bg-amber-500/20 text-amber-300 border border-amber-500/40'
+                                      : 'bg-cyan-500/20 text-cyan-300 border border-cyan-500/40'
+                                  }`}>
+                                    {pkg.tag}
+                                  </span>
+                                )}
+                              </div>
+  
+                              {/* Middle: Name */}
+                              <div className="mb-3 relative z-10">
+                                <span className={`font-black text-xs sm:text-sm leading-tight line-clamp-2 transition-colors ${isSelected ? 'text-white' : 'text-slate-300 group-hover:text-slate-200'}`}>
+                                  {pkg.name}
                                 </span>
                               </div>
-                            ) : (
-                              <div className="h-4 mb-2" />
-                            )}
-
-                            {/* Middle: Icon & Name */}
-                            <div className="flex items-center gap-2.5 mb-2">
-                              <ProductPackageImage pkg={pkg} size="md" className="group-hover:scale-110 transition-transform duration-300" />
-                              <span className="font-bold text-white text-xs sm:text-sm leading-tight line-clamp-2">
+  
+                              {/* Bottom: Price Pill */}
+                              <div className={`mt-auto relative z-10 flex items-center justify-between px-2.5 py-1.5 rounded-xl transition-all ${
+                                isSelected ? 'bg-purple-950/40 border border-purple-500/30' : 'bg-slate-950/50 border border-slate-800/60'
+                              }`}>
+                                <span className={`text-[9px] sm:text-[10px] font-mono font-medium ${isSelected ? 'text-purple-300/80' : 'text-slate-500'}`}>
+                                  ~{Math.round(pkg.price * 4100).toLocaleString()} ៛
+                                </span>
+                                <span className={`font-black text-xs sm:text-sm font-mono ${isSelected ? 'text-emerald-400' : 'text-slate-300 group-hover:text-emerald-400/80'}`}>
+                                  ${pkg.price.toFixed(2)}
+                                </span>
+                              </div>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    );
+                  }
+  
+                  // ==================== MODE 2: LARGE ICONS / GRID VIEW ====================
+                  if (layoutMode === 'grid') {
+                    return (
+                      <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-3 lg:grid-cols-4 gap-3">
+                        {filtered.map((pkg) => {
+                          const isSelected = selectedProduct.productId === pkg.productId;
+  
+                          return (
+                            <div
+                              key={pkg.productId}
+                              onClick={() => setSelectedProduct(pkg)}
+                              className={`group relative rounded-[20px] p-3.5 cursor-pointer select-none transition-all duration-300 flex flex-col items-center text-center justify-between overflow-hidden active:scale-[0.98] ${
+                                isSelected
+                                  ? 'bg-[#181335]/80 border-transparent ring-1 ring-amber-400/70 shadow-[0_0_25px_rgba(251,191,36,0.2)] scale-[1.02]'
+                                  : 'bg-slate-900/40 border border-slate-800/50 hover:bg-slate-800/40 hover:border-slate-700/60'
+                              }`}
+                            >
+                              {isSelected && <div className="absolute inset-0 bg-gradient-to-b from-amber-500/10 to-transparent pointer-events-none" />}
+                              
+                              {/* Top Badge */}
+                              <div className="h-5 mb-2 w-full flex justify-center">
+                                {pkg.tag && (
+                                  <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[9px] font-black tracking-wider shadow-sm truncate max-w-[90%] bg-amber-500/20 text-amber-300 border border-amber-500/40">
+                                    {pkg.tag}
+                                  </span>
+                                )}
+                              </div>
+  
+                              <ProductPackageImage pkg={pkg} size="lg" className="mb-3 group-hover:scale-110 transition-transform duration-300 drop-shadow-lg" />
+  
+                              <span className={`font-black text-[11px] sm:text-xs leading-snug mb-3 transition-colors ${isSelected ? 'text-white' : 'text-slate-300 group-hover:text-slate-200'}`}>
                                 {pkg.name}
                               </span>
+  
+                              {/* Price Block */}
+                              <div className={`mt-auto w-full flex flex-col items-center py-1.5 rounded-xl transition-all ${
+                                isSelected ? 'bg-amber-950/30 border border-amber-500/20' : 'bg-slate-950/50 border border-slate-800/60'
+                              }`}>
+                                <span className={`font-black text-sm sm:text-base font-mono leading-none mb-0.5 ${isSelected ? 'text-amber-400' : 'text-slate-300 group-hover:text-amber-400/80'}`}>
+                                  ${pkg.price.toFixed(2)}
+                                </span>
+                                <span className={`text-[9px] font-mono font-medium ${isSelected ? 'text-amber-300/60' : 'text-slate-500'}`}>
+                                  ~{Math.round(pkg.price * 4100).toLocaleString()} ៛
+                                </span>
+                              </div>
                             </div>
-
-                            {/* Bottom: Price in USD & KHR */}
-                            <div className="pt-2 border-t border-slate-800/80 flex items-center justify-between">
-                              <span className="text-[9px] text-slate-400 font-mono">
-                                ~{Math.round(pkg.price * 4100).toLocaleString()} ៛
-                              </span>
-                              <span className="font-black text-sm sm:text-base font-mono text-emerald-400">
-                                ${pkg.price.toFixed(2)}
-                              </span>
-                            </div>
-                          </div>
-                        );
-                      })}
-                    </div>
-                  );
-                }
-
-                // ==================== MODE 2: LARGE ICONS / GRID VIEW ====================
-                if (layoutMode === 'grid') {
+                          );
+                        })}
+                      </div>
+                    );
+                  }
+  
+                  // ==================== MODE 3: COMPACT LIST ROWS ====================
                   return (
-                    <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-3 lg:grid-cols-4 gap-3">
+                    <div className="space-y-2">
                       {filtered.map((pkg) => {
                         const isSelected = selectedProduct.productId === pkg.productId;
-
+  
                         return (
                           <div
                             key={pkg.productId}
                             onClick={() => setSelectedProduct(pkg)}
-                            className={`relative p-3.5 rounded-3xl border cursor-pointer select-none transition-all flex flex-col items-center text-center justify-between group active:scale-[0.98] ${
+                            className={`group relative flex items-center justify-between p-3 rounded-[16px] cursor-pointer select-none transition-all duration-300 overflow-hidden active:scale-[0.98] ${
                               isSelected
-                                ? 'bg-gradient-to-b from-[#1c243c] to-[#12192e] border-amber-400 shadow-[0_0_20px_rgba(251,191,36,0.3)] ring-1 ring-amber-400'
-                                : 'bg-[#111728]/95 border-slate-800 hover:border-slate-700 hover:bg-[#161f36]'
+                                ? 'bg-[#181335]/80 border-transparent ring-1 ring-purple-500/60 shadow-[0_0_20px_rgba(109,40,217,0.15)] scale-[1.01]'
+                                : 'bg-slate-900/40 border border-slate-800/50 hover:bg-slate-800/40 hover:border-slate-700/60'
                             }`}
                           >
-                            {/* Top Badge */}
-                            {pkg.tag ? (
-                              <span className="text-[9px] font-black px-2 py-0.5 rounded-full bg-slate-900/90 text-amber-400 border border-amber-500/30 mb-2 truncate max-w-full">
-                                {pkg.tag}
-                              </span>
-                            ) : (
-                              <div className="h-5 mb-2" />
-                            )}
-
-                            {/* Big Center 3D Image Artwork */}
-                            <div className="my-1 flex items-center justify-center h-16 sm:h-20">
-                              <ProductPackageImage pkg={pkg} size="lg" className="group-hover:scale-110 transition-transform duration-300" />
+                            {isSelected && <div className="absolute inset-0 bg-gradient-to-r from-purple-500/10 to-transparent pointer-events-none" />}
+                            
+                            <div className="flex items-center gap-3.5 relative z-10">
+                              <ProductPackageImage pkg={pkg} size="sm" className="group-hover:scale-110 transition-transform duration-300 drop-shadow-sm" />
+                              <div className="flex flex-col justify-center">
+                                <div className="flex items-center gap-2">
+                                  <span className={`font-black text-xs sm:text-sm transition-colors ${isSelected ? 'text-white' : 'text-slate-300 group-hover:text-slate-200'}`}>
+                                    {pkg.name}
+                                  </span>
+                                  {pkg.tag && (
+                                    <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-[9px] font-black tracking-wider shadow-sm ${
+                                      isSelected ? 'bg-purple-500/20 text-purple-300 border border-purple-500/40' : 'bg-slate-800 text-slate-400'
+                                    }`}>
+                                      {pkg.tag}
+                                    </span>
+                                  )}
+                                </div>
+                                <span className="text-[10px] text-slate-500 font-mono mt-0.5">
+                                  ~{Math.round(pkg.price * 4100).toLocaleString()} ៛
+                                </span>
+                              </div>
                             </div>
-
-                            {/* Name */}
-                            <span className="font-extrabold text-white text-xs sm:text-sm mt-1 leading-snug line-clamp-2">
-                              {pkg.name}
-                            </span>
-
-                            {/* Price Pill */}
-                            <div className="mt-3 w-full py-1.5 px-2 rounded-xl bg-slate-950/80 border border-slate-800 flex items-center justify-between">
-                              <span className="text-[9px] text-slate-500 font-mono">
-                                {currency === 'KHR' ? 'KHR' : 'USD'}
-                              </span>
-                              <span className="font-black text-xs sm:text-sm font-mono text-emerald-400">
+                            
+                            <div className={`relative z-10 px-3 py-1.5 rounded-xl transition-colors ${
+                              isSelected ? 'bg-purple-950/40 border border-purple-500/30' : 'bg-slate-950/50 border border-slate-800/60'
+                            }`}>
+                              <span className={`font-black text-sm font-mono ${isSelected ? 'text-emerald-400' : 'text-slate-300 group-hover:text-emerald-400/80'}`}>
                                 ${pkg.price.toFixed(2)}
                               </span>
                             </div>
@@ -1500,55 +1556,8 @@ const TopUp = () => {
                       })}
                     </div>
                   );
-                }
-
-                // ==================== MODE 3: COMPACT LIST ROWS ====================
-                return (
-                  <div className="space-y-1.5">
-                    {filtered.map((pkg) => {
-                      const isSelected = selectedProduct.productId === pkg.productId;
-
-                      return (
-                        <div
-                          key={pkg.productId}
-                          onClick={() => setSelectedProduct(pkg)}
-                          className={`w-full py-2 px-3 sm:py-2.5 sm:px-3.5 rounded-xl border cursor-pointer flex items-center justify-between select-none product-row-smooth transition-all active:scale-[0.99] ${
-                            isSelected
-                              ? 'bg-[#182035] border-purple-500 shadow-[0_0_15px_rgba(168,85,247,0.25)] ring-1 ring-purple-400'
-                              : 'bg-[#111728]/90 border-slate-800/80 hover:border-slate-700 hover:bg-[#161f36]'
-                          }`}
-                        >
-                          {/* Left: Icon & Product Name */}
-                          <div className="flex items-center gap-2.5 min-w-0 pr-2">
-                            <ProductPackageImage pkg={pkg} size="sm" />
-                            <div className="min-w-0">
-                              <span className="font-bold text-white text-xs sm:text-sm block truncate leading-tight">
-                                {pkg.name}
-                              </span>
-                              {pkg.tag && (
-                                <span className="text-[9px] text-amber-400 font-semibold block leading-tight mt-0.5 truncate">
-                                  {pkg.tag}
-                                </span>
-                              )}
-                            </div>
-                          </div>
-
-                          {/* Right: Price */}
-                          <div className="text-right shrink-0">
-                            <span className="font-black text-white text-xs sm:text-sm block font-mono">
-                              ${pkg.price.toFixed(2)}
-                            </span>
-                            <span className="text-[8px] sm:text-[9px] text-slate-500 font-mono block leading-tight">
-                              ~{Math.round(pkg.price * 4100).toLocaleString()} ៛
-                            </span>
-                          </div>
-                        </div>
-                      );
-                    })}
-                  </div>
-                );
-              })()}
-            </div>
+                })()}
+              </div>
 
             {/* Bottom Helper Note */}
             <div className="text-center pt-1 text-[10px] text-slate-500 font-medium">
