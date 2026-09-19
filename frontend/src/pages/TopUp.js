@@ -1503,7 +1503,7 @@ const TopUp = () => {
   
                   // ==================== MODE 3: COMPACT LIST ROWS ====================
                   return (
-                    <div className="space-y-2">
+                    <div className="space-y-2.5">
                       {filtered.map((pkg) => {
                         const isSelected = selectedProduct.productId === pkg.productId;
   
@@ -1511,39 +1511,39 @@ const TopUp = () => {
                           <div
                             key={pkg.productId}
                             onClick={() => setSelectedProduct(pkg)}
-                            className={`group relative flex items-center justify-between p-3 rounded-[16px] cursor-pointer select-none transition-all duration-300 overflow-hidden active:scale-[0.98] ${
+                            className={`group relative flex items-center justify-between p-3 rounded-[20px] cursor-pointer select-none transition-all duration-300 overflow-hidden ${
                               isSelected
-                                ? 'bg-[#181335]/80 border-transparent ring-1 ring-purple-500/60 shadow-[0_0_20px_rgba(109,40,217,0.15)] scale-[1.01]'
-                                : 'bg-slate-900/40 border border-slate-800/50 hover:bg-slate-800/40 hover:border-slate-700/60'
+                                ? 'bg-[#1a1133] border border-[#563b9e] shadow-[0_0_20px_rgba(109,40,217,0.15)]'
+                                : 'bg-[#0f1523] border border-[#1e293b] hover:bg-[#141b2d] hover:border-[#334155]'
                             }`}
                           >
-                            {isSelected && <div className="absolute inset-0 bg-gradient-to-r from-purple-500/10 to-transparent pointer-events-none" />}
-                            
-                            <div className="flex items-center gap-3.5 relative z-10">
-                              <ProductPackageImage pkg={pkg} size="sm" className="group-hover:scale-110 transition-transform duration-300 drop-shadow-sm" />
-                              <div className="flex flex-col justify-center">
-                                <div className="flex items-center gap-2">
-                                  <span className={`font-black text-xs sm:text-sm transition-colors ${isSelected ? 'text-white' : 'text-slate-300 group-hover:text-slate-200'}`}>
+                            <div className="flex items-center gap-4 relative z-10">
+                              <ProductPackageImage pkg={pkg} size="sm" className="group-hover:scale-105 transition-transform duration-300 drop-shadow-md ml-1" />
+                              <div className="flex flex-col justify-center gap-1">
+                                <div className="flex items-center gap-2.5">
+                                  <span className="font-black text-[13px] sm:text-[15px] leading-none text-white">
                                     {pkg.name}
                                   </span>
                                   {pkg.tag && (
-                                    <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-[9px] font-black tracking-wider shadow-sm ${
-                                      isSelected ? 'bg-purple-500/20 text-purple-300 border border-purple-500/40' : 'bg-slate-800 text-slate-400'
+                                    <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-[9px] font-black tracking-wider ${
+                                      isSelected 
+                                        ? 'bg-[#3b275f] text-[#c084fc]' 
+                                        : 'bg-[#1e293b] text-slate-400'
                                     }`}>
                                       {pkg.tag}
                                     </span>
                                   )}
                                 </div>
-                                <span className="text-[10px] text-slate-500 font-mono mt-0.5">
+                                <span className={`text-[10.5px] font-mono leading-none ${isSelected ? 'text-[#a855f7]' : 'text-slate-500'}`}>
                                   ~{Math.round(pkg.price * 4100).toLocaleString()} ៛
                                 </span>
                               </div>
                             </div>
                             
-                            <div className={`relative z-10 px-3 py-1.5 rounded-xl transition-colors ${
-                              isSelected ? 'bg-purple-950/40 border border-purple-500/30' : 'bg-slate-950/50 border border-slate-800/60'
+                            <div className={`relative z-10 px-4 py-2 rounded-[14px] flex items-center justify-center min-w-[70px] transition-colors ${
+                              isSelected ? 'bg-[#140b2e] border border-[#4c2d96]/30' : 'bg-[#0a0d16] border border-transparent'
                             }`}>
-                              <span className={`font-black text-sm font-mono ${isSelected ? 'text-emerald-400' : 'text-slate-300 group-hover:text-emerald-400/80'}`}>
+                              <span className={`font-black text-[15px] font-mono leading-none ${isSelected ? 'text-[#22c55e]' : 'text-white'}`}>
                                 ${pkg.price.toFixed(2)}
                               </span>
                             </div>
