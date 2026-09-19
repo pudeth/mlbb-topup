@@ -105,6 +105,33 @@ public class AdminController : BaseController
         return Ok(new { success = true, games = _gamesConfig });
     }
 
+    private static object? _eventBannersConfig = null;
+
+    /// <summary>
+    /// Get Store Promotional Event Banners (Public)
+    /// </summary>
+    [HttpGet("banners")]
+    [AllowAnonymous]
+    public IActionResult GetBanners()
+    {
+        return Ok(new { success = true, banners = _eventBannersConfig });
+    }
+
+    /// <summary>
+    /// Update Store Promotional Event Banners
+    /// </summary>
+    [HttpPost("banners")]
+    [HttpPut("banners")]
+    [AllowAnonymous]
+    public IActionResult UpdateBanners([FromBody] object data)
+    {
+        if (data != null)
+        {
+            _eventBannersConfig = data;
+        }
+        return Ok(new { success = true, banners = _eventBannersConfig });
+    }
+
     /// <summary>
     /// Get Master Top-Up Status (Public)
     /// </summary>

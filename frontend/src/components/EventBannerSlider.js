@@ -1,73 +1,12 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
+import {
+  DEFAULT_EVENT_BANNERS,
+  getStoredBanners,
+  fetchStoredBanners
+} from '../services/eventBanners';
 
-export const DEFAULT_EVENT_BANNERS = [
-  {
-    id: 'banner-1',
-    tag: '🔥 ALLSTAR 2026 EVENT',
-    title: 'Mobile Legends 515 ALLSTAR Special',
-    subtitle: 'ទទួលបាន 220 💎 + 70 Aurora ⭐ លើរាល់ការទិញ Weekly Diamond Pass!',
-    image: 'https://images.unsplash.com/photo-1542751371-adc38448a05e?auto=format&fit=crop&w=1200&q=80',
-    gameId: 'mlbb',
-    buttonText: 'Top Up MLBB Now',
-    link: '/topup?game=mlbb',
-    badgeColor: 'bg-amber-400 text-slate-950',
-    status: 'Active',
-    order: 1
-  },
-  {
-    id: 'banner-2',
-    tag: '👑 VIP PASS SALE',
-    title: 'Twilight Pass & Starlight Pass 2026',
-    subtitle: 'Unlock Exclusive Season Skins, Avatar Borders & 29x Draw Tickets!',
-    image: 'https://images.unsplash.com/photo-1511512578047-dfb367046420?auto=format&fit=crop&w=1200&q=80',
-    gameId: 'mlbb',
-    buttonText: 'Get VIP Pass ($8.50)',
-    link: '/topup?game=mlbb',
-    badgeColor: 'bg-indigo-500 text-white',
-    status: 'Active',
-    order: 2
-  },
-  {
-    id: 'banner-3',
-    tag: '⚡ ROYALE PASS BONUS',
-    title: 'PUBG Mobile UC Mega Season',
-    subtitle: 'Fast 10-second automated delivery directly to your Character ID!',
-    image: 'https://images.unsplash.com/photo-1538481199705-c710c4e965fc?auto=format&fit=crop&w=1200&q=80',
-    gameId: 'pubgm',
-    buttonText: 'Top Up UC Now',
-    link: '/topup?game=pubgm',
-    badgeColor: 'bg-cyan-400 text-slate-950',
-    status: 'Active',
-    order: 3
-  },
-  {
-    id: 'banner-4',
-    tag: '🎁 BOOYAH PASS',
-    title: 'Free Fire Booyah Pass & Diamonds',
-    subtitle: 'បញ្ចុះតម្លៃពិសេស ជាមួយប្រព័ន្ធស្វ័យប្រវត្តិ Bakong KHQR 0% Fee!',
-    image: 'https://images.unsplash.com/photo-1579373903781-fd5c0c30c4cd?auto=format&fit=crop&w=1200&q=80',
-    gameId: 'freefire',
-    buttonText: 'Get Free Fire Pass',
-    link: '/topup?game=freefire',
-    badgeColor: 'bg-rose-500 text-white',
-    status: 'Active',
-    order: 4
-  }
-];
-
-export const getStoredBanners = () => {
-  try {
-    const saved = localStorage.getItem('admin_event_banners');
-    if (saved) {
-      const parsed = JSON.parse(saved);
-      if (Array.isArray(parsed) && parsed.length > 0) {
-        return parsed.filter(b => b.status !== 'Inactive');
-      }
-    }
-  } catch (e) {}
-  return DEFAULT_EVENT_BANNERS;
-};
+export { DEFAULT_EVENT_BANNERS, getStoredBanners };
 
 const EventBannerSlider = ({ className = '' }) => {
   const navigate = useNavigate();
@@ -77,24 +16,44 @@ const EventBannerSlider = ({ className = '' }) => {
   const touchStartXRef = useRef(0);
   const touchEndXRef = useRef(0);
 
-  // Sync banners with admin updates in real-time
+  // Sync banners with cloud MongoDB & admin updates across all devices in real-time
   useEffect(() => {
+    let isMounted = true;
+
+    const syncBanners = (list) => {
+      if (!isMounted || !Array.isArray(list) || list.length === 0) return;
+      setBanners(list);
+      setCurrentIndex((prev) => (prev >= list.length ? 0 : prev));
+    };
+
+    // 1. Initial cloud fetch
+    fetchStoredBanners().then((cloudList) => {
+      if (cloudList && cloudList.length > 0) syncBanners(cloudList);
+    });
+
+    // 2. Event listeners for instant local changes
     const handleBannersUpdated = () => {
       const updated = getStoredBanners();
-      setBanners(updated);
-      if (currentIndex >= updated.length) {
-        setCurrentIndex(0);
-      }
+      syncBanners(updated);
     };
 
     window.addEventListener('eventBannersUpdated', handleBannersUpdated);
     window.addEventListener('storage', handleBannersUpdated);
 
+    // 3. Periodic cloud polling (every 4s) so smartphone changes appear on desktop & clients automatically
+    const pollInterval = setInterval(() => {
+      fetchStoredBanners().then((cloudList) => {
+        if (cloudList && cloudList.length > 0) syncBanners(cloudList);
+      });
+    }, 4000);
+
     return () => {
+      isMounted = false;
       window.removeEventListener('eventBannersUpdated', handleBannersUpdated);
       window.removeEventListener('storage', handleBannersUpdated);
+      clearInterval(pollInterval);
     };
-  }, [currentIndex]);
+  }, []);
 
   // Auto-advance timer
   useEffect(() => {
@@ -168,7 +127,7 @@ const EventBannerSlider = ({ className = '' }) => {
                   alt={banner.title}
                   onError={(e) => {
                     e.target.onerror = null;
-                    e.target.src = 'https://images.unsplash.com/photo-1542751371-adc38448a05e?auto=format&fit=crop&w=1200&q=80';
+                    e.target.src = banner.localFallbackImage || '/mlbb-logo.png';
                   }}
                   className="w-full h-full object-cover object-center filter brightness-[0.88]"
                 />

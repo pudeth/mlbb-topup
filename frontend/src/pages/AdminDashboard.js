@@ -4,7 +4,7 @@ import { useAuth } from '../context/AuthContext';
 import { adminAPI, bakongAPI } from '../services/api';
 import { getStoredGames, saveStoredGames, resetToDefaultGames, getMasterTopupStatus, saveMasterTopupStatus, fetchStoredGames, fetchMasterTopupStatus } from '../services/gamesConfig';
 import { useStoreBranding } from '../services/storeBranding';
-import { DEFAULT_EVENT_BANNERS } from '../components/EventBannerSlider';
+import { DEFAULT_EVENT_BANNERS, getAllStoredBanners, fetchStoredBanners, saveStoredBanners } from '../services/eventBanners';
 import { CambodiaFlagSvg, CambodiaFlagFrame, CambodiaCornerBadge } from '../components/CambodiaFlagBadge';
 import ProductPackageImage from '../components/ProductPackageImage';
 import { uploadToCloudinary, getCloudinaryConfig, saveCloudinaryConfig } from '../services/cloudinary';
@@ -276,17 +276,17 @@ const PRICING_GAMES = [
   const [editingProviderName, setEditingProviderName] = useState('FazerCards');
   const [newBalanceInput, setNewBalanceInput] = useState('');
 
-  // Event Banner Management State
-  const [eventBanners, setEventBanners] = useState(() => {
-    try {
-      const saved = localStorage.getItem('admin_event_banners');
-      if (saved) {
-        const parsed = JSON.parse(saved);
-        if (Array.isArray(parsed) && parsed.length > 0) return parsed;
-      }
-    } catch (e) {}
-    return DEFAULT_EVENT_BANNERS;
-  });
+  // Helper to read image as base64 Data URL fallback for smartphone uploads
+  const readFileAsDataUrl = (file) =>
+    new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = () => resolve(reader.result);
+      reader.onerror = reject;
+      reader.readAsDataURL(file);
+    });
+
+  // Event Banner Management State with Cloud Database Sync
+  const [eventBanners, setEventBanners] = useState(() => getAllStoredBanners());
   const [bannerModalOpen, setBannerModalOpen] = useState(false);
   const [editingBanner, setEditingBanner] = useState(null);
   const [uploadingBannerImage, setUploadingBannerImage] = useState(false);
@@ -304,13 +304,33 @@ const PRICING_GAMES = [
     order: 1
   });
 
+  // Sync event banners from cloud MongoDB on Admin load & listen for updates
+  useEffect(() => {
+    fetchStoredBanners().then((cloudBanners) => {
+      if (cloudBanners && cloudBanners.length > 0) {
+        setEventBanners(getAllStoredBanners());
+      }
+    });
+
+    const handleSync = () => {
+      setEventBanners(getAllStoredBanners());
+    };
+
+    window.addEventListener('eventBannersUpdated', handleSync);
+    window.addEventListener('storage', handleSync);
+    return () => {
+      window.removeEventListener('eventBannersUpdated', handleSync);
+      window.removeEventListener('storage', handleSync);
+    };
+  }, []);
+
   const handleOpenAddBannerModal = () => {
     setEditingBanner(null);
     setBannerFormData({
       tag: '🔥 SPECIAL EVENT',
       title: '',
       subtitle: '',
-      image: 'https://images.unsplash.com/photo-1542751371-adc38448a05e?auto=format&fit=crop&w=1200&q=80',
+      image: 'https://images.unsplash.com/photo-1511512578047-dfb367046420?auto=format&fit=crop&w=1400&q=80',
       gameId: 'mlbb',
       buttonText: '⚡ Top Up Now',
       link: '/topup?game=mlbb',
@@ -338,7 +358,7 @@ const PRICING_GAMES = [
     setBannerModalOpen(true);
   };
 
-  const handleSaveBanner = (e) => {
+  const handleSaveBanner = async (e) => {
     e.preventDefault();
     if (!bannerFormData.title.trim() || !bannerFormData.image.trim()) {
       showToast('error', 'Please provide both Banner Title and Image URL/upload!');
@@ -360,13 +380,12 @@ const PRICING_GAMES = [
     }
 
     setEventBanners(updatedList);
-    localStorage.setItem('admin_event_banners', JSON.stringify(updatedList));
-    window.dispatchEvent(new Event('eventBannersUpdated'));
+    await saveStoredBanners(updatedList);
     setBannerModalOpen(false);
     setEditingBanner(null);
   };
 
-  const handleToggleBannerStatus = (bannerId) => {
+  const handleToggleBannerStatus = async (bannerId) => {
     const updated = eventBanners.map(b => {
       if (b.id === bannerId) {
         const newStatus = b.status === 'Active' ? 'Inactive' : 'Active';
@@ -376,24 +395,21 @@ const PRICING_GAMES = [
       return b;
     });
     setEventBanners(updated);
-    localStorage.setItem('admin_event_banners', JSON.stringify(updated));
-    window.dispatchEvent(new Event('eventBannersUpdated'));
+    await saveStoredBanners(updated);
   };
 
-  const handleDeleteBanner = (bannerId) => {
+  const handleDeleteBanner = async (bannerId) => {
     if (!window.confirm('Are you sure you want to delete this event banner?')) return;
     const updated = eventBanners.filter(b => b.id !== bannerId);
     setEventBanners(updated);
-    localStorage.setItem('admin_event_banners', JSON.stringify(updated));
-    window.dispatchEvent(new Event('eventBannersUpdated'));
+    await saveStoredBanners(updated);
     showToast('success', 'Banner deleted successfully!');
   };
 
-  const handleResetBanners = () => {
+  const handleResetBanners = async () => {
     if (!window.confirm('Reset all banners to default official event banners?')) return;
     setEventBanners(DEFAULT_EVENT_BANNERS);
-    localStorage.setItem('admin_event_banners', JSON.stringify(DEFAULT_EVENT_BANNERS));
-    window.dispatchEvent(new Event('eventBannersUpdated'));
+    await saveStoredBanners(DEFAULT_EVENT_BANNERS);
     showToast('success', 'Event banners reset to default promotional banners!');
   };
 
@@ -405,18 +421,26 @@ const PRICING_GAMES = [
       return;
     }
     setUploadingBannerImage(true);
-    showToast('info', '☁️ Uploading banner to Cloudinary (Banner folder)...');
+    showToast('info', '☁️ Uploading banner artwork...');
     try {
+      let finalUrl = '';
       const res = await uploadToCloudinary(file, 'Banner');
-      if (res.url) {
-        setBannerFormData(prev => ({ ...prev, image: res.url }));
-        if (res.isCloudinary) {
+      if (res && res.url) {
+        finalUrl = res.url;
+      } else {
+        // Fallback for smartphone browsers where direct third-party CDN upload might be restricted
+        finalUrl = await readFileAsDataUrl(file);
+      }
+
+      if (finalUrl) {
+        setBannerFormData(prev => ({ ...prev, image: finalUrl }));
+        if (res && res.isCloudinary) {
           showToast('success', '✅ Banner uploaded to Cloudinary "Banner" folder successfully!');
         } else {
-          showToast('success', '✅ Banner image loaded and preview updated!');
+          showToast('success', '✅ Banner image loaded successfully!');
         }
       } else {
-        showToast('error', res.error || 'Failed to process banner image.');
+        showToast('error', res?.error || 'Failed to process banner image.');
       }
     } catch (err) {
       showToast('error', err?.message || 'Banner upload failed');
@@ -433,17 +457,23 @@ const PRICING_GAMES = [
       showToast('error', 'Image size should be under 10MB.');
       return;
     }
-    showToast('info', '☁️ Uploading new banner artwork to Cloudinary "Banner" folder...');
+    showToast('info', '☁️ Uploading new banner artwork & saving to cloud...');
     try {
+      let finalUrl = '';
       const res = await uploadToCloudinary(file, 'Banner');
-      if (res.url) {
-        const updated = eventBanners.map(b => b.id === bannerId ? { ...b, image: res.url } : b);
-        setEventBanners(updated);
-        localStorage.setItem('admin_event_banners', JSON.stringify(updated));
-        window.dispatchEvent(new Event('eventBannersUpdated'));
-        showToast('success', res.isCloudinary ? '✅ Banner artwork uploaded to Cloudinary "Banner" folder & saved!' : '✅ Banner image updated and saved!');
+      if (res && res.url) {
+        finalUrl = res.url;
       } else {
-        showToast('error', res.error || 'Failed to upload image.');
+        finalUrl = await readFileAsDataUrl(file);
+      }
+
+      if (finalUrl) {
+        const updated = eventBanners.map(b => b.id === bannerId ? { ...b, image: finalUrl } : b);
+        setEventBanners(updated);
+        await saveStoredBanners(updated);
+        showToast('success', res && res.isCloudinary ? '✅ Banner artwork uploaded to Cloudinary & synced to all devices!' : '✅ Banner image updated and synced to all devices!');
+      } else {
+        showToast('error', res?.error || 'Failed to upload image.');
       }
     } catch (err) {
       showToast('error', err?.message || 'Banner upload failed');
@@ -2735,7 +2765,7 @@ const PRICING_GAMES = [
                           alt={banner.title}
                           onError={(e) => {
                             e.target.onerror = null;
-                            e.target.src = 'https://images.unsplash.com/photo-1542751371-adc38448a05e?auto=format&fit=crop&w=1200&q=80';
+                            e.target.src = banner.localFallbackImage || '/mlbb-logo.png';
                           }}
                           className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
                         />
@@ -6696,7 +6726,8 @@ const PRICING_GAMES = [
                       alt="Preview"
                       className="w-full h-full object-cover"
                       onError={(e) => {
-                        e.target.src = 'https://images.unsplash.com/photo-1542751371-adc38448a05e?auto=format&fit=crop&w=1200&q=80';
+                        e.target.onerror = null;
+                        e.target.src = '/mlbb-logo.png';
                       }}
                     />
                     <div className="absolute inset-0 bg-gradient-to-r from-black/90 via-black/50 to-transparent" />
@@ -6820,22 +6851,22 @@ const PRICING_GAMES = [
                     {[
                       {
                         name: 'MLBB 515 ALLSTAR',
-                        url: 'https://images.unsplash.com/photo-1542751371-adc38448a05e?auto=format&fit=crop&w=1200&q=80',
+                        url: 'https://images.unsplash.com/photo-1511512578047-dfb367046420?auto=format&fit=crop&w=1400&q=80',
                         badge: 'ALLSTAR 2026'
                       },
                       {
                         name: 'Starlight & Twilight',
-                        url: 'https://images.unsplash.com/photo-1511512578047-dfb367046420?auto=format&fit=crop&w=1200&q=80',
+                        url: 'https://images.unsplash.com/photo-1550745165-9bc0b252726f?auto=format&fit=crop&w=1400&q=80',
                         badge: 'VIP PASS'
                       },
                       {
                         name: 'PUBG UC Mega Season',
-                        url: 'https://images.unsplash.com/photo-1538481199705-c710c4e965fc?auto=format&fit=crop&w=1200&q=80',
+                        url: 'https://images.unsplash.com/photo-1538481199705-c710c4e965fc?auto=format&fit=crop&w=1400&q=80',
                         badge: 'ROYALE PASS'
                       },
                       {
                         name: 'Free Fire Booyah Pass',
-                        url: 'https://images.unsplash.com/photo-1579373903781-fd5c0c30c4cd?auto=format&fit=crop&w=1200&q=80',
+                        url: 'https://images.unsplash.com/photo-1579373903781-fd5c0c30c4cd?auto=format&fit=crop&w=1400&q=80',
                         badge: 'BOOYAH PASS'
                       }
                     ].map((sample) => (

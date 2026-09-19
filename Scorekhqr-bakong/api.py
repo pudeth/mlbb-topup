@@ -1307,6 +1307,36 @@ def handle_branding():
         except Exception as e:
             return jsonify({'success': False, 'error': str(e)}), 500
 
+@app.route('/api/banners', methods=['GET', 'POST', 'PUT'])
+@app.route('/api/admin/banners', methods=['GET', 'POST', 'PUT'])
+def handle_event_banners():
+    """Fetch or update promotional event banners persisted in MongoDB Atlas settings collection"""
+    if request.method == 'GET':
+        if mongo_db is not None:
+            try:
+                doc = mongo_db.settings.find_one({'type': 'store_event_banners'})
+                if doc:
+                    doc.pop('_id', None)
+                    return jsonify({'success': True, 'banners': doc.get('data')})
+            except Exception as e:
+                print(f"[-] MongoDB banners fetch error: {e}")
+        return jsonify({'success': True, 'banners': None})
+    
+    if request.method in ['POST', 'PUT']:
+        try:
+            data = request.get_json() or {}
+            banners_payload = data.get('banners') if isinstance(data, dict) and 'banners' in data else data
+            if mongo_db is not None:
+                mongo_db.settings.update_one(
+                    {'type': 'store_event_banners'},
+                    {'$set': {'type': 'store_event_banners', 'data': banners_payload, 'updated_at': datetime.utcnow().isoformat()}},
+                    upsert=True
+                )
+                print("[+] Saved event banners to MongoDB Atlas settings collection!")
+            return jsonify({'success': True, 'banners': banners_payload})
+        except Exception as e:
+            return jsonify({'success': False, 'error': str(e)}), 500
+
 @app.route('/api/games', methods=['GET', 'POST', 'PUT'])
 @app.route('/api/admin/games', methods=['GET', 'POST', 'PUT'])
 def handle_games_config():
