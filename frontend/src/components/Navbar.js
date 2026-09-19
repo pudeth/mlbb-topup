@@ -100,115 +100,93 @@ const Navbar = () => {
             </Link>
           </div>
 
-          {/* Desktop Navigation Links - Ultra Sleek Design */}
-            <nav className="hidden lg:flex items-center gap-1 bg-[#0b0f19]/80 backdrop-blur-xl p-1.5 rounded-full border border-slate-800/60 shadow-[0_4px_30px_rgba(0,0,0,0.3)] font-khmer">
+          {/* Desktop Navigation Links - Ultra Sleek Pill */}
+            <nav className="hidden lg:flex items-center gap-0.5 bg-slate-950/80 backdrop-blur-xl p-1 rounded-full border border-slate-800/60 shadow-[0_4px_30px_rgba(0,0,0,0.4)] font-khmer">
               <Link
                 to="/"
-                className={`px-4 py-1.5 rounded-full text-xs font-bold transition-all duration-300 flex items-center gap-2 ${
-                  isActive('/') 
-                    ? 'bg-[#182035] text-cyan-400 border border-cyan-500/20 shadow-sm' 
+                className={`px-3.5 py-1.5 rounded-full text-[11px] font-bold transition-all duration-200 flex items-center gap-1.5 ${
+                  isActive('/')
+                    ? 'bg-slate-800/90 text-cyan-400 shadow-sm'
                     : 'text-slate-400 hover:text-white hover:bg-slate-800/40'
                 }`}
               >
+                <span className="text-[13px]">🏠</span>
                 <span>{t('nav_home')}</span>
               </Link>
               <Link
                 to="/topup"
-                className={`px-4 py-1.5 rounded-full text-xs font-bold transition-all duration-300 flex items-center gap-2 ${
-                  isActive('/topup') 
-                    ? 'bg-[#21182c] text-amber-400 border border-amber-500/20 shadow-sm' 
+                className={`px-3.5 py-1.5 rounded-full text-[11px] font-bold transition-all duration-200 flex items-center gap-1.5 ${
+                  isActive('/topup')
+                    ? 'bg-amber-400/15 text-amber-400 shadow-sm'
                     : 'text-slate-400 hover:text-white hover:bg-slate-800/40'
                 }`}
               >
+                <span className="text-[13px]">💎</span>
                 <span>{t('nav_topup')}</span>
               </Link>
               <Link
                 to="/support"
-                className={`px-4 py-1.5 rounded-full text-xs font-bold transition-all duration-300 flex items-center gap-2 ${
-                  isActive('/support') 
-                    ? 'bg-slate-800/80 text-white shadow-sm border border-slate-600/50' 
+                className={`px-3.5 py-1.5 rounded-full text-[11px] font-bold transition-all duration-200 flex items-center gap-1.5 ${
+                  isActive('/support')
+                    ? 'bg-slate-800/80 text-white shadow-sm'
                     : 'text-slate-400 hover:text-white hover:bg-slate-800/40'
                 }`}
               >
+                <span className="text-[13px]">🎧</span>
                 <span>{t('nav_support')}</span>
               </Link>
               <Link
                 to="/terms"
-                className={`px-4 py-1.5 rounded-full text-xs font-bold transition-all duration-300 flex items-center gap-2 ${
-                  isActive('/terms') 
-                    ? 'bg-slate-800/80 text-white shadow-sm border border-slate-600/50' 
+                className={`px-3.5 py-1.5 rounded-full text-[11px] font-bold transition-all duration-200 flex items-center gap-1.5 ${
+                  isActive('/terms')
+                    ? 'bg-slate-800/80 text-white shadow-sm'
                     : 'text-slate-400 hover:text-white hover:bg-slate-800/40'
                 }`}
               >
+                <span className="text-[13px]">📜</span>
                 <span>{t('nav_policy')}</span>
               </Link>
-              
+
               {isAdmin() && (
                 <>
-                  <div className="w-px h-4 bg-slate-700/50 mx-1"></div>
+                  <div className="w-px h-4 bg-slate-700/60 mx-1" />
                   <Link
                     to="/admin/setup"
-                    className={`px-4 py-1.5 rounded-full text-xs font-bold transition-all duration-300 flex items-center gap-2 ${
-                      isActive('/admin/setup') 
-                        ? 'bg-purple-900/40 text-purple-300 border border-purple-500/30 shadow-sm' 
-                        : 'text-slate-400 hover:text-purple-300 hover:bg-slate-800/40'
+                    className={`px-3.5 py-1.5 rounded-full text-[11px] font-bold transition-all duration-200 flex items-center gap-1.5 ${
+                      isActive('/admin/setup')
+                        ? 'bg-purple-900/40 text-purple-300 shadow-sm'
+                        : 'text-slate-500 hover:text-purple-300 hover:bg-slate-800/40'
                     }`}
                   >
-                    <span>ðŸ”§ {t('nav_admin')}</span>
+                    <span className="text-[13px]">⚙️</span>
+                    <span>{t('nav_admin')}</span>
                   </Link>
                   <Link
                     to="/admin/orders"
-                    className={`px-4 py-1.5 rounded-full text-xs font-bold transition-all duration-300 flex items-center gap-2 ${
-                      isActive('/admin/orders') 
-                        ? 'bg-purple-900/40 text-purple-300 border border-purple-500/30 shadow-sm' 
-                        : 'text-slate-400 hover:text-purple-300 hover:bg-slate-800/40'
+                    className={`px-3.5 py-1.5 rounded-full text-[11px] font-bold transition-all duration-200 flex items-center gap-1.5 ${
+                      isActive('/admin/orders')
+                        ? 'bg-purple-900/40 text-purple-300 shadow-sm'
+                        : 'text-slate-500 hover:text-purple-300 hover:bg-slate-800/40'
                     }`}
                   >
-                    <span>ðŸ“Š {t('nav_orders')}</span>
+                    <span className="text-[13px]">📊</span>
+                    <span>{t('nav_orders')}</span>
                   </Link>
                 </>
               )}
             </nav>
 
-          {/* Right Action: Language Switcher + CTA + Logout */}
-          <div className="flex items-center gap-2 sm:gap-3">
-
-            {/* Admin Links (Desktop only) - shown only to admin */}
-            {isAdmin() && (
-              <div className="hidden lg:flex items-center gap-1.5">
-                <Link
-                  to="/admin/setup"
-                  className={`h-9 px-3.5 rounded-full text-[12px] font-bold border transition-all flex items-center gap-1.5 font-khmer ${
-                    isActive('/admin/setup')
-                      ? 'bg-purple-950/50 text-purple-400 border-purple-500/40 shadow-sm'
-                      : 'bg-slate-900/80 text-slate-400 border-slate-800 hover:text-purple-300 hover:border-purple-700/50'
-                  }`}
-                >
-                  <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" /><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" /></svg>
-                  <span>{t('nav_admin')}</span>
-                </Link>
-                <Link
-                  to="/admin/orders"
-                  className={`h-9 px-3.5 rounded-full text-[12px] font-bold border transition-all flex items-center gap-1.5 font-khmer ${
-                    isActive('/admin/orders')
-                      ? 'bg-purple-950/50 text-purple-400 border-purple-500/40 shadow-sm'
-                      : 'bg-slate-900/80 text-slate-400 border-slate-800 hover:text-purple-300 hover:border-purple-700/50'
-                  }`}
-                >
-                  <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" /></svg>
-                  <span>{t('nav_orders')}</span>
-                </Link>
-              </div>
-            )}
+          {/* Right: Language + CTA + Logout */}
+          <div className="flex items-center gap-2">
 
             {/* Language Selector Dropdown */}
             <div className="relative">
               <button
                 type="button"
                 onClick={() => setLangDropdownOpen(!langDropdownOpen)}
-                className="h-9 px-3 rounded-full bg-slate-900/80 hover:bg-slate-800/80 border border-slate-800 hover:border-slate-700 text-slate-300 text-[12px] font-bold flex items-center gap-1.5 transition-all"
+                className="h-9 px-3 rounded-full bg-slate-900/80 hover:bg-slate-800 border border-slate-800 hover:border-slate-700 text-slate-300 text-[12px] font-bold flex items-center gap-1.5 transition-all"
               >
-                <span className="text-base">{currentLang.flag}</span>
+                <span className="text-base leading-none">{currentLang.flag}</span>
                 <span className="hidden sm:inline font-bold">{currentLang.short}</span>
                 <svg className={`w-3 h-3 text-slate-500 transition-transform ${langDropdownOpen ? 'rotate-180' : ''}`} viewBox="0 0 20 20" fill="currentColor">
                   <path fillRule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clipRule="evenodd" />
@@ -245,25 +223,22 @@ const Navbar = () => {
               )}
             </div>
 
-            {/* Desktop Top Up CTA - Golden Pill */}
+            {/* Top Up CTA - Golden Pill */}
             <Link
               to="/topup"
-              className="hidden sm:flex items-center gap-2 h-9 px-5 bg-gradient-to-r from-amber-500 to-yellow-400 hover:from-amber-400 hover:to-yellow-300 text-slate-950 text-[13px] font-black tracking-wide rounded-full shadow-[0_0_15px_rgba(251,191,36,0.2)] hover:shadow-[0_0_22px_rgba(251,191,36,0.35)] transition-all duration-300 hover:scale-[1.03] group font-khmer cursor-pointer"
+              className="hidden sm:flex items-center gap-1.5 h-9 px-4 bg-gradient-to-r from-amber-500 to-yellow-400 hover:from-amber-400 hover:to-yellow-300 text-slate-950 text-[12px] font-black tracking-wide rounded-full shadow-[0_0_16px_rgba(251,191,36,0.25)] hover:shadow-[0_0_24px_rgba(251,191,36,0.4)] transition-all duration-300 hover:scale-[1.04] group font-khmer cursor-pointer"
             >
-              <svg 
-                className="w-4 h-4 fill-current transition-transform duration-300 group-hover:rotate-12" 
-                viewBox="0 0 24 24"
-              >
+              <svg className="w-3.5 h-3.5 fill-current shrink-0 transition-transform duration-300 group-hover:rotate-12" viewBox="0 0 24 24">
                 <path d="M13 2L3 14h8l-2 8 11-12h-8l2-8z" />
               </svg>
               <span>{t('nav_instant_btn')}</span>
             </Link>
 
-            {/* Logout Button - Pill */}
+            {/* Logout Button */}
             {isAuthenticated() && (
               <button
                 onClick={logout}
-                className="hidden lg:flex items-center gap-2 h-9 px-3.5 bg-slate-900/80 hover:bg-red-950/40 border border-slate-800 hover:border-red-500/30 text-slate-400 hover:text-red-400 text-[12px] font-bold rounded-full transition-all duration-300"
+                className="hidden lg:flex items-center gap-1.5 h-9 px-3 bg-slate-900/80 hover:bg-red-950/40 border border-slate-800 hover:border-red-500/30 text-slate-400 hover:text-red-400 text-[12px] font-bold rounded-full transition-all duration-200"
               >
                 <svg className="w-3.5 h-3.5 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
@@ -271,6 +246,24 @@ const Navbar = () => {
                 <span>Logout</span>
               </button>
             )}
+
+            {/* Mobile Hamburger */}
+            <button
+              type="button"
+              className="lg:hidden h-9 w-9 flex items-center justify-center rounded-full bg-slate-900/80 hover:bg-slate-800 border border-slate-800 hover:border-slate-700 text-slate-300 hover:text-white transition-all"
+              onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+              aria-label="Toggle menu"
+            >
+              {mobileMenuOpen ? (
+                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              ) : (
+                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M4 6h16M4 12h16M4 18h16" />
+                </svg>
+              )}
+            </button>
           </div>
         </div>
       </div>

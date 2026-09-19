@@ -12,6 +12,8 @@ export const translations = {
     nav_privacy: "Privacy & Terms",
     nav_terms: "Terms & Conditions",
     nav_admin: "Admin",
+    nav_orders: "Orders",
+    nav_policy: "Policy",
     nav_instant_btn: "Instant Top Up",
     nav_guest: "Guest Checkout",
     
@@ -259,6 +261,8 @@ export const translations = {
     nav_privacy: "លក្ខខណ្ឌ & ឯកជនភាព",
     nav_terms: "លក្ខខណ្ឌប្រើប្រាស់",
     nav_admin: "គ្រប់គ្រង",
+    nav_orders: "បញ្ជាទិញ",
+    nav_policy: "គោលការណ៍",
     nav_instant_btn: "បញ្ចូលពេជ្រភ្លាមៗ",
     nav_guest: "មិនបាច់ចូលគណនី",
     
@@ -506,6 +510,8 @@ export const translations = {
     nav_privacy: "隐私与条款",
     nav_terms: "服务条款",
     nav_admin: "管理后台",
+    nav_orders: "订单管理",
+    nav_policy: "服务条款",
     nav_instant_btn: "立即极速充值",
     nav_guest: "游客极速免登",
     
