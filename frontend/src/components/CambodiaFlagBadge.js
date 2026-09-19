@@ -6,9 +6,51 @@ export const CambodiaFlagSvg = ({ className = "w-full h-full" }) => (
 );
 
 /**
+ * 3D Spherical Cambodia Flag Orb Component
+ * Fills 100% of the circle with genuine Cambodian royal blue and red stripes,
+ * centered Angkor Wat, 3D specular convex glass highlight, and depth vignette.
+ */
+export const CambodiaSphericalFlag = ({ className = "w-full h-full" }) => (
+  <svg viewBox="0 0 100 100" className={className} xmlns="http://www.w3.org/2000/svg">
+    <defs>
+      <clipPath id="cambodiaSphereClip">
+        <circle cx="50" cy="50" r="49.5" />
+      </clipPath>
+      {/* 3D Convex Glass Dome Specular Glint */}
+      <radialGradient id="sphereGlint" cx="35%" cy="25%" r="60%">
+        <stop offset="0%" stopColor="#FFFFFF" stopOpacity="0.8" />
+        <stop offset="25%" stopColor="#FFFFFF" stopOpacity="0.22" />
+        <stop offset="55%" stopColor="#FFFFFF" stopOpacity="0" />
+      </radialGradient>
+      {/* 3D Spherical Edge Shadow & Ambient Occlusion */}
+      <radialGradient id="sphereEdgeDepth" cx="50%" cy="50%" r="50%">
+        <stop offset="68%" stopColor="#000000" stopOpacity="0" />
+        <stop offset="90%" stopColor="#000000" stopOpacity="0.35" />
+        <stop offset="100%" stopColor="#000000" stopOpacity="0.75" />
+      </radialGradient>
+    </defs>
+
+    <g clipPath="url(#cambodiaSphereClip)">
+      {/* Full-Frame Cambodia Flag */}
+      <image
+        href="/kh.svg"
+        x="0"
+        y="0"
+        width="100"
+        height="100"
+        preserveAspectRatio="xMidYMid slice"
+      />
+      {/* 3D Spherical Lighting Overlay */}
+      <circle cx="50" cy="50" r="49.5" fill="url(#sphereGlint)" pointerEvents="none" />
+      <circle cx="50" cy="50" r="49.5" fill="url(#sphereEdgeDepth)" pointerEvents="none" />
+    </g>
+  </svg>
+);
+
+/**
  * MLBB Esports Cyber Metallic Cambodia Flag & Server Badge Frame
  * Uses the authentic high-resolution frame template provided by the user,
- * perfectly aligning the official Cambodia flag in the 3D medallion,
+ * perfectly aligning the official full-frame 3D Cambodia flag in the medallion,
  * with gold chrome typography and glowing cyan SERVER capsule.
  */
 export const CambodiaFlagFrame = ({
@@ -23,43 +65,39 @@ export const CambodiaFlagFrame = ({
   if (isFullBadgePng && flagImage) {
     return (
       <div className={`relative inline-block overflow-hidden filter drop-shadow-[0_8px_20px_rgba(0,0,0,0.65)] ${className}`}>
-        <img src={flagImage} alt={title || "Server Badge"} className="h-11 sm:h-14 md:h-16 w-auto object-contain" />
+        <img src={flagImage} alt={title || "Server Badge"} className="h-10 sm:h-12 md:h-14 w-auto object-contain" />
       </div>
     );
   }
 
   return (
     <div
-      className={`relative inline-block select-none filter drop-shadow-[0_8px_24px_rgba(0,0,0,0.85)] transition-transform duration-300 hover:scale-[1.03] ${className}`}
+      className={`relative inline-block select-none filter drop-shadow-[0_6px_20px_rgba(0,0,0,0.85)] transition-transform duration-300 hover:scale-[1.03] ${className}`}
       style={{
-        width: 'clamp(210px, 25vw, 300px)',
+        width: 'clamp(155px, 22vw, 230px)',
         aspectRatio: '1024 / 397'
       }}
     >
-      {/* 1. If custom flagImage is provided, render inside circular cutout */}
-      {flagImage && (
-        <div
-          className="absolute rounded-full overflow-hidden flex items-center justify-center z-0"
-          style={{
-            left: '10.45%',
-            top: '16.37%',
-            width: '22.26%',
-            height: '57.43%'
-          }}
-        >
+      {/* 1. Full-Frame 3D Spherical Cambodia Flag inside the circular medallion */}
+      <div
+        className="absolute rounded-full overflow-hidden flex items-center justify-center z-0 shadow-lg"
+        style={{
+          left: '10.3%',
+          top: '16.1%',
+          width: '22.6%',
+          height: '57.8%'
+        }}
+      >
+        {flagImage ? (
           <img src={flagImage} alt="Server Flag" className="w-full h-full object-cover" />
-          <div
-            className="absolute inset-0 pointer-events-none rounded-full"
-            style={{
-              background: 'radial-gradient(circle at 38% 26%, rgba(255,255,255,0.7) 0%, rgba(255,255,255,0.12) 38%, transparent 65%)'
-            }}
-          />
-        </div>
-      )}
+        ) : (
+          <CambodiaSphericalFlag className="w-full h-full block" />
+        )}
+      </div>
 
-      {/* 2. Pristine 3D Chiseled Gold & Navy Frame Template with Full Cambodia Flag */}
+      {/* 2. Pristine 3D Chiseled Gold & Navy Frame Template */}
       <img
-        src={flagImage ? '/mlbb-server-frame-cutout.png' : '/mlbb-server-frame-with-flag.png'}
+        src="/mlbb-server-frame-cutout.png"
         alt="MLBB Server Frame"
         className="relative z-10 w-full h-full object-contain pointer-events-none"
         draggable={false}
@@ -77,12 +115,12 @@ export const CambodiaFlagFrame = ({
           top: '44.5%',
           transform: 'translate(-50%, -50%)',
           width: '54%',
-          fontSize: 'clamp(11.5px, 1.45vw, 17.5px)',
+          fontSize: 'clamp(9.5px, 1.35vw, 15.5px)',
           letterSpacing: '0.02em',
           background: 'linear-gradient(180deg, #FFFFFF 0%, #FFF4B8 22%, #FBBF24 52%, #D97706 78%, #78350F 100%)',
           WebkitBackgroundClip: 'text',
           WebkitTextFillColor: 'transparent',
-          filter: 'drop-shadow(0 2px 0px #78350F) drop-shadow(0 3px 6px rgba(0,0,0,0.9))'
+          filter: 'drop-shadow(0 1.5px 0px #78350F) drop-shadow(0 3px 6px rgba(0,0,0,0.9))'
         }}
       >
         {title}
@@ -96,10 +134,10 @@ export const CambodiaFlagFrame = ({
           top: '70.8%',
           transform: 'translate(-50%, -50%)',
           width: '42%',
-          fontSize: 'clamp(7.5px, 0.9vw, 11px)',
-          letterSpacing: '0.24em',
+          fontSize: 'clamp(6.5px, 0.85vw, 10px)',
+          letterSpacing: '0.22em',
           color: '#7DD3FC',
-          textShadow: '0 0 8px rgba(56, 189, 248, 0.95), 0 0 16px rgba(56, 189, 248, 0.6)'
+          textShadow: '0 0 6px rgba(56, 189, 248, 0.95), 0 0 12px rgba(56, 189, 248, 0.6)'
         }}
       >
         {sub}
