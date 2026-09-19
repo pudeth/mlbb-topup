@@ -2074,8 +2074,8 @@ const PRICING_GAMES = [
               
               {/* Responsive Gateway & Balance Pill (Desktop: Full, Mobile: Balance Only) */}
               <div className="flex items-center gap-1 sm:gap-1.5 px-2 sm:px-3 py-1.5 rounded-xl bg-[#111728] border border-slate-700/80 text-xs shadow-sm shrink-0">
-                <span className="text-xs sm:text-sm">
-                  {providerSettings.activeProvider === 'FazerCards' ? '🎮' : '🇰🇭'}
+                <span className="text-xs sm:text-sm flex items-center">
+                  {providerSettings.activeProvider === 'FazerCards' ? '🎮' : <span className="fi fi-kh rounded-xs shadow-xs" />}
                 </span>
                 <div className="flex items-center gap-1 sm:gap-1.5">
                   {/* Full Gateway info on Large Desktop */}
@@ -3727,7 +3727,7 @@ const PRICING_GAMES = [
                   }`}>
                     <div className="flex items-center justify-between">
                       <div className="flex items-center gap-2">
-                        <span className="text-lg">🇰🇭</span>
+                        <span className="fi fi-kh rounded-xs shadow-xs text-lg inline-block" />
                         <div>
                           <span className="font-bold text-cyan-300 text-sm">Khmer TopUp</span>
                           <span className="text-[10px] text-slate-400 block">Direct Cambodia MLBB (khmer-topup.com)</span>

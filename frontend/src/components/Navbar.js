@@ -15,9 +15,9 @@ const Navbar = () => {
   const isActive = (path) => location.pathname === path;
 
   const languages = [
-    { code: 'km', name: 'ភាសាខ្មែរ', flag: '🇰🇭', short: 'ខ្មែរ' },
-    { code: 'en', name: 'English', flag: '🇬🇧', short: 'EN' },
-    { code: 'zh', name: '中文 (Chinese)', flag: '🇨🇳', short: '中文' },
+    { code: 'km', name: 'ភាសាខ្មែរ', flagCode: 'kh', flag: '🇰🇭', short: 'ខ្មែរ' },
+    { code: 'en', name: 'English', flagCode: 'gb', flag: '🇬🇧', short: 'EN' },
+    { code: 'zh', name: '中文 (Chinese)', flagCode: 'cn', flag: '🇨🇳', short: '中文' },
   ];
 
   const currentLang = languages.find(l => l.code === language) || languages[1];
@@ -198,7 +198,7 @@ const Navbar = () => {
                 onClick={() => setLangDropdownOpen(!langDropdownOpen)}
                 className="h-9 px-3 rounded-full bg-slate-900/80 hover:bg-slate-800 border border-slate-800 hover:border-slate-700 text-slate-300 text-[12px] font-bold flex items-center gap-1.5 transition-all"
               >
-                <span className="text-base leading-none">{currentLang.flag}</span>
+                <span className={`fi fi-${currentLang.flagCode || 'kh'} rounded-xs shadow-xs text-sm leading-none`} />
                 <span className="hidden sm:inline font-bold">{currentLang.short}</span>
                 <svg className={`w-3 h-3 text-slate-500 transition-transform ${langDropdownOpen ? 'rotate-180' : ''}`} viewBox="0 0 20 20" fill="currentColor">
                   <path fillRule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clipRule="evenodd" />
@@ -225,7 +225,7 @@ const Navbar = () => {
                       }`}
                     >
                       <span className="flex items-center gap-2">
-                        <span className="text-base">{l.flag}</span>
+                        <span className={`fi fi-${l.flagCode || 'kh'} rounded-xs shadow-xs text-base leading-none`} />
                         <span>{l.name}</span>
                       </span>
                       {language === l.code && <span className="text-cyan-400 text-xs font-black">✓</span>}
@@ -333,7 +333,7 @@ const Navbar = () => {
                       : 'text-slate-400 hover:text-white hover:bg-slate-900/60'
                   }`}
                 >
-                  <span className="text-sm">{l.flag}</span>
+                  <span className={`fi fi-${l.flagCode || 'kh'} rounded-xs text-sm leading-none`} />
                   <span>{l.short}</span>
                 </button>
               ))}
