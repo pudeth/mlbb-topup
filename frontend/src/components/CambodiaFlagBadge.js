@@ -32,6 +32,11 @@ export const MORE_WORLD_FLAGS = [
   { id: 'ae', name: 'UAE (Dubai)', t1: 'UAE SERVER', t2: 'MENA', t3: 'FAST' },
 ];
 
+export const ALL_FLAG_OPTIONS = [
+  ...POPULAR_FLAGS,
+  ...MORE_WORLD_FLAGS,
+];
+
 // Accurate Cambodia Flag using official flag-icons package
 export const CambodiaFlagSvg = ({ className = "w-full h-full" }) => (
   <span className={`fi fi-kh ${className} inline-block bg-center bg-cover rounded-xs`} />
