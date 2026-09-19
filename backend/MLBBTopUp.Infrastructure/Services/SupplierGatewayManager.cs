@@ -53,6 +53,7 @@ public class SupplierGatewayManager : ISupplierGatewayManager
             Path.Combine(AppContext.BaseDirectory, "supplier_gateway_settings.json")
         };
 
+        var jsonOptions = new JsonSerializerOptions { PropertyNameCaseInsensitive = true };
         foreach (var path in candidateFiles)
         {
             try
@@ -60,9 +61,10 @@ public class SupplierGatewayManager : ISupplierGatewayManager
                 if (File.Exists(path))
                 {
                     var json = File.ReadAllText(path);
-                    var loaded = JsonSerializer.Deserialize<SupplierSettingsModel>(json);
+                    var loaded = JsonSerializer.Deserialize<SupplierSettingsModel>(json, jsonOptions);
                     if (loaded != null && !string.IsNullOrWhiteSpace(loaded.ActiveProvider))
                     {
+                        loaded.ActiveProvider = loaded.ActiveProvider.Contains("khmer", StringComparison.OrdinalIgnoreCase) ? "KhmerTopUp" : "FazerCards";
                         _logger.LogInformation("Loaded supplier gateway settings from {Path}: Active = {ActiveProvider}", path, loaded.ActiveProvider);
                         return loaded;
                     }
@@ -78,12 +80,12 @@ public class SupplierGatewayManager : ISupplierGatewayManager
 
         return new SupplierSettingsModel
         {
-            ActiveProvider = active.Equals("KhmerTopUp", StringComparison.OrdinalIgnoreCase) ? "KhmerTopUp" : "FazerCards",
+            ActiveProvider = active.Contains("khmer", StringComparison.OrdinalIgnoreCase) ? "KhmerTopUp" : "FazerCards",
             Environment = _configuration["TopUpProvider:Environment"] ?? "Production",
             AutoDispatchOnPayment = true,
             AutoFailoverEnabled = true,
             MerchantId = _configuration["TopUpProvider:MerchantId"] ?? "peakmao007",
-            ApiKey = active.Equals("KhmerTopUp", StringComparison.OrdinalIgnoreCase) ? ktKey : fzrKey,
+            ApiKey = active.Contains("khmer", StringComparison.OrdinalIgnoreCase) ? ktKey : fzrKey,
             FazerCardsApiKey = fzrKey,
             KhmerTopUpApiKey = ktKey,
             FazerCardsApiUrl = "https://api.fzr.cards/api/v2",
@@ -99,6 +101,7 @@ public class SupplierGatewayManager : ISupplierGatewayManager
 
     private async Task LoadFromMongoAsync()
     {
+        var jsonOptions = new JsonSerializerOptions { PropertyNameCaseInsensitive = true };
         var khqrUrl = _configuration["KHQR:ApiUrl"] ?? _configuration["KHQR__ApiUrl"] ?? "https://mlbb-khqr-api.onrender.com";
         khqrUrl = khqrUrl.TrimEnd('/');
         var targetUrl = $"{khqrUrl}/api/provider-settings?_t={DateTimeOffset.UtcNow.ToUnixTimeSeconds()}";
@@ -112,12 +115,13 @@ public class SupplierGatewayManager : ISupplierGatewayManager
                 using var doc = JsonDocument.Parse(content);
                 if (doc.RootElement.TryGetProperty("settings", out var stElem) && stElem.ValueKind == JsonValueKind.Object)
                 {
-                    var fromDb = JsonSerializer.Deserialize<SupplierSettingsModel>(stElem.GetRawText());
+                    var fromDb = JsonSerializer.Deserialize<SupplierSettingsModel>(stElem.GetRawText(), jsonOptions);
                     if (fromDb != null && !string.IsNullOrWhiteSpace(fromDb.ActiveProvider))
                     {
+                        var normalized = fromDb.ActiveProvider.Contains("khmer", StringComparison.OrdinalIgnoreCase) ? "KhmerTopUp" : "FazerCards";
                         lock (_lock)
                         {
-                            _settings.ActiveProvider = fromDb.ActiveProvider;
+                            _settings.ActiveProvider = normalized;
                             _settings.FazerCardsApiKey = !string.IsNullOrWhiteSpace(fromDb.FazerCardsApiKey) ? fromDb.FazerCardsApiKey : _settings.FazerCardsApiKey;
                             _settings.KhmerTopUpApiKey = !string.IsNullOrWhiteSpace(fromDb.KhmerTopUpApiKey) ? fromDb.KhmerTopUpApiKey : _settings.KhmerTopUpApiKey;
                             _settings.ApiKey = _settings.ActiveProvider == "KhmerTopUp" ? _settings.KhmerTopUpApiKey : _settings.FazerCardsApiKey;
@@ -244,13 +248,17 @@ public class SupplierGatewayManager : ISupplierGatewayManager
         SupplierSettingsModel copy;
         lock (_lock)
         {
-            _settings.ActiveProvider = incoming.ActiveProvider ?? _settings.ActiveProvider;
+            if (!string.IsNullOrWhiteSpace(incoming.ActiveProvider))
+            {
+                _settings.ActiveProvider = incoming.ActiveProvider.Contains("khmer", StringComparison.OrdinalIgnoreCase) ? "KhmerTopUp" : "FazerCards";
+            }
             _settings.Environment = incoming.Environment ?? _settings.Environment;
             _settings.AutoDispatchOnPayment = incoming.AutoDispatchOnPayment;
             _settings.AutoFailoverEnabled = incoming.AutoFailoverEnabled;
             if (!string.IsNullOrWhiteSpace(incoming.KhmerTopUpApiKey)) _settings.KhmerTopUpApiKey = incoming.KhmerTopUpApiKey;
             if (!string.IsNullOrWhiteSpace(incoming.FazerCardsApiKey)) _settings.FazerCardsApiKey = incoming.FazerCardsApiKey;
             _settings.ApiKey = _settings.ActiveProvider == "KhmerTopUp" ? _settings.KhmerTopUpApiKey : _settings.FazerCardsApiKey;
+            _settings.BalanceUSD = _settings.ActiveProvider == "KhmerTopUp" ? _settings.KhmerTopUpBalanceUSD : _settings.FazerCardsBalanceUSD;
             _settings.UpdatedAt = DateTime.UtcNow;
             copy = GetSettings();
         }
@@ -262,7 +270,9 @@ public class SupplierGatewayManager : ISupplierGatewayManager
 
     public async Task<SupplierSettingsModel> SwitchProviderAsync(string targetProvider)
     {
-        string normalized = targetProvider.Equals("KhmerTopUp", StringComparison.OrdinalIgnoreCase) ? "KhmerTopUp" : "FazerCards";
+        string normalized = (!string.IsNullOrWhiteSpace(targetProvider) && targetProvider.Contains("khmer", StringComparison.OrdinalIgnoreCase))
+            ? "KhmerTopUp"
+            : "FazerCards";
         SupplierSettingsModel copy;
         lock (_lock)
         {

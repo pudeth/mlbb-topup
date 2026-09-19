@@ -968,6 +968,7 @@ public class AdminController : BaseController
     /// Get current Top-Up Provider Settings with live balances from both providers
     /// </summary>
     [HttpGet("provider-settings")]
+    [HttpGet("/api/provider-settings")]
     [AllowAnonymous]
     public async Task<IActionResult> GetProviderSettings()
     {
@@ -979,6 +980,7 @@ public class AdminController : BaseController
     /// 1-Click Fast Provider Switcher
     /// </summary>
     [HttpPost("provider/switch")]
+    [HttpPost("/api/provider/switch")]
     [AllowAnonymous]
     public async Task<IActionResult> SwitchProvider([FromBody] SwitchProviderRequest request)
     {
@@ -1001,6 +1003,8 @@ public class AdminController : BaseController
     /// </summary>
     [HttpPut("provider-settings")]
     [HttpPost("provider-settings")]
+    [HttpPut("/api/provider-settings")]
+    [HttpPost("/api/provider-settings")]
     [AllowAnonymous]
     public async Task<IActionResult> UpdateProviderSettings([FromBody] SupplierSettingsModel dto)
     {

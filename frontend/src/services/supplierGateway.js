@@ -27,15 +27,18 @@ const getApiUrls = () => {
   if (typeof window !== 'undefined' && (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1')) {
     return [
       'http://localhost:5000/api/admin',
+      'http://localhost:5000/api',
       'http://localhost:5001/api',
-      'https://mlbb-khqr-api.onrender.com/api',
-      'https://mlbb-backend-api.onrender.com/api'
+      'https://mlbb-backend-api.onrender.com/api/admin',
+      'https://mlbb-backend-api.onrender.com/api',
+      'https://mlbb-khqr-api.onrender.com/api'
     ];
   }
   return [
-    '/api/khqr',
+    'https://mlbb-backend-api.onrender.com/api/admin',
+    'https://mlbb-backend-api.onrender.com/api',
     'https://mlbb-khqr-api.onrender.com/api',
-    'https://mlbb-backend-api.onrender.com/api'
+    'http://localhost:5001/api'
   ];
 };
 
@@ -45,8 +48,8 @@ const getApiUrls = () => {
  */
 export const getStoredProviderSettings = () => {
   try {
-    const pinnedActive = localStorage.getItem(STORAGE_ACTIVE_KEY);
-    const saved = localStorage.getItem(STORAGE_SETTINGS_KEY);
+    const pinnedActive = typeof localStorage !== 'undefined' ? localStorage.getItem(STORAGE_ACTIVE_KEY) : null;
+    const saved = typeof localStorage !== 'undefined' ? localStorage.getItem(STORAGE_SETTINGS_KEY) : null;
     let parsed = null;
 
     if (saved) {
@@ -58,8 +61,10 @@ export const getStoredProviderSettings = () => {
     const merged = { ...DEFAULT_PROVIDER_SETTINGS, ...(parsed || {}) };
 
     // If an active provider was pinned by admin, strictly preserve it
-    if (pinnedActive && (pinnedActive === 'KhmerTopUp' || pinnedActive === 'FazerCards')) {
-      merged.activeProvider = pinnedActive;
+    if (pinnedActive) {
+      merged.activeProvider = String(pinnedActive).toLowerCase().includes('khmer') ? 'KhmerTopUp' : 'FazerCards';
+    } else if (merged.activeProvider) {
+      merged.activeProvider = String(merged.activeProvider).toLowerCase().includes('khmer') ? 'KhmerTopUp' : 'FazerCards';
     }
 
     const isKhmer = merged.activeProvider === 'KhmerTopUp';
@@ -92,6 +97,7 @@ export const switchActiveProvider = async (targetProvider) => {
   const updated = {
     ...current,
     activeProvider: normalized,
+    ActiveProvider: normalized,
     apiKey: targetKey,
     balanceUSD: targetBal,
     updatedAt: new Date().toISOString()
@@ -111,21 +117,23 @@ export const switchActiveProvider = async (targetProvider) => {
 
   // 2. Broadcast in parallel to all backend candidate endpoints
   const endpoints = getApiUrls();
+  const token = typeof localStorage !== 'undefined' ? localStorage.getItem('token') : null;
+  const headers = { 'Content-Type': 'application/json' };
+  if (token) headers['Authorization'] = `Bearer ${token}`;
+
   for (const base of endpoints) {
     const cleanBase = base.endsWith('/') ? base.slice(0, -1) : base;
-    const switchUrl = `${cleanBase}/provider/switch`;
-    const settingsUrl = `${cleanBase}/provider-settings`;
 
-    fetch(switchUrl, {
+    fetch(`${cleanBase}/provider/switch`, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers,
       body: JSON.stringify({ provider: normalized })
     }).catch(() => {});
 
-    fetch(settingsUrl, {
+    fetch(`${cleanBase}/provider-settings`, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ settings: updated })
+      headers,
+      body: JSON.stringify({ settings: updated, ...updated })
     }).catch(() => {});
   }
 
@@ -138,15 +146,20 @@ export const switchActiveProvider = async (targetProvider) => {
 export const saveStoredProviderSettings = async (settings) => {
   if (!settings) return;
   const current = getStoredProviderSettings();
-  const merged = { ...current, ...settings, updatedAt: new Date().toISOString() };
+  const activeNormalized = settings.activeProvider
+    ? (String(settings.activeProvider).toLowerCase().includes('khmer') ? 'KhmerTopUp' : 'FazerCards')
+    : current.activeProvider;
 
-  if (merged.activeProvider) {
-    try {
-      localStorage.setItem(STORAGE_ACTIVE_KEY, merged.activeProvider);
-    } catch (e) {}
-  }
+  const merged = {
+    ...current,
+    ...settings,
+    activeProvider: activeNormalized,
+    ActiveProvider: activeNormalized,
+    updatedAt: new Date().toISOString()
+  };
 
   try {
+    localStorage.setItem(STORAGE_ACTIVE_KEY, activeNormalized);
     localStorage.setItem(STORAGE_SETTINGS_KEY, JSON.stringify(merged));
     if (typeof window !== 'undefined') {
       window.dispatchEvent(new Event(EVENT_NAME));
@@ -155,12 +168,23 @@ export const saveStoredProviderSettings = async (settings) => {
   } catch (e) {}
 
   const endpoints = getApiUrls();
+  const token = typeof localStorage !== 'undefined' ? localStorage.getItem('token') : null;
+  const headers = { 'Content-Type': 'application/json' };
+  if (token) headers['Authorization'] = `Bearer ${token}`;
+
   for (const base of endpoints) {
     const cleanBase = base.endsWith('/') ? base.slice(0, -1) : base;
+
     fetch(`${cleanBase}/provider-settings`, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ settings: merged })
+      headers,
+      body: JSON.stringify({ settings: merged, ...merged })
+    }).catch(() => {});
+
+    fetch(`${cleanBase}/provider/switch`, {
+      method: 'POST',
+      headers,
+      body: JSON.stringify({ provider: activeNormalized })
     }).catch(() => {});
   }
 
@@ -192,9 +216,16 @@ export const fetchStoredProviderSettings = async () => {
         const data = await res.json();
         const settings = data?.settings || data;
         if (settings && (settings.activeProvider || settings.ActiveProvider || settings.fazerCardsBalanceUSD !== undefined || settings.balanceUSD !== undefined)) {
-          const remoteActive = settings.activeProvider || settings.ActiveProvider;
+          const rawRemoteActive = settings.activeProvider || settings.ActiveProvider;
+          const remoteActive = rawRemoteActive
+            ? (String(rawRemoteActive).toLowerCase().includes('khmer') ? 'KhmerTopUp' : 'FazerCards')
+            : null;
+
           // Pinned active provider takes precedence so refresh or close never reverts user's choice
-          const finalActive = pinnedActive ? pinnedActive : (remoteActive || local.activeProvider);
+          const finalActive = pinnedActive
+            ? (String(pinnedActive).toLowerCase().includes('khmer') ? 'KhmerTopUp' : 'FazerCards')
+            : (remoteActive || local.activeProvider);
+
           const fzrBal = settings.fazerCardsBalanceUSD ?? settings.FazerCardsBalanceUSD ?? local.fazerCardsBalanceUSD;
           const ktBal = settings.khmerTopUpBalanceUSD ?? settings.KhmerTopUpBalanceUSD ?? local.khmerTopUpBalanceUSD;
           const isKhmer = finalActive === 'KhmerTopUp';
@@ -203,10 +234,13 @@ export const fetchStoredProviderSettings = async () => {
             ...local,
             ...settings,
             activeProvider: finalActive,
+            ActiveProvider: finalActive,
             fazerCardsBalanceUSD: fzrBal,
             khmerTopUpBalanceUSD: ktBal,
             balanceUSD: isKhmer ? ktBal : fzrBal,
-            apiKey: isKhmer ? (settings.khmerTopUpApiKey || local.khmerTopUpApiKey) : (settings.fazerCardsApiKey || local.fazerCardsApiKey)
+            apiKey: isKhmer
+              ? (settings.khmerTopUpApiKey || settings.KhmerTopUpApiKey || local.khmerTopUpApiKey)
+              : (settings.fazerCardsApiKey || settings.FazerCardsApiKey || local.fazerCardsApiKey)
           };
 
           try {

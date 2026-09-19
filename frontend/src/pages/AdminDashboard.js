@@ -484,11 +484,17 @@ const PRICING_GAMES = [
       const updated = await switchActiveProvider(targetProvider);
       setProviderSettings(updated);
 
+      // Explicitly notify backend API as well
+      await adminAPI.switchProvider(updated.activeProvider).catch((e) => {
+        console.warn('adminAPI.switchProvider warning:', e?.message);
+      });
+      await adminAPI.updateProviderSettings(updated).catch(() => {});
+
       const targetBal = updated.activeProvider === 'KhmerTopUp'
         ? (updated.khmerTopUpBalanceUSD ?? 1.25)
         : (updated.fazerCardsBalanceUSD ?? 18.50);
 
-      showToast('success', `✅ Active Gateway switched to ${targetProvider}! Live Balance: $${Number(targetBal).toFixed(2)} USD (~${(Number(targetBal) * 4100).toLocaleString()} ៛)`);
+      showToast('success', `✅ Active Gateway switched to ${updated.activeProvider}! Live Balance: $${Number(targetBal).toFixed(2)} USD (~${(Number(targetBal) * 4100).toLocaleString()} ៛)`);
     } catch (err) {
       showToast('error', err.response?.data?.message || `Failed to switch to ${targetProvider}`);
     } finally {
@@ -693,7 +699,18 @@ const PRICING_GAMES = [
           adminAPI.getPendingBalanceOrders().catch(() => ({ data: { orders: [] } })),
         ]);
         setPendingOrders(pendRes.data || []);
-        if (provRes.data) setProviderSettings(provRes.data);
+        if (provRes.data) {
+          const pinned = localStorage.getItem('admin_active_provider_pinned');
+          const serverActive = provRes.data.activeProvider || provRes.data.ActiveProvider;
+          const finalActive = pinned || (serverActive ? (String(serverActive).toLowerCase().includes('khmer') ? 'KhmerTopUp' : 'FazerCards') : 'FazerCards');
+          const merged = {
+            ...getStoredProviderSettings(),
+            ...provRes.data,
+            activeProvider: finalActive,
+            ActiveProvider: finalActive
+          };
+          setProviderSettings(merged);
+        }
         setPendingBalanceOrders(balRes.data?.orders || []);
       } else if (activeTab === 'orders') {
         const ordersRes = await adminAPI.getAllOrders().catch(() => ({ data: [] }));
@@ -703,7 +720,18 @@ const PRICING_GAMES = [
           adminAPI.getProviderSettings().catch(() => ({ data: null })),
           adminAPI.getSupplierBalance().catch(() => ({ data: null })),
         ]);
-        if (provRes.data) setProviderSettings(provRes.data);
+        if (provRes.data) {
+          const pinned = localStorage.getItem('admin_active_provider_pinned');
+          const serverActive = provRes.data.activeProvider || provRes.data.ActiveProvider;
+          const finalActive = pinned || (serverActive ? (String(serverActive).toLowerCase().includes('khmer') ? 'KhmerTopUp' : 'FazerCards') : 'FazerCards');
+          const merged = {
+            ...getStoredProviderSettings(),
+            ...provRes.data,
+            activeProvider: finalActive,
+            ActiveProvider: finalActive
+          };
+          setProviderSettings(merged);
+        }
         if (suppRes.data) setSupplierBalanceData(suppRes.data);
       } else if (activeTab === 'users') {
         const usersRes = await adminAPI.getAllUsers().catch(() => ({ data: [] }));
@@ -1374,6 +1402,11 @@ const PRICING_GAMES = [
 
       const saved = await saveStoredProviderSettings(payload);
       setProviderSettings(saved);
+
+      // Explicitly notify .NET backend API as well
+      await adminAPI.switchProvider(saved.activeProvider).catch(() => {});
+      await adminAPI.updateProviderSettings(saved).catch(() => {});
+
       showToast('success', `Upstream Provider updated to ${saved.activeProvider}! Live Balance: $${activeBal.toFixed(2)} USD`);
       loadData(true);
     } catch (err) {
