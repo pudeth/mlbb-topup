@@ -256,7 +256,6 @@ const PRICING_GAMES = [
   const [newFzrTokenInput, setNewFzrTokenInput] = useState('');
   const [newFzrTokenNameInput, setNewFzrTokenNameInput] = useState('');
   const [newFzrTokenSetActive, setNewFzrTokenSetActive] = useState(true);
-  const [showFzrTokensKeyring, setShowFzrTokensKeyring] = useState(true);
   const [showFzrTokenSecret, setShowFzrTokenSecret] = useState(false);
   const [testingFzrTokenId, setTestingFzrTokenId] = useState(null);
   const [savingFzrToken, setSavingFzrToken] = useState(false);
@@ -3697,262 +3696,262 @@ const PRICING_GAMES = [
                   </span>
                 </div>
 
-                <form onSubmit={handleSaveProviderSettings} className="space-y-3.5 text-xs">
-                  <div>
-                    <label className="block text-slate-400 mb-1 font-semibold">Active MLBB Provider</label>
-                    <select
-                      value={providerSettings.activeProvider}
-                      onChange={(e) => {
-                        const nextP = e.target.value;
-                        const nextKey = nextP === 'FazerCards'
-                          ? (providerSettings.fazerCardsApiKey || 'fc_5f79a0016d5d87bd1e83ea4f')
-                          : (providerSettings.khmerTopUpApiKey || 'kt_6d38a3a5940e970221cc62fa306ae96044736364');
-                        setProviderSettings({
-                          ...providerSettings,
-                          activeProvider: nextP,
-                          apiKey: nextKey,
-                        });
-                      }}
-                      className="input w-full text-xs py-2.5 rounded-xl font-bold bg-dark-bg border-slate-700 text-amber-300"
-                    >
-                      <option value="FazerCards">🎮 FazerCards Reseller (reseller.fazercards.com - $18.50 Available)</option>
-                      <option value="KhmerTopUp">🇰🇭 Khmer TopUp (khmer-topup.com - Official Direct MLBB)</option>
-                    </select>
-                  </div>
+                {(() => {
+                  const activeFzrToken = (providerSettings.fazerCardsTokens || []).find(t => t.isActive) || (providerSettings.fazerCardsTokens || [])[0];
+                  const standbyFzrTokens = (providerSettings.fazerCardsTokens || []).filter(t => t.id !== activeFzrToken?.id && t.token !== activeFzrToken?.token);
 
-                  <div>
-                    <label className="block text-slate-400 mb-1 font-semibold">Environment Mode</label>
-                    <select
-                      value={providerSettings.environment}
-                      onChange={(e) =>
-                        setProviderSettings({ ...providerSettings, environment: e.target.value })
-                      }
-                      className="input w-full text-xs py-2 rounded-xl"
-                    >
-                      <option value="Production">🟢 Production (Live Direct Diamond Injection)</option>
-                      <option value="Sandbox">🧪 Sandbox / Demo (Simulate Successful Delivery)</option>
-                    </select>
-                  </div>
-
-                  {providerSettings.activeProvider === 'FazerCards' ? (
-                    <div className="space-y-2">
-                      <div className="flex justify-between items-center">
-                        <label className="text-slate-300 font-bold flex items-center gap-1.5">
-                          <span>🔑</span> FazerCards API Key / Token
-                        </label>
-                        <button
-                          type="button"
-                          onClick={() => setAddFzrTokenModalOpen(true)}
-                          className="px-2.5 py-1 rounded-xl bg-gradient-to-r from-amber-500 to-yellow-400 hover:from-amber-400 hover:to-yellow-300 text-black font-extrabold text-[11px] shadow-md flex items-center gap-1 transition-transform hover:scale-105"
-                        >
-                          <span>➕</span>
-                          <span>Add Token (Keep Old)</span>
-                        </button>
-                      </div>
-
-                      {/* Dropdown Quick Switcher if multiple tokens exist */}
-                      {(providerSettings.fazerCardsTokens || []).length > 1 && (
+                  return (
+                    <form onSubmit={handleSaveProviderSettings} className="space-y-4 text-xs">
+                      {/* Top Grid: Provider Selection & Environment Mode */}
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                         <div>
-                          <label className="block text-[10px] text-slate-400 mb-1 font-semibold">
-                            Select Active Token:
-                          </label>
+                          <label className="block text-slate-400 mb-1 font-semibold">Active MLBB Provider</label>
                           <select
-                            value={providerSettings.fazerCardsTokens.find(t => t.isActive)?.id || ''}
-                            onChange={(e) => handleSwitchFzrToken(e.target.value)}
-                            className="input w-full text-xs py-2 rounded-xl font-bold bg-dark-bg border-amber-500/40 text-amber-300"
+                            value={providerSettings.activeProvider}
+                            onChange={(e) => {
+                              const nextP = e.target.value;
+                              const nextKey = nextP === 'FazerCards'
+                                ? (providerSettings.fazerCardsApiKey || 'fc_5f79a0016d5d87bd1e83ea4f')
+                                : (providerSettings.khmerTopUpApiKey || 'kt_6d38a3a5940e970221cc62fa306ae96044736364');
+                              setProviderSettings({
+                                ...providerSettings,
+                                activeProvider: nextP,
+                                apiKey: nextKey,
+                              });
+                            }}
+                            className="input w-full text-xs py-2 rounded-xl font-bold bg-dark-bg border-slate-700 text-amber-300 focus:border-amber-400"
                           >
-                            {(providerSettings.fazerCardsTokens || []).map((t, idx) => (
-                              <option key={t.id || idx} value={t.id}>
-                                {t.isActive ? '🟢 [ACTIVE] ' : '⚪ [STANDBY] '} {t.name || `Token #${idx + 1}`} ({t.token.length > 16 ? t.token.substring(0, 8) + '...' + t.token.substring(t.token.length - 6) : t.token}) {t.balanceUSD !== null && t.balanceUSD !== undefined ? `- $${t.balanceUSD.toFixed(2)}` : ''}
-                              </option>
-                            ))}
+                            <option value="FazerCards">🎮 FazerCards Reseller</option>
+                            <option value="KhmerTopUp">🇰🇭 Khmer TopUp (Direct)</option>
                           </select>
                         </div>
-                      )}
 
-                      {/* Active Token Input with Show/Hide & Copy buttons */}
-                      <div className="relative">
-                        <input
-                          type={showFzrTokenSecret ? "text" : "password"}
-                          value={providerSettings.apiKey}
-                          onChange={(e) =>
-                            setProviderSettings({
-                              ...providerSettings,
-                              apiKey: e.target.value,
-                              fazerCardsApiKey: e.target.value
-                            })
-                          }
-                          className="input w-full font-mono text-xs py-2.5 pr-20 rounded-xl text-cyan-300 bg-dark-bg border-slate-700"
-                          placeholder="fc_..."
-                        />
-                        <div className="absolute right-2 top-1/2 -translate-y-1/2 flex items-center gap-1">
-                          <button
-                            type="button"
-                            onClick={() => setShowFzrTokenSecret(!showFzrTokenSecret)}
-                            className="px-1.5 py-1 text-[11px] rounded hover:bg-slate-700/60 text-slate-400 hover:text-white"
-                            title={showFzrTokenSecret ? "Hide token" : "Show token"}
+                        <div>
+                          <label className="block text-slate-400 mb-1 font-semibold">Environment Mode</label>
+                          <select
+                            value={providerSettings.environment}
+                            onChange={(e) =>
+                              setProviderSettings({ ...providerSettings, environment: e.target.value })
+                            }
+                            className="input w-full text-xs py-2 rounded-xl bg-dark-bg border-slate-700 text-slate-200"
                           >
-                            {showFzrTokenSecret ? '👁️' : '🔒'}
-                          </button>
-                          <button
-                            type="button"
-                            onClick={() => {
-                              if (providerSettings.apiKey) {
-                                navigator.clipboard.writeText(providerSettings.apiKey);
-                                showToast('success', 'Token copied to clipboard!');
-                              }
-                            }}
-                            className="px-2 py-1 text-[11px] font-bold rounded bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white border border-slate-700"
-                            title="Copy Token"
-                          >
-                            📋 Copy
-                          </button>
+                            <option value="Production">🟢 Production (Live Injection)</option>
+                            <option value="Sandbox">🧪 Sandbox / Demo</option>
+                          </select>
                         </div>
                       </div>
 
-                      {/* Saved Tokens Keyring Drawer */}
-                      <div className="mt-2.5 p-3 rounded-2xl bg-dark-bg/80 border border-slate-800/80 space-y-2">
-                        <div className="flex items-center justify-between">
-                          <button
-                            type="button"
-                            onClick={() => setShowFzrTokensKeyring(!showFzrTokensKeyring)}
-                            className="flex items-center gap-1.5 text-[11px] font-bold text-slate-300 hover:text-white"
-                          >
-                            <span>{showFzrTokensKeyring ? '▼' : '▶'}</span>
-                            <span>🗂️ FazerCards Saved Tokens Keyring ({(providerSettings.fazerCardsTokens || []).length})</span>
-                            <span className="text-[10px] text-amber-400/80 font-normal ml-1">— Old tokens kept</span>
-                          </button>
-                          <button
-                            type="button"
-                            onClick={() => setAddFzrTokenModalOpen(true)}
-                            className="px-2 py-0.5 rounded-lg bg-amber-500/20 hover:bg-amber-500/30 text-amber-300 border border-amber-500/40 text-[10px] font-bold flex items-center gap-1"
-                          >
-                            <span>➕ Add</span>
-                          </button>
-                        </div>
+                      {/* Credentials / Keyring Section */}
+                      {providerSettings.activeProvider === 'FazerCards' ? (
+                        <div className="space-y-3 pt-1">
+                          {/* Keyring Header */}
+                          <div className="flex items-center justify-between pb-1 border-b border-slate-800">
+                            <div className="flex items-center gap-2">
+                              <span className="text-sm">🔑</span>
+                              <span className="text-xs font-bold text-white uppercase tracking-wider">
+                                FazerCards Token Manager
+                              </span>
+                              <span className="text-[10px] px-2 py-0.5 rounded-full font-bold bg-amber-500/20 text-amber-300 border border-amber-500/30">
+                                {(providerSettings.fazerCardsTokens || []).length} Saved
+                              </span>
+                            </div>
+                            <button
+                              type="button"
+                              onClick={() => setAddFzrTokenModalOpen(true)}
+                              className="px-3 py-1.5 rounded-xl bg-gradient-to-r from-amber-500 to-yellow-400 hover:from-amber-400 hover:to-yellow-300 text-black font-extrabold text-[11px] shadow-md flex items-center gap-1.5 transition-all transform hover:scale-105 cursor-pointer"
+                            >
+                              <span>➕</span>
+                              <span>Add New Token</span>
+                            </button>
+                          </div>
 
-                        {showFzrTokensKeyring && (
-                          <div className="space-y-1.5 pt-1">
-                            {(providerSettings.fazerCardsTokens || []).map((tokItem, idx) => {
-                              const isCurrent = tokItem.isActive || tokItem.token === providerSettings.apiKey;
-                              return (
-                                <div
-                                  key={tokItem.id || idx}
-                                  className={`flex items-center justify-between p-2 rounded-xl border transition-all ${
-                                    isCurrent
-                                      ? 'bg-amber-500/10 border-amber-500/40'
-                                      : 'bg-slate-900/40 border-slate-800/80 hover:border-slate-700'
-                                  }`}
+                          {/* Hero Active Token Showcase Card */}
+                          <div className="p-3.5 rounded-2xl bg-gradient-to-br from-amber-500/10 via-slate-900/60 to-dark-bg border border-amber-500/40 shadow-lg space-y-2.5">
+                            <div className="flex items-center justify-between">
+                              <div className="flex items-center gap-2 min-w-0">
+                                <span className="flex h-2 w-2 rounded-full bg-emerald-400 animate-pulse shrink-0" />
+                                <span className="text-[11px] font-bold text-slate-300 uppercase tracking-wide">
+                                  Active Injection Token:
+                                </span>
+                                <span className="text-xs font-black text-amber-300 truncate">
+                                  {activeFzrToken?.name || 'Primary Token'}
+                                </span>
+                              </div>
+                              <span className="text-[11px] font-mono font-bold px-2 py-0.5 rounded-lg bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 shrink-0">
+                                {activeFzrToken?.balanceUSD !== null && activeFzrToken?.balanceUSD !== undefined
+                                  ? `$${activeFzrToken.balanceUSD.toFixed(2)} USD`
+                                  : `$${(providerSettings.fazerCardsBalanceUSD || 18.50).toFixed(2)} USD`}
+                              </span>
+                            </div>
+
+                            {/* Active Token Input with Reveal & Copy */}
+                            <div className="relative">
+                              <input
+                                type={showFzrTokenSecret ? "text" : "password"}
+                                value={providerSettings.apiKey}
+                                onChange={(e) =>
+                                  setProviderSettings({
+                                    ...providerSettings,
+                                    apiKey: e.target.value,
+                                    fazerCardsApiKey: e.target.value
+                                  })
+                                }
+                                className="input w-full font-mono text-xs py-2.5 pl-3 pr-24 rounded-xl text-cyan-300 bg-black/50 border-slate-700/80 focus:border-amber-400 transition-all"
+                                placeholder="fc_..."
+                              />
+                              <div className="absolute right-1.5 top-1/2 -translate-y-1/2 flex items-center gap-1">
+                                <button
+                                  type="button"
+                                  onClick={() => setShowFzrTokenSecret(!showFzrTokenSecret)}
+                                  className="p-1.5 text-xs rounded-lg hover:bg-slate-700/60 text-slate-400 hover:text-white transition-colors"
+                                  title={showFzrTokenSecret ? "Hide token" : "Reveal token"}
                                 >
-                                  <div className="min-w-0 flex-1 pr-2">
-                                    <div className="flex items-center gap-1.5 flex-wrap">
-                                      <span className="font-bold text-white text-[11px] truncate">
-                                        {tokItem.name || `Token #${idx + 1}`}
-                                      </span>
-                                      {isCurrent ? (
-                                        <span className="px-1.5 py-0.5 rounded text-[9px] font-black bg-emerald-500/20 text-emerald-300 border border-emerald-500/40">
-                                          ACTIVE 🟢
-                                        </span>
-                                      ) : (
-                                        <span className="px-1.5 py-0.5 rounded text-[9px] font-bold bg-slate-800 text-slate-400">
-                                          STANDBY ⚪
-                                        </span>
-                                      )}
-                                      {tokItem.balanceUSD !== null && tokItem.balanceUSD !== undefined && (
-                                        <span className="text-[10px] font-mono text-cyan-300 font-semibold">
-                                          ${tokItem.balanceUSD.toFixed(2)} USD
-                                        </span>
-                                      )}
-                                    </div>
-                                    <div className="font-mono text-[10px] text-slate-400 truncate mt-0.5">
-                                      {tokItem.token.length > 20
-                                        ? `${tokItem.token.substring(0, 10)}...${tokItem.token.substring(tokItem.token.length - 8)}`
-                                        : tokItem.token}
-                                    </div>
-                                  </div>
+                                  {showFzrTokenSecret ? '👁️' : '🔒'}
+                                </button>
+                                <button
+                                  type="button"
+                                  onClick={() => {
+                                    if (providerSettings.apiKey) {
+                                      navigator.clipboard.writeText(providerSettings.apiKey);
+                                      showToast('success', 'Token copied to clipboard!');
+                                    }
+                                  }}
+                                  className="px-2.5 py-1 text-[10px] font-bold rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-200 hover:text-white border border-slate-700 transition-all"
+                                  title="Copy Token"
+                                >
+                                  📋 Copy
+                                </button>
+                              </div>
+                            </div>
+                          </div>
 
-                                  <div className="flex items-center gap-1 shrink-0">
-                                    {!isCurrent && (
+                          {/* Standby / Backup Tokens List */}
+                          {standbyFzrTokens.length > 0 ? (
+                            <div className="p-3 rounded-2xl bg-dark-bg/60 border border-slate-800 space-y-2">
+                              <div className="flex items-center justify-between text-[11px] font-bold text-slate-400">
+                                <span>🛡️ Standby Tokens ({standbyFzrTokens.length}) — Safely Preserved</span>
+                                <span className="text-[10px] text-slate-500">1-Click Switch</span>
+                              </div>
+                              <div className="space-y-1.5">
+                                {standbyFzrTokens.map((tokItem, idx) => (
+                                  <div
+                                    key={tokItem.id || idx}
+                                    className="flex items-center justify-between p-2 rounded-xl bg-slate-900/50 hover:bg-slate-900/80 border border-slate-800 hover:border-slate-700 transition-all text-xs"
+                                  >
+                                    <div className="min-w-0 flex-1 pr-2">
+                                      <div className="flex items-center gap-2 flex-wrap">
+                                        <span className="font-bold text-white text-[11px] truncate">
+                                          {tokItem.name || `Backup Token #${idx + 1}`}
+                                        </span>
+                                        <span className="px-1.5 py-0.2 rounded text-[9px] font-bold bg-slate-800 text-slate-400">
+                                          STANDBY
+                                        </span>
+                                        {tokItem.balanceUSD !== null && tokItem.balanceUSD !== undefined && (
+                                          <span className="text-[10px] font-mono text-cyan-400">
+                                            ${tokItem.balanceUSD.toFixed(2)}
+                                          </span>
+                                        )}
+                                      </div>
+                                      <div className="font-mono text-[10px] text-slate-400 truncate mt-0.5">
+                                        {tokItem.token.length > 18
+                                          ? `${tokItem.token.substring(0, 8)}...${tokItem.token.substring(tokItem.token.length - 6)}`
+                                          : tokItem.token}
+                                      </div>
+                                    </div>
+
+                                    <div className="flex items-center gap-1 shrink-0">
                                       <button
                                         type="button"
                                         onClick={() => handleSwitchFzrToken(tokItem.id)}
-                                        className="px-2 py-1 rounded-lg bg-emerald-600/30 hover:bg-emerald-600/50 text-emerald-200 border border-emerald-500/40 text-[10px] font-bold"
-                                        title="Use this token as active"
+                                        className="px-2.5 py-1 rounded-lg bg-emerald-600/30 hover:bg-emerald-600/50 text-emerald-200 border border-emerald-500/40 text-[10px] font-bold transition-all"
+                                        title="Make this token active"
                                       >
-                                        ⚡ Use
+                                        ⚡ Switch
                                       </button>
-                                    )}
-                                    <button
-                                      type="button"
-                                      disabled={testingFzrTokenId === tokItem.id}
-                                      onClick={() => handleTestSpecificFzrToken(tokItem.token, tokItem.id)}
-                                      className="px-2 py-1 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 text-[10px] font-semibold"
-                                      title="Test token balance"
-                                    >
-                                      {testingFzrTokenId === tokItem.id ? '🔄' : '⚡ Test'}
-                                    </button>
-                                    <button
-                                      type="button"
-                                      onClick={() => {
-                                        navigator.clipboard.writeText(tokItem.token);
-                                        showToast('success', 'Token copied!');
-                                      }}
-                                      className="p-1 rounded bg-slate-800 hover:bg-slate-700 text-slate-400 hover:text-white text-[10px]"
-                                      title="Copy token"
-                                    >
-                                      📋
-                                    </button>
-                                    {!isCurrent && (providerSettings.fazerCardsTokens || []).length > 1 && (
+                                      <button
+                                        type="button"
+                                        disabled={testingFzrTokenId === tokItem.id}
+                                        onClick={() => handleTestSpecificFzrToken(tokItem.token, tokItem.id)}
+                                        className="px-2 py-1 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 text-[10px] font-semibold transition-all"
+                                        title="Check token balance"
+                                      >
+                                        {testingFzrTokenId === tokItem.id ? '🔄' : 'Test'}
+                                      </button>
+                                      <button
+                                        type="button"
+                                        onClick={() => {
+                                          navigator.clipboard.writeText(tokItem.token);
+                                          showToast('success', 'Token copied!');
+                                        }}
+                                        className="p-1 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-400 hover:text-white text-[10px]"
+                                        title="Copy"
+                                      >
+                                        📋
+                                      </button>
                                       <button
                                         type="button"
                                         onClick={() => handleDeleteFzrToken(tokItem.id)}
-                                        className="p-1 rounded bg-rose-950/40 hover:bg-rose-900/60 text-rose-400 border border-rose-500/30 text-[10px]"
-                                        title="Remove token"
+                                        className="p-1 rounded-lg bg-rose-950/40 hover:bg-rose-900/60 text-rose-400 border border-rose-500/30 text-[10px]"
+                                        title="Remove"
                                       >
                                         🗑️
                                       </button>
-                                    )}
+                                    </div>
                                   </div>
-                                </div>
-                              );
-                            })}
+                                ))}
+                              </div>
+                            </div>
+                          ) : (
+                            <div className="p-2.5 rounded-xl bg-slate-900/40 border border-slate-800/80 text-[11px] text-slate-400 flex items-center justify-between">
+                              <span className="flex items-center gap-1.5">
+                                <span>🛡️</span> Old tokens will be safely kept here when you add new ones.
+                              </span>
+                              <button
+                                type="button"
+                                onClick={() => setAddFzrTokenModalOpen(true)}
+                                className="text-amber-400 font-bold hover:underline"
+                              >
+                                + Add Backup
+                              </button>
+                            </div>
+                          )}
+                        </div>
+                      ) : (
+                        <div className="space-y-2 pt-1">
+                          <div className="flex justify-between items-center mb-1">
+                            <label className="text-slate-300 font-bold">
+                              🇰🇭 Khmer TopUp API Key (kt_...)
+                            </label>
+                            <span className="text-[10px] text-slate-500 font-mono">Auto-populated</span>
                           </div>
-                        )}
-                      </div>
-                    </div>
-                  ) : (
-                    <div>
-                      <div className="flex justify-between items-center mb-1">
-                        <label className="text-slate-400 font-semibold">
-                          Khmer TopUp API Key (kt_...)
-                        </label>
-                        <span className="text-[10px] text-slate-500 font-mono">Auto-populated</span>
-                      </div>
-                      <input
-                        type="text"
-                        value={providerSettings.apiKey}
-                        onChange={(e) =>
-                          setProviderSettings({ ...providerSettings, apiKey: e.target.value })
-                        }
-                        className="input w-full font-mono text-xs py-2.5 rounded-xl text-cyan-300"
-                      />
-                    </div>
-                  )}
+                          <input
+                            type="text"
+                            value={providerSettings.apiKey}
+                            onChange={(e) =>
+                              setProviderSettings({ ...providerSettings, apiKey: e.target.value })
+                            }
+                            className="input w-full font-mono text-xs py-2.5 rounded-xl text-cyan-300 bg-dark-bg border-slate-700"
+                          />
+                        </div>
+                      )}
 
-                  <div className="flex items-center gap-2 pt-2">
-                    <button type="submit" className="btn btn-primary text-xs py-2.5 px-4 font-bold shadow-glow-cyan">
-                      💾 Save Settings
-                    </button>
-                    <button
-                      type="button"
-                      onClick={handleTestProviderConnection}
-                      disabled={providerTesting}
-                      className="btn btn-secondary text-xs py-2.5 px-4 font-bold"
-                    >
-                      {providerTesting ? '🔄 Testing...' : '⚡ Test Connection'}
-                    </button>
-                  </div>
-                </form>
+                      {/* Action Buttons */}
+                      <div className="flex items-center gap-2 pt-2 border-t border-slate-800">
+                        <button type="submit" className="btn btn-primary text-xs py-2.5 px-4 font-bold shadow-glow-cyan">
+                          💾 Save Settings
+                        </button>
+                        <button
+                          type="button"
+                          onClick={handleTestProviderConnection}
+                          disabled={providerTesting}
+                          className="btn btn-secondary text-xs py-2.5 px-4 font-bold"
+                        >
+                          {providerTesting ? '🔄 Testing...' : '⚡ Test Connection'}
+                        </button>
+                      </div>
+                    </form>
+                  );
+                })()}
               </div>
 
               {/* 1-Click Fast Gateway Switcher & Live Balances */}
