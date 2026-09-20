@@ -3,6 +3,7 @@ import { Link, useLocation } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { useLanguage } from '../context/LanguageContext';
 import { useStoreBranding } from '../services/storeBranding';
+import { BrandLogo } from './BrandLogo';
 
 const Navbar = () => {
   const { user, logout, isAuthenticated, isAdmin } = useAuth();
@@ -67,36 +68,8 @@ const Navbar = () => {
           
           {/* Logo */}
           <div className="flex items-center gap-3">
-            <Link to="/" className="flex items-center gap-3 group">
-              <div className="h-11 w-11 rounded-xl bg-slate-900/90 border border-slate-700/80 p-1 flex items-center justify-center shrink-0 group-hover:border-amber-400/60 group-hover:shadow-[0_0_15px_rgba(245,158,11,0.25)] transition-all overflow-hidden shadow-md">
-                <img
-                  src={branding.logoImage || '/tin-logo.png'}
-                  alt={branding.storeName || 'Tin-Topup'}
-                  className="w-full h-full object-contain group-hover:scale-105 transition-transform"
-                  onError={(e) => {
-                    e.target.onerror = null;
-                    e.target.src = '/tin-logo.png';
-                  }}
-                />
-              </div>
-              <div className="flex flex-col">
-                <div className="flex items-center gap-2">
-                  <span className="text-lg sm:text-xl font-black tracking-wide text-white group-hover:text-amber-400 transition-colors">
-                    {branding.storeName || 'Tin-Topup'}
-                  </span>
-                  {branding.badgeText && (
-                    <span className="bg-gradient-to-r from-cyan-400 to-blue-500 text-slate-950 text-[9px] font-black px-2 py-0.5 rounded-full tracking-wider uppercase shadow-sm">
-                      {branding.badgeText}
-                    </span>
-                  )}
-                </div>
-                <div className="flex items-center gap-1.5 mt-0.5">
-                  <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse shadow-[0_0_8px_rgba(52,211,153,0.6)]"></span>
-                  <span className="text-[10px] sm:text-[11px] font-bold text-slate-400">
-                    {branding.versionText || 'Enterprise Hub v2.5'}
-                  </span>
-                </div>
-              </div>
+            <Link to="/" className="group flex items-center">
+              <BrandLogo branding={branding} size="md" showSubtitle={true} />
             </Link>
           </div>
 

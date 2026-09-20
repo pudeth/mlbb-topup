@@ -2,6 +2,7 @@ import React from 'react';
 import { Link } from 'react-router-dom';
 import { useLanguage } from '../context/LanguageContext';
 import { useStoreBranding } from '../services/storeBranding';
+import { BrandLogo } from './BrandLogo';
 import { AbaPaywayLogo, AbaAcceptanceMarks } from './AbaPaymentLogos';
 
 const Footer = () => {
@@ -72,38 +73,8 @@ const Footer = () => {
               
               {/* Left: Brand Identity & Live Status */}
               <div className="flex flex-wrap items-center justify-center sm:justify-start gap-3 sm:gap-4">
-                <Link to="/" className="flex items-center gap-3 group">
-                  {branding.logoType === 'image' && branding.logoImage ? (
-                    <div className="w-10 h-10 rounded-xl bg-slate-900 border border-slate-700/80 p-0.5 overflow-hidden shrink-0 group-hover:border-amber-400/60 shadow-lg shadow-black/40 transition-all flex items-center justify-center">
-                      <img
-                        src={branding.logoImage}
-                        alt={branding.storeName || 'Store Logo'}
-                        className="w-full h-full object-contain drop-shadow-sm group-hover:scale-105 transition-transform"
-                        onError={(e) => {
-                          e.target.style.display = 'none';
-                        }}
-                      />
-                    </div>
-                  ) : (
-                    <div className="w-10 h-10 rounded-xl bg-gradient-to-tr from-slate-900 via-slate-800 to-slate-900 border border-slate-700/80 flex items-center justify-center text-lg shadow-lg group-hover:border-amber-400/60 transition-all">
-                      <span>{branding.logoEmoji || '💎'}</span>
-                    </div>
-                  )}
-                  <div className="flex flex-col text-left">
-                    <div className="flex items-center gap-1.5">
-                      <span className="text-base sm:text-lg font-black tracking-tight text-white group-hover:text-amber-400 transition-colors">
-                        {branding.storeName || 'Tin-TopUp'}
-                      </span>
-                      {branding.badgeText && (
-                        <span className="bg-gradient-to-r from-cyan-500 to-blue-500 text-slate-950 text-[9px] font-black px-1.5 py-0.5 rounded tracking-widest uppercase shadow-sm">
-                          {branding.badgeText}
-                        </span>
-                      )}
-                    </div>
-                    <span className="text-[10.5px] text-slate-400 font-medium">
-                      {branding.versionText || 'Instant Top-Up & Gaming Hub'}
-                    </span>
-                  </div>
+                <Link to="/" className="group flex items-center">
+                  <BrandLogo branding={branding} size="md" showSubtitle={true} />
                 </Link>
 
                 <div className="inline-flex items-center gap-2 text-[11px] font-bold text-emerald-400 bg-emerald-950/40 border border-emerald-500/30 px-3 py-1.5 rounded-full shadow-[0_0_15px_rgba(16,185,129,0.15)]">
