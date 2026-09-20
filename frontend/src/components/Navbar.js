@@ -292,58 +292,7 @@ const Navbar = () => {
             : 'max-h-0 opacity-0 -translate-y-2 pointer-events-none border-transparent'
         }`}
       >
-        <div className="px-4 pt-3 pb-28 space-y-3.5 max-w-md mx-auto">
-          
-          {/* 1. Sleek Brand & VIP Status Pill Banner */}
-          <div className="p-2.5 px-3 rounded-2xl bg-gradient-to-r from-slate-900/95 via-[#0e1628] to-slate-900/95 border border-slate-800/90 flex items-center justify-between shadow-inner">
-            <div className="flex items-center gap-2.5">
-              <div className="w-8 h-8 rounded-xl bg-gradient-to-tr from-cyan-500 to-blue-600 p-0.5 shadow-glow-cyan shrink-0 flex items-center justify-center">
-                {branding.logoType === 'image' && branding.logoImage ? (
-                  <img src={branding.logoImage} alt="Logo" className="w-full h-full object-contain rounded-lg" />
-                ) : (
-                  <span className="text-sm">💎</span>
-                )}
-              </div>
-              <div className="leading-tight">
-                <div className="flex items-center gap-1.5">
-                  <span className="text-white font-extrabold text-xs tracking-tight">{branding.brandName || 'Tin-TopUp'}</span>
-                  <span className="bg-gradient-to-r from-amber-400 to-yellow-400 text-slate-950 text-[8px] font-black px-1.5 py-0.2 rounded font-mono">VIP</span>
-                </div>
-                <div className="flex items-center gap-1 text-[10px] text-emerald-400 font-semibold mt-0.5">
-                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span>
-                  <span>Instant KHQR Service Online</span>
-                </div>
-              </div>
-            </div>
-            <span className="text-[10px] font-bold text-amber-400 bg-amber-950/50 border border-amber-500/30 px-2 py-0.5 rounded-lg shrink-0">
-              ⚡ 10s Fast
-            </span>
-          </div>
-
-          {/* 2. Sleek Segmented Capsule Language Selector */}
-          <div className="space-y-1">
-            <div className="flex items-center justify-between px-1 text-[10px] font-bold text-slate-400 uppercase tracking-wider">
-              <span className="flex items-center gap-1">🌐 Language / ភាសា</span>
-              <span className="text-cyan-400 font-bold">{currentLang?.name}</span>
-            </div>
-            <div className="grid grid-cols-3 gap-1 p-1 bg-slate-950/80 rounded-xl border border-slate-800/80 shadow-inner">
-              {languages.map((l) => (
-                <button
-                  key={l.code}
-                  type="button"
-                  onClick={() => setLanguage(l.code)}
-                  className={`py-1.5 px-2 rounded-lg text-xs font-bold flex items-center justify-center gap-1.5 transition-all cursor-pointer ${
-                    language === l.code
-                      ? 'bg-gradient-to-r from-cyan-500 to-blue-600 text-slate-950 shadow-md font-black scale-[1.01]'
-                      : 'text-slate-400 hover:text-white hover:bg-slate-900/60'
-                  }`}
-                >
-                  <span className={`fi fi-${l.flagCode || 'kh'} rounded-xs text-sm leading-none`} />
-                  <span>{l.short}</span>
-                </button>
-              ))}
-            </div>
-          </div>
+        <div className="px-4 pt-3 pb-28 space-y-3 max-w-md mx-auto">
 
           {/* 3. Grouped Navigation Inset List (iOS / Fintech Style) */}
           <div className="bg-[#0e1424]/90 backdrop-blur-xl rounded-2xl border border-slate-800/80 divide-y divide-slate-800/60 overflow-hidden shadow-lg">
