@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useRef } from 'react';
 import { useLocation } from 'react-router-dom';
 import Navbar from './Navbar';
 import Footer from './Footer';
@@ -11,7 +11,8 @@ const Layout = ({ children }) => {
   const isAdminPath = location.pathname.startsWith('/admin');
   const isAuthPath = location.pathname.startsWith('/login') || location.pathname.startsWith('/register');
 
-  // Automatically scroll to top or target hash on route changes
+  // Automatically scroll to top ONLY on actual page (pathname) navigation, NOT on search params
+  const prevPathnameRef = useRef(location.pathname);
   useEffect(() => {
     if (location.hash) {
       const el = document.querySelector(location.hash);
@@ -22,8 +23,12 @@ const Layout = ({ children }) => {
         return;
       }
     }
-    window.scrollTo({ top: 0, behavior: 'smooth' });
-  }, [location.pathname, location.search, location.hash]);
+    // Only scroll to top if pathname changed (e.g. / to /topup), NEVER on query param changes
+    if (prevPathnameRef.current !== location.pathname) {
+      prevPathnameRef.current = location.pathname;
+      window.scrollTo({ top: 0, behavior: 'instant' });
+    }
+  }, [location.pathname, location.hash]);
 
   if (isAdminPath) {
     return (

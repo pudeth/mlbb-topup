@@ -508,18 +508,20 @@ const TopUp = () => {
   };
 
   const [, startTransition] = useTransition();
+  const carouselContainerRef = useRef(null);
 
-  // Unified smooth game selection
+  // Unified smooth game selection (preserves window vertical scroll position)
   const handleSelectGame = useCallback((game, e = null) => {
     if (!game || game.id === selectedGame.id) return;
 
-    // Smoothly center the clicked element immediately
-    if (e?.currentTarget) {
-      e.currentTarget.scrollIntoView({
-        behavior: 'smooth',
-        inline: 'center',
-        block: 'nearest'
-      });
+    // Scroll ONLY the carousel container horizontally without moving window vertically
+    if (e?.currentTarget && carouselContainerRef.current) {
+      const container = carouselContainerRef.current;
+      const target = e.currentTarget;
+      const targetRect = target.getBoundingClientRect();
+      const containerRect = container.getBoundingClientRect();
+      const scrollOffset = (targetRect.left + targetRect.width / 2) - (containerRect.left + containerRect.width / 2);
+      container.scrollBy({ left: scrollOffset, behavior: 'smooth' });
     }
 
     // Update URL query parameter cleanly without reload
@@ -1087,6 +1089,7 @@ const TopUp = () => {
   
           {/* Smooth Touch Carousel with Momentum & Auto-Centering */}
           <div
+            ref={carouselContainerRef}
             className="flex items-center gap-2.5 sm:gap-3 overflow-x-auto pb-2.5 pt-1 px-1 scroll-smooth overscroll-x-contain touch-pan-x scrollbar-none select-none"
             style={{ WebkitOverflowScrolling: 'touch' }}
           >
@@ -1095,11 +1098,6 @@ const TopUp = () => {
               return (
                 <button
                   key={game.id}
-                  ref={isSelected ? (el) => {
-                    if (el) {
-                      el.scrollIntoView({ behavior: 'smooth', inline: 'center', block: 'nearest' });
-                    }
-                  } : null}
                   type="button"
                   onClick={(e) => handleSelectGame(game, e)}
                   className={`flex items-center gap-2.5 p-1.5 pr-4 rounded-full border transition-all duration-200 shrink-0 cursor-pointer active:scale-95 ${
