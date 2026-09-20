@@ -451,6 +451,164 @@ const AiAssistant = () => {
   ]);
   const [isTyping, setIsTyping] = useState(false);
   const chatEndRef = useRef(null);
+  const btnRef = useRef(null);
+
+  // Flexible dragging state for mobile touch & desktop mouse
+  const [pos, setPos] = useState(() => {
+    try {
+      const saved = localStorage.getItem('ai_assistant_pos');
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        if (
+          typeof parsed.x === 'number' &&
+          typeof parsed.y === 'number' &&
+          parsed.x >= 0 &&
+          parsed.x < (typeof window !== 'undefined' ? window.innerWidth : 1000) &&
+          parsed.y >= 0 &&
+          parsed.y < (typeof window !== 'undefined' ? window.innerHeight : 1000)
+        ) {
+          return parsed;
+        }
+      }
+    } catch (e) {}
+    return null;
+  });
+
+  const [isDragging, setIsDragging] = useState(false);
+  const dragDataRef = useRef({
+    startX: 0,
+    startY: 0,
+    elemX: 0,
+    elemY: 0,
+    hasMoved: false,
+  });
+
+  // Keep button within screen bounds on window resize / orientation change
+  useEffect(() => {
+    const handleResize = () => {
+      setPos(prev => {
+        if (!prev || !btnRef.current) return prev;
+        const btnW = btnRef.current.offsetWidth || 56;
+        const btnH = btnRef.current.offsetHeight || 56;
+        const maxX = Math.max(10, window.innerWidth - btnW - 8);
+        const maxY = Math.max(60, window.innerHeight - btnH - 12);
+        return {
+          x: Math.min(Math.max(prev.x, 8), maxX),
+          y: Math.min(Math.max(prev.y, 50), maxY),
+        };
+      });
+    };
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
+
+  // Window-level touch & mouse listeners while dragging for seamless responsiveness
+  useEffect(() => {
+    if (!isDragging) return;
+
+    const onMouseMove = (e) => {
+      const data = dragDataRef.current;
+      const dx = e.clientX - data.startX;
+      const dy = e.clientY - data.startY;
+      if (Math.abs(dx) > 4 || Math.abs(dy) > 4) {
+        data.hasMoved = true;
+      }
+      const btnW = btnRef.current ? btnRef.current.offsetWidth : 56;
+      const btnH = btnRef.current ? btnRef.current.offsetHeight : 56;
+      const minX = 6;
+      const maxX = window.innerWidth - btnW - 6;
+      const minY = 50;
+      const maxY = window.innerHeight - btnH - 10;
+
+      setPos({
+        x: Math.min(Math.max(data.elemX + dx, minX), maxX),
+        y: Math.min(Math.max(data.elemY + dy, minY), maxY),
+      });
+    };
+
+    const onMouseUp = () => {
+      setIsDragging(false);
+      setPos(currentPos => {
+        if (dragDataRef.current.hasMoved && currentPos) {
+          try {
+            localStorage.setItem('ai_assistant_pos', JSON.stringify(currentPos));
+          } catch (e) {}
+        }
+        return currentPos;
+      });
+    };
+
+    const onTouchMove = (e) => {
+      if (!e.touches || !e.touches[0]) return;
+      if (e.cancelable) e.preventDefault();
+      const touch = e.touches[0];
+      const data = dragDataRef.current;
+      const dx = touch.clientX - data.startX;
+      const dy = touch.clientY - data.startY;
+      if (Math.abs(dx) > 4 || Math.abs(dy) > 4) {
+        data.hasMoved = true;
+      }
+      const btnW = btnRef.current ? btnRef.current.offsetWidth : 56;
+      const btnH = btnRef.current ? btnRef.current.offsetHeight : 56;
+      const minX = 6;
+      const maxX = window.innerWidth - btnW - 6;
+      const minY = 50;
+      const maxY = window.innerHeight - btnH - 10;
+
+      setPos({
+        x: Math.min(Math.max(data.elemX + dx, minX), maxX),
+        y: Math.min(Math.max(data.elemY + dy, minY), maxY),
+      });
+    };
+
+    const onTouchEnd = () => {
+      setIsDragging(false);
+      setPos(currentPos => {
+        if (dragDataRef.current.hasMoved && currentPos) {
+          try {
+            localStorage.setItem('ai_assistant_pos', JSON.stringify(currentPos));
+          } catch (e) {}
+        }
+        return currentPos;
+      });
+    };
+
+    window.addEventListener('mousemove', onMouseMove);
+    window.addEventListener('mouseup', onMouseUp);
+    window.addEventListener('touchmove', onTouchMove, { passive: false });
+    window.addEventListener('touchend', onTouchEnd);
+    window.addEventListener('touchcancel', onTouchEnd);
+
+    return () => {
+      window.removeEventListener('mousemove', onMouseMove);
+      window.removeEventListener('mouseup', onMouseUp);
+      window.removeEventListener('touchmove', onTouchMove);
+      window.removeEventListener('touchend', onTouchEnd);
+      window.removeEventListener('touchcancel', onTouchEnd);
+    };
+  }, [isDragging]);
+
+  const handleDragStart = (clientX, clientY) => {
+    if (!btnRef.current) return;
+    const rect = btnRef.current.getBoundingClientRect();
+    dragDataRef.current = {
+      startX: clientX,
+      startY: clientY,
+      elemX: rect.left,
+      elemY: rect.top,
+      hasMoved: false,
+    };
+    setIsDragging(true);
+  };
+
+  const handleClick = (e) => {
+    if (dragDataRef.current.hasMoved) {
+      e.preventDefault();
+      e.stopPropagation();
+      return;
+    }
+    setIsOpen(prev => !prev);
+  };
 
   // Update welcome message when language changes
   useEffect(() => {
@@ -495,26 +653,59 @@ const AiAssistant = () => {
 
   return (
     <>
-      {/* Clean Floating AI Trigger - No background, just the icon */}
+      {/* Mobile Backdrop Overlay when chat is open */}
+      {isOpen && (
+        <div
+          className="fixed inset-0 bg-black/50 backdrop-blur-[2px] z-40 sm:hidden animate-fadeIn"
+          onClick={() => setIsOpen(false)}
+        />
+      )}
+
+      {/* Flexible Draggable Floating AI Trigger */}
       <button
+        ref={btnRef}
         type="button"
-        onClick={() => setIsOpen(!isOpen)}
-        className="ai-assistant-widget fixed bottom-5 right-4 sm:right-5 z-40 w-16 h-16 sm:w-20 sm:h-20 hover:scale-110 active:scale-95 transition-all duration-300 group select-none cursor-pointer bg-transparent border-0 outline-none p-0"
+        onClick={handleClick}
+        onMouseDown={(e) => {
+          if (e.button === 0) handleDragStart(e.clientX, e.clientY);
+        }}
+        onTouchStart={(e) => {
+          if (e.touches && e.touches[0]) {
+            handleDragStart(e.touches[0].clientX, e.touches[0].clientY);
+          }
+        }}
+        style={
+          pos
+            ? {
+                left: `${pos.x}px`,
+                top: `${pos.y}px`,
+                right: 'auto',
+                bottom: 'auto',
+                touchAction: 'none',
+              }
+            : {
+                touchAction: 'none',
+              }
+        }
+        className={`ai-assistant-widget fixed z-40 w-14 h-14 sm:w-16 sm:h-16 md:w-20 md:h-20 select-none cursor-grab active:cursor-grabbing bg-transparent border-0 outline-none p-0 transition-transform ${
+          pos ? '' : 'bottom-20 right-3.5 sm:bottom-6 sm:right-6'
+        } ${isDragging ? 'scale-115 opacity-90' : 'hover:scale-110 active:scale-95'}`}
         aria-label="Open AI Assistant"
+        title="Drag to move anywhere / ចុចឬអូសផ្លាស់ប្តូរទីតាំង"
       >
-        {/* MLBB Bot Badge - Full icon, no wrapper box */}
-        <div className="relative w-full h-full">
+        {/* MLBB Bot Badge - Full icon */}
+        <div className="relative w-full h-full pointer-events-none">
           <img
             src="/ai-bot-icon.png"
             alt="AI Assistant"
-            className="w-full h-full object-contain transition-all duration-300"
+            className="w-full h-full object-contain filter drop-shadow-[0_4px_12px_rgba(56,189,248,0.4)] transition-all duration-300"
           />
         </div>
       </button>
 
       {/* AI Assistant Chat Modal Drawer */}
       {isOpen && (
-        <div className="fixed bottom-24 right-2 sm:right-5 w-[95vw] sm:w-[400px] max-h-[620px] h-[80vh] z-50 flex flex-col rounded-[24px] overflow-hidden shadow-[0_20px_60px_rgba(0,0,0,0.5)] animate-fadeIn border border-slate-800/60">
+        <div className="fixed bottom-20 sm:bottom-24 left-1/2 -translate-x-1/2 sm:left-auto sm:translate-x-0 sm:right-6 w-[94vw] max-w-[400px] max-h-[620px] h-[78vh] sm:h-[80vh] z-50 flex flex-col rounded-[24px] overflow-hidden shadow-[0_20px_60px_rgba(0,0,0,0.75)] animate-fadeIn border border-slate-800/80">
 
           {/* ── HEADER (Messenger style) ── */}
           <div className="bg-[#0f1724] px-4 py-3 flex items-center gap-3 border-b border-slate-800/60 shrink-0">
