@@ -259,10 +259,14 @@ const Navbar = () => {
               </button>
             )}
 
-            {/* Mobile Hamburger */}
+            {/* Mobile Hamburger / Close Button */}
             <button
               type="button"
-              className="lg:hidden h-9 w-9 flex items-center justify-center rounded-full bg-slate-900/80 hover:bg-slate-800 border border-slate-800 hover:border-slate-700 text-slate-300 hover:text-white transition-all"
+              className={`lg:hidden h-9 w-9 flex items-center justify-center rounded-full border transition-all duration-300 ${
+                mobileMenuOpen
+                  ? 'bg-red-950/40 border-red-500/40 text-red-300 rotate-90 shadow-sm'
+                  : 'bg-slate-900/80 hover:bg-slate-800 border-slate-800 text-slate-300 hover:text-white'
+              }`}
               onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
               aria-label="Toggle menu"
             >
@@ -280,56 +284,65 @@ const Navbar = () => {
         </div>
       </div>
 
-      {/* Personalized Professional Mobile Dropdown Menu */}
-      {mobileMenuOpen && (
-        <div className="lg:hidden bg-[#0B0F19]/95 backdrop-blur-2xl border-b border-slate-800/90 px-4 pt-3 pb-6 space-y-4 animate-slideDown shadow-2xl">
+      {/* Backdrop overlay for smooth mobile menu transition */}
+      <div
+        className={`lg:hidden fixed inset-0 top-[88px] sm:top-[96px] bg-black/65 backdrop-blur-[3px] z-40 transition-opacity duration-300 ease-in-out ${
+          mobileMenuOpen ? 'opacity-100 pointer-events-auto' : 'opacity-0 pointer-events-none'
+        }`}
+        onClick={() => setMobileMenuOpen(false)}
+      />
+
+      {/* Ultra Clean & Smooth Animated Mobile Drawer */}
+      <div
+        className={`lg:hidden bg-[#0a0f1d]/98 backdrop-blur-2xl border-b border-slate-800/90 shadow-[0_25px_60px_rgba(0,0,0,0.85)] transition-all duration-300 ease-in-out overflow-y-auto ${
+          mobileMenuOpen
+            ? 'max-h-[calc(100vh-88px)] opacity-100 translate-y-0 pointer-events-auto border-slate-800/90'
+            : 'max-h-0 opacity-0 -translate-y-2 pointer-events-none border-transparent'
+        }`}
+      >
+        <div className="px-4 pt-3 pb-28 space-y-3.5 max-w-md mx-auto">
           
-          {/* 1. VIP Gamer / Store Identity Card */}
-          <div className="p-3 rounded-2xl bg-gradient-to-r from-slate-900/90 via-[#111728] to-slate-900/90 border border-slate-800/90 flex items-center justify-between shadow-inner">
-            <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-xl bg-gradient-to-tr from-cyan-500 to-blue-600 p-0.5 shadow-glow-cyan shrink-0 flex items-center justify-center">
+          {/* 1. Sleek Brand & VIP Status Pill Banner */}
+          <div className="p-2.5 px-3 rounded-2xl bg-gradient-to-r from-slate-900/95 via-[#0e1628] to-slate-900/95 border border-slate-800/90 flex items-center justify-between shadow-inner">
+            <div className="flex items-center gap-2.5">
+              <div className="w-8 h-8 rounded-xl bg-gradient-to-tr from-cyan-500 to-blue-600 p-0.5 shadow-glow-cyan shrink-0 flex items-center justify-center">
                 {branding.logoType === 'image' && branding.logoImage ? (
                   <img src={branding.logoImage} alt="Logo" className="w-full h-full object-contain rounded-lg" />
                 ) : (
-                  <span className="text-base font-black text-slate-950">💎</span>
+                  <span className="text-sm">💎</span>
                 )}
               </div>
-              <div>
+              <div className="leading-tight">
                 <div className="flex items-center gap-1.5">
-                  <span className="text-white font-extrabold text-sm tracking-tight">{branding.brandName || 'Tin-TopUp'}</span>
-                  <span className="bg-gradient-to-r from-amber-400 to-yellow-400 text-slate-950 text-[9px] font-black px-1.5 py-0.2 rounded font-mono">VIP</span>
+                  <span className="text-white font-extrabold text-xs tracking-tight">{branding.brandName || 'Tin-TopUp'}</span>
+                  <span className="bg-gradient-to-r from-amber-400 to-yellow-400 text-slate-950 text-[8px] font-black px-1.5 py-0.2 rounded font-mono">VIP</span>
                 </div>
-                <div className="flex items-center gap-1.5 text-[11px] text-emerald-400 font-semibold">
+                <div className="flex items-center gap-1 text-[10px] text-emerald-400 font-semibold mt-0.5">
                   <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span>
                   <span>Instant KHQR Service Online</span>
                 </div>
               </div>
             </div>
-            <div className="text-right">
-              <span className="text-[10px] font-bold text-amber-400 bg-amber-950/60 border border-amber-500/30 px-2 py-0.5 rounded-lg">
-                ⚡ 10s Fast
-              </span>
-            </div>
+            <span className="text-[10px] font-bold text-amber-400 bg-amber-950/50 border border-amber-500/30 px-2 py-0.5 rounded-lg shrink-0">
+              ⚡ 10s Fast
+            </span>
           </div>
 
-          {/* 2. Glass Language Switcher */}
-          <div className="space-y-1.5">
-            <div className="flex items-center justify-between px-1">
-              <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider flex items-center gap-1">
-                <span>🌐</span>
-                <span>Language / ភាសា</span>
-              </span>
-              <span className="text-[10px] text-cyan-400 font-bold">{currentLang?.name}</span>
+          {/* 2. Sleek Segmented Capsule Language Selector */}
+          <div className="space-y-1">
+            <div className="flex items-center justify-between px-1 text-[10px] font-bold text-slate-400 uppercase tracking-wider">
+              <span className="flex items-center gap-1">🌐 Language / ភាសា</span>
+              <span className="text-cyan-400 font-bold">{currentLang?.name}</span>
             </div>
-            <div className="grid grid-cols-3 gap-1.5 p-1 bg-slate-950/80 rounded-xl border border-slate-800/80 shadow-inner">
+            <div className="grid grid-cols-3 gap-1 p-1 bg-slate-950/80 rounded-xl border border-slate-800/80 shadow-inner">
               {languages.map((l) => (
                 <button
                   key={l.code}
                   type="button"
                   onClick={() => setLanguage(l.code)}
-                  className={`py-2 px-2 rounded-lg text-xs font-bold flex items-center justify-center gap-1.5 transition-all cursor-pointer ${
+                  className={`py-1.5 px-2 rounded-lg text-xs font-bold flex items-center justify-center gap-1.5 transition-all cursor-pointer ${
                     language === l.code
-                      ? 'bg-gradient-to-r from-cyan-500 to-blue-600 text-slate-950 shadow-md font-black scale-[1.02]'
+                      ? 'bg-gradient-to-r from-cyan-500 to-blue-600 text-slate-950 shadow-md font-black scale-[1.01]'
                       : 'text-slate-400 hover:text-white hover:bg-slate-900/60'
                   }`}
                 >
@@ -340,135 +353,159 @@ const Navbar = () => {
             </div>
           </div>
 
-          {/* 3. Personalized Nav Link Cards */}
-          <div className="space-y-1.5">
+          {/* 3. Grouped Navigation Inset List (iOS / Fintech Style) */}
+          <div className="bg-[#0e1424]/90 backdrop-blur-xl rounded-2xl border border-slate-800/80 divide-y divide-slate-800/60 overflow-hidden shadow-lg">
+            
+            {/* Home */}
             <Link
               to="/"
               onClick={() => setMobileMenuOpen(false)}
-              className={`flex items-center justify-between p-3 rounded-xl border transition-all ${
-                isActive('/')
-                  ? 'bg-[#141d33] border-cyan-500/50 text-cyan-300 shadow-sm ring-1 ring-cyan-500/30'
-                  : 'bg-[#0f1422]/60 border-slate-800/80 text-slate-300 hover:bg-[#151c2e] hover:border-slate-700'
+              className={`flex items-center justify-between p-3 transition-colors ${
+                isActive('/') ? 'bg-cyan-500/10 text-cyan-300' : 'text-slate-200 hover:bg-slate-800/40'
               }`}
             >
               <div className="flex items-center gap-3">
-                <div className={`w-8 h-8 rounded-lg flex items-center justify-center text-base ${isActive('/') ? 'bg-cyan-500/20 text-cyan-400' : 'bg-slate-900 text-slate-400'}`}>
+                <div className={`w-8 h-8 rounded-xl flex items-center justify-center text-sm ${isActive('/') ? 'bg-cyan-500/20 text-cyan-400' : 'bg-slate-900 text-slate-400 border border-slate-800'}`}>
                   🏠
                 </div>
                 <div>
-                  <div className="font-bold text-sm text-white">{t('nav_home')}</div>
+                  <div className="font-bold text-xs sm:text-sm text-white">{t('nav_home')}</div>
                   <div className="text-[10px] text-slate-400">Official Game Store & Events</div>
                 </div>
               </div>
-              <span className="text-slate-500 text-xs font-bold">→</span>
+              <svg className="w-4 h-4 text-slate-500" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M9 5l7 7-7 7" /></svg>
             </Link>
 
+            {/* Top Up Diamonds */}
             <Link
               to="/topup"
               onClick={() => setMobileMenuOpen(false)}
-              className={`flex items-center justify-between p-3 rounded-xl border transition-all ${
-                isActive('/topup') && !window.location.search.includes('pass')
-                  ? 'bg-[#1c182d] border-amber-500/50 text-amber-300 shadow-sm ring-1 ring-amber-500/30'
-                  : 'bg-[#0f1422]/60 border-slate-800/80 text-slate-300 hover:bg-[#151c2e] hover:border-slate-700'
+              className={`flex items-center justify-between p-3 transition-colors ${
+                isActive('/topup') && !window.location.search.includes('pass') ? 'bg-amber-500/10 text-amber-300' : 'text-slate-200 hover:bg-slate-800/40'
               }`}
             >
               <div className="flex items-center gap-3">
-                <div className={`w-8 h-8 rounded-lg flex items-center justify-center text-base ${isActive('/topup') ? 'bg-amber-500/20 text-amber-400' : 'bg-slate-900 text-slate-400'}`}>
+                <div className={`w-8 h-8 rounded-xl flex items-center justify-center text-sm ${isActive('/topup') ? 'bg-amber-500/20 text-amber-400' : 'bg-slate-900 text-slate-400 border border-slate-800'}`}>
                   💎
                 </div>
                 <div>
-                  <div className="font-bold text-sm text-white">{t('nav_topup')}</div>
+                  <div className="font-bold text-xs sm:text-sm text-white">{t('nav_topup')}</div>
                   <div className="text-[10px] text-slate-400">Direct MLBB Diamonds & Packages</div>
                 </div>
               </div>
-              <span className="text-slate-500 text-xs font-bold">→</span>
+              <svg className="w-4 h-4 text-slate-500" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M9 5l7 7-7 7" /></svg>
             </Link>
 
+            {/* Weekly Diamond Pass */}
             <Link
               to="/topup?tab=pass"
               onClick={() => setMobileMenuOpen(false)}
-              className="flex items-center justify-between p-3 rounded-xl border bg-[#0f1422]/60 border-slate-800/80 text-slate-300 hover:bg-[#151c2e] hover:border-slate-700 transition-all"
+              className="flex items-center justify-between p-3 text-slate-200 hover:bg-slate-800/40 transition-colors"
             >
               <div className="flex items-center gap-3">
-                <div className="w-8 h-8 rounded-lg bg-cyan-950/60 text-cyan-400 flex items-center justify-center text-base">
+                <div className="w-8 h-8 rounded-xl bg-cyan-950/60 text-cyan-400 border border-cyan-800/40 flex items-center justify-center text-sm">
                   🔥
                 </div>
                 <div>
-                  <div className="font-bold text-sm text-white">Weekly Diamond Pass</div>
+                  <div className="font-bold text-xs sm:text-sm text-white">Weekly Diamond Pass</div>
                   <div className="text-[10px] text-cyan-400/80">Special Passes & Ticket Bundles</div>
                 </div>
               </div>
-              <span className="text-slate-500 text-xs font-bold">→</span>
+              <svg className="w-4 h-4 text-slate-500" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M9 5l7 7-7 7" /></svg>
             </Link>
 
+            {/* Help & FAQ */}
             <Link
               to="/support"
               onClick={() => setMobileMenuOpen(false)}
-              className={`flex items-center justify-between p-3 rounded-xl border transition-all ${
-                isActive('/support')
-                  ? 'bg-[#1b142d] border-purple-500/50 text-purple-300 shadow-sm ring-1 ring-purple-500/30'
-                  : 'bg-[#0f1422]/60 border-slate-800/80 text-slate-300 hover:bg-[#151c2e] hover:border-slate-700'
+              className={`flex items-center justify-between p-3 transition-colors ${
+                isActive('/support') ? 'bg-purple-500/10 text-purple-300' : 'text-slate-200 hover:bg-slate-800/40'
               }`}
             >
               <div className="flex items-center gap-3">
-                <div className={`w-8 h-8 rounded-lg flex items-center justify-center text-base ${isActive('/support') ? 'bg-purple-500/20 text-purple-400' : 'bg-slate-900 text-slate-400'}`}>
+                <div className={`w-8 h-8 rounded-xl flex items-center justify-center text-sm ${isActive('/support') ? 'bg-purple-500/20 text-purple-400' : 'bg-slate-900 text-slate-400 border border-slate-800'}`}>
                   🎧
                 </div>
                 <div>
-                  <div className="font-bold text-sm text-white">{t('nav_support')}</div>
+                  <div className="font-bold text-xs sm:text-sm text-white">{t('nav_support')}</div>
                   <div className="text-[10px] text-slate-400">Telegram & 24/7 Customer Care</div>
                 </div>
               </div>
-              <span className="text-slate-500 text-xs font-bold">→</span>
+              <svg className="w-4 h-4 text-slate-500" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M9 5l7 7-7 7" /></svg>
             </Link>
 
+            {/* Privacy & Terms */}
             <Link
               to="/privacy"
               onClick={() => setMobileMenuOpen(false)}
-              className={`flex items-center justify-between p-3 rounded-xl border transition-all ${
-                isActive('/privacy') || isActive('/terms')
-                  ? 'bg-[#122320] border-emerald-500/50 text-emerald-300 shadow-sm'
-                  : 'bg-[#0f1422]/60 border-slate-800/80 text-slate-300 hover:bg-[#151c2e] hover:border-slate-700'
+              className={`flex items-center justify-between p-3 transition-colors ${
+                isActive('/privacy') || isActive('/terms') ? 'bg-emerald-500/10 text-emerald-300' : 'text-slate-200 hover:bg-slate-800/40'
               }`}
             >
               <div className="flex items-center gap-3">
-                <div className="w-8 h-8 rounded-lg bg-emerald-950/60 text-emerald-400 flex items-center justify-center text-base">
+                <div className="w-8 h-8 rounded-xl bg-emerald-950/60 text-emerald-400 border border-emerald-800/40 flex items-center justify-center text-sm">
                   📜
                 </div>
                 <div>
-                  <div className="font-bold text-sm text-white">{t('nav_privacy')}</div>
+                  <div className="font-bold text-xs sm:text-sm text-white">{t('nav_privacy')}</div>
                   <div className="text-[10px] text-slate-400">100% Safe Official Guarantee</div>
                 </div>
               </div>
-              <span className="text-slate-500 text-xs font-bold">→</span>
+              <svg className="w-4 h-4 text-slate-500" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M9 5l7 7-7 7" /></svg>
             </Link>
 
+            {/* Admin (Only if Admin) */}
             {isAdmin() && (
               <Link
                 to="/admin"
                 onClick={() => setMobileMenuOpen(false)}
-                className="flex items-center justify-between p-3 rounded-xl border border-red-500/40 bg-red-500/10 text-red-300 hover:bg-red-500/20 transition-all"
+                className="flex items-center justify-between p-3 bg-red-950/20 text-red-300 hover:bg-red-950/40 transition-colors"
               >
                 <div className="flex items-center gap-3">
-                  <div className="w-8 h-8 rounded-lg bg-red-950 text-red-400 flex items-center justify-center text-base">
+                  <div className="w-8 h-8 rounded-xl bg-red-950 text-red-400 border border-red-800/50 flex items-center justify-center text-sm">
                     ⚙️
                   </div>
                   <div>
-                    <div className="font-bold text-sm text-white">{t('nav_admin')}</div>
+                    <div className="font-bold text-xs sm:text-sm text-white">{t('nav_admin')}</div>
                     <div className="text-[10px] text-red-400/80">Store & Product Management</div>
                   </div>
                 </div>
-                <span className="text-red-400 text-xs font-bold">→</span>
+                <svg className="w-4 h-4 text-red-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M9 5l7 7-7 7" /></svg>
               </Link>
+            )}
+
+            {/* Logout (if authenticated) */}
+            {isAuthenticated() && (
+              <button
+                type="button"
+                onClick={() => {
+                  logout();
+                  setMobileMenuOpen(false);
+                }}
+                className="w-full flex items-center justify-between p-3 text-red-400 hover:bg-red-950/30 transition-colors text-left"
+              >
+                <div className="flex items-center gap-3">
+                  <div className="w-8 h-8 rounded-xl bg-red-950/40 text-red-400 border border-red-800/40 flex items-center justify-center text-sm">
+                    <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+                    </svg>
+                  </div>
+                  <div>
+                    <div className="font-bold text-xs sm:text-sm">Logout ({user?.name || 'Account'})</div>
+                    <div className="text-[10px] text-slate-500">Sign out of current session</div>
+                  </div>
+                </div>
+                <span className="text-xs text-red-400 font-bold">Exit</span>
+              </button>
             )}
           </div>
 
           {/* 4. Instant Top-Up Main Action & Telegram Support */}
-          <div className="pt-2 space-y-2">
+          <div className="pt-1 space-y-2">
             <Link
               to="/topup"
               onClick={() => setMobileMenuOpen(false)}
-              className="btn btn-gold w-full text-center font-black py-3.5 rounded-2xl transition-all uppercase tracking-wider text-xs sm:text-sm flex items-center justify-center gap-2 group font-khmer cursor-pointer"
+              className="w-full h-11 rounded-full bg-gradient-to-r from-amber-400 via-amber-500 to-yellow-400 hover:from-amber-300 hover:to-yellow-300 text-slate-950 text-xs sm:text-sm font-black tracking-wide flex items-center justify-center gap-2 shadow-[0_4px_25px_rgba(251,191,36,0.35)] active:scale-98 transition-all font-khmer cursor-pointer"
             >
               <svg 
                 className="w-4 h-4 shrink-0 text-slate-950 fill-current drop-shadow-[0_1px_0_rgba(255,255,255,0.4)] transition-transform duration-200 group-hover:scale-125 group-hover:rotate-6" 
@@ -483,14 +520,14 @@ const Navbar = () => {
               href="https://t.me/Peak_Deth"
               target="_blank"
               rel="noreferrer"
-              className="w-full py-2.5 px-4 rounded-xl bg-[#121c2d] hover:bg-[#1a2840] border border-sky-500/40 text-sky-300 text-xs font-bold flex items-center justify-center gap-2 transition-all active:scale-95 shadow-sm"
+              className="w-full h-9 rounded-full bg-[#121c2d] hover:bg-[#1a2840] border border-sky-500/30 text-sky-300 text-xs font-bold flex items-center justify-center gap-2 transition-all active:scale-98 shadow-sm"
             >
-              <span>✈️</span>
+              <svg className="w-3.5 h-3.5 fill-current" viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm4.64 6.8c-.15 1.58-.8 5.42-1.13 7.19-.14.75-.42 1-.68 1.03-.58.05-1.02-.38-1.58-.75-.88-.58-1.38-.94-2.23-1.5-.99-.65-.35-1.01.22-1.59.15-.15 2.71-2.48 2.76-2.69a.2.2 0 00-.05-.18c-.06-.05-.14-.03-.21-.02-.09.02-1.49.95-4.22 2.79-.4.27-.76.41-1.08.4-.36-.01-1.04-.2-1.55-.37-.63-.2-1.12-.31-1.08-.66.02-.18.27-.36.74-.55 2.92-1.27 4.86-2.11 5.83-2.51 2.78-1.16 3.35-1.36 3.73-1.36.08 0 .27.02.39.12.1.08.13.19.14.27-.01.06.01.24 0 .38z"/></svg>
               <span>Telegram 24/7: @Peak_Deth</span>
             </a>
           </div>
         </div>
-      )}
+      </div>
         </>
       )}
     </header>
