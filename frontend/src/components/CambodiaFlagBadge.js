@@ -221,7 +221,9 @@ export const CambodiaFlagFrame = ({
   flagImage = null,
   isFullBadgePng = false,
   badgeStyle = "gold_cyber", // 'gold_cyber' | 'cyber_pill' | 'esports_shield'
-  className = ""
+  className = "",
+  style = {},
+  width = null
 }) => {
   // Sanitize title: strip emoji flag regional indicators (e.g. 🇵🇭 which render as letters PH) and collapse duplicates
   const sanitizedTitle = (title || '')
@@ -248,7 +250,7 @@ export const CambodiaFlagFrame = ({
     return (
       <div
         className={`relative inline-flex items-center gap-1.5 px-2 py-0.5 sm:py-1 rounded-full bg-slate-950/90 border border-amber-400/80 backdrop-blur-md select-none transition-transform duration-300 hover:scale-[1.03] ${className}`}
-        style={{ maxWidth: '175px' }}
+        style={{ maxWidth: '175px', ...style }}
       >
         {/* Left Flag Orb */}
         <div className="w-4 h-4 sm:w-5 sm:h-5 rounded-full ring-1 ring-amber-300 shrink-0 overflow-hidden flex items-center justify-center">
@@ -277,6 +279,7 @@ export const CambodiaFlagFrame = ({
     return (
       <div
         className={`relative inline-flex items-center gap-1.5 p-1 pr-2 rounded-xl bg-gradient-to-r from-[#10192e] via-[#0b1222] to-[#121c33] border border-amber-400/90 select-none transition-transform duration-300 hover:scale-[1.03] ${className}`}
+        style={{ ...style }}
       >
         {/* Shield Hex / Circle Medallion */}
         <div className="w-5 h-5 sm:w-6 sm:h-6 rounded-full ring-1.5 ring-amber-400/80 overflow-hidden shrink-0 flex items-center justify-center bg-slate-900">
@@ -310,8 +313,9 @@ export const CambodiaFlagFrame = ({
     <div
       className={`relative inline-block select-none transition-transform duration-300 hover:scale-[1.03] ${className}`}
       style={{
-        width: 'clamp(105px, 14vw, 150px)',
-        aspectRatio: '1024 / 397'
+        width: width || 'clamp(105px, 14vw, 150px)',
+        aspectRatio: '1024 / 397',
+        ...style
       }}
     >
       {/* 1. Dynamic Country Flag Medallion inside the circular bezel */}
