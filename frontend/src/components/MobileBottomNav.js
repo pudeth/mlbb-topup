@@ -1,14 +1,10 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { useLanguage } from '../context/LanguageContext';
-import { useStoreBranding } from '../services/storeBranding';
-import { useAuth } from '../context/AuthContext';
 
 const MobileBottomNav = () => {
   const location = useLocation();
   const { t } = useLanguage();
-  const { branding } = useStoreBranding();
-  const { isAdmin } = useAuth();
 
   const [isVisible, setIsVisible] = useState(true);
   const lastScrollYRef = useRef(0);
@@ -42,22 +38,20 @@ const MobileBottomNav = () => {
   }, []);
 
   const pathname = location.pathname;
-  const search = location.search;
-
-  const isHome = pathname === '/';
+  const isHome = pathname === '/' && !location.hash;
+  const isAllGames = pathname === '/' && location.hash === '#games-section';
   const isTopUp = pathname === '/topup';
-  const isSupport = pathname === '/support';
 
   return (
     <div
-      className={`mobile-bottom-nav lg:hidden fixed bottom-3 sm:bottom-4 left-1/2 -translate-x-1/2 z-50 w-[94%] max-w-[420px] transition-all duration-300 ease-out select-none ${
+      className={`mobile-bottom-nav lg:hidden fixed bottom-3 sm:bottom-4 left-1/2 -translate-x-1/2 z-50 w-[75%] max-w-[280px] transition-all duration-300 ease-out select-none ${
         isVisible
           ? 'translate-y-0 opacity-100 pointer-events-auto'
           : 'translate-y-24 opacity-0 pointer-events-none'
       }`}
     >
-      {/* Floating Dark Pill Dock matching reference image */}
-      <nav className="bg-[#181a20]/95 backdrop-blur-2xl border border-slate-700/60 rounded-full px-3 py-2 flex items-center justify-between shadow-[0_10px_35px_rgba(0,0,0,0.8)] ring-1 ring-white/10">
+      {/* Floating Dark Pill Dock - Only 3 Buttons: Home, All Games, Top Up */}
+      <nav className="bg-[#141824]/95 backdrop-blur-2xl border border-slate-700/60 rounded-full px-3 py-1.5 flex items-center justify-around shadow-[0_10px_35px_rgba(0,0,0,0.85)] ring-1 ring-white/10">
         
         {/* 1. Home Tab */}
         <Link
@@ -68,7 +62,7 @@ const MobileBottomNav = () => {
               ? 'w-11 h-11 rounded-full bg-gradient-to-tr from-amber-400 to-yellow-300 text-slate-950 shadow-glow-gold scale-105'
               : 'w-10 h-10 rounded-full text-slate-400 hover:text-white hover:bg-slate-800/60 active:scale-90'
           }`}
-          title={t('nav_home')}
+          title={t('nav_home') || 'Home'}
           aria-label="Home"
         >
           <svg className="w-5 h-5 fill-current" viewBox="0 0 24 24">
@@ -76,23 +70,27 @@ const MobileBottomNav = () => {
           </svg>
         </Link>
 
-        {/* 3. Community / All Games Tab */}
+        {/* 2. All Games Tab */}
         <Link
           to="/#games-section"
           onClick={() => {
             const el = document.getElementById('games-section');
             if (el) el.scrollIntoView({ behavior: 'smooth' });
           }}
-          className="w-10 h-10 rounded-full text-slate-400 hover:text-white hover:bg-slate-800/60 active:scale-90 flex items-center justify-center transition-all"
-          title="All Games Catalog"
-          aria-label="Games"
+          className={`relative flex items-center justify-center transition-all duration-200 ${
+            isAllGames
+              ? 'w-11 h-11 rounded-full bg-gradient-to-tr from-cyan-400 to-blue-500 text-slate-950 shadow-glow-cyan scale-105'
+              : 'w-10 h-10 rounded-full text-slate-400 hover:text-white hover:bg-slate-800/60 active:scale-90'
+          }`}
+          title="All Games"
+          aria-label="All Games"
         >
           <svg className="w-5 h-5 fill-current" viewBox="0 0 24 24">
-            <path d="M16 11c1.66 0 2.99-1.34 2.99-3S17.66 5 16 5c-1.66 0-3 1.34-3 3s1.34 3 3 3zm-8 0c1.66 0 2.99-1.34 2.99-3S9.66 5 8 5C6.34 5 5 6.34 5 8s1.34 3 3 3zm0 2c-2.33 0-7 1.17-7 3.5V19h14v-2.5c0-2.33-4.67-3.5-7-3.5zm8 0c-.29 0-.62.02-.97.05 1.16.84 1.97 1.97 1.97 3.45V19h6v-2.5c0-2.33-4.67-3.5-7-3.5z" />
+            <path d="M21 6H3c-1.1 0-2 .9-2 2v8c0 1.1.9 2 2 2h18c1.1 0 2-.9 2-2V8c0-1.1-.9-2-2-2zm-10 7H8v3H6v-3H3v-2h3V8h2v3h3v2zm4.5 2c-.83 0-1.5-.67-1.5-1.5s.67-1.5 1.5-1.5 1.5.67 1.5 1.5-.67 1.5-1.5 1.5zm4-3c-.83 0-1.5-.67-1.5-1.5S18.67 9 19.5 9s1.5.67 1.5 1.5-.67 1.5-1.5 1.5z" />
           </svg>
         </Link>
 
-        {/* 4. Store / Top-Up Diamonds Tab */}
+        {/* 3. Top Up Diamonds Tab */}
         <Link
           to="/topup"
           onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
@@ -101,70 +99,13 @@ const MobileBottomNav = () => {
               ? 'w-11 h-11 rounded-full bg-gradient-to-tr from-amber-400 to-yellow-300 text-slate-950 shadow-glow-gold scale-105'
               : 'w-10 h-10 rounded-full text-slate-400 hover:text-white hover:bg-slate-800/60 active:scale-90'
           }`}
-          title={t('nav_topup')}
-          aria-label="Shop"
+          title={t('nav_topup') || 'Top Up'}
+          aria-label="Top Up"
         >
           <svg className="w-5 h-5 fill-current" viewBox="0 0 24 24">
-            <path d="M20 4H4v2h16V4zm1 10v-2l-1-5H4l-1 5v2h1v6h10v-6h4v6h2v-6h1zm-9 4H6v-4h6v4z" />
+            <path d="M12 2L2 9l10 13 10-13-10-7zm0 3.2L18.4 9 12 18.2 5.6 9 12 5.2z" />
           </svg>
         </Link>
-
-        {/* 5. Support / Notification Bell Tab */}
-        <Link
-          to="/support"
-          onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
-          className={`relative flex items-center justify-center transition-all duration-200 ${
-            isSupport
-              ? 'w-11 h-11 rounded-full bg-gradient-to-tr from-purple-500 to-indigo-600 text-white shadow-glow-purple scale-105'
-              : 'w-10 h-10 rounded-full text-slate-400 hover:text-white hover:bg-slate-800/60 active:scale-90'
-          }`}
-          title={t('nav_support')}
-          aria-label="Support"
-        >
-          <svg className="w-5 h-5 fill-current" viewBox="0 0 24 24">
-            <path d="M12 22c1.1 0 2-.9 2-2h-4c0 1.1.9 2 2 2zm6-6v-5c0-3.07-1.63-5.64-4.5-6.32V4c0-.83-.67-1.5-1.5-1.5s-1.5.67-1.5 1.5v.68C7.64 5.36 6 7.92 6 11v5l-2 2v1h16v-1l-2-2z" />
-          </svg>
-        </Link>
-
-        {/* Admin Tab (When Admin) */}
-        {isAdmin() && (
-          <Link
-            to="/admin"
-            className={`relative flex items-center justify-center transition-all duration-200 ${
-              pathname.startsWith('/admin')
-                ? 'w-11 h-11 rounded-full bg-gradient-to-tr from-red-600 to-rose-500 text-white shadow-glow-red scale-105'
-                : 'w-10 h-10 rounded-full text-red-400 hover:text-white hover:bg-red-950/60 active:scale-90'
-            }`}
-            title={t('nav_admin')}
-            aria-label="Admin"
-          >
-            <span className="text-base leading-none">⚙️</span>
-          </Link>
-        )}
-
-        {/* 6. Profile Avatar with Blue Ring Border matching image */}
-        <a
-          href="https://t.me/Peak_Deth"
-          target="_blank"
-          rel="noreferrer"
-          className="relative group p-0.5 active:scale-90 transition-transform"
-          title="Direct Telegram Profile: @Peak_Deth"
-          aria-label="Profile"
-        >
-          <div className="w-9 h-9 rounded-full ring-2 ring-amber-400 ring-offset-2 ring-offset-[#181a20] overflow-hidden bg-slate-900 shadow-md flex items-center justify-center">
-            <img
-              src={branding.logoImage || '/tin-logo.png'}
-              alt="Profile"
-              className="w-full h-full object-cover"
-              onError={(e) => {
-                e.target.onerror = null;
-                e.target.src = '/tin-logo.png';
-              }}
-            />
-          </div>
-          {/* Online green dot */}
-          <span className="absolute bottom-0 right-0 w-2.5 h-2.5 bg-emerald-400 border-2 border-[#181a20] rounded-full"></span>
-        </a>
       </nav>
     </div>
   );
