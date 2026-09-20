@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback, useRef } from 'react';
+import React, { useState, useEffect, useCallback, useRef, useTransition } from 'react';
 import { useSearchParams, useNavigate, Link } from 'react-router-dom';
 import { QRCodeSVG } from 'qrcode.react';
 import { useLanguage } from '../context/LanguageContext';
@@ -208,11 +208,16 @@ const TopUp = () => {
   const [autoDetectedMessage, setAutoDetectedMessage] = useState('');
   const [showIdGuide, setShowIdGuide] = useState(false);
 
+  const selectedGameIdRef = useRef(selectedGame.id);
+  useEffect(() => {
+    selectedGameIdRef.current = selectedGame.id;
+  }, [selectedGame.id]);
+
   useEffect(() => {
     const handleStatusSync = () => {
       setMasterStatus(getMasterTopupStatus());
       const updatedAll = getStoredGames();
-      const updatedMatched = updatedAll.find(g => g.id === rawGameParam || g.id.startsWith(rawGameParam)) || updatedAll[0];
+      const updatedMatched = updatedAll.find(g => g.id === selectedGameIdRef.current) || updatedAll[0];
       if (updatedMatched) setSelectedGame(updatedMatched);
     };
 
@@ -224,7 +229,7 @@ const TopUp = () => {
         ]);
         if (cloudStatus) setMasterStatus(cloudStatus);
         if (cloudGames && Array.isArray(cloudGames)) {
-          const updatedMatched = cloudGames.find(g => g.id === rawGameParam || g.id.startsWith(rawGameParam)) || cloudGames[0];
+          const updatedMatched = cloudGames.find(g => g.id === selectedGameIdRef.current) || cloudGames[0];
           if (updatedMatched) setSelectedGame(updatedMatched);
         }
       } catch (err) {}
@@ -233,8 +238,8 @@ const TopUp = () => {
     // Immediate initial sync
     syncCloudData();
 
-    // 2.5s Real-Time Background polling across all mobile devices
-    const interval = setInterval(syncCloudData, 2500);
+    // 5s Real-Time Background polling across all mobile devices
+    const interval = setInterval(syncCloudData, 5000);
 
     const handleVisibility = () => {
       if (document.visibilityState === 'visible') {
@@ -253,7 +258,7 @@ const TopUp = () => {
       window.removeEventListener('gamesConfigUpdated', handleStatusSync);
       window.removeEventListener('masterTopupStatusUpdated', handleStatusSync);
     };
-  }, [rawGameParam]);
+  }, []);
 
   const isMasterPaused = masterStatus?.status && masterStatus.status !== 'Active';
   const isGamePaused = selectedGame?.status && selectedGame.status !== 'Active';
@@ -491,43 +496,66 @@ const TopUp = () => {
     return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
   };
 
-  // Sync game from URL
-  useEffect(() => {
-    const gameObj = allGames.find(g => g.id === rawGameParam || g.id.startsWith(rawGameParam)) || allGames[0];
-    if (gameObj) {
-      setSelectedGame(gameObj);
-      const newPkgs = getPackagesForGame(gameObj.id);
+  const [, startTransition] = useTransition();
+
+  // Unified smooth game selection
+  const handleSelectGame = useCallback((game, e = null) => {
+    if (!game || game.id === selectedGame.id) return;
+
+    // Smoothly center the clicked element immediately
+    if (e?.currentTarget) {
+      e.currentTarget.scrollIntoView({
+        behavior: 'smooth',
+        inline: 'center',
+        block: 'nearest'
+      });
+    }
+
+    // Update URL query parameter cleanly without reload
+    setSearchParams({ game: game.id }, { replace: true });
+
+    const newPkgs = getPackagesForGame(game.id);
+
+    // Non-blocking transition for smooth 60fps UI
+    startTransition(() => {
+      setSelectedGame(game);
       setProducts(newPkgs);
       setSelectedProduct(newPkgs[0]);
       setFormData(prev => ({
         ...prev,
+        playerID: '',
+        serverID: game.id.startsWith('mlbb') ? '' : 'Global',
         productId: newPkgs[0]?.productId || 100,
-        serverID: gameObj.id.startsWith('mlbb') ? '' : (prev.serverID || 'Global')
+        paymentMethod: 'abapayway'
       }));
+      setVerifiedAccount(null);
+      setPaymentData(null);
+      setOrderId(null);
+      setPaymentPaid(false);
+      setAwaitingBalance(false);
+      setConfirmSent(false);
+    });
+  }, [selectedGame.id, getPackagesForGame, setSearchParams]);
+
+  // Sync game from URL (only if changed externally e.g. browser back/forward or direct link)
+  useEffect(() => {
+    if (!rawGameParam) return;
+    const gameObj = allGames.find(g => g.id === rawGameParam || g.id.startsWith(rawGameParam));
+    if (gameObj && gameObj.id !== selectedGame.id) {
+      const newPkgs = getPackagesForGame(gameObj.id);
+      startTransition(() => {
+        setSelectedGame(gameObj);
+        setProducts(newPkgs);
+        setSelectedProduct(newPkgs[0]);
+        setFormData(prev => ({
+          ...prev,
+          productId: newPkgs[0]?.productId || 100,
+          serverID: gameObj.id.startsWith('mlbb') ? '' : (prev.serverID || 'Global')
+        }));
+      });
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [rawGameParam]);
-
-  // Handle Game Switcher Click
-  const handleSelectGame = (game) => {
-    setSelectedGame(game);
-    setSearchParams({ game: game.id });
-    const newPkgs = getPackagesForGame(game.id);
-    setProducts(newPkgs);
-    setSelectedProduct(newPkgs[0]);
-    setFormData({
-      playerID: '',
-      serverID: game.id.startsWith('mlbb') ? '' : 'Global',
-      productId: newPkgs[0]?.productId || 100,
-      paymentMethod: 'abapayway'
-    });
-    setVerifiedAccount(null);
-    setPaymentData(null);
-    setOrderId(null);
-    setPaymentPaid(false);
-    setAwaitingBalance(false);
-    setConfirmSent(false);
-  };
 
   const handlePlayerIdChange = (e) => {
     const rawVal = e.target.value;
@@ -1046,20 +1074,34 @@ const TopUp = () => {
             </span>
           </div>
   
-          <div className="flex items-center gap-3 overflow-x-auto pb-2 pt-1 scrollbar-none">
+          {/* Smooth Touch Carousel with Momentum & Auto-Centering */}
+          <div
+            className="flex items-center gap-2.5 sm:gap-3 overflow-x-auto pb-2.5 pt-1 px-1 scroll-smooth overscroll-x-contain touch-pan-x scrollbar-none select-none"
+            style={{ WebkitOverflowScrolling: 'touch' }}
+          >
             {allGames.map((game) => {
               const isSelected = selectedGame.id === game.id;
               return (
                 <button
                   key={game.id}
-                  onClick={() => handleSelectGame(game)}
-                  className={`flex items-center gap-2.5 p-1.5 pr-4 rounded-full border transition-all duration-300 shrink-0 select-none cursor-pointer ${
+                  ref={isSelected ? (el) => {
+                    if (el) {
+                      el.scrollIntoView({ behavior: 'smooth', inline: 'center', block: 'nearest' });
+                    }
+                  } : null}
+                  type="button"
+                  onClick={(e) => handleSelectGame(game, e)}
+                  className={`flex items-center gap-2.5 p-1.5 pr-4 rounded-full border transition-all duration-200 shrink-0 cursor-pointer active:scale-95 ${
                     isSelected
-                      ? 'bg-[#181335]/80 border-purple-500/60 text-white shadow-[0_0_15px_rgba(109,40,217,0.2)] scale-[1.02]'
-                      : 'bg-slate-900/40 border-slate-800/60 text-slate-400 hover:bg-slate-800/60 hover:text-slate-200 hover:border-slate-700/80'
+                      ? 'bg-gradient-to-r from-[#291b52] via-[#1d143c] to-[#130d29] border-purple-400/90 text-white shadow-[0_0_22px_rgba(168,85,247,0.35),inset_0_1px_0_rgba(255,255,255,0.2)] scale-[1.02]'
+                      : 'bg-[#0f1424]/80 border-slate-800/80 text-slate-300 hover:bg-[#161d33] hover:border-slate-700/90 hover:text-white'
                   }`}
                 >
-                  <div className={`w-9 h-9 rounded-full overflow-hidden shrink-0 transition-transform duration-300 ${isSelected ? 'shadow-md border border-purple-500/40 scale-105' : 'border border-slate-700/40'}`}>
+                  <div className={`relative w-9 h-9 rounded-full overflow-hidden shrink-0 transition-transform duration-200 ${
+                    isSelected
+                      ? 'ring-2 ring-purple-400 shadow-[0_0_12px_rgba(168,85,247,0.6)] scale-105'
+                      : 'border border-slate-700/60'
+                  }`}>
                     <img
                       src={game.image}
                       alt={game.name}
@@ -1069,12 +1111,24 @@ const TopUp = () => {
                       }}
                       className="w-full h-full object-cover"
                     />
+                    {isSelected && (
+                      <div className="absolute inset-0 bg-gradient-to-tr from-purple-500/25 via-transparent to-white/20 pointer-events-none" />
+                    )}
                   </div>
                   <div className="text-left">
-                    <span className={`text-[11px] font-black block truncate max-w-[130px] sm:max-w-[160px] uppercase tracking-wide transition-colors ${isSelected ? 'text-white' : 'text-slate-300'}`}>
-                      {game.name}
-                    </span>
-                    <span className={`text-[9px] block uppercase font-bold tracking-widest ${isSelected ? 'text-purple-300/80' : 'text-slate-500'}`}>
+                    <div className="flex items-center gap-1.5">
+                      <span className={`text-[11px] font-black block truncate max-w-[125px] sm:max-w-[155px] uppercase tracking-wide transition-colors ${
+                        isSelected ? 'text-white drop-shadow-sm' : 'text-slate-200'
+                      }`}>
+                        {game.name}
+                      </span>
+                      {isSelected && (
+                        <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 shadow-[0_0_8px_rgba(52,211,153,0.9)] animate-pulse shrink-0" />
+                      )}
+                    </div>
+                    <span className={`text-[9px] block uppercase font-bold tracking-widest ${
+                      isSelected ? 'text-purple-300' : 'text-slate-400'
+                    }`}>
                       {game.currency}
                     </span>
                   </div>
