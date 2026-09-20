@@ -82,7 +82,7 @@ Go to our website and click **"Mobile Legends"** from the game catalog.
 Paste your Player ID in the input field. Our system will verify your in-game username automatically.
 
 **Step 4 — Choose a Diamond Package** 🛒
-Pick your preferred package (e.g. 55 Diamonds \$0.95, or Weekly Diamond Pass \$1.55).
+Pick your preferred package (e.g. 55 Diamonds $0.95, or Weekly Diamond Pass $1.55).
 
 **Step 5 — Choose Payment Method** 🏦
 Select **ABA PayWay** or **Bakong KHQR** and tap **"Proceed to Payment"**.
@@ -175,7 +175,7 @@ Within **10–30 seconds**, your diamonds will appear in your **MLBB in-game mai
 បិទភ្ជាប់ Player ID ក្នុងប្រអប់ = ប្រព័ន្ធនឹងផ្ទៀងផ្ទាត់ ឈ្មោះក្នុងហ្គេមស្វ័យប្រវត្តិ។
 
 **ជំហានទី ៤ — ជ្រើសរើសកញ្ចប់ពេជ្រ** 🛒
-ជ្រើសកញ្ចប់ដែលអ្នកចង់បាន (ឧ. 55 ពេជ្រ \$0.95 ឬ Weekly Diamond Pass \$1.55)។
+ជ្រើសកញ្ចប់ដែលអ្នកចង់បាន (ឧ. 55 ពេជ្រ $0.95 ឬ Weekly Diamond Pass $1.55)។
 
 **ជំហានទី ៥ — ជ្រើសវិធីទូទាត់** 🏦
 ជ្រើស **ABA PayWay** ឬ **Bakong KHQR** រួចចុច **"ទូទាត់"**។
@@ -268,7 +268,7 @@ Within **10–30 seconds**, your diamonds will appear in your **MLBB in-game mai
 将 Player ID 粘贴到输入框，系统将自动验证您的游戏昵称。
 
 **第 4 步 — 选择钻石套餐** 🛒
-选择您需要的套餐（如 55 钻石 \$0.95，或每周钻石通行证 \$1.55）。
+选择您需要的套餐（如 55 钻石 $0.95，或每周钻石通行证 $1.55）。
 
 **第 5 步 — 选择付款方式** 🏦
 选择 **ABA PayWay** 或 **Bakong KHQR** 扫码支付，点击 **"去支付"**。
