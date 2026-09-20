@@ -248,6 +248,15 @@ export const translations = {
     tab_diamond_pkgs: "Diamond",
     checkout_selected_total: "Selected Item & Total",
     checkout_click_hint: "Click any item to select and proceed to instant checkout.",
+
+    // Status Notice Banners
+    status_notice_badge: "System Notice",
+    status_paused_title: "Top-Up Temporarily Paused",
+    status_paused_desc: "Top-up orders for {game} are temporarily paused for routine maintenance. We will be back online shortly.",
+    status_closed_title: "Top-Up Temporarily Closed",
+    status_closed_desc: "Top-up orders for {game} are currently closed. Please check back later.",
+    status_master_paused_title: "System Maintenance in Progress",
+    status_master_paused_desc: "All top-up services are temporarily paused for scheduled maintenance.",
   },
 
   km: {
@@ -497,6 +506,15 @@ export const translations = {
     tab_diamond_pkgs: "ពេជ្រ",
     checkout_selected_total: "ទំនិញដែលបានជ្រើសរើស និងសរុប",
     checkout_click_hint: "ចុចលើកញ្ចប់ណាមួយដើម្បីជ្រើសរើស និងបន្តការទូទាត់ភ្លាមៗ។",
+
+    // Status Notice Banners
+    status_notice_badge: "ដំណឹងប្រព័ន្ធ",
+    status_paused_title: "ផ្អាកការបញ្ចូលទឹកប្រាក់បណ្តោះអាសន្ន",
+    status_paused_desc: "ការបញ្ចូលទឹកប្រាក់សម្រាប់ {game} ត្រូវបានផ្អាកជាបណ្តោះអាសន្នដើម្បីថែទាំប្រព័ន្ធ។ យើងនឹងបើកដំណើរការឡើងវិញក្នុងពេលឆាប់ៗនេះ។",
+    status_closed_title: "បិទការបញ្ចូលទឹកប្រាក់បណ្តោះអាសន្ន",
+    status_closed_desc: "ការបញ្ចូលទឹកប្រាក់សម្រាប់ {game} ត្រូវបានបិទជាបណ្តោះអាសន្ន។ សូមត្រឡប់មកពិនិត្យឡើងវិញនៅពេលក្រោយ។",
+    status_master_paused_title: "កំពុងដំណើរការថែទាំប្រព័ន្ធ",
+    status_master_paused_desc: "រាល់សេវាបញ្ចូលទឹកប្រាក់ទាំងអស់ត្រូវបានផ្អាកជាបណ្តោះអាសន្នដើម្បីថែទាំប្រព័ន្ធ។",
   },
 
   zh: {
@@ -746,6 +764,15 @@ export const translations = {
     tab_diamond_pkgs: "钻石",
     checkout_selected_total: "已选商品与总计",
     checkout_click_hint: "点击任意套餐以选择并进入快速结账。",
+
+    // Status Notice Banners
+    status_notice_badge: "系统公告",
+    status_paused_title: "充值服务暂时暂停",
+    status_paused_desc: "{game} 的充值通道正在进行系统维护，即将恢复正常服务，请稍候。",
+    status_closed_title: "充值服务暂时关闭",
+    status_closed_desc: "{game} 的充值服务目前已关闭，请稍后重新查看。",
+    status_master_paused_title: "系统正在维护中",
+    status_master_paused_desc: "所有充值服务正在进行定期维护，暂时暂停。",
   }
 };
 

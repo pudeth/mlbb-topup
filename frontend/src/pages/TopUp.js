@@ -263,9 +263,20 @@ const TopUp = () => {
   const isMasterPaused = masterStatus?.status && masterStatus.status !== 'Active';
   const isGamePaused = selectedGame?.status && selectedGame.status !== 'Active';
   const isTopupDisabled = isMasterPaused || isGamePaused;
-  const pauseReasonMessage = isMasterPaused 
-    ? (masterStatus.notice || 'Top-Ups are temporarily paused by Admin for system maintenance.')
-    : (selectedGame?.status === 'Closed' ? `Top-Up orders for ${selectedGame.name} are currently closed.` : `Top-Up orders for ${selectedGame.name} are temporarily paused by Admin for maintenance.`);
+  const isClosed = masterStatus?.status === 'Closed' || selectedGame?.status === 'Closed';
+
+  const noticeTitle = isMasterPaused
+    ? t('status_master_paused_title')
+    : isClosed
+    ? t('status_closed_title')
+    : t('status_paused_title');
+
+  const noticeDesc = isMasterPaused
+    ? (masterStatus?.notice || t('status_master_paused_desc'))
+    : isClosed
+    ? (selectedGame?.notice || t('status_closed_desc').replace('{game}', selectedGame?.name || 'this game'))
+    : (selectedGame?.notice || t('status_paused_desc').replace('{game}', selectedGame?.name || 'this game'));
+  const pauseReasonMessage = noticeDesc;
 
     // Determine active packages merged with Admin Customer Retail Prices
   const getPackagesForGame = useCallback((gameId) => {
@@ -1138,19 +1149,88 @@ const TopUp = () => {
           </div>
         </div>
 
-      {/* Top-Up Paused / Closed Maintenance Notice Banner */}
+      {/* Top-Up Paused / Closed Maintenance Notice Banner (Classic Fintech & Multilingual) */}
       {isTopupDisabled && (
-        <div className="mb-6 p-4 sm:p-5 rounded-3xl bg-amber-500/10 border border-amber-500/40 flex items-center gap-3.5 text-amber-300 shadow-xl animate-pulse">
-          <span className="text-2xl sm:text-3xl shrink-0">
-            {(masterStatus?.status === 'Closed' || selectedGame?.status === 'Closed') ? '🔴' : '⏸️'}
-          </span>
-          <div>
-            <h3 className="font-black text-sm sm:text-base uppercase tracking-wider">
-              {(masterStatus?.status === 'Closed' || selectedGame?.status === 'Closed') ? 'Top-Up Temporarily Closed' : 'Top-Up Temporarily Paused by Admin'}
-            </h3>
-            <p className="text-xs text-slate-200 mt-0.5 font-medium">
-              {pauseReasonMessage}
-            </p>
+        <div className={`relative overflow-hidden rounded-[22px] p-4 sm:p-5 mb-6 border backdrop-blur-xl shadow-2xl transition-all duration-300 select-none ${
+          isClosed
+            ? 'bg-gradient-to-r from-[#200d14]/95 via-[#180a0f]/95 to-[#0e0508]/98 border-rose-500/35 shadow-[0_10px_35px_rgba(0,0,0,0.6),0_0_20px_rgba(244,63,94,0.12)]'
+            : 'bg-gradient-to-r from-[#1f1608]/95 via-[#171106]/95 to-[#0f0b04]/98 border-amber-500/35 shadow-[0_10px_35px_rgba(0,0,0,0.6),0_0_20px_rgba(245,158,11,0.12)]'
+        }`}>
+          {/* Top Specular Sheen Line */}
+          <div className={`absolute top-0 inset-x-8 h-[1px] bg-gradient-to-r from-transparent ${
+            isClosed ? 'via-rose-400/50' : 'via-amber-400/50'
+          } to-transparent pointer-events-none`} />
+
+          {/* Background Ambient Glow */}
+          <div className={`absolute -right-10 -top-10 w-40 h-40 rounded-full blur-3xl pointer-events-none ${
+            isClosed ? 'bg-rose-500/10' : 'bg-amber-500/10'
+          }`} />
+
+          <div className="relative z-10 flex items-start sm:items-center gap-3.5 sm:gap-4">
+            {/* 3D Glass Icon Medallion */}
+            <div className={`relative w-11 h-11 sm:w-12 sm:h-12 rounded-2xl flex items-center justify-center shrink-0 border shadow-lg ${
+              isClosed
+                ? 'bg-gradient-to-br from-rose-500/25 via-rose-600/15 to-rose-950/40 border-rose-400/40 shadow-rose-950/50 text-rose-300'
+                : 'bg-gradient-to-br from-amber-500/25 via-amber-600/15 to-amber-950/40 border-amber-400/40 shadow-amber-950/50 text-amber-300'
+            }`}>
+              {/* Inner Specular Highlight */}
+              <div className="absolute inset-0 rounded-2xl bg-gradient-to-tr from-transparent via-white/10 to-transparent pointer-events-none" />
+
+              {/* Pulsing Corner Status Dot */}
+              <span className="absolute -top-1 -right-1 flex h-3 w-3">
+                <span className={`animate-ping absolute inline-flex h-full w-full rounded-full opacity-75 ${
+                  isClosed ? 'bg-rose-400' : 'bg-amber-400'
+                }`} />
+                <span className={`relative inline-flex rounded-full h-3 w-3 border-2 ${
+                  isClosed ? 'border-[#180a0f] bg-rose-500' : 'border-[#171106] bg-amber-500'
+                }`} />
+              </span>
+
+              {/* Classic SVG Vector Icon */}
+              {isClosed ? (
+                <svg className="w-5 h-5 sm:w-6 sm:h-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+                  <circle cx="12" cy="12" r="10" />
+                  <line x1="4.93" y1="4.93" x2="19.07" y2="19.07" />
+                </svg>
+              ) : (
+                <svg className="w-5 h-5 sm:w-6 sm:h-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+                  <rect x="6" y="4" width="4" height="16" rx="1.5" />
+                  <rect x="14" y="4" width="4" height="16" rx="1.5" />
+                </svg>
+              )}
+            </div>
+
+            {/* Notice Text Content */}
+            <div className="flex-1 min-w-0">
+              {/* Micro Status Badge */}
+              <div className="flex items-center gap-2 mb-1">
+                <span className={`inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[9px] font-black uppercase tracking-wider font-mono border ${
+                  isClosed
+                    ? 'bg-rose-950/80 text-rose-300 border-rose-500/40'
+                    : 'bg-amber-950/80 text-amber-300 border-amber-500/40'
+                }`}>
+                  <span className={`w-1 h-1 rounded-full ${isClosed ? 'bg-rose-400' : 'bg-amber-400'}`} />
+                  <span>{t('status_notice_badge')}</span>
+                </span>
+                <span className="text-[10px] text-slate-400 font-mono tracking-wide truncate">
+                  {selectedGame?.name}
+                </span>
+              </div>
+
+              {/* Classic Gold / Ruby Metallic Gradient Header */}
+              <h3 className={`text-sm sm:text-base font-black tracking-wide font-khmer uppercase ${
+                isClosed
+                  ? 'text-transparent bg-clip-text bg-gradient-to-r from-rose-200 via-rose-300 to-red-400 drop-shadow-sm'
+                  : 'text-transparent bg-clip-text bg-gradient-to-r from-amber-100 via-amber-200 to-yellow-400 drop-shadow-sm'
+              }`}>
+                {noticeTitle}
+              </h3>
+
+              {/* Refined Description */}
+              <p className="text-xs sm:text-[13px] leading-relaxed text-slate-200/90 font-khmer mt-0.5">
+                {noticeDesc}
+              </p>
+            </div>
           </div>
         </div>
       )}
