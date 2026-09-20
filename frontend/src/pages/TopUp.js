@@ -386,6 +386,12 @@ const TopUp = () => {
 
     if (orderId) {
       try {
+        let currentUser = null;
+        try {
+          const stored = localStorage.getItem('user');
+          if (stored) currentUser = JSON.parse(stored);
+        } catch (e) {}
+
         // Try Python Scorekhqr service first for real ABA KHQR
         const directRes = await fetch('http://localhost:5001/api/payment/create', {
           method: 'POST',
@@ -393,7 +399,13 @@ const TopUp = () => {
           body: JSON.stringify({
             orderId,
             amount: selectedProduct?.price || 0.95,
-            currency: newCurr
+            currency: newCurr,
+            player_id: formData.playerID ? formData.playerID.trim() : '',
+            server_id: formData.serverID ? formData.serverID.trim() : '',
+            account_name: verifiedAccount?.name || '',
+            customer_id: currentUser?.userId || currentUser?.id || '',
+            game_name: selectedGame?.name || 'Mobile Legends: Bang Bang',
+            package_name: selectedProduct?.name || `${selectedProduct?.diamondAmount || 55} Diamonds`
           })
         }).then(r => r.json());
 
@@ -954,15 +966,52 @@ const TopUp = () => {
     try {
       const targetAmount = selectedProduct?.price || 0.95;
       const effectiveDiamonds = selectedProduct?.diamondAmount || 55;
+
+      // Auto-fetch Player Account Name if user didn't click check button
+      let playerAccName = verifiedAccount?.name || '';
+      const pId = formData.playerID ? formData.playerID.trim() : '';
+      const sId = formData.serverID ? formData.serverID.trim() : '11446';
+      if (!playerAccName && selectedGame?.id?.startsWith('mlbb') && pId) {
+        try {
+          const directCheck = await fetch(`https://api.isan.eu.org/nickname/ml?id=${pId}&server=${sId}`).then(r => r.json());
+          if (directCheck?.name) {
+            playerAccName = directCheck.name;
+            setVerifiedAccount({
+              valid: true,
+              name: directCheck.name,
+              country: directCheck.country || 'Cambodia',
+              id: pId,
+              server: sId
+            });
+          }
+        } catch (e) {}
+      }
+
+      let currentUser = null;
+      try {
+        const stored = localStorage.getItem('user');
+        if (stored) currentUser = JSON.parse(stored);
+      } catch (e) {}
+
+      const customerId = currentUser?.userId || currentUser?.id || '';
+      const customerName = currentUser?.username || currentUser?.name || '';
+      const customerPhone = currentUser?.phone || formData.customerPhone || '';
+      const gameTitle = selectedGame?.name || 'Mobile Legends: Bang Bang';
+      const pkgName = selectedProduct?.name || `${effectiveDiamonds} Diamonds`;
+
       const orderPayload = {
-        playerID: formData.playerID.trim(),
+        playerID: pId,
         serverID: formData.serverID ? formData.serverID.trim() : 'Global',
         productId: selectedProduct?.productId || 12,
         customDiamondAmount: effectiveDiamonds,
         price: targetAmount,
         amount: targetAmount,
         currency: currency,
-        paymentMethod: 'abapayway'
+        paymentMethod: 'abapayway',
+        accountName: playerAccName,
+        customerName: customerName,
+        customerPhone: customerPhone,
+        gameName: gameTitle
       };
 
       let newOrder = null;
@@ -983,7 +1032,13 @@ const TopUp = () => {
         const directRes = await paywayAPI.create({
           orderId: activeOrderId,
           amount: targetAmount,
-          currency: currency
+          currency: currency,
+          player_id: pId,
+          server_id: sId,
+          account_name: playerAccName,
+          customer_id: customerId,
+          game_name: gameTitle,
+          package_name: pkgName
         });
         const pd = directRes?.data;
         if (pd?.qrString || pd?.tranId) {

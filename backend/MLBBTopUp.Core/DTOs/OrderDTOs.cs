@@ -4,6 +4,10 @@ public class CreateOrderRequest
 {
     public string PlayerID { get; set; } = string.Empty;
     public string ServerID { get; set; } = string.Empty;
+    public string? AccountName { get; set; }
+    public string? CustomerName { get; set; }
+    public string? CustomerPhone { get; set; }
+    public string? GameName { get; set; }
     public int? ProductId { get; set; }
     public int? CustomDiamondAmount { get; set; }
     public decimal? Price { get; set; }
@@ -18,6 +22,9 @@ public class OrderResponse
     public int? UserId { get; set; }
     public string PlayerID { get; set; } = string.Empty;
     public string ServerID { get; set; } = string.Empty;
+    public string? AccountName { get; set; }
+    public string? CustomerPhone { get; set; }
+    public string? GameName { get; set; }
     public int ProductId { get; set; }
     public string ProductName { get; set; } = string.Empty;
     public int DiamondAmount { get; set; }

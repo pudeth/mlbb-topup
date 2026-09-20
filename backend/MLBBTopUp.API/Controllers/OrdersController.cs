@@ -267,23 +267,42 @@ public class OrdersController : BaseController
                 var chatId = _configuration["Telegram:ChatId"] ?? "-1004398577975";
                 var topicId = _configuration["Telegram:TopicId"] ?? "35";
 
+                string customerIdText = order.UserId.HasValue ? $"#{order.UserId.Value}" : $"Guest #{order.OrderId}";
+                string playerName = !string.IsNullOrWhiteSpace(order.AccountName) ? order.AccountName : "Player";
+                string gameTitle = !string.IsNullOrWhiteSpace(order.GameName) ? order.GameName : "Mobile Legends: Bang Bang";
+
                 var msg = $"🚨 <b>URGENT — CUSTOMER CONFIRMED PAYMENT!</b>\n" +
-                          $"━━━━━━━━━━━━━━━━━━━━━━\n" +
+                          $"━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n" +
                           $"⚠️ <b>Diamonds NOT yet delivered!</b>\n" +
-                          $"📦 <b>Order:</b> <code>#{order.OrderId}</code>\n" +
-                          $"👤 <b>Player ID:</b> <code>{order.PlayerID}</code> (Zone {order.ServerID})\n" +
-                          $"💎 <b>Diamonds:</b> {order.DiamondAmount}\n" +
+                          $"📦 <b>Order ID:</b> <code>#{order.OrderId}</code>\n" +
+                          $"🏷️ <b>Game Title:</b> {EscapeHtml(gameTitle)}\n" +
+                          $"👤 <b>Account Player:</b> <b>{EscapeHtml(playerName)}</b>\n" +
+                          $"🆔 <b>Player ID:</b> <code>{EscapeHtml(order.PlayerID)}</code> (Zone {EscapeHtml(order.ServerID)})\n" +
+                          $"👤 <b>Customer ID:</b> <code>{customerIdText}</code>\n" +
+                          $"💎 <b>Diamonds:</b> {order.DiamondAmount} 💎\n" +
                           $"💰 <b>Amount:</b> ${order.Amount:F2} USD\n" +
                           $"📌 <b>Topup Status:</b> AwaitingBalance\n" +
-                          $"━━━━━━━━━━━━━━━━━━━━━━\n" +
-                          $"👉 <i>Please top up provider balance and approve this order in Admin Dashboard.</i>";
+                          $"━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n" +
+                          $"👇 <i>Tap below to approve and dispatch diamonds:</i>";
+
+                var buttons = new
+                {
+                    inline_keyboard = new[]
+                    {
+                        new[]
+                        {
+                            new { text = "✅ Approve & Deliver Diamonds", callback_data = $"confirm_{order.OrderId}_manual" }
+                        }
+                    }
+                };
 
                 using var httpClient = new HttpClient { Timeout = TimeSpan.FromSeconds(8) };
                 var payload = new Dictionary<string, object>
                 {
                     ["chat_id"] = chatId,
                     ["text"] = msg,
-                    ["parse_mode"] = "HTML"
+                    ["parse_mode"] = "HTML",
+                    ["reply_markup"] = buttons
                 };
                 if (!string.IsNullOrEmpty(topicId) && int.TryParse(topicId, out int threadId))
                     payload["message_thread_id"] = threadId;
@@ -301,5 +320,11 @@ public class OrdersController : BaseController
             message = "Admin has been notified. Your diamonds will be delivered shortly.",
             topupStatus = "AwaitingBalance"
         });
+    }
+
+    private static string EscapeHtml(string? input)
+    {
+        if (string.IsNullOrEmpty(input)) return string.Empty;
+        return input.Replace("&", "&amp;").Replace("<", "&lt;").Replace(">", "&gt;");
     }
 }

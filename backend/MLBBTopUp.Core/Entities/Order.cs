@@ -6,6 +6,9 @@ public class Order
     public int? UserId { get; set; }
     public string PlayerID { get; set; } = string.Empty;
     public string ServerID { get; set; } = string.Empty;
+    public string? AccountName { get; set; }
+    public string? CustomerPhone { get; set; }
+    public string? GameName { get; set; }
     public int ProductId { get; set; }
     public decimal Amount { get; set; }
     public string PaymentStatus { get; set; } = "Pending"; // Pending, Paid, Failed

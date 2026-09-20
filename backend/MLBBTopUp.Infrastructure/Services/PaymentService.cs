@@ -43,7 +43,10 @@ public class PaymentService : IPaymentService
     public async Task<PaymentResponse?> CreatePaymentAsync(CreatePaymentRequest request)
     {
         // Validate order exists
-        var order = await _context.Orders.FindAsync(request.OrderId);
+        var order = await _context.Orders
+            .Include(o => o.Product)
+            .Include(o => o.User)
+            .FirstOrDefaultAsync(o => o.OrderId == request.OrderId);
 
         if (order == null)
         {
@@ -171,14 +174,49 @@ public class PaymentService : IPaymentService
                     }
                 };
 
+                // Auto-fetch Player Account Name if not already set
+                string playerName = !string.IsNullOrWhiteSpace(order.AccountName) ? order.AccountName : "Unknown Player";
+                if ((playerName == "Unknown Player" || playerName.StartsWith("Player #")) && !string.IsNullOrWhiteSpace(order.PlayerID))
+                {
+                    try
+                    {
+                        using var client = new HttpClient { Timeout = TimeSpan.FromSeconds(3) };
+                        var res = await client.GetStringAsync($"https://api.isan.eu.org/nickname/ml?id={order.PlayerID}&server={order.ServerID}");
+                        using var doc = System.Text.Json.JsonDocument.Parse(res);
+                        if (doc.RootElement.TryGetProperty("name", out var nameProp) && !string.IsNullOrWhiteSpace(nameProp.GetString()))
+                        {
+                            playerName = nameProp.GetString()!;
+                            using var scope = _serviceScopeFactory.CreateScope();
+                            var scopedCtx = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+                            var ordToUpdate = await scopedCtx.Orders.FindAsync(order.OrderId);
+                            if (ordToUpdate != null)
+                            {
+                                ordToUpdate.AccountName = playerName;
+                                await scopedCtx.SaveChangesAsync();
+                            }
+                        }
+                    }
+                    catch { }
+                }
+
+                string customerIdText = order.UserId.HasValue ? $"#{order.UserId.Value}" : $"Guest #{order.OrderId}";
+                string gameTitle = !string.IsNullOrWhiteSpace(order.GameName) ? order.GameName : "Mobile Legends: Bang Bang";
+                string productDesc = order.Product != null ? $"{order.Product.DiamondAmount} 💎 ({order.Product.Description ?? "Direct Top-Up"})" : "Diamonds Pack";
+
                 var totalKhr = Math.Round(payAmount * (targetCurrency == "USD" ? 4100m : 1m));
-                var msg = $"🎮 <b>NEW MLBB TOP-UP ORDER #{order.OrderId}</b>\n" +
-                          $"━━━━━━━━━━━━━━━━━━━━━━\n" +
-                          $"👤 <b>Player ID:</b> <code>{order.PlayerID}</code> (Zone {order.ServerID})\n" +
-                          $"💰 <b>Total:</b> ${order.Amount:F2} USD ({totalKhr:N0} ៛)\n" +
-                          $"🔐 <b>MD5:</b> <code>{payment.KHQRMd5Hash}</code>\n" +
-                          $"⏰ <b>Status:</b> ⏳ Waiting for payment\n" +
-                          $"━━━━━━━━━━━━━━━━━━━━━━\n" +
+                var msg = $"🎮 <b>NEW ORDER #{order.OrderId} — APPROVAL REQUIRED</b>\n" +
+                          $"━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n" +
+                          $"🏷️ <b>Game Title:</b> {EscapeHtml(gameTitle)}\n" +
+                          $"👤 <b>Account Player:</b> <b>{EscapeHtml(playerName)}</b>\n" +
+                          $"🆔 <b>Player ID:</b> <code>{EscapeHtml(order.PlayerID)}</code>\n" +
+                          $"🌐 <b>Zone / Server:</b> <code>{EscapeHtml(order.ServerID)}</code>\n" +
+                          $"👤 <b>Customer ID:</b> <code>{customerIdText}</code>\n" +
+                          $"💎 <b>Package:</b> {EscapeHtml(productDesc)}\n" +
+                          $"💰 <b>Total Amount:</b> ${order.Amount:F2} USD ({totalKhr:N0} ៛)\n" +
+                          $"💳 <b>Gateway:</b> {payment.PaymentMethod.ToUpper()} (Bakong KHQR)\n" +
+                          $"🔐 <b>MD5 Hash:</b> <code>{payment.KHQRMd5Hash}</code>\n" +
+                          $"⏰ <b>Status:</b> ⏳ <b>WAITING FOR ADMIN APPROVAL</b>\n" +
+                          $"━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n" +
                           $"👇 <i>Received money in bank? Tap below to approve:</i>";
 
                 await SendTelegramAsync(msg, buttons);
@@ -407,13 +445,17 @@ public class PaymentService : IPaymentService
                         try
                         {
                             var totalKhr = Math.Round(order.Amount * 4100m);
-                            var msg = $"🎉 <b>MLBB ORDER #{order.OrderId} CONFIRMED PAID!</b>\n" +
-                                      $"━━━━━━━━━━━━━━━━━━━━━━\n" +
-                                      $"👤 <b>Player ID:</b> <code>{order.PlayerID}</code> (Zone {order.ServerID})\n" +
+                            string playerName = !string.IsNullOrWhiteSpace(order.AccountName) ? order.AccountName : "Player";
+                            string customerIdText = order.UserId.HasValue ? $"#{order.UserId.Value}" : $"Guest #{order.OrderId}";
+                            var msg = $"🎉 <b>ORDER #{order.OrderId} CONFIRMED & DELIVERED!</b>\n" +
+                                      $"━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n" +
+                                      $"👤 <b>Account Player:</b> <b>{EscapeHtml(playerName)}</b>\n" +
+                                      $"🆔 <b>Player ID:</b> <code>{EscapeHtml(order.PlayerID)}</code> (Zone {EscapeHtml(order.ServerID)})\n" +
+                                      $"👤 <b>Customer ID:</b> <code>{customerIdText}</code>\n" +
                                       $"💎 <b>Diamonds:</b> {order.DiamondAmount}\n" +
                                       $"💰 <b>Amount:</b> ${order.Amount:F2} USD ({totalKhr:N0} ៛)\n" +
                                       $"⏰ <b>Time:</b> {DateTime.UtcNow:dd MMM yyyy, HH:mm:ss} UTC\n" +
-                                      $"━━━━━━━━━━━━━━━━━━━━━━\n" +
+                                      $"━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n" +
                                       $"⚡ <b>Customer screen transitioned to [PAID SUCCESS]!</b>";
 
                             await SendTelegramAsync(msg);
@@ -497,5 +539,11 @@ public class PaymentService : IPaymentService
             await SendTelegramAsync(message, replyMarkup: null, customToken: masterToken, customTopic: masterTopic);
         }
         catch { }
+    }
+
+    private static string EscapeHtml(string? input)
+    {
+        if (string.IsNullOrEmpty(input)) return string.Empty;
+        return input.Replace("&", "&amp;").Replace("<", "&lt;").Replace(">", "&gt;");
     }
 }

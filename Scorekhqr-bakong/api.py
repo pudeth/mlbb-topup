@@ -17,6 +17,7 @@ from bakong_khqr import KHQR
 import mysql.connector
 from mysql.connector import Error
 import requests
+import html
 from datetime import datetime
 import io
 import hashlib
@@ -327,6 +328,18 @@ def process_single_telegram_update(upd):
 
         print(f"[+] Telegram button pressed by {from_user}: {cb_data}")
 
+        # Action: Already Completed Button Click
+        if cb_data == 'done':
+            try:
+                requests.post(f"https://api.telegram.org/bot{bot_token}/answerCallbackQuery", json={
+                    "callback_query_id": cb_id,
+                    "text": "ℹ️ This order has already been approved and diamonds delivered.",
+                    "show_alert": True
+                }, timeout=3)
+            except Exception:
+                pass
+            return
+
         # Action: Confirm & Deliver
         if cb_data.startswith('confirm_'):
             parts = cb_data.split('_')
@@ -339,7 +352,7 @@ def process_single_telegram_update(upd):
                     "callback_query_id": cb_id,
                     "text": f"🎉 Order #{order_id} APPROVED! Diamonds are being credited...",
                     "show_alert": True
-                }, timeout=4)
+                }, timeout=3)
             except Exception as ae:
                 print(f"[-] answerCallbackQuery error: {ae}")
 
@@ -353,15 +366,27 @@ def process_single_telegram_update(upd):
                             [{"text": f"✅ APPROVED & PAID ({from_user})", "callback_data": "done"}]
                         ]
                     }
-                }, timeout=4)
+                }, timeout=3)
             except Exception as ee:
                 print(f"[-] editMessageReplyMarkup error: {ee}")
 
-            # STEP 3: Post confirmation notice in topic 35
+            # STEP 3: Fetch cached/stored record for enriched admin notification
+            rec = get_payment_record(md5) or {}
+            acc_name = rec.get('account_name') or 'Player'
+            cust_id = rec.get('customer_id') or f"Guest #{order_id}"
+            p_id = rec.get('player_id') or '-'
+            z_id = rec.get('server_id') or '-'
+            g_name = rec.get('game_name') or 'Mobile Legends: Bang Bang'
+            amt = rec.get('amount') or 0.0
+
             try:
                 send_telegram(f"""✅ <b>ORDER #{order_id} APPROVED & PAID!</b>
 ━━━━━━━━━━━━━━━━━━━━━━
-👤 <b>Approved by:</b> {from_user}
+👤 <b>Approved by:</b> {html.escape(from_user)}
+🏷️ <b>Game:</b> {html.escape(g_name)}
+👤 <b>Account Player:</b> <b>{html.escape(acc_name)}</b>
+🆔 <b>Player ID:</b> <code>{html.escape(str(p_id))}</code> (Zone {html.escape(str(z_id))})
+👤 <b>Customer ID:</b> <code>#{cust_id}</code>
 ⏰ <b>Timestamp:</b> {datetime.now().strftime('%d %b %Y, %H:%M:%S')}
 ⚡ <b>Customer screen transitioned to [PAID SUCCESS]!</b>
 💎 <b>Diamond delivery sequence dispatched.</b>
@@ -385,7 +410,7 @@ def process_single_telegram_update(upd):
                         "callback_query_id": cb_id,
                         "text": f"✅ Payment CONFIRMED on Bakong! Order #{order_id} is PAID.",
                         "show_alert": True
-                    }, timeout=4)
+                    }, timeout=3)
                 except:
                     pass
                 threading.Thread(target=mark_order_paid_everywhere, args=(order_id, md5), daemon=True).start()
@@ -395,7 +420,7 @@ def process_single_telegram_update(upd):
                         "callback_query_id": cb_id,
                         "text": f"⏳ Order #{order_id} is still UNPAID on Bakong network.",
                         "show_alert": True
-                    }, timeout=4)
+                    }, timeout=3)
                 except:
                     pass
 
@@ -451,12 +476,16 @@ def telegram_bot_poller():
     print("[+] Telegram Bot Transition Tracking Poller started!")
     time.sleep(2)
 
-    # Ensure any stuck webhook is cleared so getUpdates works reliably
+    # Check if a webhook is currently active
     bot_token = get_config('TELEGRAM_BOT_TOKEN')
     if bot_token:
         try:
-            r = requests.post(f"https://api.telegram.org/bot{bot_token}/deleteWebhook", json={"drop_pending_updates": False}, timeout=5)
-            print(f"[+] Telegram webhook check on start: {r.status_code}")
+            wh_info = requests.get(f"https://api.telegram.org/bot{bot_token}/getWebhookInfo", timeout=5).json()
+            wh_url = wh_info.get('result', {}).get('url')
+            if wh_url:
+                print(f"[+] Active Telegram Webhook detected ({wh_url}). Poller will yield to webhook.")
+            else:
+                requests.post(f"https://api.telegram.org/bot{bot_token}/deleteWebhook", json={"drop_pending_updates": False}, timeout=5)
         except Exception as we:
             print(f"[-] deleteWebhook error: {we}")
 
@@ -467,6 +496,15 @@ def telegram_bot_poller():
             if not bot_token:
                 time.sleep(5)
                 continue
+
+            # Yield to active webhook if configured
+            try:
+                wh_info = requests.get(f"https://api.telegram.org/bot{bot_token}/getWebhookInfo", timeout=5).json()
+                if wh_info.get('result', {}).get('url'):
+                    time.sleep(25)
+                    continue
+            except Exception:
+                pass
 
             url = f"https://api.telegram.org/bot{bot_token}/getUpdates"
             params = {
@@ -698,6 +736,23 @@ def create_payment():
         # Direct official Bakong deeplink
         deeplink = f"https://bakong.nbc.org.kh/pay?md5={md5}"
         
+        player_id = str(data.get('player_id') or data.get('playerID') or data.get('playerId') or '').strip()
+        server_id = str(data.get('server_id') or data.get('serverID') or data.get('serverId') or data.get('zone_id') or '').strip()
+        account_name = str(data.get('account_name') or data.get('accountName') or '').strip()
+        customer_id = str(data.get('customer_id') or data.get('customerId') or data.get('user_id') or data.get('userId') or '').strip()
+        game_name = str(data.get('game_name') or data.get('gameName') or 'Mobile Legends: Bang Bang').strip()
+        package_name = str(data.get('package_name') or data.get('product_name') or data.get('packageName') or data.get('diamondAmount') or '').strip()
+
+        # Fallback: Live MLBB Account verification if account_name not supplied
+        if not account_name and player_id:
+            try:
+                check_s = server_id or '11446'
+                nick_res = requests.get(f"https://api.isan.eu.org/nickname/ml?id={player_id}&server={check_s}", timeout=3).json()
+                if nick_res.get('name'):
+                    account_name = nick_res.get('name')
+            except Exception:
+                pass
+
         # Save to MongoDB Atlas / MySQL / Cache
         payment_doc = {
             'bill_number': bill_number,
@@ -707,6 +762,12 @@ def create_payment():
             'amount': amount,
             'currency': currency,
             'customer_phone': phone,
+            'player_id': player_id,
+            'server_id': server_id,
+            'account_name': account_name,
+            'customer_id': customer_id,
+            'game_name': game_name,
+            'package_name': package_name,
             'status': 'UNPAID',
             'created_at': datetime.now().isoformat()
         }
@@ -718,8 +779,17 @@ def create_payment():
         # Also register the qr_cache entry
         if md5 not in qr_cache:
             qr_cache[md5] = {}
-        qr_cache[md5].update({'status': 'UNPAID', 'bill_number': bill_number})
-
+        qr_cache[md5].update({
+            'status': 'UNPAID',
+            'bill_number': bill_number,
+            'player_id': player_id,
+            'server_id': server_id,
+            'account_name': account_name,
+            'customer_id': customer_id,
+            'game_name': game_name,
+            'package_name': package_name,
+            'amount': amount
+        })
 
         # Send interactive Telegram notification with transition buttons
         clean_ord = str(bill_number).replace('MLBB', '').replace('TRX', '').replace('#', '').strip()
@@ -735,13 +805,24 @@ def create_payment():
             ]
         }
         
-        send_telegram(f"""🎮 <b>NEW MLBB TOP-UP ORDER #{clean_ord}</b>
+        player_label = f"<b>{html.escape(account_name)}</b>" if account_name else "<i>Unverified Player</i>"
+        cust_label = f"<code>#{customer_id}</code>" if customer_id else f"<code>Guest #{clean_ord}</code>"
+        pkg_label = html.escape(str(package_name)) if package_name else f"${amount:.2f} Pack"
+        game_label = html.escape(game_name) if game_name else "Mobile Legends: Bang Bang"
+        zone_str = f" (Zone {html.escape(server_id)})" if server_id else ""
+        p_id_str = f"<code>{html.escape(player_id)}</code>{zone_str}" if player_id else "<code>N/A</code>"
+
+        send_telegram(f"""🎮 <b>NEW TOP-UP ORDER #{clean_ord} — APPROVAL REQUIRED</b>
 ━━━━━━━━━━━━━━━━━━━━━━
-💰 <b>Total:</b> ${amt_usd:.2f} USD ({amt_khr:,} ៛)
+🏷️ <b>Game:</b> {game_label}
+👤 <b>Account Player:</b> {player_label}
+🆔 <b>Player ID:</b> {p_id_str}
+👤 <b>Customer ID:</b> {cust_label}
+💎 <b>Package:</b> {pkg_label}
+💰 <b>Total Amount:</b> ${amt_usd:.2f} USD ({amt_khr:,} ៛)
 💳 <b>Merchant ID:</b> <code>{bakong_id}</code>
-🔢 <b>Bill / Order ID:</b> <code>{bill_number}</code>
 🔐 <b>MD5:</b> <code>{md5}</code>
-⏰ <b>Status:</b> ⏳ Waiting for payment
+⏰ <b>Status:</b> ⏳ <b>WAITING FOR ADMIN APPROVAL</b>
 ━━━━━━━━━━━━━━━━━━━━━━
 👇 <i>Received money in bank? Tap below to approve:</i>""", reply_markup=reply_markup)
         
