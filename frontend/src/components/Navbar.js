@@ -62,7 +62,7 @@ const Navbar = () => {
 
       {!isAuthPage && (
         <>
-          <div className="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8">
+          <div className="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 relative z-20">
             <div className="flex items-center justify-between h-20">
           
           {/* Logo */}
@@ -191,47 +191,56 @@ const Navbar = () => {
               </svg>
             </button>
 
-            {/* Language Selector Dropdown */}
-            <div className="relative">
+            {/* Language Selector Dropdown - Always in front */}
+            <div className="relative z-50">
               <button
                 type="button"
                 onClick={() => setLangDropdownOpen(!langDropdownOpen)}
-                className="h-9 px-3 rounded-full bg-slate-900/80 hover:bg-slate-800 border border-slate-800 hover:border-slate-700 text-slate-300 text-[12px] font-bold flex items-center gap-1.5 transition-all"
+                className="h-9 px-3 rounded-full bg-slate-900/90 hover:bg-slate-800 border border-slate-700/80 hover:border-slate-600 text-slate-300 text-[12px] font-bold flex items-center gap-1.5 transition-all shadow-sm active:scale-95"
               >
                 <span className={`fi fi-${currentLang.flagCode || 'kh'} rounded-xs shadow-xs text-sm leading-none`} />
                 <span className="hidden sm:inline font-bold">{currentLang.short}</span>
-                <svg className={`w-3 h-3 text-slate-500 transition-transform ${langDropdownOpen ? 'rotate-180' : ''}`} viewBox="0 0 20 20" fill="currentColor">
+                <svg className={`w-3 h-3 text-slate-400 transition-transform duration-200 ${langDropdownOpen ? 'rotate-180 text-amber-400' : ''}`} viewBox="0 0 20 20" fill="currentColor">
                   <path fillRule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clipRule="evenodd" />
                 </svg>
               </button>
 
               {langDropdownOpen && (
-                <div className="absolute right-0 mt-2 w-44 bg-slate-950/95 backdrop-blur-xl border border-slate-700/80 rounded-2xl p-1.5 shadow-2xl z-50 animate-fadeIn font-khmer">
-                  <div className="px-3 py-1.5 text-[10px] font-extrabold text-slate-400 uppercase tracking-wider border-b border-slate-800/80 mb-1 flex items-center gap-1">
-                    <span>🌐</span> Language
+                <>
+                  {/* Click-away overlay to close dropdown */}
+                  <div
+                    className="fixed inset-0 z-40"
+                    onClick={() => setLangDropdownOpen(false)}
+                  />
+
+                  {/* High-priority Dropdown Menu */}
+                  <div className="absolute right-0 mt-2 w-48 bg-[#0d1322]/98 backdrop-blur-2xl border border-slate-700/90 rounded-2xl p-1.5 shadow-[0_20px_50px_rgba(0,0,0,0.95)] ring-1 ring-white/10 z-50 animate-fadeIn font-khmer">
+                    <div className="px-3 py-1.5 text-[10px] font-extrabold text-slate-400 uppercase tracking-wider border-b border-slate-800/80 mb-1 flex items-center gap-1">
+                      <span>🌐</span> Language / ភាសា
+                    </div>
+                    {languages.map((l) => (
+                      <button
+                        key={l.code}
+                        type="button"
+                        onClick={() => {
+                          setLanguage(l.code);
+                          setLangDropdownOpen(false);
+                        }}
+                        className={`w-full text-left px-3 py-2 rounded-xl text-xs font-bold flex items-center justify-between transition-all cursor-pointer ${
+                          language === l.code
+                            ? 'bg-cyan-950/40 text-cyan-300 font-black border border-cyan-500/30 shadow-sm'
+                            : 'text-slate-300 hover:bg-slate-800/60 hover:text-white'
+                        }`}
+                      >
+                        <span className="flex items-center gap-2">
+                          <span className={`fi fi-${l.flagCode || 'kh'} rounded-xs shadow-xs text-base leading-none`} />
+                          <span>{l.name}</span>
+                        </span>
+                        {language === l.code && <span className="text-cyan-400 text-xs font-black">✓</span>}
+                      </button>
+                    ))}
                   </div>
-                  {languages.map((l) => (
-                    <button
-                      key={l.code}
-                      type="button"
-                      onClick={() => {
-                        setLanguage(l.code);
-                        setLangDropdownOpen(false);
-                      }}
-                      className={`w-full text-left px-3 py-2 rounded-xl text-xs font-bold flex items-center justify-between transition-colors ${
-                        language === l.code
-                          ? 'bg-cyan-950/30 text-cyan-400'
-                          : 'text-slate-300 hover:bg-slate-900 hover:text-white'
-                      }`}
-                    >
-                      <span className="flex items-center gap-2">
-                        <span className={`fi fi-${l.flagCode || 'kh'} rounded-xs shadow-xs text-base leading-none`} />
-                        <span>{l.name}</span>
-                      </span>
-                      {language === l.code && <span className="text-cyan-400 text-xs font-black">✓</span>}
-                    </button>
-                  ))}
-                </div>
+                </>
               )}
             </div>
 
@@ -286,7 +295,7 @@ const Navbar = () => {
 
       {/* Ultra Clean & Smooth Animated Mobile Drawer */}
       <div
-        className={`lg:hidden relative z-50 bg-[#0a0f1d] border-b border-slate-800/90 shadow-[0_25px_60px_rgba(0,0,0,0.95)] transition-all duration-300 ease-in-out overflow-y-auto ${
+        className={`lg:hidden relative z-10 bg-[#0a0f1d] border-b border-slate-800/90 shadow-[0_25px_60px_rgba(0,0,0,0.95)] transition-all duration-300 ease-in-out overflow-y-auto ${
           mobileMenuOpen
             ? 'max-h-[calc(100vh-80px)] opacity-100 translate-y-0 pointer-events-auto border-slate-800/90'
             : 'max-h-0 opacity-0 -translate-y-2 pointer-events-none border-transparent'
