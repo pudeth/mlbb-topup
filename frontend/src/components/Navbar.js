@@ -284,19 +284,11 @@ const Navbar = () => {
         </div>
       </div>
 
-      {/* Backdrop overlay for smooth mobile menu transition */}
-      <div
-        className={`lg:hidden fixed inset-0 top-[88px] sm:top-[96px] bg-black/65 backdrop-blur-[3px] z-40 transition-opacity duration-300 ease-in-out ${
-          mobileMenuOpen ? 'opacity-100 pointer-events-auto' : 'opacity-0 pointer-events-none'
-        }`}
-        onClick={() => setMobileMenuOpen(false)}
-      />
-
       {/* Ultra Clean & Smooth Animated Mobile Drawer */}
       <div
-        className={`lg:hidden bg-[#0a0f1d]/98 backdrop-blur-2xl border-b border-slate-800/90 shadow-[0_25px_60px_rgba(0,0,0,0.85)] transition-all duration-300 ease-in-out overflow-y-auto ${
+        className={`lg:hidden relative z-50 bg-[#0a0f1d] border-b border-slate-800/90 shadow-[0_25px_60px_rgba(0,0,0,0.95)] transition-all duration-300 ease-in-out overflow-y-auto ${
           mobileMenuOpen
-            ? 'max-h-[calc(100vh-88px)] opacity-100 translate-y-0 pointer-events-auto border-slate-800/90'
+            ? 'max-h-[calc(100vh-80px)] opacity-100 translate-y-0 pointer-events-auto border-slate-800/90'
             : 'max-h-0 opacity-0 -translate-y-2 pointer-events-none border-transparent'
         }`}
       >
