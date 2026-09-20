@@ -87,6 +87,18 @@ public class SupplierGatewayManager : ISupplierGatewayManager
             MerchantId = _configuration["TopUpProvider:MerchantId"] ?? "peakmao007",
             ApiKey = active.Contains("khmer", StringComparison.OrdinalIgnoreCase) ? ktKey : fzrKey,
             FazerCardsApiKey = fzrKey,
+            FazerCardsTokens = new List<FazerCardsTokenItem>
+            {
+                new FazerCardsTokenItem
+                {
+                    Id = "default_fzr_token",
+                    Token = fzrKey,
+                    Name = "Primary Token (Default)",
+                    IsActive = true,
+                    BalanceUSD = 18.50m,
+                    CreatedAt = DateTime.UtcNow
+                }
+            },
             KhmerTopUpApiKey = ktKey,
             FazerCardsApiUrl = "https://api.fzr.cards/api/v2",
             KhmerTopUpApiUrl = "https://khmer-topup.com/api/v1/orders",
@@ -123,6 +135,10 @@ public class SupplierGatewayManager : ISupplierGatewayManager
                         {
                             _settings.ActiveProvider = normalized;
                             _settings.FazerCardsApiKey = !string.IsNullOrWhiteSpace(fromDb.FazerCardsApiKey) ? fromDb.FazerCardsApiKey : _settings.FazerCardsApiKey;
+                            if (fromDb.FazerCardsTokens != null && fromDb.FazerCardsTokens.Count > 0)
+                            {
+                                _settings.FazerCardsTokens = fromDb.FazerCardsTokens;
+                            }
                             _settings.KhmerTopUpApiKey = !string.IsNullOrWhiteSpace(fromDb.KhmerTopUpApiKey) ? fromDb.KhmerTopUpApiKey : _settings.KhmerTopUpApiKey;
                             _settings.ApiKey = _settings.ActiveProvider == "KhmerTopUp" ? _settings.KhmerTopUpApiKey : _settings.FazerCardsApiKey;
                             _settings.AutoDispatchOnPayment = fromDb.AutoDispatchOnPayment;
@@ -230,6 +246,7 @@ public class SupplierGatewayManager : ISupplierGatewayManager
                 MerchantId = _settings.MerchantId,
                 ApiKey = _settings.ActiveProvider == "KhmerTopUp" ? _settings.KhmerTopUpApiKey : _settings.FazerCardsApiKey,
                 FazerCardsApiKey = _settings.FazerCardsApiKey,
+                FazerCardsTokens = _settings.FazerCardsTokens != null ? new List<FazerCardsTokenItem>(_settings.FazerCardsTokens) : new(),
                 KhmerTopUpApiKey = _settings.KhmerTopUpApiKey,
                 FazerCardsApiUrl = _settings.FazerCardsApiUrl,
                 KhmerTopUpApiUrl = _settings.KhmerTopUpApiUrl,
@@ -256,7 +273,54 @@ public class SupplierGatewayManager : ISupplierGatewayManager
             _settings.AutoDispatchOnPayment = incoming.AutoDispatchOnPayment;
             _settings.AutoFailoverEnabled = incoming.AutoFailoverEnabled;
             if (!string.IsNullOrWhiteSpace(incoming.KhmerTopUpApiKey)) _settings.KhmerTopUpApiKey = incoming.KhmerTopUpApiKey;
-            if (!string.IsNullOrWhiteSpace(incoming.FazerCardsApiKey)) _settings.FazerCardsApiKey = incoming.FazerCardsApiKey;
+
+            // Preserve old tokens: merge incoming tokens into existing keyring
+            _settings.FazerCardsTokens ??= new();
+            if (incoming.FazerCardsTokens != null && incoming.FazerCardsTokens.Count > 0)
+            {
+                var merged = new List<FazerCardsTokenItem>(_settings.FazerCardsTokens);
+                foreach (var inTok in incoming.FazerCardsTokens)
+                {
+                    var match = merged.FirstOrDefault(t => t.Id == inTok.Id || t.Token == inTok.Token);
+                    if (match != null)
+                    {
+                        match.Name = !string.IsNullOrWhiteSpace(inTok.Name) ? inTok.Name : match.Name;
+                        match.IsActive = inTok.IsActive;
+                        if (inTok.BalanceUSD.HasValue) match.BalanceUSD = inTok.BalanceUSD;
+                    }
+                    else
+                    {
+                        merged.Add(inTok);
+                    }
+                }
+                _settings.FazerCardsTokens = merged;
+            }
+
+            // If a specific FazerCardsApiKey is passed, ensure it is added to keyring without deleting old token
+            if (!string.IsNullOrWhiteSpace(incoming.FazerCardsApiKey))
+            {
+                var cleanFzrKey = incoming.FazerCardsApiKey.Trim();
+                _settings.FazerCardsApiKey = cleanFzrKey;
+                var found = _settings.FazerCardsTokens.FirstOrDefault(t => t.Token == cleanFzrKey);
+                if (found == null)
+                {
+                    // Mark others inactive and add as new token while keeping old tokens!
+                    foreach (var t in _settings.FazerCardsTokens) t.IsActive = false;
+                    _settings.FazerCardsTokens.Add(new FazerCardsTokenItem
+                    {
+                        Id = Guid.NewGuid().ToString("N")[..8],
+                        Token = cleanFzrKey,
+                        Name = $"Token #{_settings.FazerCardsTokens.Count + 1}",
+                        IsActive = true,
+                        CreatedAt = DateTime.UtcNow
+                    });
+                }
+                else
+                {
+                    foreach (var t in _settings.FazerCardsTokens) t.IsActive = (t == found);
+                }
+            }
+
             _settings.ApiKey = _settings.ActiveProvider == "KhmerTopUp" ? _settings.KhmerTopUpApiKey : _settings.FazerCardsApiKey;
             _settings.BalanceUSD = _settings.ActiveProvider == "KhmerTopUp" ? _settings.KhmerTopUpBalanceUSD : _settings.FazerCardsBalanceUSD;
             _settings.UpdatedAt = DateTime.UtcNow;
@@ -265,6 +329,112 @@ public class SupplierGatewayManager : ISupplierGatewayManager
 
         await PersistSettingsAsync(copy);
         _ = Task.Run(async () => await RefreshBalancesAsync());
+        return copy;
+    }
+
+    public async Task<SupplierSettingsModel> AddFazerCardsTokenAsync(string token, string? name, bool setActive = true)
+    {
+        if (string.IsNullOrWhiteSpace(token)) return GetSettings();
+        var clean = token.Trim();
+        var label = !string.IsNullOrWhiteSpace(name) ? name.Trim() : $"Token #{(_settings.FazerCardsTokens?.Count ?? 0) + 1}";
+
+        SupplierSettingsModel copy;
+        lock (_lock)
+        {
+            _settings.FazerCardsTokens ??= new();
+            var existing = _settings.FazerCardsTokens.FirstOrDefault(t => t.Token == clean);
+            if (existing != null)
+            {
+                existing.Name = label;
+                if (setActive)
+                {
+                    foreach (var t in _settings.FazerCardsTokens) t.IsActive = (t == existing);
+                    _settings.FazerCardsApiKey = clean;
+                    if (_settings.ActiveProvider == "FazerCards") _settings.ApiKey = clean;
+                }
+            }
+            else
+            {
+                if (setActive)
+                {
+                    foreach (var t in _settings.FazerCardsTokens) t.IsActive = false;
+                }
+                _settings.FazerCardsTokens.Add(new FazerCardsTokenItem
+                {
+                    Id = Guid.NewGuid().ToString("N")[..8],
+                    Token = clean,
+                    Name = label,
+                    IsActive = setActive,
+                    CreatedAt = DateTime.UtcNow
+                });
+                if (setActive)
+                {
+                    _settings.FazerCardsApiKey = clean;
+                    if (_settings.ActiveProvider == "FazerCards") _settings.ApiKey = clean;
+                }
+            }
+            _settings.UpdatedAt = DateTime.UtcNow;
+            copy = GetSettings();
+        }
+
+        await PersistSettingsAsync(copy);
+        _ = Task.Run(async () => await RefreshBalancesAsync());
+        return copy;
+    }
+
+    public async Task<SupplierSettingsModel> SwitchFazerCardsTokenAsync(string idOrToken)
+    {
+        if (string.IsNullOrWhiteSpace(idOrToken)) return GetSettings();
+        var clean = idOrToken.Trim();
+
+        SupplierSettingsModel copy;
+        lock (_lock)
+        {
+            _settings.FazerCardsTokens ??= new();
+            var target = _settings.FazerCardsTokens.FirstOrDefault(t => t.Id == clean || t.Token == clean);
+            if (target != null)
+            {
+                foreach (var t in _settings.FazerCardsTokens) t.IsActive = (t == target);
+                _settings.FazerCardsApiKey = target.Token;
+                if (_settings.ActiveProvider == "FazerCards") _settings.ApiKey = target.Token;
+                _settings.UpdatedAt = DateTime.UtcNow;
+            }
+            copy = GetSettings();
+        }
+
+        await PersistSettingsAsync(copy);
+        _ = Task.Run(async () => await RefreshBalancesAsync());
+        return copy;
+    }
+
+    public async Task<SupplierSettingsModel> DeleteFazerCardsTokenAsync(string id)
+    {
+        if (string.IsNullOrWhiteSpace(id)) return GetSettings();
+
+        SupplierSettingsModel copy;
+        lock (_lock)
+        {
+            if (_settings.FazerCardsTokens != null && _settings.FazerCardsTokens.Count > 1)
+            {
+                var target = _settings.FazerCardsTokens.FirstOrDefault(t => t.Id == id);
+                if (target != null)
+                {
+                    bool wasActive = target.IsActive;
+                    _settings.FazerCardsTokens.Remove(target);
+                    if (wasActive && _settings.FazerCardsTokens.Count > 0)
+                    {
+                        var first = _settings.FazerCardsTokens[0];
+                        first.IsActive = true;
+                        _settings.FazerCardsApiKey = first.Token;
+                        if (_settings.ActiveProvider == "FazerCards") _settings.ApiKey = first.Token;
+                    }
+                    _settings.UpdatedAt = DateTime.UtcNow;
+                }
+            }
+            copy = GetSettings();
+        }
+
+        await PersistSettingsAsync(copy);
         return copy;
     }
 
@@ -291,7 +461,7 @@ public class SupplierGatewayManager : ISupplierGatewayManager
 
     public async Task<SupplierSettingsModel> RefreshBalancesAsync()
     {
-        // 1. FazerCards Balance
+        // 1. FazerCards Balance (Active Token)
         try
         {
             var fzrKey = _settings.FazerCardsApiKey;
@@ -306,7 +476,12 @@ public class SupplierGatewayManager : ISupplierGatewayManager
                 {
                     if (decimal.TryParse(bProp.GetString(), out var bal))
                     {
-                        lock (_lock) _settings.FazerCardsBalanceUSD = bal;
+                        lock (_lock)
+                        {
+                            _settings.FazerCardsBalanceUSD = bal;
+                            var activeTok = _settings.FazerCardsTokens?.FirstOrDefault(t => t.IsActive);
+                            if (activeTok != null) activeTok.BalanceUSD = bal;
+                        }
                     }
                 }
             }
@@ -314,6 +489,30 @@ public class SupplierGatewayManager : ISupplierGatewayManager
         catch (Exception ex)
         {
             _logger.LogWarning("FazerCards balance check warning: {Message}", ex.Message);
+        }
+
+        // 1b. Check balance for other tokens in keyring
+        if (_settings.FazerCardsTokens != null)
+        {
+            foreach (var tok in _settings.FazerCardsTokens.Where(t => !t.IsActive))
+            {
+                try
+                {
+                    using var req = new HttpRequestMessage(HttpMethod.Get, "https://api.fzr.cards/api/v2/balance");
+                    req.Headers.Add("X-API-Key", tok.Token);
+                    var res = await _httpClient.SendAsync(req);
+                    if (res.IsSuccessStatusCode)
+                    {
+                        var content = await res.Content.ReadAsStringAsync();
+                        using var doc = JsonDocument.Parse(content);
+                        if (doc.RootElement.TryGetProperty("balance", out var bProp) && decimal.TryParse(bProp.GetString(), out var bVal))
+                        {
+                            lock (_lock) tok.BalanceUSD = bVal;
+                        }
+                    }
+                }
+                catch { }
+            }
         }
 
         // 2. KhmerTopUp Balance

@@ -10,6 +10,16 @@ export const DEFAULT_PROVIDER_SETTINGS = {
   merchantId: 'peakmao007',
   apiKey: 'fc_5f79a0016d5d87bd1e83ea4f',
   fazerCardsApiKey: 'fc_5f79a0016d5d87bd1e83ea4f',
+  fazerCardsTokens: [
+    {
+      id: 'default_fzr_token',
+      name: 'Primary Token (Default)',
+      token: 'fc_5f79a0016d5d87bd1e83ea4f',
+      isActive: true,
+      balanceUSD: 18.50,
+      createdAt: '2026-01-01T00:00:00.000Z'
+    }
+  ],
   khmerTopUpApiKey: 'kt_6d38a3a5940e970221cc62fa306ae96044736364',
   webhookUrl: 'https://mlbb-backend-api.onrender.com/api/supplier/webhook',
   balanceUSD: 18.50,
@@ -65,6 +75,38 @@ export const getStoredProviderSettings = () => {
       merged.activeProvider = String(pinnedActive).toLowerCase().includes('khmer') ? 'KhmerTopUp' : 'FazerCards';
     } else if (merged.activeProvider) {
       merged.activeProvider = String(merged.activeProvider).toLowerCase().includes('khmer') ? 'KhmerTopUp' : 'FazerCards';
+    }
+
+    // Ensure fazerCardsTokens keyring exists and contains at least default token
+    if (!merged.fazerCardsTokens || !Array.isArray(merged.fazerCardsTokens) || merged.fazerCardsTokens.length === 0) {
+      const currentFzr = merged.fazerCardsApiKey || DEFAULT_PROVIDER_SETTINGS.fazerCardsApiKey;
+      merged.fazerCardsTokens = [
+        {
+          id: 'default_fzr_token',
+          name: 'Primary Token (Default)',
+          token: currentFzr,
+          isActive: true,
+          balanceUSD: merged.fazerCardsBalanceUSD ?? 18.50,
+          createdAt: new Date().toISOString()
+        }
+      ];
+    } else {
+      // Ensure the active key matches an active token in the list
+      const activeTok = merged.fazerCardsTokens.find(t => t.isActive);
+      if (activeTok && !merged.fazerCardsApiKey) {
+        merged.fazerCardsApiKey = activeTok.token;
+      } else if (merged.fazerCardsApiKey && !merged.fazerCardsTokens.some(t => t.token === merged.fazerCardsApiKey)) {
+        // Keep old tokens and append the current active key
+        merged.fazerCardsTokens.forEach(t => { t.isActive = false; });
+        merged.fazerCardsTokens.push({
+          id: 'token_' + Date.now().toString(36),
+          name: `Token #${merged.fazerCardsTokens.length + 1}`,
+          token: merged.fazerCardsApiKey,
+          isActive: true,
+          balanceUSD: merged.fazerCardsBalanceUSD ?? 18.50,
+          createdAt: new Date().toISOString()
+        });
+      }
     }
 
     const isKhmer = merged.activeProvider === 'KhmerTopUp';
@@ -230,6 +272,19 @@ export const fetchStoredProviderSettings = async () => {
           const ktBal = settings.khmerTopUpBalanceUSD ?? settings.KhmerTopUpBalanceUSD ?? local.khmerTopUpBalanceUSD;
           const isKhmer = finalActive === 'KhmerTopUp';
 
+          // Merge remote FazerCards tokens if available
+          const remoteTokens = settings.fazerCardsTokens || settings.FazerCardsTokens;
+          let mergedTokens = local.fazerCardsTokens || [];
+          if (Array.isArray(remoteTokens) && remoteTokens.length > 0) {
+            const existingTokens = [...mergedTokens];
+            remoteTokens.forEach(rem => {
+              if (!existingTokens.some(loc => loc.token === rem.token || loc.id === rem.id)) {
+                existingTokens.push(rem);
+              }
+            });
+            mergedTokens = existingTokens;
+          }
+
           const merged = {
             ...local,
             ...settings,
@@ -238,6 +293,7 @@ export const fetchStoredProviderSettings = async () => {
             fazerCardsBalanceUSD: fzrBal,
             khmerTopUpBalanceUSD: ktBal,
             balanceUSD: isKhmer ? ktBal : fzrBal,
+            fazerCardsTokens: mergedTokens,
             apiKey: isKhmer
               ? (settings.khmerTopUpApiKey || settings.KhmerTopUpApiKey || local.khmerTopUpApiKey)
               : (settings.fazerCardsApiKey || settings.FazerCardsApiKey || local.fazerCardsApiKey)
@@ -258,4 +314,102 @@ export const fetchStoredProviderSettings = async () => {
   }
 
   return local;
+};
+
+/**
+ * Add a new FazerCards API key / token to the keyring while preserving all existing tokens.
+ */
+export const addStoredFazerCardsToken = async (token, name = '', setActive = true) => {
+  if (!token) return getStoredProviderSettings();
+  const clean = token.trim();
+  const current = getStoredProviderSettings();
+  const tokens = Array.isArray(current.fazerCardsTokens) ? [...current.fazerCardsTokens] : [];
+
+  const existingIdx = tokens.findIndex(t => t.token === clean);
+  const tokenLabel = name.trim() || `Token #${tokens.length + 1}`;
+
+  if (existingIdx >= 0) {
+    tokens[existingIdx].name = tokenLabel;
+    if (setActive) {
+      tokens.forEach((t, i) => { t.isActive = (i === existingIdx); });
+    }
+  } else {
+    if (setActive) {
+      tokens.forEach(t => { t.isActive = false; });
+    }
+    tokens.push({
+      id: 'fzr_' + Date.now().toString(36) + '_' + Math.random().toString(36).substring(2, 6),
+      name: tokenLabel,
+      token: clean,
+      isActive: setActive,
+      balanceUSD: null,
+      createdAt: new Date().toISOString()
+    });
+  }
+
+  const updated = {
+    ...current,
+    fazerCardsTokens: tokens,
+    ...(setActive ? {
+      fazerCardsApiKey: clean,
+      apiKey: current.activeProvider === 'FazerCards' ? clean : current.apiKey
+    } : {})
+  };
+
+  return await saveStoredProviderSettings(updated);
+};
+
+/**
+ * Switch active FazerCards token by ID or token string.
+ */
+export const switchStoredFazerCardsToken = async (idOrToken) => {
+  if (!idOrToken) return getStoredProviderSettings();
+  const current = getStoredProviderSettings();
+  const tokens = Array.isArray(current.fazerCardsTokens) ? [...current.fazerCardsTokens] : [];
+
+  const target = tokens.find(t => t.id === idOrToken || t.token === idOrToken);
+  if (!target) return current;
+
+  tokens.forEach(t => { t.isActive = (t.id === target.id); });
+
+  const updated = {
+    ...current,
+    fazerCardsTokens: tokens,
+    fazerCardsApiKey: target.token,
+    apiKey: current.activeProvider === 'FazerCards' ? target.token : current.apiKey
+  };
+
+  return await saveStoredProviderSettings(updated);
+};
+
+/**
+ * Delete a FazerCards token from the keyring.
+ * Prevents deleting if it's the last remaining token.
+ */
+export const deleteStoredFazerCardsToken = async (id) => {
+  if (!id) return getStoredProviderSettings();
+  const current = getStoredProviderSettings();
+  let tokens = Array.isArray(current.fazerCardsTokens) ? [...current.fazerCardsTokens] : [];
+  if (tokens.length <= 1) return current;
+
+  const target = tokens.find(t => t.id === id);
+  if (!target) return current;
+
+  const wasActive = target.isActive;
+  tokens = tokens.filter(t => t.id !== id);
+
+  if (wasActive && tokens.length > 0) {
+    tokens[0].isActive = true;
+  }
+
+  const activeToken = tokens.find(t => t.isActive) || tokens[0];
+
+  const updated = {
+    ...current,
+    fazerCardsTokens: tokens,
+    fazerCardsApiKey: activeToken ? activeToken.token : current.fazerCardsApiKey,
+    apiKey: current.activeProvider === 'FazerCards' ? (activeToken ? activeToken.token : current.apiKey) : current.apiKey
+  };
+
+  return await saveStoredProviderSettings(updated);
 };

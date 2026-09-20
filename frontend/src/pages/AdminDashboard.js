@@ -9,7 +9,7 @@ import { CambodiaFlagSvg, CambodiaFlagFrame, CambodiaCornerBadge, DynamicFlagMed
 import CreativeFlagDropdown from '../components/CreativeFlagDropdown';
 import ProductPackageImage from '../components/ProductPackageImage';
 import { uploadToCloudinary, readFileAsDataUrl, getCloudinaryConfig, saveCloudinaryConfig } from '../services/cloudinary';
-import { getStoredProviderSettings, fetchStoredProviderSettings, switchActiveProvider, saveStoredProviderSettings } from '../services/supplierGateway';
+import { getStoredProviderSettings, fetchStoredProviderSettings, switchActiveProvider, saveStoredProviderSettings, addStoredFazerCardsToken, switchStoredFazerCardsToken, deleteStoredFazerCardsToken } from '../services/supplierGateway';
 
 const AdminDashboard = () => {
 
@@ -252,6 +252,14 @@ const PRICING_GAMES = [
   const [balanceEditModalOpen, setBalanceEditModalOpen] = useState(false);
   const [editingProviderName, setEditingProviderName] = useState('FazerCards');
   const [newBalanceInput, setNewBalanceInput] = useState('');
+  const [addFzrTokenModalOpen, setAddFzrTokenModalOpen] = useState(false);
+  const [newFzrTokenInput, setNewFzrTokenInput] = useState('');
+  const [newFzrTokenNameInput, setNewFzrTokenNameInput] = useState('');
+  const [newFzrTokenSetActive, setNewFzrTokenSetActive] = useState(true);
+  const [showFzrTokensKeyring, setShowFzrTokensKeyring] = useState(true);
+  const [showFzrTokenSecret, setShowFzrTokenSecret] = useState(false);
+  const [testingFzrTokenId, setTestingFzrTokenId] = useState(null);
+  const [savingFzrToken, setSavingFzrToken] = useState(false);
 
   // Event Banner Management State with Cloud Database Sync
   const [eventBanners, setEventBanners] = useState(() => getAllStoredBanners());
@@ -1398,8 +1406,34 @@ const PRICING_GAMES = [
         ? (providerSettings.fazerCardsBalanceUSD || 18.50)
         : (providerSettings.khmerTopUpBalanceUSD || 1.45);
 
+      // If user typed a new FazerCards token in the input box, ensure it is added to keyring and old tokens are KEPT!
+      let tokens = Array.isArray(providerSettings.fazerCardsTokens) ? [...providerSettings.fazerCardsTokens] : [];
+      let fzrKey = providerSettings.fazerCardsApiKey || 'fc_5f79a0016d5d87bd1e83ea4f';
+
+      if (providerSettings.activeProvider === 'FazerCards' && providerSettings.apiKey) {
+        const cleanInputKey = providerSettings.apiKey.trim();
+        fzrKey = cleanInputKey;
+        const exists = tokens.find(t => t.token === cleanInputKey);
+        if (!exists) {
+          // Add as new token and KEEP ALL PREVIOUS TOKENS SAFE!
+          tokens.forEach(t => { t.isActive = false; });
+          tokens.push({
+            id: 'fzr_' + Date.now().toString(36),
+            name: `Token #${tokens.length + 1}`,
+            token: cleanInputKey,
+            isActive: true,
+            balanceUSD: null,
+            createdAt: new Date().toISOString()
+          });
+        } else {
+          tokens.forEach(t => { t.isActive = (t.token === cleanInputKey); });
+        }
+      }
+
       const payload = {
         ...providerSettings,
+        fazerCardsApiKey: fzrKey,
+        fazerCardsTokens: tokens,
         balanceUSD: activeBal,
       };
 
@@ -1414,6 +1448,104 @@ const PRICING_GAMES = [
       loadData(true);
     } catch (err) {
       showToast('error', err.response?.data?.message || 'Failed to save settings');
+    }
+  };
+
+  const handleAddFazerCardsTokenSubmit = async (e) => {
+    if (e) e.preventDefault();
+    if (!newFzrTokenInput.trim()) {
+      showToast('error', 'Please enter a valid FazerCards token / API key.');
+      return;
+    }
+    setSavingFzrToken(true);
+    try {
+      const cleanToken = newFzrTokenInput.trim();
+      const label = newFzrTokenNameInput.trim() || `Token #${(providerSettings.fazerCardsTokens?.length || 0) + 1}`;
+      
+      const updated = await addStoredFazerCardsToken(cleanToken, label, newFzrTokenSetActive);
+      setProviderSettings(updated);
+
+      // Sync with .NET Backend
+      await adminAPI.addFazerCardsToken({
+        token: cleanToken,
+        name: label,
+        setActive: newFzrTokenSetActive
+      }).catch(() => {});
+      await adminAPI.updateProviderSettings(updated).catch(() => {});
+
+      setAddFzrTokenModalOpen(false);
+      setNewFzrTokenInput('');
+      setNewFzrTokenNameInput('');
+      showToast('success', `FazerCards token "${label}" added! Old token safely preserved in Keyring.`);
+      loadData(true);
+    } catch (err) {
+      showToast('error', 'Failed to add FazerCards token');
+    } finally {
+      setSavingFzrToken(false);
+    }
+  };
+
+  const handleSwitchFzrToken = async (tokenId) => {
+    try {
+      const updated = await switchStoredFazerCardsToken(tokenId);
+      setProviderSettings(updated);
+
+      await adminAPI.switchFazerCardsToken(tokenId).catch(() => {});
+      await adminAPI.updateProviderSettings(updated).catch(() => {});
+
+      showToast('success', 'Active FazerCards token switched successfully!');
+      loadData(true);
+    } catch (err) {
+      showToast('error', 'Failed to switch token');
+    }
+  };
+
+  const handleDeleteFzrToken = async (tokenId) => {
+    const target = (providerSettings.fazerCardsTokens || []).find(t => t.id === tokenId);
+    if (!target) return;
+    if (target.isActive) {
+      showToast('error', 'Cannot delete active token. Switch to another token first.');
+      return;
+    }
+    if (!window.confirm(`Are you sure you want to remove token "${target.name || target.token.substring(0, 10)}..." from keyring?`)) {
+      return;
+    }
+    try {
+      const updated = await deleteStoredFazerCardsToken(tokenId);
+      setProviderSettings(updated);
+
+      await adminAPI.deleteFazerCardsToken(tokenId).catch(() => {});
+      await adminAPI.updateProviderSettings(updated).catch(() => {});
+
+      showToast('success', 'Token removed from keyring.');
+    } catch (err) {
+      showToast('error', 'Failed to delete token');
+    }
+  };
+
+  const handleTestSpecificFzrToken = async (tokenStr, tokenId) => {
+    setTestingFzrTokenId(tokenId);
+    try {
+      const res = await adminAPI.testProviderConnection({
+        activeProvider: 'FazerCards',
+        apiKey: tokenStr
+      });
+      if (res.data?.success) {
+        const bal = res.data.balanceUSD ?? res.data.availableBalanceUSD ?? 0;
+        showToast('success', `Token Verified! Live Balance: $${bal.toFixed(2)} USD`);
+        const updatedTokens = (providerSettings.fazerCardsTokens || []).map(t =>
+          t.id === tokenId ? { ...t, balanceUSD: bal, status: 'Verified' } : t
+        );
+        const updated = { ...providerSettings, fazerCardsTokens: updatedTokens };
+        await saveStoredProviderSettings(updated);
+        setProviderSettings(updated);
+      } else {
+        showToast('error', res.data?.message || 'Token verification failed');
+      }
+    } catch (err) {
+      showToast('error', err.response?.data?.message || 'Token connection failed');
+    } finally {
+      setTestingFzrTokenId(null);
     }
   };
 
@@ -3602,22 +3734,210 @@ const PRICING_GAMES = [
                     </select>
                   </div>
 
-                  <div>
-                    <div className="flex justify-between items-center mb-1">
-                      <label className="text-slate-400 font-semibold">
-                        {providerSettings.activeProvider === 'FazerCards' ? 'FazerCards API Key / Token' : 'Khmer TopUp API Key (kt_...)'}
-                      </label>
-                      <span className="text-[10px] text-slate-500 font-mono">Auto-populated</span>
+                  {providerSettings.activeProvider === 'FazerCards' ? (
+                    <div className="space-y-2">
+                      <div className="flex justify-between items-center">
+                        <label className="text-slate-300 font-bold flex items-center gap-1.5">
+                          <span>🔑</span> FazerCards API Key / Token
+                        </label>
+                        <button
+                          type="button"
+                          onClick={() => setAddFzrTokenModalOpen(true)}
+                          className="px-2.5 py-1 rounded-xl bg-gradient-to-r from-amber-500 to-yellow-400 hover:from-amber-400 hover:to-yellow-300 text-black font-extrabold text-[11px] shadow-md flex items-center gap-1 transition-transform hover:scale-105"
+                        >
+                          <span>➕</span>
+                          <span>Add Token (Keep Old)</span>
+                        </button>
+                      </div>
+
+                      {/* Dropdown Quick Switcher if multiple tokens exist */}
+                      {(providerSettings.fazerCardsTokens || []).length > 1 && (
+                        <div>
+                          <label className="block text-[10px] text-slate-400 mb-1 font-semibold">
+                            Select Active Token:
+                          </label>
+                          <select
+                            value={providerSettings.fazerCardsTokens.find(t => t.isActive)?.id || ''}
+                            onChange={(e) => handleSwitchFzrToken(e.target.value)}
+                            className="input w-full text-xs py-2 rounded-xl font-bold bg-dark-bg border-amber-500/40 text-amber-300"
+                          >
+                            {(providerSettings.fazerCardsTokens || []).map((t, idx) => (
+                              <option key={t.id || idx} value={t.id}>
+                                {t.isActive ? '🟢 [ACTIVE] ' : '⚪ [STANDBY] '} {t.name || `Token #${idx + 1}`} ({t.token.length > 16 ? t.token.substring(0, 8) + '...' + t.token.substring(t.token.length - 6) : t.token}) {t.balanceUSD !== null && t.balanceUSD !== undefined ? `- $${t.balanceUSD.toFixed(2)}` : ''}
+                              </option>
+                            ))}
+                          </select>
+                        </div>
+                      )}
+
+                      {/* Active Token Input with Show/Hide & Copy buttons */}
+                      <div className="relative">
+                        <input
+                          type={showFzrTokenSecret ? "text" : "password"}
+                          value={providerSettings.apiKey}
+                          onChange={(e) =>
+                            setProviderSettings({
+                              ...providerSettings,
+                              apiKey: e.target.value,
+                              fazerCardsApiKey: e.target.value
+                            })
+                          }
+                          className="input w-full font-mono text-xs py-2.5 pr-20 rounded-xl text-cyan-300 bg-dark-bg border-slate-700"
+                          placeholder="fc_..."
+                        />
+                        <div className="absolute right-2 top-1/2 -translate-y-1/2 flex items-center gap-1">
+                          <button
+                            type="button"
+                            onClick={() => setShowFzrTokenSecret(!showFzrTokenSecret)}
+                            className="px-1.5 py-1 text-[11px] rounded hover:bg-slate-700/60 text-slate-400 hover:text-white"
+                            title={showFzrTokenSecret ? "Hide token" : "Show token"}
+                          >
+                            {showFzrTokenSecret ? '👁️' : '🔒'}
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => {
+                              if (providerSettings.apiKey) {
+                                navigator.clipboard.writeText(providerSettings.apiKey);
+                                showToast('success', 'Token copied to clipboard!');
+                              }
+                            }}
+                            className="px-2 py-1 text-[11px] font-bold rounded bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white border border-slate-700"
+                            title="Copy Token"
+                          >
+                            📋 Copy
+                          </button>
+                        </div>
+                      </div>
+
+                      {/* Saved Tokens Keyring Drawer */}
+                      <div className="mt-2.5 p-3 rounded-2xl bg-dark-bg/80 border border-slate-800/80 space-y-2">
+                        <div className="flex items-center justify-between">
+                          <button
+                            type="button"
+                            onClick={() => setShowFzrTokensKeyring(!showFzrTokensKeyring)}
+                            className="flex items-center gap-1.5 text-[11px] font-bold text-slate-300 hover:text-white"
+                          >
+                            <span>{showFzrTokensKeyring ? '▼' : '▶'}</span>
+                            <span>🗂️ FazerCards Saved Tokens Keyring ({(providerSettings.fazerCardsTokens || []).length})</span>
+                            <span className="text-[10px] text-amber-400/80 font-normal ml-1">— Old tokens kept</span>
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => setAddFzrTokenModalOpen(true)}
+                            className="px-2 py-0.5 rounded-lg bg-amber-500/20 hover:bg-amber-500/30 text-amber-300 border border-amber-500/40 text-[10px] font-bold flex items-center gap-1"
+                          >
+                            <span>➕ Add</span>
+                          </button>
+                        </div>
+
+                        {showFzrTokensKeyring && (
+                          <div className="space-y-1.5 pt-1">
+                            {(providerSettings.fazerCardsTokens || []).map((tokItem, idx) => {
+                              const isCurrent = tokItem.isActive || tokItem.token === providerSettings.apiKey;
+                              return (
+                                <div
+                                  key={tokItem.id || idx}
+                                  className={`flex items-center justify-between p-2 rounded-xl border transition-all ${
+                                    isCurrent
+                                      ? 'bg-amber-500/10 border-amber-500/40'
+                                      : 'bg-slate-900/40 border-slate-800/80 hover:border-slate-700'
+                                  }`}
+                                >
+                                  <div className="min-w-0 flex-1 pr-2">
+                                    <div className="flex items-center gap-1.5 flex-wrap">
+                                      <span className="font-bold text-white text-[11px] truncate">
+                                        {tokItem.name || `Token #${idx + 1}`}
+                                      </span>
+                                      {isCurrent ? (
+                                        <span className="px-1.5 py-0.5 rounded text-[9px] font-black bg-emerald-500/20 text-emerald-300 border border-emerald-500/40">
+                                          ACTIVE 🟢
+                                        </span>
+                                      ) : (
+                                        <span className="px-1.5 py-0.5 rounded text-[9px] font-bold bg-slate-800 text-slate-400">
+                                          STANDBY ⚪
+                                        </span>
+                                      )}
+                                      {tokItem.balanceUSD !== null && tokItem.balanceUSD !== undefined && (
+                                        <span className="text-[10px] font-mono text-cyan-300 font-semibold">
+                                          ${tokItem.balanceUSD.toFixed(2)} USD
+                                        </span>
+                                      )}
+                                    </div>
+                                    <div className="font-mono text-[10px] text-slate-400 truncate mt-0.5">
+                                      {tokItem.token.length > 20
+                                        ? `${tokItem.token.substring(0, 10)}...${tokItem.token.substring(tokItem.token.length - 8)}`
+                                        : tokItem.token}
+                                    </div>
+                                  </div>
+
+                                  <div className="flex items-center gap-1 shrink-0">
+                                    {!isCurrent && (
+                                      <button
+                                        type="button"
+                                        onClick={() => handleSwitchFzrToken(tokItem.id)}
+                                        className="px-2 py-1 rounded-lg bg-emerald-600/30 hover:bg-emerald-600/50 text-emerald-200 border border-emerald-500/40 text-[10px] font-bold"
+                                        title="Use this token as active"
+                                      >
+                                        ⚡ Use
+                                      </button>
+                                    )}
+                                    <button
+                                      type="button"
+                                      disabled={testingFzrTokenId === tokItem.id}
+                                      onClick={() => handleTestSpecificFzrToken(tokItem.token, tokItem.id)}
+                                      className="px-2 py-1 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 text-[10px] font-semibold"
+                                      title="Test token balance"
+                                    >
+                                      {testingFzrTokenId === tokItem.id ? '🔄' : '⚡ Test'}
+                                    </button>
+                                    <button
+                                      type="button"
+                                      onClick={() => {
+                                        navigator.clipboard.writeText(tokItem.token);
+                                        showToast('success', 'Token copied!');
+                                      }}
+                                      className="p-1 rounded bg-slate-800 hover:bg-slate-700 text-slate-400 hover:text-white text-[10px]"
+                                      title="Copy token"
+                                    >
+                                      📋
+                                    </button>
+                                    {!isCurrent && (providerSettings.fazerCardsTokens || []).length > 1 && (
+                                      <button
+                                        type="button"
+                                        onClick={() => handleDeleteFzrToken(tokItem.id)}
+                                        className="p-1 rounded bg-rose-950/40 hover:bg-rose-900/60 text-rose-400 border border-rose-500/30 text-[10px]"
+                                        title="Remove token"
+                                      >
+                                        🗑️
+                                      </button>
+                                    )}
+                                  </div>
+                                </div>
+                              );
+                            })}
+                          </div>
+                        )}
+                      </div>
                     </div>
-                    <input
-                      type="text"
-                      value={providerSettings.apiKey}
-                      onChange={(e) =>
-                        setProviderSettings({ ...providerSettings, apiKey: e.target.value })
-                      }
-                      className="input w-full font-mono text-xs py-2.5 rounded-xl text-cyan-300"
-                    />
-                  </div>
+                  ) : (
+                    <div>
+                      <div className="flex justify-between items-center mb-1">
+                        <label className="text-slate-400 font-semibold">
+                          Khmer TopUp API Key (kt_...)
+                        </label>
+                        <span className="text-[10px] text-slate-500 font-mono">Auto-populated</span>
+                      </div>
+                      <input
+                        type="text"
+                        value={providerSettings.apiKey}
+                        onChange={(e) =>
+                          setProviderSettings({ ...providerSettings, apiKey: e.target.value })
+                        }
+                        className="input w-full font-mono text-xs py-2.5 rounded-xl text-cyan-300"
+                      />
+                    </div>
+                  )}
 
                   <div className="flex items-center gap-2 pt-2">
                     <button type="submit" className="btn btn-primary text-xs py-2.5 px-4 font-bold shadow-glow-cyan">
@@ -5341,6 +5661,103 @@ const PRICING_GAMES = [
                   className="btn btn-primary text-xs py-2 px-4 shadow-glow-cyan"
                 >
                   Save Balance
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* Add FazerCards API Key / Token Modal (Keep Old Token) */}
+      {addFzrTokenModalOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-md animate-fadeIn">
+          <div className="bg-dark-card border border-dark-border rounded-3xl max-w-md w-full p-6 space-y-4 shadow-2xl animate-scaleUp">
+            <div className="flex justify-between items-center pb-2 border-b border-dark-border">
+              <div className="flex items-center gap-2">
+                <span className="text-xl">🔑</span>
+                <div>
+                  <h3 className="font-black text-white text-base">
+                    Add FazerCards API Key / Token
+                  </h3>
+                  <p className="text-[11px] text-amber-400 font-semibold">
+                    Old tokens are safely preserved in Keyring
+                  </p>
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={() => setAddFzrTokenModalOpen(false)}
+                className="text-slate-400 hover:text-white font-bold p-1 rounded-lg hover:bg-slate-800"
+              >
+                ✕
+              </button>
+            </div>
+
+            {/* Reassurance Info Banner */}
+            <div className="p-3 rounded-2xl bg-amber-500/10 border border-amber-500/30 text-amber-200 text-xs space-y-1">
+              <div className="font-bold flex items-center gap-1.5">
+                <span>🛡️</span> Safe Keyring Management
+              </div>
+              <p className="text-[11px] text-amber-300/80 leading-relaxed">
+                Your previous token (<span className="font-mono font-bold text-amber-200">{(providerSettings.fazerCardsApiKey || 'fc_...').substring(0, 10)}...</span>) will be kept as a standby backup. You can switch between tokens anytime.
+              </p>
+            </div>
+
+            <form onSubmit={handleAddFazerCardsTokenSubmit} className="space-y-3.5 text-xs">
+              <div>
+                <label className="block text-slate-300 mb-1 font-semibold">
+                  FazerCards API Key / Token string <span className="text-rose-400">*</span>
+                </label>
+                <input
+                  type="text"
+                  required
+                  value={newFzrTokenInput}
+                  onChange={(e) => setNewFzrTokenInput(e.target.value)}
+                  className="input w-full text-xs py-2.5 rounded-xl font-mono text-cyan-300 bg-dark-bg border-slate-700 focus:border-amber-400"
+                  placeholder="fc_5F79a0016d5d87bd1e83ea4f or JWT token..."
+                />
+              </div>
+
+              <div>
+                <label className="block text-slate-300 mb-1 font-semibold">
+                  Token Name / Label (Optional)
+                </label>
+                <input
+                  type="text"
+                  value={newFzrTokenNameInput}
+                  onChange={(e) => setNewFzrTokenNameInput(e.target.value)}
+                  className="input w-full text-xs py-2 rounded-xl bg-dark-bg border-slate-700"
+                  placeholder={`e.g. Backup Key #${(providerSettings.fazerCardsTokens?.length || 0) + 1} or Refill Token`}
+                />
+              </div>
+
+              <div className="flex items-center gap-2 pt-1">
+                <input
+                  type="checkbox"
+                  id="setFzrActiveImmediately"
+                  checked={newFzrTokenSetActive}
+                  onChange={(e) => setNewFzrTokenSetActive(e.target.checked)}
+                  className="rounded border-slate-700 text-amber-500 focus:ring-amber-500 h-4 w-4 bg-dark-bg"
+                />
+                <label htmlFor="setFzrActiveImmediately" className="text-slate-300 text-xs font-semibold cursor-pointer">
+                  Activate this token immediately for live diamond injections
+                </label>
+              </div>
+
+              <div className="flex justify-end gap-2 pt-3 border-t border-dark-border">
+                <button
+                  type="button"
+                  onClick={() => setAddFzrTokenModalOpen(false)}
+                  className="btn btn-secondary text-xs py-2 px-3"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  disabled={savingFzrToken}
+                  className="btn btn-primary text-xs py-2 px-4 shadow-glow-cyan font-bold bg-gradient-to-r from-amber-500 to-yellow-400 text-black hover:from-amber-400 hover:to-yellow-300 border-none"
+                >
+                  {savingFzrToken ? 'Saving...' : '💾 Save Token (Keep Old)'}
                 </button>
               </div>
             </form>

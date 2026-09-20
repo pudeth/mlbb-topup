@@ -158,6 +158,9 @@ export const adminAPI = {
   deleteBakongAccount: (id) => api.delete(`/admin/bakong/accounts/${id}`),
   updateBakongToken: (token) => api.post('/admin/bakong/update-token', { token }),
   testBakongToken: (token) => api.post('/admin/bakong/test-token', { token }),
+  addFazerCardsToken: (data) => api.post('/admin/provider/fazercards-tokens', data),
+  switchFazerCardsToken: (id) => api.post('/admin/provider/fazercards-tokens/switch', { id }),
+  deleteFazerCardsToken: (id) => api.delete(`/admin/provider/fazercards-tokens/${id}`),
   getPendingBalanceOrders: () => api.get('/admin/pending-balance-orders'),
   approveTopup: (orderId) => api.post(`/admin/orders/${orderId}/approve-topup`),
 };

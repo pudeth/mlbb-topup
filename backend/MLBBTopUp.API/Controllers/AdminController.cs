@@ -1023,6 +1023,72 @@ public class AdminController : BaseController
     }
 
     /// <summary>
+    /// Add a new FazerCards API Key / Token while keeping old tokens safely preserved
+    /// </summary>
+    [HttpPost("provider/fazercards-tokens")]
+    [HttpPost("/api/provider/fazercards-tokens")]
+    [AllowAnonymous]
+    public async Task<IActionResult> AddFazerCardsToken([FromBody] AddFazerCardsTokenRequest request)
+    {
+        if (string.IsNullOrWhiteSpace(request?.Token))
+        {
+            return BadRequest(new { success = false, message = "Token cannot be empty." });
+        }
+
+        var updated = await _gatewayManager.AddFazerCardsTokenAsync(request.Token, request.Name, request.SetActive);
+        return Ok(new
+        {
+            success = true,
+            message = "FazerCards token added successfully! Old tokens kept safely in keyring.",
+            settings = updated
+        });
+    }
+
+    /// <summary>
+    /// Switch active FazerCards API Key / Token
+    /// </summary>
+    [HttpPost("provider/fazercards-tokens/switch")]
+    [HttpPost("/api/provider/fazercards-tokens/switch")]
+    [AllowAnonymous]
+    public async Task<IActionResult> SwitchFazerCardsToken([FromBody] SwitchFazerCardsTokenRequest request)
+    {
+        if (string.IsNullOrWhiteSpace(request?.Id))
+        {
+            return BadRequest(new { success = false, message = "Token ID is required." });
+        }
+
+        var updated = await _gatewayManager.SwitchFazerCardsTokenAsync(request.Id);
+        return Ok(new
+        {
+            success = true,
+            message = "Active FazerCards token switched successfully.",
+            settings = updated
+        });
+    }
+
+    /// <summary>
+    /// Delete a FazerCards token from keyring
+    /// </summary>
+    [HttpDelete("provider/fazercards-tokens/{id}")]
+    [HttpDelete("/api/provider/fazercards-tokens/{id}")]
+    [AllowAnonymous]
+    public async Task<IActionResult> DeleteFazerCardsToken(string id)
+    {
+        if (string.IsNullOrWhiteSpace(id))
+        {
+            return BadRequest(new { success = false, message = "Token ID is required." });
+        }
+
+        var updated = await _gatewayManager.DeleteFazerCardsTokenAsync(id);
+        return Ok(new
+        {
+            success = true,
+            message = "FazerCards token removed from keyring.",
+            settings = updated
+        });
+    }
+
+    /// <summary>
     /// Test Connection to Top-Up Provider
     /// </summary>
     [HttpPost("provider/test-connection")]
@@ -1519,11 +1585,24 @@ public class AdminController : BaseController
         public string ApiKey { get; set; } = "fc_5f79a0016d5d87bd1e83ea4f";
         public string KhmerTopUpApiKey { get; set; } = "kt_6d38a3a5940e970221cc62fa306ae96044736364";
         public string FazerCardsApiKey { get; set; } = "fc_5f79a0016d5d87bd1e83ea4f";
+        public List<FazerCardsTokenItem> FazerCardsTokens { get; set; } = new();
         public string WebhookUrl { get; set; } = "http://localhost:5000/api/supplier/webhook";
         public decimal BalanceUSD { get; set; } = 18.50m;
         public decimal KhmerTopUpBalanceUSD { get; set; } = 1.25m;
         public decimal FazerCardsBalanceUSD { get; set; } = 18.50m;
         public string Status { get; set; } = "Connected & Active";
+    }
+
+    public class AddFazerCardsTokenRequest
+    {
+        public string Token { get; set; } = string.Empty;
+        public string? Name { get; set; }
+        public bool SetActive { get; set; } = true;
+    }
+
+    public class SwitchFazerCardsTokenRequest
+    {
+        public string Id { get; set; } = string.Empty;
     }
 
     public class SupplierBalanceDto

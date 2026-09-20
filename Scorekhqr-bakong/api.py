@@ -1472,7 +1472,11 @@ def handle_provider_switch():
 
         settings_data = (current_doc.get('data') if current_doc else {}) or {}
         settings_data['activeProvider'] = normalized
-        settings_data['ActiveProvider'] = normalized
+        if normalized == 'FazerCards' and 'fazerCardsTokens' in settings_data and isinstance(settings_data['fazerCardsTokens'], list):
+            active_tok = next((t.get('token') for t in settings_data['fazerCardsTokens'] if t.get('isActive')), None)
+            if active_tok:
+                settings_data['fazerCardsApiKey'] = active_tok
+
         settings_data['apiKey'] = settings_data.get('khmerTopUpApiKey', 'kt_6d38a3a5940e970221cc62fa306ae96044736364') if normalized == 'KhmerTopUp' else settings_data.get('fazerCardsApiKey', 'fc_5f79a0016d5d87bd1e83ea4f')
         settings_data['balanceUSD'] = settings_data.get('khmerTopUpBalanceUSD', 1.25) if normalized == 'KhmerTopUp' else settings_data.get('fazerCardsBalanceUSD', 18.50)
         settings_data['updatedAt'] = datetime.utcnow().isoformat()
