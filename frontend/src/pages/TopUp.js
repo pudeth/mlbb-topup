@@ -9,6 +9,7 @@ import ProductPackageImage from '../components/ProductPackageImage';
 import {
   AbaPayLogo,
   KhqrLogo,
+  AbaKhqrLogo,
   AbaPaywayVoucherHeader,
   VisaLogo,
   MastercardLogo,
@@ -1791,10 +1792,13 @@ const TopUp = () => {
                 >
                   <div className="flex items-start justify-between gap-2">
                     <div className="flex items-center gap-2">
-                      <div className="flex items-center gap-1.5 bg-[#030d1a] px-2.5 py-1 rounded-xl border border-sky-900/60 shadow-inner">
-                        <AbaPayLogo className="h-5 w-auto" />
-                        <span className="text-slate-600 text-xs font-bold">•</span>
-                        <KhqrLogo className="h-5 w-auto" />
+                      <div className="flex items-center gap-2 bg-[#030d1a] px-2 py-1 rounded-xl border border-sky-900/60 shadow-inner">
+                        <AbaKhqrLogo className="h-7 w-7 rounded-lg shadow-sm" />
+                        <div className="flex items-center gap-1.5">
+                          <AbaPayLogo className="h-4.5 w-auto" />
+                          <span className="text-slate-600 text-xs font-bold">•</span>
+                          <KhqrLogo className="h-4.5 w-auto" />
+                        </div>
                       </div>
                       <span className="px-2 py-0.5 rounded-full text-[9px] font-black uppercase tracking-wider bg-emerald-500/15 text-emerald-400 border border-emerald-500/30 font-khmer">
                         {language === 'km' ? 'លឿនបំផុត' : 'Fastest'}

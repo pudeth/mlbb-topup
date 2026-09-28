@@ -1,9 +1,26 @@
 import React from 'react';
+import abaKhqrImg from '../assets/aba-khqr-logo.png';
 
 /**
- * ABA PayWay & KHQR Official Compliance Logos (SVG Vector)
+ * ABA PayWay & KHQR Official Compliance Logos
  * Strictly complying with ABA Bank Merchant Integration Guideline v2.11
  */
+
+export { abaKhqrImg };
+
+export const AbaKhqrLogo = ({ className = "h-6 w-auto", style = {}, alt = "ABA KHQR" }) => (
+  <img
+    src={abaKhqrImg}
+    alt={alt}
+    className={`inline-block object-contain shrink-0 rounded-md shadow-sm ${className}`}
+    style={{ verticalAlign: 'middle', ...style }}
+    onError={(e) => {
+      if (e.target.src !== `${process.env.PUBLIC_URL || ''}/images/aba-khqr-logo.png`) {
+        e.target.src = `${process.env.PUBLIC_URL || ''}/images/aba-khqr-logo.png`;
+      }
+    }}
+  />
+);
 
 export const AbaPayLogo = ({ className = "h-5 w-auto", style = {} }) => (
   <svg viewBox="0 0 120 40" fill="none" xmlns="http://www.w3.org/2000/svg" className={`${className} shrink-0`} style={{ maxHeight: '24px', width: 'auto', display: 'inline-block', verticalAlign: 'middle', ...style }} aria-label="ABA PAY">
@@ -77,8 +94,9 @@ export const KhqrVoucherHeader = () => (
  * Official ABA PayWay Voucher Header
  */
 export const AbaPaywayVoucherHeader = () => (
-  <div className="relative w-full bg-gradient-to-r from-[#003B70] to-[#0055A5] py-3.5 px-4 flex items-center justify-between rounded-t-2xl overflow-hidden shadow-inner">
-    <div className="flex items-center gap-2">
+  <div className="relative w-full bg-gradient-to-r from-[#003B70] to-[#0055A5] py-3 px-4 flex items-center justify-between rounded-t-2xl overflow-hidden shadow-inner">
+    <div className="flex items-center gap-2.5">
+      <AbaKhqrLogo className="h-7 w-7 rounded-md border border-white/20 shadow-sm" />
       <svg viewBox="0 0 120 32" fill="none" xmlns="http://www.w3.org/2000/svg" className="h-6 sm:h-7 w-auto">
         <text x="4" y="24" fill="#FFFFFF" fontSize="22" fontWeight="900" fontFamily="system-ui, -apple-system, sans-serif" letterSpacing="0.8">
           ABA
@@ -147,6 +165,9 @@ export const JcbLogo = ({ className = "h-5 w-auto", style = {} }) => (
  */
 export const AbaAcceptanceMarks = ({ className = "" }) => (
   <div className={`flex flex-wrap items-center gap-1.5 ${className}`}>
+    <span title="ABA KHQR" className="inline-flex items-center p-0.5 rounded-md bg-white/5 border border-white/10 hover:border-white/20 transition-colors">
+      <AbaKhqrLogo className="h-4.5 sm:h-5 w-auto" />
+    </span>
     <span title="ABA PAY" className="inline-flex items-center px-1.5 py-0.5 rounded-md bg-white/5 border border-white/10 hover:border-white/20 transition-colors">
       <AbaPayLogo className="h-4 sm:h-4.5 w-auto" />
     </span>

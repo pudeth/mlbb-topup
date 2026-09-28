@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom';
 import { useLanguage } from '../context/LanguageContext';
 import { useStoreBranding } from '../services/storeBranding';
 import { BrandLogo } from './BrandLogo';
-import { AbaPaywayLogo, AbaAcceptanceMarks } from './AbaPaymentLogos';
+import { AbaPaywayLogo, AbaAcceptanceMarks, AbaKhqrLogo } from './AbaPaymentLogos';
 
 const Footer = () => {
   const { t } = useLanguage();
@@ -196,7 +196,10 @@ const Footer = () => {
         <div className="pt-6 border-t border-slate-800/80">
           <div className="p-4 sm:p-5 rounded-2xl bg-gradient-to-r from-[#002244]/80 via-slate-900/90 to-[#00172e]/80 border border-sky-500/30 flex flex-col md:flex-row items-center justify-between gap-4 shadow-xl">
             <div className="flex flex-col sm:flex-row items-center sm:items-start md:items-center gap-3 text-center sm:text-left">
-              <AbaPaywayLogo className="h-7 w-auto" />
+              <div className="flex items-center gap-2.5 shrink-0">
+                <AbaKhqrLogo className="h-9 w-9 rounded-xl border border-sky-400/30 shadow-md" />
+                <AbaPaywayLogo className="h-7 w-auto" />
+              </div>
               <div className="space-y-0.5">
                 <div className="flex items-center justify-center sm:justify-start gap-2">
                   <span className="text-xs font-black text-white tracking-wide">
