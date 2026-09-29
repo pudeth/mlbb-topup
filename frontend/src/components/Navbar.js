@@ -233,16 +233,6 @@ const Navbar = () => {
               )}
             </div>
 
-            {/* Instant Top-Up CTA */}
-            <Link
-              to="/topup"
-              className="hidden sm:inline-flex items-center gap-2 h-10 px-4.5 bg-gradient-to-r from-amber-400 via-amber-500 to-yellow-500 hover:from-amber-300 hover:to-yellow-400 text-slate-950 text-xs font-black tracking-wide rounded-xl shadow-[0_0_18px_rgba(251,191,36,0.35)] hover:shadow-[0_0_26px_rgba(251,191,36,0.55)] transition-all duration-300 hover:scale-[1.03] active:scale-[0.98] whitespace-nowrap cursor-pointer font-khmer"
-            >
-              <svg className="w-4 h-4 fill-current shrink-0" viewBox="0 0 24 24">
-                <path d="M13 2L3 14h8l-2 8 11-12h-8l2-8z" />
-              </svg>
-              <span>{t('nav_instant_btn')}</span>
-            </Link>
 
             {/* Logout Button */}
             {isAuthenticated() && (
