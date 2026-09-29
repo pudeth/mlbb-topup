@@ -554,6 +554,43 @@ const TopUp = () => {
     };
   }, [paymentData, paymentPaid]);
 
+  // Mobile device detection for mobile banking app deeplink triggers
+  const [isMobileDevice, setIsMobileDevice] = useState(() => {
+    if (typeof window === 'undefined') return false;
+    return (
+      /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) ||
+      window.innerWidth < 768
+    );
+  });
+
+  useEffect(() => {
+    const handleResize = () => {
+      setIsMobileDevice(
+        /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) ||
+        window.innerWidth < 768
+      );
+    };
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
+
+  const handleOpenBankApp = () => {
+    const deeplink = paymentData?.abapayDeeplink || paymentData?.khqrDeeplink;
+    const rawQr = paymentData?.qrString || paymentData?.khqrQRCode;
+
+    if (deeplink) {
+      window.location.href = deeplink;
+    } else if (rawQr) {
+      const bakongUrl = `bakong://qr?data=${encodeURIComponent(rawQr)}`;
+      window.location.href = bakongUrl;
+      setTimeout(() => {
+        window.location.href = 'abamobilebank://';
+      }, 500);
+    } else {
+      window.location.href = 'abamobilebank://';
+    }
+  };
+
   const [, startTransition] = useTransition();
   const carouselContainerRef = useRef(null);
 
@@ -2223,48 +2260,64 @@ const TopUp = () => {
                       : 'Scan with Bakong App or Mobile Banking app that support KHQR'}
                   </p>
 
-                  {/* User Options: Open Banking App / Close QR Code */}
-                  <div className="pt-3 space-y-2 font-khmer">
-                    {/* Option 1: Open Banking App */}
-                    <button
-                      type="button"
-                      onClick={() => {
-                        const deeplink = paymentData?.abapayDeeplink || paymentData?.khqrDeeplink;
-                        if (deeplink) {
-                          window.location.href = deeplink;
-                        } else {
-                          // Try ABA Mobile app scheme with store fallback
-                          window.location.href = 'abamobilebank://';
-                          setTimeout(() => {
-                            window.open('https://www.ababank.com/aba-mobile-app/', '_blank');
-                          }, 1200);
-                        }
-                      }}
-                      className="w-full py-2.5 px-4 rounded-xl bg-gradient-to-r from-[#003B70] via-[#004d8c] to-[#0055A5] hover:brightness-110 text-white text-xs sm:text-sm font-bold shadow-md hover:shadow-lg transition-all flex items-center justify-center gap-2 cursor-pointer active:scale-[0.98]"
-                    >
-                      <svg className="w-4 h-4 text-sky-300 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 18h.01M8 21h8a2 2 0 002-2V5a2 2 0 00-2-2H8a2 2 0 00-2 2v14a2 2 0 002 2z" />
-                      </svg>
-                      <span>
-                        {language === 'km' ? 'បើកកម្មវិធីធនាគារ (Open Bank App)' : 'Open Banking App'}
-                      </span>
-                    </button>
+                  {/* MOBILE-ONLY: Ask user to open banking app with automatic launch on YES */}
+                  {isMobileDevice && (
+                    <div className="pt-3 font-khmer">
+                      <div className="bg-sky-50/90 border border-sky-100 rounded-2xl p-3 text-center space-y-2.5 shadow-sm">
+                        <div className="flex items-center justify-center gap-1.5 text-slate-800">
+                          <span className="text-base">📱</span>
+                          <span className="text-xs font-bold font-khmer">
+                            {language === 'km'
+                              ? 'តើអ្នកចង់បើកកម្មវិធីធនាគារដើម្បីទូទាត់ទេ?'
+                              : 'Open banking app on your device to pay?'}
+                          </span>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          {/* Press YES to automatically open banking app in user device */}
+                          <button
+                            type="button"
+                            onClick={handleOpenBankApp}
+                            className="flex-1 py-2.5 px-3 rounded-xl bg-gradient-to-r from-[#003B70] via-[#004d8c] to-[#0055A5] hover:brightness-110 text-white text-xs font-bold shadow-md flex items-center justify-center gap-1.5 cursor-pointer active:scale-95 transition-all"
+                          >
+                            <span>✓</span>
+                            <span>{language === 'km' ? 'បាទ/ចាស (Yes)' : 'Yes, Open App'}</span>
+                          </button>
+                          
+                          {/* Close QR Code */}
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setPaymentData(null);
+                              setOrderId(null);
+                            }}
+                            className="flex-1 py-2.5 px-3 rounded-xl border border-slate-200 bg-white hover:bg-slate-50 text-slate-600 hover:text-slate-900 text-xs font-semibold cursor-pointer active:scale-95 transition-all"
+                          >
+                            <span>✕</span>
+                            <span>{language === 'km' ? 'បិទ (Close)' : 'No, Close'}</span>
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  )}
 
-                    {/* Option 2: Close QR Code */}
-                    <button
-                      type="button"
-                      onClick={() => {
-                        setPaymentData(null);
-                        setOrderId(null);
-                      }}
-                      className="w-full py-2 px-4 rounded-xl border border-slate-200 hover:bg-slate-50 text-slate-600 hover:text-slate-900 text-xs font-semibold transition-all flex items-center justify-center gap-1.5 cursor-pointer active:scale-[0.98]"
-                    >
-                      <span>✕</span>
-                      <span>
-                        {language === 'km' ? 'បិទ QR Code (Close QR Code)' : 'Close QR Code'}
-                      </span>
-                    </button>
-                  </div>
+                  {/* DESKTOP-ONLY: Clean Close QR Code option (No bank app button on PC) */}
+                  {!isMobileDevice && (
+                    <div className="pt-3 font-khmer">
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setPaymentData(null);
+                          setOrderId(null);
+                        }}
+                        className="w-full py-2 px-4 rounded-xl border border-slate-200 hover:bg-slate-50 text-slate-600 hover:text-slate-900 text-xs font-semibold transition-all flex items-center justify-center gap-1.5 cursor-pointer active:scale-[0.98]"
+                      >
+                        <span>✕</span>
+                        <span>
+                          {language === 'km' ? 'បិទ QR Code (Close QR Code)' : 'Close QR Code'}
+                        </span>
+                      </button>
+                    </div>
+                  )}
                 </>
               )}
 
