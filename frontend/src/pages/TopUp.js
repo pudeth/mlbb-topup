@@ -1872,6 +1872,74 @@ const TopUp = () => {
               Click any item to select and proceed to instant checkout.
             </div>
 
+            {/* Selected Item & Total Summary Box (Moved directly above Step 3) */}
+            <div ref={checkoutSectionRef} className="pt-3 font-khmer">
+              <div className="p-3.5 sm:p-4 rounded-2xl bg-gradient-to-br from-[#0b1220] via-[#0f172a] to-[#0b1220] border border-slate-700/80 shadow-xl space-y-3 sm:space-y-0 sm:flex sm:items-center sm:justify-between sm:gap-4">
+                {/* Product Summary */}
+                <div className="space-y-0.5">
+                  <div className="flex items-center gap-1.5">
+                    <span className="text-[10px] text-slate-400 uppercase font-black tracking-wider block font-khmer">
+                      {language === 'km' ? 'កញ្ចប់ដែលបានជ្រើសរើស & សរុប' : 'Selected Item & Total'}
+                    </span>
+                    {selectedProduct.tag && (
+                      <span className="px-2 py-0.2 rounded-full text-[9px] font-bold bg-amber-400/15 text-amber-300 border border-amber-400/30 font-khmer">
+                        {selectedProduct.tag}
+                      </span>
+                    )}
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <span className="text-base">💎</span>
+                    <span className="font-black text-amber-300 text-sm sm:text-base tracking-wide font-khmer">
+                      {selectedProduct.name}
+                    </span>
+                  </div>
+                </div>
+                
+                {/* Currency Switcher & Price Display */}
+                <div className="flex items-center justify-between sm:justify-end gap-3 pt-2 sm:pt-0 border-t sm:border-t-0 border-slate-800">
+                  {/* Currency Switcher Pill */}
+                  <div className="flex items-center p-1 bg-slate-900/90 rounded-xl border border-slate-700/90 shadow-inner">
+                    <button
+                      type="button"
+                      onClick={() => handleSwitchCurrency('USD')}
+                      className={`py-1 px-2.5 rounded-lg text-xs font-black transition-all cursor-pointer ${
+                        currency === 'USD'
+                          ? 'bg-amber-400 text-slate-950 shadow-md font-black'
+                          : 'text-slate-400 hover:text-white'
+                      }`}
+                    >
+                      USD ($)
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => handleSwitchCurrency('KHR')}
+                      className={`py-1 px-2.5 rounded-lg text-xs font-black transition-all cursor-pointer font-khmer ${
+                        currency === 'KHR'
+                          ? 'bg-emerald-400 text-slate-950 shadow-md font-black'
+                          : 'text-slate-400 hover:text-white'
+                      }`}
+                    >
+                      KHR (៛)
+                    </button>
+                  </div>
+
+                  {/* Price Block */}
+                  <div className="text-right">
+                    <span className="font-mono font-black text-emerald-400 text-xl sm:text-2xl block leading-tight drop-shadow-sm">
+                      {currency === 'KHR'
+                        ? <span>{Math.round(selectedProduct.price * 4100).toLocaleString()} <span className="font-khmer font-bold">៛</span></span>
+                        : `$${selectedProduct.price.toFixed(2)} USD`}
+                    </span>
+                    <span className="text-[10px] text-slate-400 font-mono block">
+                      {currency === 'KHR'
+                        ? `~$${selectedProduct.price.toFixed(2)} USD`
+                        : <span>~{Math.round(selectedProduct.price * 4100).toLocaleString()} <span className="font-khmer">៛</span></span>}
+                    </span>
+                  </div>
+                </div>
+              </div>
+            </div>
+
             {/* ======================================================== */}
             {/* STEP 3: SELECT PAYMENT METHOD (ABA PAYWAY COMPLIANCE v2.11) */}
             {/* Strictly adhering to Figma Guideline Node 18242-814 */}
@@ -1955,74 +2023,6 @@ const TopUp = () => {
                   </div>
                 </button>
               </div>
-            </div>
-
-            {/* Review & Pay Bar */}
-            <div ref={checkoutSectionRef} className="pt-4 border-t border-slate-800 space-y-4 font-khmer">
-              <div className="p-3.5 sm:p-4 rounded-2xl bg-gradient-to-br from-[#0b1220] via-[#0f172a] to-[#0b1220] border border-slate-700/80 shadow-xl space-y-3 sm:space-y-0 sm:flex sm:items-center sm:justify-between sm:gap-4">
-                {/* Product Summary */}
-                <div className="space-y-0.5">
-                  <div className="flex items-center gap-1.5">
-                    <span className="text-[10px] text-slate-400 uppercase font-black tracking-wider block font-khmer">
-                      {language === 'km' ? 'កញ្ចប់ដែលបានជ្រើសរើស & សរុប' : 'Selected Item & Total'}
-                    </span>
-                    {selectedProduct.tag && (
-                      <span className="px-2 py-0.2 rounded-full text-[9px] font-bold bg-amber-400/15 text-amber-300 border border-amber-400/30 font-khmer">
-                        {selectedProduct.tag}
-                      </span>
-                    )}
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <span className="text-base">💎</span>
-                    <span className="font-black text-amber-300 text-sm sm:text-base tracking-wide font-khmer">
-                      {selectedProduct.name}
-                    </span>
-                  </div>
-                </div>
-                
-                {/* Currency Switcher & Price Display */}
-                <div className="flex items-center justify-between sm:justify-end gap-3 pt-2 sm:pt-0 border-t sm:border-t-0 border-slate-800">
-                  {/* Currency Switcher Pill */}
-                  <div className="flex items-center p-1 bg-slate-900/90 rounded-xl border border-slate-700/90 shadow-inner">
-                    <button
-                      type="button"
-                      onClick={() => handleSwitchCurrency('USD')}
-                      className={`py-1 px-2.5 rounded-lg text-xs font-black transition-all cursor-pointer ${
-                        currency === 'USD'
-                          ? 'bg-amber-400 text-slate-950 shadow-md font-black'
-                          : 'text-slate-400 hover:text-white'
-                      }`}
-                    >
-                      USD ($)
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => handleSwitchCurrency('KHR')}
-                      className={`py-1 px-2.5 rounded-lg text-xs font-black transition-all cursor-pointer font-khmer ${
-                        currency === 'KHR'
-                          ? 'bg-emerald-400 text-slate-950 shadow-md font-black'
-                          : 'text-slate-400 hover:text-white'
-                      }`}
-                    >
-                      KHR (៛)
-                    </button>
-                  </div>
-
-                  {/* Price Block */}
-                  <div className="text-right">
-                    <span className="font-mono font-black text-emerald-400 text-xl sm:text-2xl block leading-tight drop-shadow-sm">
-                      {currency === 'KHR'
-                        ? <span>{Math.round(selectedProduct.price * 4100).toLocaleString()} <span className="font-khmer font-bold">៛</span></span>
-                        : `$${selectedProduct.price.toFixed(2)} USD`}
-                    </span>
-                    <span className="text-[10px] text-slate-400 font-mono block">
-                      {currency === 'KHR'
-                        ? `~$${selectedProduct.price.toFixed(2)} USD`
-                        : <span>~{Math.round(selectedProduct.price * 4100).toLocaleString()} <span className="font-khmer">៛</span></span>}
-                    </span>
-                  </div>
-                </div>
-              </div>
 
               {error && (
                 <div className="p-3 bg-rose-950/60 border border-rose-500/40 rounded-xl text-rose-300 text-xs font-bold flex items-center gap-2 animate-pulse font-khmer">
@@ -2037,7 +2037,6 @@ const TopUp = () => {
                   {language === 'km' ? 'លក្ខខណ្ឌ & ឯកជនភាព' : 'Terms & Privacy Policy'}
                 </Link>
               </div>
-
             </div>
           </div>
         </div>
