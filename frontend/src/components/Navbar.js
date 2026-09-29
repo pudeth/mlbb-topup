@@ -73,120 +73,136 @@ const Navbar = () => {
             </Link>
           </div>
 
-          {/* Desktop Navigation Links - Ultra Sleek Pill */}
-            <nav className="hidden lg:flex items-center gap-0.5 bg-slate-950/80 backdrop-blur-xl p-1 rounded-full border border-slate-800/60 shadow-[0_4px_30px_rgba(0,0,0,0.4)] font-khmer">
-              <Link
-                to="/"
-                className={`px-3.5 py-1.5 rounded-full text-[11px] font-bold transition-all duration-200 flex items-center gap-1.5 ${
-                  isActive('/')
-                    ? 'bg-slate-800/90 text-cyan-400 shadow-sm'
-                    : 'text-slate-400 hover:text-white hover:bg-slate-800/40'
-                }`}
-              >
-                <span className="text-[13px]">🏠</span>
-                <span>{t('nav_home')}</span>
-              </Link>
-              <Link
-                to="/topup"
-                className={`px-3.5 py-1.5 rounded-full text-[11px] font-bold transition-all duration-200 flex items-center gap-1.5 ${
-                  isActive('/topup')
-                    ? 'bg-amber-400/15 text-amber-400 shadow-sm'
-                    : 'text-slate-400 hover:text-white hover:bg-slate-800/40'
-                }`}
-              >
-                <span className="text-[13px]">💎</span>
-                <span>{t('nav_topup')}</span>
-              </Link>
-              <Link
-                to="/support"
-                className={`px-3.5 py-1.5 rounded-full text-[11px] font-bold transition-all duration-200 flex items-center gap-1.5 ${
-                  isActive('/support')
-                    ? 'bg-slate-800/80 text-white shadow-sm'
-                    : 'text-slate-400 hover:text-white hover:bg-slate-800/40'
-                }`}
-              >
-                <span className="text-[13px]">🎧</span>
-                <span>{t('nav_support')}</span>
-              </Link>
-              <Link
-                to="/terms"
-                className={`px-3.5 py-1.5 rounded-full text-[11px] font-bold transition-all duration-200 flex items-center gap-1.5 ${
-                  isActive('/terms')
-                    ? 'bg-slate-800/80 text-white shadow-sm'
-                    : 'text-slate-400 hover:text-white hover:bg-slate-800/40'
-                }`}
-              >
-                <span className="text-[13px]">📜</span>
-                <span>{t('nav_policy')}</span>
-              </Link>
+          {/* Desktop Navigation Links - Modern Cyber Gaming Pill */}
+          <nav className="hidden lg:flex items-center gap-1 bg-[#090d18]/90 backdrop-blur-2xl p-1.5 rounded-2xl border border-slate-800/80 shadow-[0_4px_30px_rgba(0,0,0,0.5)] font-khmer select-none">
+            {/* Home */}
+            <Link
+              to="/"
+              className={`px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all duration-200 flex items-center gap-2 whitespace-nowrap ${
+                isActive('/')
+                  ? 'bg-sky-500/15 text-sky-300 border border-sky-400/30 shadow-[0_0_12px_rgba(56,189,248,0.25)]'
+                  : 'text-slate-400 hover:text-white hover:bg-slate-800/60 border border-transparent'
+              }`}
+            >
+              <svg className={`w-3.5 h-3.5 shrink-0 ${isActive('/') ? 'text-sky-400' : 'text-slate-400'}`} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
+              </svg>
+              <span>{t('nav_home')}</span>
+            </Link>
 
-              {isAdmin() && (
-                <>
-                  <div className="w-px h-4 bg-slate-700/60 mx-1" />
-                  <Link
-                    to="/admin/setup"
-                    className={`px-3.5 py-1.5 rounded-full text-[11px] font-bold transition-all duration-200 flex items-center gap-1.5 ${
-                      isActive('/admin/setup')
-                        ? 'bg-purple-900/40 text-purple-300 shadow-sm'
-                        : 'text-slate-500 hover:text-purple-300 hover:bg-slate-800/40'
-                    }`}
-                  >
-                    <span className="text-[13px]">⚙️</span>
-                    <span>{t('nav_admin')}</span>
-                  </Link>
-                  <Link
-                    to="/admin/orders"
-                    className={`px-3.5 py-1.5 rounded-full text-[11px] font-bold transition-all duration-200 flex items-center gap-1.5 ${
-                      isActive('/admin/orders')
-                        ? 'bg-purple-900/40 text-purple-300 shadow-sm'
-                        : 'text-slate-500 hover:text-purple-300 hover:bg-slate-800/40'
-                    }`}
-                  >
-                    <span className="text-[13px]">📊</span>
-                    <span>{t('nav_orders')}</span>
-                  </Link>
-                </>
-              )}
-            </nav>
+            {/* Top Up Diamonds */}
+            <Link
+              to="/topup"
+              className={`px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all duration-200 flex items-center gap-2 whitespace-nowrap ${
+                isActive('/topup') && !location.search.includes('pass')
+                  ? 'bg-amber-400/15 text-amber-300 border border-amber-400/30 shadow-[0_0_12px_rgba(251,191,36,0.25)]'
+                  : 'text-slate-400 hover:text-white hover:bg-slate-800/60 border border-transparent'
+              }`}
+            >
+              <svg className={`w-3.5 h-3.5 shrink-0 ${isActive('/topup') && !location.search.includes('pass') ? 'text-amber-400' : 'text-amber-400/80'}`} viewBox="0 0 24 24" fill="currentColor">
+                <path d="M6 3h12l5 7-11 11L1 10l5-7z" />
+              </svg>
+              <span>{t('nav_topup')}</span>
+            </Link>
 
-          {/* Right: Language + CTA + Logout */}
-          <div className="flex items-center gap-2">
+            {/* Support */}
+            <Link
+              to="/support"
+              className={`px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all duration-200 flex items-center gap-2 whitespace-nowrap ${
+                isActive('/support')
+                  ? 'bg-purple-500/15 text-purple-300 border border-purple-400/30 shadow-[0_0_12px_rgba(168,85,247,0.25)]'
+                  : 'text-slate-400 hover:text-white hover:bg-slate-800/60 border border-transparent'
+              }`}
+            >
+              <svg className={`w-3.5 h-3.5 shrink-0 ${isActive('/support') ? 'text-purple-400' : 'text-slate-400'}`} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 100-6 3 3 0 000 6z" />
+              </svg>
+              <span>{t('nav_support')}</span>
+            </Link>
 
+            {/* Policy */}
+            <Link
+              to="/terms"
+              className={`px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all duration-200 flex items-center gap-2 whitespace-nowrap ${
+                isActive('/terms') || isActive('/privacy')
+                  ? 'bg-emerald-500/15 text-emerald-300 border border-emerald-400/30 shadow-[0_0_12px_rgba(16,185,129,0.25)]'
+                  : 'text-slate-400 hover:text-white hover:bg-slate-800/60 border border-transparent'
+              }`}
+            >
+              <svg className={`w-3.5 h-3.5 shrink-0 ${isActive('/terms') || isActive('/privacy') ? 'text-emerald-400' : 'text-slate-400'}`} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
+              </svg>
+              <span>{t('nav_policy')}</span>
+            </Link>
+
+            {isAdmin() && (
+              <>
+                <div className="w-px h-4 bg-slate-700/60 mx-1" />
+                <Link
+                  to="/admin/setup"
+                  className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all duration-200 flex items-center gap-1.5 whitespace-nowrap ${
+                    isActive('/admin/setup')
+                      ? 'bg-purple-900/40 text-purple-300 border border-purple-500/30'
+                      : 'text-slate-500 hover:text-purple-300 hover:bg-slate-800/50 border border-transparent'
+                  }`}
+                >
+                  <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                  </svg>
+                  <span>{t('nav_admin')}</span>
+                </Link>
+                <Link
+                  to="/admin/orders"
+                  className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all duration-200 flex items-center gap-1.5 whitespace-nowrap ${
+                    isActive('/admin/orders')
+                      ? 'bg-purple-900/40 text-purple-300 border border-purple-500/30'
+                      : 'text-slate-500 hover:text-purple-300 hover:bg-slate-800/50 border border-transparent'
+                  }`}
+                >
+                  <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+                  </svg>
+                  <span>{t('nav_orders')}</span>
+                </Link>
+              </>
+            )}
+          </nav>
+
+          {/* Right: Actions */}
+          <div className="flex items-center gap-2 select-none">
             {/* Refresh Button */}
             <button
               type="button"
               onClick={() => window.location.reload()}
               title="Refresh Page"
-              className="h-9 w-9 rounded-full bg-slate-900/80 hover:bg-slate-800 border border-slate-800 hover:border-slate-600 text-slate-400 hover:text-white flex items-center justify-center transition-all duration-300 hover:rotate-180 group"
+              className="h-10 w-10 rounded-xl bg-slate-900/80 hover:bg-slate-800 border border-slate-800 hover:border-slate-700 text-slate-400 hover:text-sky-300 flex items-center justify-center transition-all duration-300 active:scale-95 group shadow-sm"
             >
-              <svg className="w-4 h-4 transition-transform duration-500 group-hover:rotate-180" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+              <svg className="w-4 h-4 transition-transform duration-500 group-hover:rotate-180" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
               </svg>
             </button>
 
-            {/* Language Selector Dropdown - Always in front */}
+            {/* Language Selector Dropdown */}
             <div className="relative z-50">
               <button
                 type="button"
                 onClick={() => setLangDropdownOpen(!langDropdownOpen)}
-                className="h-9 px-3 rounded-full bg-slate-900/90 hover:bg-slate-800 border border-slate-700/80 hover:border-slate-600 text-slate-300 text-[12px] font-bold flex items-center gap-1.5 transition-all shadow-sm active:scale-95"
+                className="h-10 px-3.5 rounded-xl bg-slate-900/90 hover:bg-slate-800 border border-slate-800 hover:border-slate-700 text-slate-200 text-xs font-bold flex items-center gap-2 transition-all shadow-sm active:scale-95 whitespace-nowrap"
               >
-                <span className={`fi fi-${currentLang.flagCode || 'kh'} rounded-xs shadow-xs text-sm leading-none`} />
+                <span className={`fi fi-${currentLang.flagCode || 'kh'} rounded-xs shadow-xs text-base leading-none`} />
                 <span className="hidden sm:inline font-bold">{currentLang.short}</span>
-                <svg className={`w-3 h-3 text-slate-400 transition-transform duration-200 ${langDropdownOpen ? 'rotate-180 text-amber-400' : ''}`} viewBox="0 0 20 20" fill="currentColor">
+                <svg className={`w-3.5 h-3.5 text-slate-400 transition-transform duration-200 ${langDropdownOpen ? 'rotate-180 text-amber-400' : ''}`} viewBox="0 0 20 20" fill="currentColor">
                   <path fillRule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clipRule="evenodd" />
                 </svg>
               </button>
 
               {langDropdownOpen && (
                 <>
-                  {/* Click-away overlay to close dropdown */}
                   <div
                     className="fixed inset-0 z-40"
                     onClick={() => setLangDropdownOpen(false)}
                   />
-
-                  {/* High-priority Dropdown Menu */}
                   <div className="absolute right-0 mt-2 w-48 bg-[#0d1322]/98 backdrop-blur-2xl border border-slate-700/90 rounded-2xl p-1.5 shadow-[0_20px_50px_rgba(0,0,0,0.95)] ring-1 ring-white/10 z-50 animate-fadeIn font-khmer">
                     <div className="px-3 py-1.5 text-[10px] font-extrabold text-slate-400 uppercase tracking-wider border-b border-slate-800/80 mb-1 flex items-center gap-1">
                       <span>🌐</span> Language / ភាសា
@@ -217,12 +233,12 @@ const Navbar = () => {
               )}
             </div>
 
-            {/* Top Up CTA - Golden Pill */}
+            {/* Instant Top-Up CTA */}
             <Link
               to="/topup"
-              className="hidden sm:flex items-center gap-1.5 h-9 px-4 bg-gradient-to-r from-amber-500 to-yellow-400 hover:from-amber-400 hover:to-yellow-300 text-slate-950 text-[12px] font-black tracking-wide rounded-full shadow-[0_0_16px_rgba(251,191,36,0.25)] hover:shadow-[0_0_24px_rgba(251,191,36,0.4)] transition-all duration-300 hover:scale-[1.04] group font-khmer cursor-pointer"
+              className="hidden sm:inline-flex items-center gap-2 h-10 px-4.5 bg-gradient-to-r from-amber-400 via-amber-500 to-yellow-500 hover:from-amber-300 hover:to-yellow-400 text-slate-950 text-xs font-black tracking-wide rounded-xl shadow-[0_0_18px_rgba(251,191,36,0.35)] hover:shadow-[0_0_26px_rgba(251,191,36,0.55)] transition-all duration-300 hover:scale-[1.03] active:scale-[0.98] whitespace-nowrap cursor-pointer font-khmer"
             >
-              <svg className="w-3.5 h-3.5 fill-current shrink-0 transition-transform duration-300 group-hover:rotate-12" viewBox="0 0 24 24">
+              <svg className="w-4 h-4 fill-current shrink-0" viewBox="0 0 24 24">
                 <path d="M13 2L3 14h8l-2 8 11-12h-8l2-8z" />
               </svg>
               <span>{t('nav_instant_btn')}</span>
@@ -232,10 +248,10 @@ const Navbar = () => {
             {isAuthenticated() && (
               <button
                 onClick={logout}
-                className="hidden lg:flex items-center gap-1.5 h-9 px-3 bg-slate-900/80 hover:bg-red-950/40 border border-slate-800 hover:border-red-500/30 text-slate-400 hover:text-red-400 text-[12px] font-bold rounded-full transition-all duration-200"
+                className="hidden lg:inline-flex items-center gap-1.5 h-10 px-3.5 bg-slate-900/80 hover:bg-rose-950/40 border border-slate-800 hover:border-rose-500/40 text-slate-400 hover:text-rose-300 text-xs font-semibold rounded-xl transition-all whitespace-nowrap active:scale-95"
               >
-                <svg className="w-3.5 h-3.5 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+                <svg className="w-3.5 h-3.5 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
                 </svg>
                 <span>Logout</span>
               </button>
@@ -244,9 +260,9 @@ const Navbar = () => {
             {/* Mobile Hamburger / Close Button */}
             <button
               type="button"
-              className={`lg:hidden h-9 w-9 flex items-center justify-center rounded-full border transition-all duration-300 ${
+              className={`lg:hidden h-10 w-10 flex items-center justify-center rounded-xl border transition-all duration-300 ${
                 mobileMenuOpen
-                  ? 'bg-red-950/40 border-red-500/40 text-red-300 rotate-90 shadow-sm'
+                  ? 'bg-rose-950/40 border-rose-500/40 text-rose-300 rotate-90 shadow-sm'
                   : 'bg-slate-900/80 hover:bg-slate-800 border-slate-800 text-slate-300 hover:text-white'
               }`}
               onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
@@ -254,11 +270,11 @@ const Navbar = () => {
             >
               {mobileMenuOpen ? (
                 <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M6 18L18 6M6 6l12 12" />
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M6 18L18 6M6 6l12 12" />
                 </svg>
               ) : (
                 <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M4 6h16M4 12h16M4 18h16" />
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M4 6h16M4 12h16M4 18h16" />
                 </svg>
               )}
             </button>
