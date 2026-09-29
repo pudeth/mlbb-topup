@@ -369,7 +369,6 @@ const TopUp = () => {
   const [timeLeft, setTimeLeft] = useState(300); // 5-minute (300 seconds) countdown
   const [productCategoryTab, setProductCategoryTab] = useState('all'); // 'all', 'passes', 'diamonds'
   const [layoutMode, setLayoutMode] = useState('tiles'); // 'list', 'tiles', 'grid'
-  const [selectedPaymentOption, setSelectedPaymentOption] = useState('abapay_khqr'); // 'abapay_khqr' or 'cards'
   const checkoutSectionRef = useRef(null);
 
   const handleSwitchCurrency = async (newCurr) => {
@@ -1772,23 +1771,27 @@ const TopUp = () => {
                 </span>
               </div>
 
-              {/* Single Official ABA KHQR Payment Method */}
+              {/* Single Official ABA KHQR Payment Method - Press Directly to Pay */}
               <div className="flex flex-wrap items-center">
-                <div
-                  onClick={() => setSelectedPaymentOption('abapay_khqr')}
+                <button
+                  type="button"
+                  onClick={() => {
+                    if (loading || isTopupDisabled) return;
+                    handleProceedToPayment();
+                  }}
+                  disabled={loading || isTopupDisabled}
                   style={{
                     width: '276px',
                     maxWidth: '100%',
                     height: '60px',
-                    opacity: 1,
+                    opacity: isTopupDisabled ? 0.6 : 1,
                     borderRadius: '8px',
                     padding: '10px',
                     gap: '10px',
                   }}
-                  className={`relative bg-white border shadow-sm hover:shadow-md transition-all cursor-pointer select-none active:scale-[0.985] flex items-center justify-between ${
-                    selectedPaymentOption === 'abapay_khqr'
-                      ? 'border-sky-500 ring-2 ring-sky-400/40'
-                      : 'border-slate-200/90 hover:border-sky-400'
+                  title={isTopupDisabled ? 'Top-Up Temporarily Paused' : 'Click to pay with ABA KHQR'}
+                  className={`relative bg-white border border-slate-200/90 shadow-sm hover:shadow-md hover:border-sky-500 hover:ring-2 hover:ring-sky-400/30 transition-all select-none active:scale-[0.985] flex items-center justify-between text-left ${
+                    loading ? 'cursor-wait opacity-90' : isTopupDisabled ? 'cursor-not-allowed' : 'cursor-pointer'
                   }`}
                 >
                   <div className="flex items-center gap-[10px] min-w-0">
@@ -1805,18 +1808,27 @@ const TopUp = () => {
                         style={{ color: '#697386', marginTop: '4px' }}
                         className="text-[11px] leading-tight font-medium truncate font-khmer"
                       >
-                        {language === 'km' ? 'ស្កេនទូទាត់ជាមួយកម្មវិធីធនាគារទាំងអស់' : 'Scan to pay with any banking app'}
+                        {loading
+                          ? (language === 'km' ? 'កំពុងភ្ជាប់ទៅកាន់ ABA...' : 'Connecting to ABA...')
+                          : (language === 'km' ? 'ចុចទីនេះដើម្បីស្កេនទូទាត់' : 'Scan to pay with any banking app')}
                       </span>
                     </div>
                   </div>
 
-                  {/* Right Chevron Button matching Figma */}
-                  <div className="w-7 h-7 rounded-md bg-[#f1f5f9] flex items-center justify-center text-slate-400 shrink-0">
-                    <svg className="w-3.5 h-3.5 text-slate-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M9 5l7 7-7 7" />
-                    </svg>
+                  {/* Right Action / Chevron Button */}
+                  <div className="w-7 h-7 rounded-md bg-[#f1f5f9] flex items-center justify-center text-slate-500 shrink-0">
+                    {loading ? (
+                      <svg className="animate-spin w-3.5 h-3.5 text-sky-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z"></path>
+                      </svg>
+                    ) : (
+                      <svg className="w-3.5 h-3.5 text-slate-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M9 5l7 7-7 7" />
+                      </svg>
+                    )}
                   </div>
-                </div>
+                </button>
               </div>
             </div>
 
@@ -1894,43 +1906,18 @@ const TopUp = () => {
                 </div>
               )}
 
-              {/* Pay Button (ABA PayWay Branded CTA) */}
-              {!paymentData && !paymentPaid && (
-                <div className="space-y-2.5">
-                  <button
-                    onClick={handleProceedToPayment}
-                    disabled={loading || isTopupDisabled}
-                    className={`w-full py-4 px-5 rounded-2xl font-black text-sm sm:text-base uppercase tracking-wider flex items-center justify-center gap-2.5 transition-all cursor-pointer shadow-xl active:scale-[0.985] touch-manipulation ${
-                      isTopupDisabled
-                        ? 'bg-slate-800 text-slate-400 border border-slate-700 cursor-not-allowed opacity-80'
-                        : 'bg-gradient-to-r from-[#0055a5] via-[#0066cc] to-[#00488d] hover:from-[#0062be] hover:to-[#0052a3] text-white shadow-sky-950/60 border border-sky-400/40 hover:shadow-sky-500/20'
-                    }`}
-                  >
-                    <span className="text-lg">{isTopupDisabled ? '⚠️' : loading ? '⏳' : '💳'}</span>
-                    <span className="truncate font-khmer">
-                      {isTopupDisabled
-                        ? (selectedGame?.status === 'Closed' || masterStatus?.status === 'Closed' ? (language === 'km' ? 'ការបញ្ចូលពេជ្រត្រូវបានបិទបណ្តោះអាសន្ន' : 'Top-Up Temporarily Closed') : (language === 'km' ? 'ការបញ្ចូលពេជ្រត្រូវបានផ្អាកបណ្តោះអាសន្ន' : 'Top-Up Temporarily Paused'))
-                        : loading
-                        ? (language === 'km' ? 'កំពុងភ្ជាប់ទៅកាន់ ABA PayWay...' : 'Connecting ABA PayWay...')
-                        : (language === 'km'
-                            ? `ទូទាត់ ${currency === 'KHR' ? `${Math.round(selectedProduct.price * 4100).toLocaleString()} ៛` : `$${selectedProduct.price.toFixed(2)} USD`} ជាមួយ ABA KHQR`
-                            : `Pay ${currency === 'KHR' ? `${Math.round(selectedProduct.price * 4100).toLocaleString()} ៛` : `$${selectedProduct.price.toFixed(2)} USD`} with ABA KHQR`)}
-                    </span>
-                  </button>
-
-                  <div className="flex flex-col sm:flex-row items-center justify-between gap-1.5 text-[10.5px] text-slate-400 px-1 pt-0.5 text-center sm:text-left font-khmer">
-                    <span className="flex items-center gap-1.5">
-                      <span>🛡️</span>
-                      <span>{language === 'km' ? 'ប្រព័ន្ធទូទាត់មានសុវត្ថិភាពខ្ពស់ដោយ ' : 'Processed securely by '}<strong>Advanced Bank of Asia Ltd. (ABA Bank)</strong></span>
-                    </span>
-                    <span>
-                      <Link to="/privacy" target="_blank" className="text-cyan-400 hover:underline font-khmer">
-                        {language === 'km' ? 'លក្ខខណ្ឌ & ឯកជនភាព' : 'Terms & Privacy Policy'}
-                      </Link>
-                    </span>
-                  </div>
-                </div>
-              )}
+              {/* Security & Privacy Notice */}
+              <div className="flex flex-col sm:flex-row items-center justify-between gap-1.5 text-[10.5px] text-slate-400 px-1 pt-1 text-center sm:text-left font-khmer">
+                <span className="flex items-center gap-1.5">
+                  <span>🛡️</span>
+                  <span>{language === 'km' ? 'ប្រព័ន្ធទូទាត់មានសុវត្ថិភាពខ្ពស់ដោយ ' : 'Processed securely by '}<strong>Advanced Bank of Asia Ltd. (ABA Bank)</strong></span>
+                </span>
+                <span>
+                  <Link to="/privacy" target="_blank" className="text-cyan-400 hover:underline font-khmer">
+                    {language === 'km' ? 'លក្ខខណ្ឌ & ឯកជនភាព' : 'Terms & Privacy Policy'}
+                  </Link>
+                </span>
+              </div>
 
             </div>
           </div>
