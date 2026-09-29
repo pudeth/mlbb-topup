@@ -7,15 +7,8 @@ import { getStoredGames, getMasterTopupStatus, fetchStoredGames, fetchMasterTopu
 import { CambodiaFlagFrame } from '../components/CambodiaFlagBadge';
 import ProductPackageImage from '../components/ProductPackageImage';
 import {
-  AbaPayLogo,
-  KhqrLogo,
   AbaKhqrLogo,
-  AbaPaywayVoucherHeader,
-  VisaLogo,
-  MastercardLogo,
-  UnionPayLogo,
-  JcbLogo,
-  AbaPaywayTrustBox
+  AbaPaywayVoucherHeader
 } from '../components/AbaPaymentLogos';
 
 // Game-specific packages matching upstream supplier catalog
@@ -1779,108 +1772,52 @@ const TopUp = () => {
                 </span>
               </div>
 
-              {/* Payment Method Cards Container - Responsive Mobile First */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                {/* Option A: ABA PAY & KHQR */}
+              {/* Single Official ABA KHQR Payment Method */}
+              <div className="flex flex-wrap items-center">
                 <div
                   onClick={() => setSelectedPaymentOption('abapay_khqr')}
-                  className={`relative p-3.5 sm:p-4 rounded-2xl border transition-all cursor-pointer select-none active:scale-[0.985] touch-manipulation ${
+                  style={{
+                    width: '276px',
+                    maxWidth: '100%',
+                    height: '60px',
+                    opacity: 1,
+                    borderRadius: '8px',
+                    padding: '10px',
+                    gap: '10px',
+                  }}
+                  className={`relative bg-white border shadow-sm hover:shadow-md transition-all cursor-pointer select-none active:scale-[0.985] flex items-center justify-between ${
                     selectedPaymentOption === 'abapay_khqr'
-                      ? 'bg-gradient-to-b from-[#002f5a]/60 via-[#0b162c] to-[#070e1c] border-sky-400 shadow-xl shadow-sky-950/70 ring-1 ring-sky-400/40'
-                      : 'bg-[#090e1a]/90 border-slate-800/90 hover:border-slate-700 hover:bg-[#0d1424] opacity-90'
+                      ? 'border-sky-500 ring-2 ring-sky-400/40'
+                      : 'border-slate-200/90 hover:border-sky-400'
                   }`}
                 >
-                  <div className="flex items-start justify-between gap-2">
-                    <div className="flex items-center gap-2">
-                      <div className="flex items-center gap-2 bg-[#030d1a] px-2 py-1 rounded-xl border border-sky-900/60 shadow-inner">
-                        <AbaKhqrLogo className="h-7 w-7 rounded-lg shadow-sm" />
-                        <div className="flex items-center gap-1.5">
-                          <AbaPayLogo className="h-4.5 w-auto" />
-                          <span className="text-slate-600 text-xs font-bold">•</span>
-                          <KhqrLogo className="h-4.5 w-auto" />
-                        </div>
-                      </div>
-                      <span className="px-2 py-0.5 rounded-full text-[9px] font-black uppercase tracking-wider bg-emerald-500/15 text-emerald-400 border border-emerald-500/30 font-khmer">
-                        {language === 'km' ? 'លឿនបំផុត' : 'Fastest'}
+                  <div className="flex items-center gap-[10px] min-w-0">
+                    <AbaKhqrLogo
+                      alt="ABA KHQR"
+                      style={{ width: '40px', height: '40px', borderRadius: '8px' }}
+                      className="shrink-0 object-contain shadow-sm"
+                    />
+                    <div className="flex flex-col justify-center text-left min-w-0">
+                      <span className="text-[14px] font-bold text-slate-900 leading-none tracking-tight">
+                        ABA KHQR
+                      </span>
+                      <span
+                        style={{ color: '#697386', marginTop: '4px' }}
+                        className="text-[11px] leading-tight font-medium truncate font-khmer"
+                      >
+                        {language === 'km' ? 'ស្កេនទូទាត់ជាមួយកម្មវិធីធនាគារទាំងអស់' : 'Scan to pay with any banking app'}
                       </span>
                     </div>
-
-                    {/* Radio Indicator */}
-                    <div className={`w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-black shrink-0 transition-all ${
-                      selectedPaymentOption === 'abapay_khqr'
-                        ? 'bg-gradient-to-tr from-sky-500 to-cyan-400 text-white shadow-md shadow-sky-500/50 ring-2 ring-sky-400/40'
-                        : 'border border-slate-700 bg-slate-900/60 text-transparent'
-                    }`}>
-                      ✓
-                    </div>
                   </div>
 
-                  <div className="mt-2.5">
-                    <span className="text-xs sm:text-[13px] font-black text-white block">ABA PAYWAY (ABA Mobile & KHQR)</span>
-                    <p className="text-[10.5px] text-slate-400 leading-snug mt-0.5 font-khmer">
-                      {language === 'km'
-                        ? 'ស្កេនជាមួយ ABA Mobile ឬកម្មវិធីធនាគារទាំងអស់តាមរយៈ Bakong KHQR'
-                        : 'Scan with ABA Mobile or any banking app via Bakong KHQR'}
-                    </p>
-                  </div>
-
-                  <div className="mt-3 pt-2.5 border-t border-slate-800/80 flex items-center justify-between text-[10px] font-khmer">
-                    <span className="text-emerald-400 font-bold flex items-center gap-1">
-                      <span>⚡</span> {language === 'km' ? 'ផ្ញើជូនភ្លាមៗ ១០វិនាទី' : 'Instant 10s Delivery'}
-                    </span>
-                    <span className="text-sky-300 font-mono font-semibold bg-sky-950/60 px-2 py-0.5 rounded-md border border-sky-800/40">
-                      {language === 'km' ? 'សេវា 0%' : '0% Surcharge'}
-                    </span>
-                  </div>
-                </div>
-
-                {/* Option B: Credit / Debit Cards via ABA PayWay */}
-                <div
-                  onClick={() => setSelectedPaymentOption('cards')}
-                  className={`relative p-3.5 sm:p-4 rounded-2xl border transition-all cursor-pointer select-none active:scale-[0.985] touch-manipulation ${
-                    selectedPaymentOption === 'cards'
-                      ? 'bg-gradient-to-b from-[#002f5a]/60 via-[#0b162c] to-[#070e1c] border-sky-400 shadow-xl shadow-sky-950/70 ring-1 ring-sky-400/40'
-                      : 'bg-[#090e1a]/90 border-slate-800/90 hover:border-slate-700 hover:bg-[#0d1424] opacity-90'
-                  }`}
-                >
-                  <div className="flex items-start justify-between gap-2">
-                    <div className="flex items-center gap-1.5 bg-[#030d1a] px-2 py-1 rounded-xl border border-sky-900/60 shadow-inner flex-wrap">
-                      <VisaLogo className="h-4 w-auto" />
-                      <MastercardLogo className="h-4 w-auto" />
-                      <UnionPayLogo className="h-4 w-auto" />
-                      <JcbLogo className="h-4 w-auto" />
-                    </div>
-
-                    {/* Radio Indicator */}
-                    <div className={`w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-black shrink-0 transition-all ${
-                      selectedPaymentOption === 'cards'
-                        ? 'bg-gradient-to-tr from-sky-500 to-cyan-400 text-white shadow-md shadow-sky-500/50 ring-2 ring-sky-400/40'
-                        : 'border border-slate-700 bg-slate-900/60 text-transparent'
-                    }`}>
-                      ✓
-                    </div>
-                  </div>
-
-                  <div className="mt-2.5">
-                    <span className="text-xs sm:text-[13px] font-black text-white block font-khmer">
-                      {language === 'km' ? 'កាតឥណទាន / ឥណពន្ធ (Credit / Debit Cards)' : 'Credit / Debit Cards'}
-                    </span>
-                    <p className="text-[10.5px] text-slate-400 leading-snug mt-0.5 font-khmer">
-                      Visa, Mastercard, UnionPay & JCB via ABA PayWay 3D-Secure
-                    </p>
-                  </div>
-
-                  <div className="mt-3 pt-2.5 border-t border-slate-800/80 flex items-center justify-between text-[10px] font-khmer">
-                    <span className="text-sky-400 font-semibold flex items-center gap-1">
-                      <span>🔒</span> {language === 'km' ? 'ការពារសុវត្ថិភាព 3D-Secure' : '3D-Secure Protected'}
-                    </span>
-                    <span className="text-slate-400 font-mono">ABA PayWay</span>
+                  {/* Right Chevron Button matching Figma */}
+                  <div className="w-7 h-7 rounded-md bg-[#f1f5f9] flex items-center justify-center text-slate-400 shrink-0">
+                    <svg className="w-3.5 h-3.5 text-slate-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M9 5l7 7-7 7" />
+                    </svg>
                   </div>
                 </div>
               </div>
-
-              {/* ABA PayWay Trust Box & Acceptance Marks Bar */}
-              <AbaPaywayTrustBox merchantName="Pu Deth" />
             </div>
 
             {/* Review & Pay Bar */}
@@ -1975,13 +1912,9 @@ const TopUp = () => {
                         ? (selectedGame?.status === 'Closed' || masterStatus?.status === 'Closed' ? (language === 'km' ? 'ការបញ្ចូលពេជ្រត្រូវបានបិទបណ្តោះអាសន្ន' : 'Top-Up Temporarily Closed') : (language === 'km' ? 'ការបញ្ចូលពេជ្រត្រូវបានផ្អាកបណ្តោះអាសន្ន' : 'Top-Up Temporarily Paused'))
                         : loading
                         ? (language === 'km' ? 'កំពុងភ្ជាប់ទៅកាន់ ABA PayWay...' : 'Connecting ABA PayWay...')
-                        : selectedPaymentOption === 'cards'
-                        ? (language === 'km'
-                            ? `ទូទាត់ ${currency === 'KHR' ? `${Math.round(selectedProduct.price * 4100).toLocaleString()} ៛` : `$${selectedProduct.price.toFixed(2)} USD`} ជាមួយ Card`
-                            : `Pay ${currency === 'KHR' ? `${Math.round(selectedProduct.price * 4100).toLocaleString()} ៛` : `$${selectedProduct.price.toFixed(2)} USD`} with Card`)
                         : (language === 'km'
-                            ? `ទូទាត់ ${currency === 'KHR' ? `${Math.round(selectedProduct.price * 4100).toLocaleString()} ៛` : `$${selectedProduct.price.toFixed(2)} USD`} ជាមួយ ABA PayWay`
-                            : `Pay ${currency === 'KHR' ? `${Math.round(selectedProduct.price * 4100).toLocaleString()} ៛` : `$${selectedProduct.price.toFixed(2)} USD`} with ABA PayWay`)}
+                            ? `ទូទាត់ ${currency === 'KHR' ? `${Math.round(selectedProduct.price * 4100).toLocaleString()} ៛` : `$${selectedProduct.price.toFixed(2)} USD`} ជាមួយ ABA KHQR`
+                            : `Pay ${currency === 'KHR' ? `${Math.round(selectedProduct.price * 4100).toLocaleString()} ៛` : `$${selectedProduct.price.toFixed(2)} USD`} with ABA KHQR`)}
                     </span>
                   </button>
 
