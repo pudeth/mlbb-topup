@@ -2021,7 +2021,7 @@ const TopUp = () => {
                     gap: '10px',
                   }}
                   title={isTopupDisabled ? 'Top-Up Temporarily Paused' : 'Click to pay with ABA KHQR'}
-                  className={`relative bg-white border border-slate-200/90 shadow-sm hover:shadow-md hover:border-sky-500 hover:ring-2 hover:ring-sky-400/30 transition-all select-none active:scale-[0.985] flex items-center justify-between text-left ${
+                  className={`relative bg-gradient-to-br from-[#0b1220] via-[#0f172a] to-[#0b1220] border border-slate-700/90 hover:border-sky-400/80 shadow-lg hover:shadow-[0_0_20px_rgba(14,165,233,0.18)] transition-all select-none active:scale-[0.985] flex items-center justify-between text-left group ${
                     loading ? 'cursor-wait opacity-90' : isTopupDisabled ? 'cursor-not-allowed' : 'cursor-pointer'
                   }`}
                 >
@@ -2032,12 +2032,11 @@ const TopUp = () => {
                       className="shrink-0 object-contain shadow-sm"
                     />
                     <div className="flex flex-col justify-center text-left min-w-0">
-                      <span className="text-[14px] font-bold text-slate-900 leading-none tracking-tight">
+                      <span className="text-[14px] font-bold text-white group-hover:text-sky-300 leading-none tracking-tight transition-colors">
                         ABA KHQR
                       </span>
                       <span
-                        style={{ color: '#697386', marginTop: '4px' }}
-                        className="text-[11px] leading-tight font-medium truncate font-khmer"
+                        className="text-[11px] leading-tight font-medium truncate font-khmer text-slate-400 mt-1"
                       >
                         {loading
                           ? (language === 'km' ? 'កំពុងភ្ជាប់ទៅកាន់ ABA...' : 'Connecting to ABA...')
@@ -2047,14 +2046,14 @@ const TopUp = () => {
                   </div>
 
                   {/* Right Action / Chevron Button */}
-                  <div className="w-7 h-7 rounded-md bg-[#f1f5f9] flex items-center justify-center text-slate-500 shrink-0">
+                  <div className="w-7 h-7 rounded-md bg-slate-800/90 border border-slate-700/80 group-hover:border-sky-400/50 flex items-center justify-center text-slate-300 group-hover:text-sky-300 shrink-0 transition-colors">
                     {loading ? (
-                      <svg className="animate-spin w-3.5 h-3.5 text-sky-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                      <svg className="animate-spin w-3.5 h-3.5 text-sky-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
                         <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
                         <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z"></path>
                       </svg>
                     ) : (
-                      <svg className="w-3.5 h-3.5 text-slate-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <svg className="w-3.5 h-3.5 text-slate-300 group-hover:text-sky-300 transition-colors" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M9 5l7 7-7 7" />
                       </svg>
                     )}
