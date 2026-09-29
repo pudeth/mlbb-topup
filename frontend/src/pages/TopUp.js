@@ -8,7 +8,7 @@ import { CambodiaFlagFrame } from '../components/CambodiaFlagBadge';
 import ProductPackageImage from '../components/ProductPackageImage';
 import {
   AbaKhqrLogo,
-  AbaPaywayVoucherHeader
+  KhqrVoucherHeader
 } from '../components/AbaPaymentLogos';
 
 // Game-specific packages matching upstream supplier catalog
@@ -365,7 +365,6 @@ const TopUp = () => {
   const qrExpiredRef = useRef(false);
   const [processingStep, setProcessingStep] = useState(0); // 0: scanning, 1: verifying, 2: server sync, 3: delivering
   const [currency, setCurrency] = useState('USD'); // 'USD' or 'KHR'
-  const [switchingCurrency, setSwitchingCurrency] = useState(false);
   const [timeLeft, setTimeLeft] = useState(300); // 5-minute (300 seconds) countdown
   const [productCategoryTab, setProductCategoryTab] = useState('all'); // 'all', 'passes', 'diamonds'
   const [layoutMode, setLayoutMode] = useState('tiles'); // 'list', 'tiles', 'grid'
@@ -373,7 +372,6 @@ const TopUp = () => {
 
   const handleSwitchCurrency = async (newCurr) => {
     if (newCurr === currency && paymentData?.currency === newCurr) return;
-    setSwitchingCurrency(true);
     setCurrency(newCurr);
     setPaymentData(prev => prev ? ({ ...prev, currency: newCurr }) : prev);
 
@@ -434,11 +432,7 @@ const TopUp = () => {
         }
       } catch (err) {
         console.warn('Currency switch notice:', err?.message);
-      } finally {
-        setTimeout(() => setSwitchingCurrency(false), 350);
       }
-    } else {
-      setSwitchingCurrency(false);
     }
   };
 
@@ -505,12 +499,6 @@ const TopUp = () => {
     }
     return () => document.body.classList.remove('modal-open');
   }, [paymentData, paymentPaid]);
-
-  const formatTime = (seconds) => {
-    const mins = Math.floor(seconds / 60);
-    const secs = seconds % 60;
-    return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
-  };
 
   const [, startTransition] = useTransition();
   const carouselContainerRef = useRef(null);
@@ -1927,16 +1915,13 @@ const TopUp = () => {
             <span className="font-extrabold text-sm sm:text-base tracking-widest uppercase italic text-sky-400">PAYWAY</span>
           </div>
 
-          {/* Clean White Modal Container (Strictly matching Image 2) */}
-          <div className="bg-white rounded-3xl max-w-[340px] sm:max-w-[360px] w-full p-4 sm:p-5 shadow-2xl space-y-3.5 animate-scaleUp relative my-auto">
+          {/* Clean White Modal Container (Strictly matching Image 2 from Figma) */}
+          <div className="bg-white rounded-3xl max-w-[340px] sm:max-w-[360px] w-full p-4 sm:p-5 shadow-2xl space-y-4 animate-scaleUp relative my-auto">
             
-            {/* Modal Header: Title & Close Button */}
-            <div className="flex items-center justify-between pt-0.5 px-0.5">
-              <h3 className="text-lg sm:text-xl font-black text-slate-900 tracking-tight flex items-center gap-2">
-                <span>ABA PAYWAY</span>
-                <span className="text-[10px] font-mono font-bold text-slate-400 bg-slate-100 px-2 py-0.5 rounded-full">
-                  #{orderId}
-                </span>
+            {/* Modal Header: Title "ABA KHQR" & Cyan Close Button */}
+            <div className="flex items-center justify-between pt-0.5 px-1">
+              <h3 className="text-lg sm:text-xl font-bold text-slate-900 tracking-tight">
+                ABA KHQR
               </h3>
               <button
                 type="button"
@@ -1944,52 +1929,16 @@ const TopUp = () => {
                   setPaymentData(null);
                   setOrderId(null);
                 }}
-                className="w-7 h-7 rounded-full text-slate-400 hover:text-slate-700 hover:bg-slate-100 flex items-center justify-center text-sm font-bold transition-all cursor-pointer"
+                className="w-7 h-7 flex items-center justify-center text-cyan-500 hover:text-cyan-600 text-lg font-bold transition-all cursor-pointer"
                 title="Close"
               >
                 ✕
               </button>
             </div>
 
-            {/* Currency & Timer Controls */}
-            <div className="flex items-center justify-between gap-2 px-0.5 text-xs">
-              {/* Currency Toggle Buttons */}
-              <div className="flex items-center p-0.5 bg-slate-100 rounded-xl border border-slate-200">
-                <button
-                  type="button"
-                  onClick={() => handleSwitchCurrency('USD')}
-                  className={`py-1 px-2.5 rounded-lg text-[11px] font-black transition-all cursor-pointer ${
-                    (paymentData?.currency || currency) === 'USD'
-                      ? 'bg-[#0055a5] text-white shadow-xs'
-                      : 'text-slate-500 hover:text-slate-800'
-                  }`}
-                >
-                  USD ($)
-                </button>
-                <button
-                  type="button"
-                  onClick={() => handleSwitchCurrency('KHR')}
-                  className={`py-1 px-2.5 rounded-lg text-[11px] font-black transition-all cursor-pointer ${
-                    (paymentData?.currency || currency) === 'KHR'
-                      ? 'bg-[#0055a5] text-white shadow-xs'
-                      : 'text-slate-500 hover:text-slate-800'
-                  }`}
-                >
-                  KHR (៛)
-                </button>
-              </div>
-
-              {/* Countdown Timer */}
-              <div className="text-[11px] font-mono text-amber-700 bg-amber-50 px-2.5 py-1 rounded-xl border border-amber-200 font-bold flex items-center gap-1">
-                <span>⏱️</span>
-                <span>{formatTime(timeLeft)}</span>
-              </div>
-            </div>
-
             {processingStep > 0 ? (
               /* ── Payment Processing Steps UI ── */
               <div className="p-5 bg-emerald-50 rounded-2xl border border-emerald-200 text-center space-y-4 my-2 animate-fadeIn">
-                {/* Header */}
                 <div className="flex flex-col items-center gap-1.5">
                   <div className="w-12 h-12 rounded-full bg-emerald-500 text-white flex items-center justify-center text-xl shadow-lg animate-pulse">
                     {processingStep < 3 ? '⚡' : '✅'}
@@ -2005,40 +1954,12 @@ const TopUp = () => {
                     {processingStep === 3 && `Crediting ${selectedProduct?.name || 'diamonds'} to Player ID ${formData.playerID}`}
                   </p>
                 </div>
-
-                {/* Step Progress */}
-                <div className="space-y-2 text-left">
-                  {/* Step 1 */}
-                  <div className={`flex items-center gap-2.5 px-3 py-2 rounded-xl text-xs font-bold transition-all duration-500 ${processingStep >= 1 ? 'bg-emerald-100 text-emerald-800' : 'bg-slate-100 text-slate-400'}`}>
-                    <span className={`w-6 h-6 rounded-full flex items-center justify-center text-[11px] font-black flex-shrink-0 ${processingStep >= 1 ? 'bg-emerald-500 text-white' : 'bg-slate-300 text-slate-500'}`}>
-                      {processingStep >= 1 ? '✓' : '1'}
-                    </span>
-                    <span>💳 Payment Confirmed — ABA PayWay Gateway Signature ✓</span>
-                  </div>
-                  {/* Step 2 */}
-                  <div className={`flex items-center gap-2.5 px-3 py-2 rounded-xl text-xs font-bold transition-all duration-500 ${processingStep >= 2 ? 'bg-blue-100 text-blue-800' : processingStep === 1 ? 'bg-slate-100 text-slate-400 animate-pulse' : 'bg-slate-100 text-slate-400'}`}>
-                    <span className={`w-6 h-6 rounded-full flex items-center justify-center text-[11px] font-black flex-shrink-0 ${processingStep >= 2 ? 'bg-blue-500 text-white' : 'bg-slate-300 text-slate-500'}`}>
-                      {processingStep >= 2 ? '✓' : '2'}
-                    </span>
-                    <span>⚡ Connected to Game Server (Zone {formData.serverID || 'Default'}) ✓</span>
-                  </div>
-                  {/* Step 3 */}
-                  <div className={`flex items-center gap-2.5 px-3 py-2 rounded-xl text-xs font-bold transition-all duration-500 ${processingStep >= 3 ? 'bg-amber-100 text-amber-800' : 'bg-slate-100 text-slate-400'}`}>
-                    <span className={`w-6 h-6 rounded-full flex items-center justify-center text-[11px] font-black flex-shrink-0 ${processingStep >= 3 ? 'bg-amber-500 text-white' : 'bg-slate-300 text-slate-500'}`}>
-                      {processingStep >= 3 ? '✓' : '3'}
-                    </span>
-                    <span>💎 Crediting {selectedProduct?.name || 'diamonds'} → Player {formData.playerID}</span>
-                  </div>
-                </div>
-
-                {/* Progress Bar */}
                 <div className="w-full bg-slate-200 h-2 rounded-full overflow-hidden">
                   <div
                     className="bg-emerald-500 h-full rounded-full transition-all duration-700 ease-out"
                     style={{ width: `${(processingStep / 3) * 100}%` }}
                   />
                 </div>
-                <p className="text-[9px] text-slate-400 font-mono">Step {processingStep}/3 — Order #{orderId}</p>
               </div>
             ) : timeLeft === 0 ? (
               /* Expired Screen */
@@ -2057,13 +1978,13 @@ const TopUp = () => {
               </div>
             ) : (
               /* THE AUTHENTIC KHQR VOUCHER CARD (100% Matching Image 2) */
-              <div className="space-y-3">
-                <div className="bg-white rounded-2xl shadow-[0_6px_28px_rgba(0,0,0,0.09)] border border-slate-200/90 overflow-hidden relative">
+              <div className="space-y-3.5">
+                <div className="bg-white rounded-2xl shadow-sm border border-slate-200/90 overflow-hidden relative">
                   
-                  {/* Official ABA PayWay Voucher Banner */}
-                  <AbaPaywayVoucherHeader />
+                  {/* Official Red KHQR Banner with folded corner cut */}
+                  <KhqrVoucherHeader />
 
-                  {/* Voucher Body: Merchant Name & Amount */}
+                  {/* Voucher Body: Store Name & Amount */}
                   {(() => {
                     const currentCur = paymentData?.currency || currency;
                     const isRiel = currentCur === 'KHR';
@@ -2071,122 +1992,49 @@ const TopUp = () => {
                     const validQrString = paymentData?.qrString || paymentData?.khqrQRCode || `https://checkout-sandbox.payway.com.kh/pay?tran_id=${paymentData?.tranId || orderId}`;
 
                     return (
-                      <div className="p-4 sm:p-5 text-center space-y-2.5">
-                        <div className="space-y-0.5">
-                          <span className="text-[10.5px] uppercase font-bold text-slate-600 tracking-wider block">
-                            DETH PHEAK (ABA Bank)
+                      <div className="p-4 sm:p-5 text-left">
+                        {/* Store Name & Amount (Left-aligned as in Image 2) */}
+                        <div className="space-y-0.5 pl-1">
+                          <span className="text-[11px] uppercase font-bold text-slate-500 tracking-wider block font-khmer">
+                            DETH PHEAK
                           </span>
                           <span className="text-2xl sm:text-3xl font-black text-slate-900 tracking-tight block">
                             {isRiel ? `${payAmount.toLocaleString()} ៛` : `$ ${payAmount.toFixed(2)}`}
                           </span>
-                          <div className="flex items-center justify-center gap-2 pt-0.5 text-[9.5px] text-slate-500 font-mono">
-                            <span>USD: <strong className="text-slate-700">004 164 074</strong></span>
-                            <span>•</span>
-                            <span>KHR: <strong className="text-slate-700">015 499 221</strong></span>
-                          </div>
                         </div>
 
                         {/* Perforated dashed divider (Image 2) */}
-                        <div className="border-t border-dashed border-slate-200 w-full my-2" />
+                        <div className="border-t border-dashed border-slate-300 w-full my-3.5" />
 
-                        {/* 100% Camera-Readable Dynamic QR Code matching Figma Guideline */}
-                        <div className="p-3 bg-white rounded-2xl border border-slate-100 shadow-sm inline-flex items-center justify-center mx-auto">
-                          <QRCodeSVG
-                            value={validQrString}
-                            size={215}
-                            level="M"
-                            includeMargin={true}
-                            className="w-full h-auto max-w-[215px] select-none"
-                          />
-                        </div>
-
-                        {/* Currency Switching Overlay */}
-                        {switchingCurrency && (
-                          <div className="absolute inset-0 bg-white/95 backdrop-blur-xs flex flex-col items-center justify-center p-4 space-y-2 z-10 rounded-2xl">
-                            <div className="w-7 h-7 border-3 border-[#0055a5] border-t-transparent rounded-full animate-spin" />
-                            <span className="text-xs font-bold text-slate-700">Updating {currency} QR...</span>
+                        {/* 100% Camera-Readable Dynamic QR Code with Bakong Center Emblem (Image 2) */}
+                        <div className="flex items-center justify-center p-2 relative">
+                          <div className="relative inline-flex items-center justify-center p-2.5 bg-white rounded-xl">
+                            <QRCodeSVG
+                              value={validQrString}
+                              size={220}
+                              level="H"
+                              includeMargin={false}
+                              className="w-full h-auto max-w-[220px] select-none"
+                            />
+                            {/* Center Bakong $ Emblem */}
+                            <div className="absolute w-8 h-8 rounded-full bg-white shadow-md flex items-center justify-center border border-slate-200">
+                              <div className="w-6 h-6 rounded-full bg-slate-900 text-white flex items-center justify-center text-xs font-black font-mono">
+                                $
+                              </div>
+                            </div>
                           </div>
-                        )}
+                        </div>
                       </div>
                     );
                   })()}
                 </div>
 
-                {/* Subtext below QR Card */}
-                <p className="text-[11px] text-slate-500 text-center leading-relaxed px-2">
-                  Scan with ABA Mobile App or any mobile banking app supporting KHQR
+                {/* Subtext below QR Card (100% Matching Image 2) */}
+                <p className="text-[12px] text-slate-500 text-center leading-relaxed max-w-[290px] mx-auto font-khmer">
+                  {language === 'km'
+                    ? 'ស្កេនជាមួយកម្មវិធី Bakong ឬកម្មវិធីធនាគារទាំងអស់ដែលគាំទ្រ KHQR'
+                    : 'Scan with Bakong App or Mobile Banking app that support KHQR'}
                 </p>
-
-                {/* Real-time Tracking Pill */}
-                <div className="py-1.5 px-3 rounded-xl bg-slate-50 border border-slate-200 flex items-center justify-between text-[10.5px]">
-                  <div className="flex items-center gap-1.5">
-                    <span className="relative flex h-2 w-2">
-                      <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-sky-400 opacity-75"></span>
-                      <span className="relative inline-flex rounded-full h-2 w-2 bg-sky-600"></span>
-                    </span>
-                    <span className="text-slate-600 font-medium">Auto-Tracking Payment...</span>
-                  </div>
-                  <span className="font-mono text-slate-400">TRX: {paymentData?.tranId || `TRX${orderId}`}</span>
-                </div>
-
-                {/* One-Tap Mobile Pay Button */}
-                {(paymentData?.abapayDeeplink || paymentData?.khqrDeeplink) && (
-                  <a
-                    href={paymentData.abapayDeeplink || paymentData.khqrDeeplink}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="w-full py-3 px-4 rounded-xl bg-[#0055a5] hover:bg-[#004380] text-white font-black text-xs tracking-wider uppercase transition-all flex items-center justify-center gap-2 shadow-lg shadow-sky-950/20 active:scale-[0.98]"
-                  >
-                    <span>📲</span>
-                    <span>Pay with ABA Mobile App</span>
-                  </a>
-                )}
-
-                {/* Instant Verification Button */}
-                <button
-                  type="button"
-                  onClick={async () => {
-                    if (!orderId) return;
-                    try {
-                      const res = await ordersAPI.checkPayment(orderId, true);
-                      if (res?.data?.isPaid || res?.data?.paymentStatus === 'Paid') {
-                        setPaymentPaid(true);
-                      }
-                    } catch (e) {
-                      console.warn('Manual check error:', e);
-                    }
-                  }}
-                  className="w-full py-2.5 px-3 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs transition-all flex items-center justify-center gap-1.5 cursor-pointer shadow-md"
-                >
-                  <span>✓</span>
-                  <span>I Have Transferred / Verify Now</span>
-                </button>
-
-                {/* Official PayWay Checkout Popup Trigger */}
-
-
-                <button
-                  type="button"
-                  onClick={(e) => {
-                    e.preventDefault();
-                    // Follow ABA Guideline exactly
-                    if (typeof window !== 'undefined' && 'AbaPayway' in window) {
-                       window.AbaPayway.checkout();
-                    } else if (typeof AbaPayway !== 'undefined') {
-                       // eslint-disable-next-line no-undef
-                       AbaPayway.checkout();
-                    } else {
-                      const form = document.getElementById('aba_merchant_request');
-                      if (form) {
-                        form.submit(); // Hosted view mode fallback
-                      }
-                    }
-                  }}
-                  className="w-full py-2 px-3 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-600 hover:text-slate-900 font-bold text-[11px] transition-all flex items-center justify-center gap-1.5 cursor-pointer"
-                >
-                  <span>🌐</span>
-                  <span>PayWay Official Checkout Popup</span>
-                </button>
               </div>
             )}
 
