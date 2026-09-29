@@ -10,7 +10,7 @@ import {
   AbaKhqrLogo,
   KhqrVoucherHeader
 } from '../components/AbaPaymentLogos';
-import weAcceptPaymentsImg from '../assets/we-accept-payments.png';
+import WeAcceptPayments from '../components/WeAcceptPayments';
 
 // Game-specific packages matching upstream supplier catalog
 const GAME_PACKAGES_MAP = {
@@ -2070,18 +2070,7 @@ const TopUp = () => {
 
               {/* Footer Trust Row: We Accept Marks & Terms (Figma: width 326px, height 18px, gap 4px) */}
               <div className="flex flex-col sm:flex-row items-center justify-between gap-3 pt-3 border-t border-slate-800/80 font-khmer">
-                <div className="flex items-center gap-1 select-none">
-                  <img
-                    src={weAcceptPaymentsImg}
-                    alt="We accept: ABA, KHQR, Visa, Mastercard, UnionPay, JCB, Alipay, WeChat Pay"
-                    className="h-[18px] w-auto max-w-[326px] object-contain"
-                    style={{
-                      width: '326px',
-                      height: '18px',
-                      opacity: 1
-                    }}
-                  />
-                </div>
+                <WeAcceptPayments />
 
                 {/* Terms & Privacy Link */}
                 <div className="flex items-center justify-end text-[10.5px] text-slate-400 px-1 font-khmer">

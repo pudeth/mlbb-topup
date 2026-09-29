@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom';
 import { useLanguage } from '../context/LanguageContext';
 import { useStoreBranding } from '../services/storeBranding';
 import { BrandLogo } from './BrandLogo';
-import weAcceptPaymentsImg from '../assets/we-accept-payments.png';
+import WeAcceptPayments from './WeAcceptPayments';
 
 const Footer = () => {
   const { t } = useLanguage();
@@ -195,18 +195,7 @@ const Footer = () => {
         <div className="border-t border-slate-900 pt-5 space-y-4">
           <div className="flex flex-col md:flex-row items-center justify-between gap-4">
             {/* We Accept Payment Marks (Figma: width 326px, height 18px, gap 4px, opacity 1) */}
-            <div className="flex items-center gap-1 select-none">
-              <img
-                src={weAcceptPaymentsImg}
-                alt="We accept: ABA, KHQR, Visa, Mastercard, UnionPay, JCB, Alipay, WeChat Pay"
-                className="h-[18px] w-auto max-w-[326px] object-contain"
-                style={{
-                  width: '326px',
-                  height: '18px',
-                  opacity: 1
-                }}
-              />
-            </div>
+            <WeAcceptPayments />
 
             {/* Terms & Privacy Links */}
             <div className="flex items-center gap-3 text-[11px] text-slate-400">
