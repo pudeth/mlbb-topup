@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import { useLanguage } from '../context/LanguageContext';
 import { useStoreBranding } from '../services/storeBranding';
 import { BrandLogo } from './BrandLogo';
+import weAcceptPaymentsImg from '../assets/we-accept-payments.png';
 
 const Footer = () => {
   const { t } = useLanguage();
@@ -189,27 +190,47 @@ const Footer = () => {
         </div>
 
         {/* ======================================================== */}
-        {/* 3. COPYRIGHT & DISCLAIMER */}
+        {/* 3. ACCEPTED PAYMENTS & COPYRIGHT */}
         {/* ======================================================== */}
-        <div className="border-t border-slate-900 pt-4 flex flex-col sm:flex-row items-center justify-between gap-3 text-[11px] text-slate-500 text-center sm:text-left">
-          <p>© {new Date().getFullYear()} {branding.storeName || 'Tin-TopUp'}. {t('footer_rights')}</p>
-          <div className="flex items-center gap-3 text-slate-400">
-            <Link
-              to="/terms"
-              onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
-              className="hover:text-amber-400 transition-colors"
-            >
-              {t('footer_terms')}
-            </Link>
-            <span>•</span>
-            <Link
-              to="/privacy"
-              onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
-              className="hover:text-cyan-400 transition-colors"
-            >
-              {t('footer_privacy')}
-            </Link>
+        <div className="border-t border-slate-900 pt-5 space-y-4">
+          <div className="flex flex-col md:flex-row items-center justify-between gap-4">
+            {/* We Accept Payment Marks (Figma: width 326px, height 18px, gap 4px, opacity 1) */}
+            <div className="flex items-center gap-1 select-none">
+              <img
+                src={weAcceptPaymentsImg}
+                alt="We accept: ABA, KHQR, Visa, Mastercard, UnionPay, JCB, Alipay, WeChat Pay"
+                className="h-[18px] w-auto max-w-[326px] object-contain"
+                style={{
+                  width: '326px',
+                  height: '18px',
+                  opacity: 1
+                }}
+              />
+            </div>
+
+            {/* Terms & Privacy Links */}
+            <div className="flex items-center gap-3 text-[11px] text-slate-400">
+              <Link
+                to="/terms"
+                onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
+                className="hover:text-amber-400 transition-colors"
+              >
+                {t('footer_terms')}
+              </Link>
+              <span>•</span>
+              <Link
+                to="/privacy"
+                onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
+                className="hover:text-cyan-400 transition-colors"
+              >
+                {t('footer_privacy')}
+              </Link>
+            </div>
           </div>
+
+          <p className="text-[11px] text-slate-500 text-center md:text-left">
+            © {new Date().getFullYear()} {branding.storeName || 'Tin-TopUp'}. {t('footer_rights')}
+          </p>
         </div>
 
       </div>

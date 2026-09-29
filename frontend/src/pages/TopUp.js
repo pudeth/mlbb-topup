@@ -10,6 +10,7 @@ import {
   AbaKhqrLogo,
   KhqrVoucherHeader
 } from '../components/AbaPaymentLogos';
+import weAcceptPaymentsImg from '../assets/we-accept-payments.png';
 
 // Game-specific packages matching upstream supplier catalog
 const GAME_PACKAGES_MAP = {
@@ -2068,11 +2069,27 @@ const TopUp = () => {
                 </div>
               )}
 
-              {/* Terms & Privacy Link */}
-              <div className="flex items-center justify-end text-[10.5px] text-slate-400 px-1 pt-1 font-khmer">
-                <Link to="/privacy" target="_blank" className="text-slate-500 hover:text-cyan-400 transition-colors font-khmer">
-                  {language === 'km' ? 'លក្ខខណ្ឌ & ឯកជនភាព' : 'Terms & Privacy Policy'}
-                </Link>
+              {/* Footer Trust Row: We Accept Marks & Terms (Figma: width 326px, height 18px, gap 4px) */}
+              <div className="flex flex-col sm:flex-row items-center justify-between gap-3 pt-3 border-t border-slate-800/80 font-khmer">
+                <div className="flex items-center gap-1 select-none">
+                  <img
+                    src={weAcceptPaymentsImg}
+                    alt="We accept: ABA, KHQR, Visa, Mastercard, UnionPay, JCB, Alipay, WeChat Pay"
+                    className="h-[18px] w-auto max-w-[326px] object-contain"
+                    style={{
+                      width: '326px',
+                      height: '18px',
+                      opacity: 1
+                    }}
+                  />
+                </div>
+
+                {/* Terms & Privacy Link */}
+                <div className="flex items-center justify-end text-[10.5px] text-slate-400 px-1 font-khmer">
+                  <Link to="/privacy" target="_blank" className="text-slate-500 hover:text-cyan-400 transition-colors font-khmer">
+                    {language === 'km' ? 'លក្ខខណ្ឌ & ឯកជនភាព' : 'Terms & Privacy Policy'}
+                  </Link>
+                </div>
               </div>
             </div>
           </div>
