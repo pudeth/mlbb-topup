@@ -66,10 +66,9 @@ const Footer = () => {
         {/* 2. CONCISE SUMMARY FOOTER BAR & BRAND HUB */}
         {/* ======================================================== */}
         <div className="pt-6 border-t border-slate-800/80">
-          <div className="p-5 sm:p-6 rounded-2xl bg-gradient-to-b from-[#0d121f]/90 via-[#0a0e18]/90 to-[#070a12]/95 border border-slate-800/90 shadow-2xl space-y-5">
-            
-            {/* Top Row: Brand Profile + Live Status + Social Action Buttons */}
-            <div className="flex flex-col lg:flex-row items-center justify-between gap-4 pb-4 border-b border-slate-800/80">
+          <div className="p-5 sm:p-6 rounded-2xl bg-gradient-to-b from-[#0d121f]/90 via-[#0a0e18]/90 to-[#070a12]/95 border border-slate-800/90 shadow-2xl">
+            {/* Brand Profile + Live Status + Social Action Buttons */}
+            <div className="flex flex-col lg:flex-row items-center justify-between gap-4">
               
               {/* Left: Brand Identity & Live Status */}
               <div className="flex flex-wrap items-center justify-center sm:justify-start gap-3 sm:gap-4">
@@ -115,77 +114,6 @@ const Footer = () => {
                 </a>
               </div>
             </div>
-
-            {/* Bottom Row: Quick Navigation Ribbon with Icon Badges */}
-            <nav className="flex flex-wrap items-center justify-center lg:justify-between gap-2 text-xs font-semibold text-slate-300 font-khmer pt-1">
-              <Link
-                to="/"
-                onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
-                className="px-3 py-1.5 rounded-lg bg-slate-900/60 hover:bg-slate-800 border border-slate-800/80 hover:border-amber-500/40 text-slate-300 hover:text-amber-400 transition-all flex items-center gap-1.5 cursor-pointer shadow-sm"
-              >
-                <span>🏠</span>
-                <span>{t('nav_home')}</span>
-              </Link>
-
-              <Link
-                to="/topup"
-                onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
-                className="px-3 py-1.5 rounded-lg bg-slate-900/60 hover:bg-slate-800 border border-slate-800/80 hover:border-amber-500/40 text-slate-300 hover:text-amber-400 transition-all flex items-center gap-1.5 cursor-pointer shadow-sm"
-              >
-                <span>💎</span>
-                <span>{t('nav_topup')}</span>
-              </Link>
-
-              <Link
-                to="/topup?tab=pass"
-                onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
-                className="px-3 py-1.5 rounded-lg bg-slate-900/60 hover:bg-slate-800 border border-slate-800/80 hover:border-amber-500/40 text-slate-300 hover:text-amber-400 transition-all flex items-center gap-1.5 cursor-pointer shadow-sm"
-              >
-                <span>🎫</span>
-                <span>Weekly Pass</span>
-              </Link>
-
-              <Link
-                to="/#games-section"
-                onClick={() => {
-                  const el = document.getElementById('games-section');
-                  if (el) el.scrollIntoView({ behavior: 'smooth' });
-                  else window.scrollTo({ top: 0, behavior: 'smooth' });
-                }}
-                className="px-3 py-1.5 rounded-lg bg-slate-900/60 hover:bg-slate-800 border border-slate-800/80 hover:border-cyan-500/40 text-slate-300 hover:text-cyan-400 transition-all flex items-center gap-1.5 cursor-pointer shadow-sm"
-              >
-                <span>🎮</span>
-                <span>All Games</span>
-              </Link>
-
-              <Link
-                to="/support"
-                onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
-                className="px-3 py-1.5 rounded-lg bg-slate-900/60 hover:bg-slate-800 border border-slate-800/80 hover:border-purple-500/40 text-slate-300 hover:text-purple-400 transition-all flex items-center gap-1.5 cursor-pointer shadow-sm"
-              >
-                <span>🎧</span>
-                <span>{t('nav_support')}</span>
-              </Link>
-
-              <Link
-                to="/privacy"
-                onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
-                className="px-3 py-1.5 rounded-lg bg-slate-900/60 hover:bg-slate-800 border border-slate-800/80 hover:border-emerald-500/40 text-slate-300 hover:text-emerald-400 transition-all flex items-center gap-1.5 cursor-pointer shadow-sm"
-              >
-                <span>📜</span>
-                <span>{t('nav_privacy')}</span>
-              </Link>
-
-              <Link
-                to="/admin"
-                onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
-                className="px-3 py-1.5 rounded-lg bg-slate-900/60 hover:bg-slate-800 border border-slate-800/80 hover:border-red-500/40 text-slate-300 hover:text-red-400 transition-all flex items-center gap-1.5 cursor-pointer shadow-sm"
-              >
-                <span>💼</span>
-                <span>Reseller</span>
-              </Link>
-            </nav>
-
           </div>
         </div>
 
