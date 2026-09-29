@@ -11,61 +11,9 @@ const Footer = () => {
 
   return (
     <footer className="bg-[#07090E] border-t border-slate-800/80 text-slate-400 mt-12 sm:mt-16 relative z-0">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-10 space-y-8">
-        
-        {/* ======================================================== */}
-        {/* 1. TRUST DETAILS (Clean Normal Text Format) */}
-        {/* ======================================================== */}
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 sm:gap-6 py-2">
-          {/* Detail 1: 10-Second Delivery */}
-          <div className="space-y-0.5">
-            <div className="flex items-center gap-1.5 text-white font-bold text-xs sm:text-sm">
-              <span className="text-amber-400 text-sm sm:text-base">⚡</span>
-              <span>{t('footer_delivery')}</span>
-            </div>
-            <p className="text-[11px] sm:text-xs text-slate-400 leading-relaxed">
-              {t('footer_delivery_desc')}
-            </p>
-          </div>
-
-          {/* Detail 2: 100% Safe Top-Up */}
-          <div className="space-y-0.5">
-            <div className="flex items-center gap-1.5 text-white font-bold text-xs sm:text-sm">
-              <span className="text-sky-400 text-sm sm:text-base">🛡️</span>
-              <span>{t('footer_safe')}</span>
-            </div>
-            <p className="text-[11px] sm:text-xs text-slate-400 leading-relaxed">
-              {t('footer_safe_desc')}
-            </p>
-          </div>
-
-          {/* Detail 3: ABA PayWay & KHQR */}
-          <div className="space-y-0.5">
-            <div className="flex items-center gap-1.5 text-white font-bold text-xs sm:text-sm">
-              <span className="text-sky-400 text-sm sm:text-base">💳</span>
-              <span>ABA PayWay & KHQR</span>
-            </div>
-            <p className="text-[11px] sm:text-xs text-slate-400 leading-relaxed">
-              Zero-fee instant checkout with ABA Mobile, KHQR & Cards
-            </p>
-          </div>
-
-          {/* Detail 4: 24/7 Live Support */}
-          <div className="space-y-0.5">
-            <div className="flex items-center gap-1.5 text-white font-bold text-xs sm:text-sm">
-              <span className="text-purple-400 text-sm sm:text-base">🎧</span>
-              <span>{t('footer_support')}</span>
-            </div>
-            <p className="text-[11px] sm:text-xs text-slate-400 leading-relaxed">
-              {t('footer_support_desc')}
-            </p>
-          </div>
-        </div>
-
-        {/* ======================================================== */}
-        {/* 2. CONCISE SUMMARY FOOTER BAR & BRAND HUB */}
-        {/* ======================================================== */}
-        <div className="pt-6 border-t border-slate-800/80">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-10 space-y-6">
+        {/* BRAND HUB & SOCIAL BAR */}
+        <div>
           <div className="p-5 sm:p-6 rounded-2xl bg-gradient-to-b from-[#0d121f]/90 via-[#0a0e18]/90 to-[#070a12]/95 border border-slate-800/90 shadow-2xl">
             {/* Brand Profile + Live Status + Social Action Buttons */}
             <div className="flex flex-col lg:flex-row items-center justify-between gap-4">
