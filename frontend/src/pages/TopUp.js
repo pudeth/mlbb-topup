@@ -497,7 +497,19 @@ const TopUp = () => {
     } else {
       document.body.classList.remove('modal-open');
     }
-    return () => document.body.classList.remove('modal-open');
+
+    const handleKeyDown = (e) => {
+      if (e.key === 'Escape' && paymentData && !paymentPaid) {
+        setPaymentData(null);
+        setOrderId(null);
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+
+    return () => {
+      document.body.classList.remove('modal-open');
+      window.removeEventListener('keydown', handleKeyDown);
+    };
   }, [paymentData, paymentPaid]);
 
   const [, startTransition] = useTransition();
@@ -1906,7 +1918,16 @@ const TopUp = () => {
       {/* ROOT-LEVEL DYNAMIC KHQR PAYMENT POPUP MODAL (z-[9999]) */}
       {/* Strictly matching ABA PayWay Official Figma Guideline */}
       {/* ======================================================== */}
-        <div className="fixed inset-0 z-[9999] flex items-center justify-center p-3 sm:p-4 bg-slate-950/85 backdrop-blur-md overflow-y-auto animate-fadeIn">
+      {paymentData && !paymentPaid && (paymentData.qrString || paymentData.khqrQRCode) && (
+        <div
+          onClick={(e) => {
+            if (e.target === e.currentTarget) {
+              setPaymentData(null);
+              setOrderId(null);
+            }
+          }}
+          className="fixed inset-0 z-[9999] flex items-center justify-center p-3 sm:p-4 bg-slate-950/85 backdrop-blur-md overflow-y-auto animate-fadeIn"
+        >
           
           {/* Frame 2120633223: Auto layout strictly matching Figma */}
           <div
