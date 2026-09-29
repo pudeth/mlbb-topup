@@ -2045,8 +2045,8 @@ const TopUp = () => {
       </div>
 
       {/* ======================================================== */}
-      {/* ROOT-LEVEL AUTHENTIC KHQR PAYMENT MODAL (z-[9999]) */}
-      {/* Strictly matching User's uploaded voucher card design */}
+      {/* ROOT-LEVEL ABA KHQR PAYMENT MODAL (z-[9999]) */}
+      {/* Strictly matching User's uploaded screenshot media_1790656805839 */}
       {/* ======================================================== */}
       {paymentData && !paymentPaid && (paymentData.qrString || paymentData.khqrQRCode) && (
         <div
@@ -2058,125 +2058,144 @@ const TopUp = () => {
           }}
           className="fixed inset-0 z-[9999] flex items-center justify-center p-3 sm:p-4 bg-slate-950/85 backdrop-blur-md overflow-y-auto animate-fadeIn"
         >
-          {/* Simple Clean Card Container strictly matching user design */}
-          <div className="relative w-full max-w-[316px] sm:max-w-[336px] my-auto animate-scaleUp">
+          {/* Modal Wrapper aligned column with ABA' PAYWAY at top right */}
+          <div className="w-full max-w-[340px] sm:max-w-[360px] my-auto animate-scaleUp flex flex-col items-end">
             
-            {/* Clean Floating Close Button */}
-            <button
-              type="button"
-              onClick={() => {
-                setPaymentData(null);
-                setOrderId(null);
-              }}
-              className="absolute -top-3.5 -right-3.5 w-8 h-8 rounded-full bg-slate-800 hover:bg-rose-600 text-white border border-slate-700/80 shadow-lg flex items-center justify-center text-sm font-bold transition-all z-20 cursor-pointer active:scale-90"
-              title="Close"
-            >
-              ✕
-            </button>
+            {/* Top Right Wordmark: ABA' PAYWAY */}
+            <div className="flex items-center gap-1.5 mb-2 pr-1 select-none pointer-events-none">
+              <span className="font-black text-xl text-white tracking-wide">ABA'</span>
+              <span className="font-black text-xl tracking-widest uppercase italic text-white">PAYWAY</span>
+            </div>
 
-            {processingStep > 0 ? (
-              /* Payment Processing Steps UI */
-              <div className="bg-white rounded-3xl p-5 shadow-2xl border border-slate-200 text-center space-y-4">
-                <div className="flex flex-col items-center gap-1.5">
-                  <div className="w-12 h-12 rounded-full bg-emerald-500 text-white flex items-center justify-center text-xl shadow-lg animate-pulse">
-                    {processingStep < 3 ? '⚡' : '✅'}
+            {/* Outer White Container */}
+            <div className="w-full bg-white rounded-[24px] sm:rounded-[28px] p-5 sm:p-6 shadow-2xl relative text-left">
+              
+              {processingStep > 0 ? (
+                /* Payment Processing Steps UI */
+                <div className="text-center space-y-4 py-2">
+                  <div className="flex flex-col items-center gap-1.5">
+                    <div className="w-12 h-12 rounded-full bg-emerald-500 text-white flex items-center justify-center text-xl shadow-lg animate-pulse">
+                      {processingStep < 3 ? '⚡' : '✅'}
+                    </div>
+                    <h4 className="text-sm font-black text-slate-900">
+                      {processingStep === 1 && 'Payment Confirmed!'}
+                      {processingStep === 2 && 'Syncing with Game Server...'}
+                      {processingStep === 3 && 'Delivering Diamonds!'}
+                    </h4>
+                    <p className="text-[10px] text-emerald-700 font-medium">
+                      {processingStep === 1 && 'ABA KHQR verified — starting delivery...'}
+                      {processingStep === 2 && `Connected to Zone ${formData.serverID || 'Default'} server ✓`}
+                      {processingStep === 3 && `Crediting ${selectedProduct?.name || 'diamonds'} to Player ID ${formData.playerID}`}
+                    </p>
                   </div>
-                  <h4 className="text-sm font-black text-slate-900">
-                    {processingStep === 1 && 'Payment Confirmed!'}
-                    {processingStep === 2 && 'Syncing with Game Server...'}
-                    {processingStep === 3 && 'Delivering Diamonds!'}
-                  </h4>
-                  <p className="text-[10px] text-emerald-700 font-medium">
-                    {processingStep === 1 && 'ABA KHQR verified — starting delivery...'}
-                    {processingStep === 2 && `Connected to Zone ${formData.serverID || 'Default'} server ✓`}
-                    {processingStep === 3 && `Crediting ${selectedProduct?.name || 'diamonds'} to Player ID ${formData.playerID}`}
+                  <div className="w-full bg-slate-200 h-2 rounded-full overflow-hidden">
+                    <div
+                      className="bg-emerald-500 h-full rounded-full transition-all duration-700 ease-out"
+                      style={{ width: `${(processingStep / 3) * 100}%` }}
+                    />
+                  </div>
+                </div>
+              ) : timeLeft === 0 ? (
+                /* Expired Screen */
+                <div className="text-center space-y-3 py-4">
+                  <div className="text-3xl">⏱️</div>
+                  <h4 className="text-slate-900 font-bold text-base">QR Code Expired</h4>
+                  <p className="text-xs text-slate-500">
+                    Session timeout for your security. Please generate a new QR code.
                   </p>
+                  <button
+                    onClick={handleProceedToPayment}
+                    className="w-full py-2.5 px-4 bg-[#0055a5] text-white text-xs font-bold rounded-xl shadow cursor-pointer hover:bg-[#004485] transition-all"
+                  >
+                    Generate New QR
+                  </button>
                 </div>
-                <div className="w-full bg-slate-200 h-2 rounded-full overflow-hidden">
-                  <div
-                    className="bg-emerald-500 h-full rounded-full transition-all duration-700 ease-out"
-                    style={{ width: `${(processingStep / 3) * 100}%` }}
-                  />
-                </div>
-              </div>
-            ) : timeLeft === 0 ? (
-              /* Expired Screen */
-              <div className="bg-white rounded-3xl p-6 shadow-2xl border border-slate-200 text-center space-y-3">
-                <div className="text-3xl">⏱️</div>
-                <h4 className="text-slate-900 font-bold text-base">QR Code Expired</h4>
-                <p className="text-xs text-slate-500">
-                  Session timeout for your security. Please generate a new QR code.
-                </p>
-                <button
-                  onClick={handleProceedToPayment}
-                  className="w-full py-2.5 px-4 bg-[#0055a5] text-white text-xs font-bold rounded-xl shadow cursor-pointer hover:bg-[#004485] transition-all"
-                >
-                  Generate New QR
-                </button>
-              </div>
-            ) : (
-              /* THE AUTHENTIC KHQR VOUCHER CARD (Simple Single Card Matching Image) */
-              <div className="bg-white rounded-[26px] shadow-2xl overflow-hidden relative border border-slate-200/90 text-left">
-                
-                {/* Official Red KHQR Banner with folded corner cut */}
-                <KhqrVoucherHeader />
+              ) : (
+                <>
+                  {/* Header: Title "ABA KHQR" + Cyan Close Icon "✕" */}
+                  <div className="flex items-center justify-between pb-3 sm:pb-3.5">
+                    <h3 className="text-[20px] sm:text-[22px] font-bold text-[#0B2038] tracking-tight">
+                      ABA KHQR
+                    </h3>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setPaymentData(null);
+                        setOrderId(null);
+                      }}
+                      className="text-[#00AFD7] hover:text-[#0092b3] p-1 -mr-1 transition-colors cursor-pointer select-none active:scale-95"
+                      title="Close"
+                      aria-label="Close"
+                    >
+                      <svg className="w-5 h-5 sm:w-6 sm:h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+                      </svg>
+                    </button>
+                  </div>
 
-                {/* Voucher Body: Store Name & Real Amount */}
-                {(() => {
-                  const currentCur = paymentData?.currency || currency;
-                  const isRiel = currentCur === 'KHR';
-                  const payAmount = paymentData?.amount != null
-                    ? (isRiel ? Math.round(Number(paymentData.amount)) : Number(paymentData.amount))
-                    : (isRiel ? Math.round(selectedProduct.price * 4100) : selectedProduct.price);
-                  const validQrString = paymentData?.qrString || paymentData?.khqrQRCode;
+                  {/* Inner Authentic KHQR Voucher Card */}
+                  <div className="bg-white rounded-[20px] shadow-sm border border-slate-200 overflow-hidden text-left mb-4">
+                    
+                    {/* Official Red KHQR Banner */}
+                    <KhqrVoucherHeader />
 
-                  return (
-                    <div className="text-left">
-                      {/* Store Name & Real Amount */}
-                      <div className="px-6 pt-5 pb-3">
-                        <span className="text-[12px] sm:text-[13px] uppercase font-semibold text-neutral-800 tracking-wider block font-khmer">
-                          {paymentData?.merchantName || 'MY SHOP'}
-                        </span>
-                        <span className="text-[28px] sm:text-[32px] font-black text-black tracking-tight block leading-tight mt-1">
-                          {isRiel ? `${payAmount.toLocaleString()} ៛` : `$ ${payAmount.toFixed(2)}`}
-                        </span>
-                      </div>
+                    {/* Voucher Body: Store Name & Real Amount */}
+                    {(() => {
+                      const currentCur = paymentData?.currency || currency;
+                      const isRiel = currentCur === 'KHR';
+                      const payAmount = paymentData?.amount != null
+                        ? (isRiel ? Math.round(Number(paymentData.amount)) : Number(paymentData.amount))
+                        : (isRiel ? Math.round(selectedProduct.price * 4100) : selectedProduct.price);
+                      const validQrString = paymentData?.qrString || paymentData?.khqrQRCode;
 
-                      {/* Perforated dashed divider */}
-                      <div className="border-t border-dashed border-neutral-300 w-full" />
+                      return (
+                        <div>
+                          {/* Store Name & Real Amount */}
+                          <div className="px-5 pt-3.5 pb-2 text-left">
+                            <span className="text-[11px] sm:text-[12px] uppercase font-bold text-slate-700 tracking-wide block font-khmer">
+                              {paymentData?.merchantName || 'MY SHOP'}
+                            </span>
+                            <span className="text-[26px] sm:text-[28px] font-black text-slate-900 tracking-tight block leading-tight mt-1">
+                              {isRiel ? `${payAmount.toLocaleString()} ៛` : `$ ${payAmount.toFixed(2)}`}
+                            </span>
+                          </div>
 
-                      {/* 100% Camera-Readable Dynamic QR Code with Bakong Center Emblem */}
-                      <div className="flex items-center justify-center pt-6 pb-8 px-6 relative">
-                        <div className="relative inline-flex items-center justify-center p-1 bg-white rounded-xl">
-                          <QRCodeSVG
-                            value={validQrString}
-                            size={220}
-                            level="H"
-                            includeMargin={false}
-                            className="w-full h-auto max-w-[220px] select-none"
-                          />
-                          {/* Center Bakong $ Emblem */}
-                          <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-                            <div className="w-11 h-11 rounded-full bg-white shadow-sm flex items-center justify-center p-0.5">
-                              <div className="w-full h-full rounded-full bg-black flex items-center justify-center border-2 border-white">
-                                <span className="text-white font-mono font-black text-base leading-none">$</span>
+                          {/* Perforated dashed divider */}
+                          <div className="border-t border-dashed border-slate-300 w-full my-1" />
+
+                          {/* 100% Camera-Readable Dynamic QR Code with Bakong Center Emblem */}
+                          <div className="flex items-center justify-center p-4 pt-3 pb-5 relative">
+                            <div className="relative inline-flex items-center justify-center bg-white">
+                              <QRCodeSVG
+                                value={validQrString}
+                                size={200}
+                                level="H"
+                                includeMargin={false}
+                                className="w-full h-auto max-w-[200px] select-none"
+                              />
+                              {/* Center Bakong $ Emblem */}
+                              <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+                                <div className="w-10 h-10 rounded-full bg-white shadow-sm flex items-center justify-center p-0.5">
+                                  <div className="w-full h-full rounded-full bg-black flex items-center justify-center border-2 border-white">
+                                    <span className="text-white font-mono font-black text-base leading-none">$</span>
+                                  </div>
+                                </div>
                               </div>
                             </div>
                           </div>
                         </div>
-                      </div>
-                    </div>
-                  );
-                })()}
-              </div>
-            )}
+                      );
+                    })()}
+                  </div>
 
-            {/* Clean helper note below card */}
-            <p className="text-[11.5px] text-slate-400 text-center leading-relaxed mt-3 px-2 font-khmer drop-shadow-sm">
-              {language === 'km'
-                ? 'ស្កេនជាមួយកម្មវិធី Bakong ឬកម្មវិធីធនាគារទាំងអស់ដែលគាំទ្រ KHQR'
-                : 'Scan with Bakong App or Mobile Banking app that support KHQR'}
-            </p>
+                  {/* Scan Instruction Footer strictly matching user screenshot */}
+                  <p className="text-[12px] sm:text-[12.5px] text-[#64748B] text-center leading-snug font-khmer px-1">
+                    Scan with Bakong App or Mobile Banking app that support KHQR
+                  </p>
+                </>
+              )}
+
+            </div>
           </div>
         </div>
       )}

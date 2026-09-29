@@ -73,7 +73,7 @@ export const KhqrLogo = ({ className = "h-5 w-auto", style = {} }) => (
  * Strictly matching User & Official NBC KHQR Figma Specifications
  */
 export const KhqrVoucherHeader = () => (
-  <div className="relative w-full overflow-hidden select-none bg-[#E21A1A]">
+  <div className="relative w-full overflow-hidden select-none bg-white">
     <svg
       viewBox="2.20496 2.20502 28.66504 7.34863"
       fill="none"
