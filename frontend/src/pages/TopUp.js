@@ -1759,11 +1759,6 @@ const TopUp = () => {
                         {language === 'km' ? '(Payment Methods)' : '(វិធីសាស្ត្រទូទាត់)'}
                       </span>
                     </h3>
-                    <p className="text-[10.5px] sm:text-xs text-slate-400 font-khmer">
-                      {language === 'km'
-                        ? 'សេវាទូទាត់ប្រាក់ផ្លូវការដំណើរការដោយ ធនាគារ វឌ្ឍនៈ អាស៊ី ចំកាត់ (ABA Bank)'
-                        : 'Official payment gateway powered by Advanced Bank of Asia Ltd. (ABA Bank)'}
-                    </p>
                   </div>
                 </div>
                 <span className="px-2.5 py-0.5 rounded-full bg-emerald-500/15 border border-emerald-500/40 text-emerald-400 text-[10px] sm:text-[11px] font-bold shrink-0 font-khmer">
