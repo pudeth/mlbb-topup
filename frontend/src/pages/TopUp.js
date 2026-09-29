@@ -1906,17 +1906,28 @@ const TopUp = () => {
       {/* ROOT-LEVEL DYNAMIC KHQR PAYMENT POPUP MODAL (z-[9999]) */}
       {/* Strictly matching ABA PayWay Official Figma Guideline */}
       {/* ======================================================== */}
-      {paymentData && !paymentPaid && (paymentData.qrString || paymentData.khqrQRCode) && (
-        <div className="fixed inset-0 z-[9999] flex flex-col items-center justify-center p-3 sm:p-4 bg-slate-950/85 backdrop-blur-md overflow-y-auto animate-fadeIn">
+        <div className="fixed inset-0 z-[9999] flex items-center justify-center p-3 sm:p-4 bg-slate-950/85 backdrop-blur-md overflow-y-auto animate-fadeIn">
           
-          {/* Top ABA' PAYWAY Wordmark (Strictly matching Image 2) */}
-          <div className="w-full max-w-[340px] sm:max-w-[360px] flex justify-end items-center gap-1.5 pb-2.5 text-white pr-2">
-            <span className="font-black text-base sm:text-lg tracking-wider">ABA'</span>
-            <span className="font-extrabold text-sm sm:text-base tracking-widest uppercase italic text-sky-400">PAYWAY</span>
-          </div>
+          {/* Frame 2120633223: Auto layout strictly matching Figma */}
+          <div
+            style={{
+              display: 'flex',
+              flexDirection: 'column',
+              alignItems: 'flex-end',
+              padding: '0px',
+              gap: '6px',
+              isolation: 'isolate',
+            }}
+            className="w-full max-w-[354px] relative my-auto animate-scaleUp"
+          >
+            {/* Top ABA' PAYWAY Wordmark (align-items: flex-end) */}
+            <div className="flex items-center gap-1.5 text-white pr-1">
+              <span className="font-black text-base sm:text-lg tracking-wider">ABA'</span>
+              <span className="font-extrabold text-sm sm:text-base tracking-widest uppercase italic text-sky-400">PAYWAY</span>
+            </div>
 
-          {/* Clean White Modal Container (Strictly matching Image 2 from Figma) */}
-          <div className="bg-white rounded-3xl max-w-[340px] sm:max-w-[360px] w-full p-4 sm:p-5 shadow-2xl space-y-4 animate-scaleUp relative my-auto">
+            {/* Clean White Modal Container (Strictly matching Image 2 from Figma) */}
+            <div className="w-full bg-white rounded-3xl p-4 sm:p-5 shadow-2xl space-y-4 relative">
             
             {/* Modal Header: Title "ABA KHQR" & Cyan Close Button */}
             <div className="flex items-center justify-between pt-0.5 px-1">
@@ -2038,6 +2049,7 @@ const TopUp = () => {
               </div>
             )}
 
+          </div>
           </div>
         </div>
       )}
