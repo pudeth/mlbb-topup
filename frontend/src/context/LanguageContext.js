@@ -237,7 +237,7 @@ export const translations = {
 
     // Event Banners
     event_banner_title: "News of Event Games & Special Offers",
-    event_banner_badge: "✨ Auto-Updated Events",
+    event_banner_badge: "Auto-Updated Events",
 
     // TopUp Layout & Tabs
     layout_tiles: "Tiles",
@@ -495,7 +495,7 @@ export const translations = {
 
     // Event Banners
     event_banner_title: "ព័ត៌មានព្រឹត្តិការណ៍ហ្គេម & ការផ្ដល់ជូនពិសេស",
-    event_banner_badge: "✨ ព្រឹត្តិការណ៍ថ្មីៗជានិច្ច",
+    event_banner_badge: "ព្រឹត្តិការណ៍ថ្មីៗជានិច្ច",
 
     // TopUp Layout & Tabs
     layout_tiles: "ក្រឡា",
@@ -753,7 +753,7 @@ export const translations = {
 
     // Event Banners
     event_banner_title: "游戏最新活动与特惠公告",
-    event_banner_badge: "✨ 实时更新活动",
+    event_banner_badge: "实时更新活动",
 
     // TopUp Layout & Tabs
     layout_tiles: "瓦片视图",
