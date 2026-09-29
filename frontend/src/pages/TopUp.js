@@ -365,7 +365,7 @@ const TopUp = () => {
   const qrExpiredRef = useRef(false);
   const [processingStep, setProcessingStep] = useState(0); // 0: scanning, 1: verifying, 2: server sync, 3: delivering
   const [currency, setCurrency] = useState('USD'); // 'USD' or 'KHR'
-  const [timeLeft, setTimeLeft] = useState(300); // 5-minute (300 seconds) countdown
+  const [timeLeft, setTimeLeft] = useState(60); // 1-minute (60 seconds) countdown
   const [productCategoryTab, setProductCategoryTab] = useState('all'); // 'all', 'passes', 'diamonds'
   const [layoutMode, setLayoutMode] = useState('tiles'); // 'list', 'tiles', 'grid'
   const checkoutSectionRef = useRef(null);
@@ -511,10 +511,10 @@ const TopUp = () => {
     }
   }, [showCustomModal]);
 
-  // 5-minute Countdown Timer
+  // 1-minute Countdown Timer (60 seconds) strictly for KHQR code scan
   useEffect(() => {
     if (!paymentData || paymentPaid) return;
-    setTimeLeft(300);
+    setTimeLeft(60);
     setQrExpired(false);
     qrExpiredRef.current = false;
     const timer = setInterval(() => {
@@ -2096,26 +2096,55 @@ const TopUp = () => {
                 </div>
               ) : timeLeft === 0 ? (
                 /* Expired Screen */
-                <div className="text-center space-y-3 py-4">
+                <div className="text-center space-y-3 py-4 font-khmer">
                   <div className="text-3xl">⏱️</div>
-                  <h4 className="text-slate-900 font-bold text-base">QR Code Expired</h4>
+                  <h4 className="text-slate-900 font-bold text-base">
+                    {language === 'km' ? 'QR Code ផុតកំណត់ (១ នាទី)' : 'QR Code Expired (1 min)'}
+                  </h4>
                   <p className="text-xs text-slate-500">
-                    Session timeout for your security. Please generate a new QR code.
+                    {language === 'km'
+                      ? 'រយៈពេលកំណត់ ១នាទី ត្រូវបានបញ្ចប់។ សូមបង្កើត QR Code ថ្មីដើម្បីទូទាត់។'
+                      : '1-minute timeout reached. Please generate a new QR code to scan.'}
                   </p>
-                  <button
-                    onClick={handleProceedToPayment}
-                    className="w-full py-2.5 px-4 bg-[#0055a5] text-white text-xs font-bold rounded-xl shadow cursor-pointer hover:bg-[#004485] transition-all"
-                  >
-                    Generate New QR
-                  </button>
+                  <div className="flex flex-col gap-2 pt-1">
+                    <button
+                      type="button"
+                      onClick={handleProceedToPayment}
+                      className="w-full py-2.5 px-4 bg-[#0055a5] hover:bg-[#004485] text-white text-xs font-bold rounded-xl shadow cursor-pointer transition-all active:scale-[0.98]"
+                    >
+                      {language === 'km' ? 'បង្កើត QR ថ្មី (Generate New QR)' : 'Generate New QR'}
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setPaymentData(null);
+                        setOrderId(null);
+                      }}
+                      className="w-full py-2 px-4 border border-slate-200 hover:bg-slate-50 text-slate-600 text-xs font-semibold rounded-xl cursor-pointer transition-all active:scale-[0.98]"
+                    >
+                      {language === 'km' ? 'បិទ (Close)' : 'Close QR Code'}
+                    </button>
+                  </div>
                 </div>
               ) : (
                 <>
-                  {/* Header: Title "ABA KHQR" + Cyan Close Icon "✕" */}
+                  {/* Header: Title "ABA KHQR" + 1-Minute Countdown Badge + Cyan Close Icon "✕" */}
                   <div className="flex items-center justify-between pb-3 sm:pb-3.5">
-                    <h3 className="text-[20px] sm:text-[22px] font-bold text-[#0B2038] tracking-tight">
-                      ABA KHQR
-                    </h3>
+                    <div className="flex items-center gap-2">
+                      <h3 className="text-[20px] sm:text-[22px] font-bold text-[#0B2038] tracking-tight">
+                        ABA KHQR
+                      </h3>
+                      {/* 1-Minute Live Countdown Badge */}
+                      <span className={`inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-mono font-bold border transition-colors ${
+                        timeLeft <= 15
+                          ? 'bg-rose-50 text-rose-600 border-rose-200 animate-pulse'
+                          : 'bg-amber-50 text-amber-700 border-amber-200'
+                      }`}>
+                        <span>⏱️</span>
+                        <span>00:{String(timeLeft).padStart(2, '0')}</span>
+                      </span>
+                    </div>
+
                     <button
                       type="button"
                       onClick={() => {
@@ -2133,7 +2162,7 @@ const TopUp = () => {
                   </div>
 
                   {/* Inner Authentic KHQR Voucher Card */}
-                  <div className="bg-white rounded-[20px] shadow-sm border border-slate-200 overflow-hidden text-left mb-4">
+                  <div className="bg-white rounded-[20px] shadow-sm border border-slate-200 overflow-hidden text-left mb-3.5">
                     
                     {/* Official Red KHQR Banner */}
                     <KhqrVoucherHeader />
@@ -2189,8 +2218,53 @@ const TopUp = () => {
 
                   {/* Scan Instruction Footer strictly matching user screenshot */}
                   <p className="text-[12px] sm:text-[12.5px] text-[#64748B] text-center leading-snug font-khmer px-1">
-                    Scan with Bakong App or Mobile Banking app that support KHQR
+                    {language === 'km'
+                      ? 'ស្កេនជាមួយកម្មវិធី Bakong ឬកម្មវិធីធនាគារទាំងអស់ដែលគាំទ្រ KHQR'
+                      : 'Scan with Bakong App or Mobile Banking app that support KHQR'}
                   </p>
+
+                  {/* User Options: Open Banking App / Close QR Code */}
+                  <div className="pt-3 space-y-2 font-khmer">
+                    {/* Option 1: Open Banking App */}
+                    <button
+                      type="button"
+                      onClick={() => {
+                        const deeplink = paymentData?.abapayDeeplink || paymentData?.khqrDeeplink;
+                        if (deeplink) {
+                          window.location.href = deeplink;
+                        } else {
+                          // Try ABA Mobile app scheme with store fallback
+                          window.location.href = 'abamobilebank://';
+                          setTimeout(() => {
+                            window.open('https://www.ababank.com/aba-mobile-app/', '_blank');
+                          }, 1200);
+                        }
+                      }}
+                      className="w-full py-2.5 px-4 rounded-xl bg-gradient-to-r from-[#003B70] via-[#004d8c] to-[#0055A5] hover:brightness-110 text-white text-xs sm:text-sm font-bold shadow-md hover:shadow-lg transition-all flex items-center justify-center gap-2 cursor-pointer active:scale-[0.98]"
+                    >
+                      <svg className="w-4 h-4 text-sky-300 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 18h.01M8 21h8a2 2 0 002-2V5a2 2 0 00-2-2H8a2 2 0 00-2 2v14a2 2 0 002 2z" />
+                      </svg>
+                      <span>
+                        {language === 'km' ? 'បើកកម្មវិធីធនាគារ (Open Bank App)' : 'Open Banking App'}
+                      </span>
+                    </button>
+
+                    {/* Option 2: Close QR Code */}
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setPaymentData(null);
+                        setOrderId(null);
+                      }}
+                      className="w-full py-2 px-4 rounded-xl border border-slate-200 hover:bg-slate-50 text-slate-600 hover:text-slate-900 text-xs font-semibold transition-all flex items-center justify-center gap-1.5 cursor-pointer active:scale-[0.98]"
+                    >
+                      <span>✕</span>
+                      <span>
+                        {language === 'km' ? 'បិទ QR Code (Close QR Code)' : 'Close QR Code'}
+                      </span>
+                    </button>
+                  </div>
                 </>
               )}
 
