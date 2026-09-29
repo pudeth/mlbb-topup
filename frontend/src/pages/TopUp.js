@@ -1901,17 +1901,11 @@ const TopUp = () => {
                 </div>
               )}
 
-              {/* Security & Privacy Notice */}
-              <div className="flex flex-col sm:flex-row items-center justify-between gap-1.5 text-[10.5px] text-slate-400 px-1 pt-1 text-center sm:text-left font-khmer">
-                <span className="flex items-center gap-1.5">
-                  <span>🛡️</span>
-                  <span>{language === 'km' ? 'ប្រព័ន្ធទូទាត់មានសុវត្ថិភាពខ្ពស់ដោយ ' : 'Processed securely by '}<strong>Advanced Bank of Asia Ltd. (ABA Bank)</strong></span>
-                </span>
-                <span>
-                  <Link to="/privacy" target="_blank" className="text-cyan-400 hover:underline font-khmer">
-                    {language === 'km' ? 'លក្ខខណ្ឌ & ឯកជនភាព' : 'Terms & Privacy Policy'}
-                  </Link>
-                </span>
+              {/* Terms & Privacy Link */}
+              <div className="flex items-center justify-end text-[10.5px] text-slate-400 px-1 pt-1 font-khmer">
+                <Link to="/privacy" target="_blank" className="text-slate-500 hover:text-cyan-400 transition-colors font-khmer">
+                  {language === 'km' ? 'លក្ខខណ្ឌ & ឯកជនភាព' : 'Terms & Privacy Policy'}
+                </Link>
               </div>
 
             </div>
