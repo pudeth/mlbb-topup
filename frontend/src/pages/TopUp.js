@@ -2116,7 +2116,7 @@ const TopUp = () => {
               </div>
             ) : (
               /* THE AUTHENTIC KHQR VOUCHER CARD (Simple Single Card Matching Image) */
-              <div className="bg-white rounded-3xl shadow-2xl overflow-hidden relative border border-slate-200/90 text-left">
+              <div className="bg-white rounded-[26px] shadow-2xl overflow-hidden relative border border-slate-200/90 text-left">
                 
                 {/* Official Red KHQR Banner with folded corner cut */}
                 <KhqrVoucherHeader />
@@ -2131,34 +2131,36 @@ const TopUp = () => {
                   const validQrString = paymentData?.qrString || paymentData?.khqrQRCode;
 
                   return (
-                    <div className="p-4 sm:p-5 text-left">
+                    <div className="text-left">
                       {/* Store Name & Real Amount */}
-                      <div className="space-y-0.5 pl-1">
-                        <span className="text-[11px] uppercase font-bold text-slate-500 tracking-wider block font-khmer">
-                          {paymentData?.merchantName || 'DETH PHEAK'}
+                      <div className="px-6 pt-5 pb-3">
+                        <span className="text-[12px] sm:text-[13px] uppercase font-semibold text-neutral-800 tracking-wider block font-khmer">
+                          {paymentData?.merchantName || 'MY SHOP'}
                         </span>
-                        <span className="text-2xl sm:text-3xl font-black text-slate-900 tracking-tight block">
+                        <span className="text-[28px] sm:text-[32px] font-black text-black tracking-tight block leading-tight mt-1">
                           {isRiel ? `${payAmount.toLocaleString()} ៛` : `$ ${payAmount.toFixed(2)}`}
                         </span>
                       </div>
 
                       {/* Perforated dashed divider */}
-                      <div className="border-t border-dashed border-slate-300 w-full my-3.5" />
+                      <div className="border-t border-dashed border-neutral-300 w-full" />
 
                       {/* 100% Camera-Readable Dynamic QR Code with Bakong Center Emblem */}
-                      <div className="flex items-center justify-center p-1 relative">
-                        <div className="relative inline-flex items-center justify-center p-2 bg-white rounded-xl">
+                      <div className="flex items-center justify-center pt-6 pb-8 px-6 relative">
+                        <div className="relative inline-flex items-center justify-center p-1 bg-white rounded-xl">
                           <QRCodeSVG
                             value={validQrString}
-                            size={216}
+                            size={220}
                             level="H"
                             includeMargin={false}
-                            className="w-full h-auto max-w-[216px] select-none"
+                            className="w-full h-auto max-w-[220px] select-none"
                           />
                           {/* Center Bakong $ Emblem */}
-                          <div className="absolute w-8 h-8 rounded-full bg-white shadow-md flex items-center justify-center border border-slate-200">
-                            <div className="w-6 h-6 rounded-full bg-slate-900 text-white flex items-center justify-center text-xs font-black font-mono">
-                              $
+                          <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+                            <div className="w-11 h-11 rounded-full bg-white shadow-sm flex items-center justify-center p-0.5">
+                              <div className="w-full h-full rounded-full bg-black flex items-center justify-center border-2 border-white">
+                                <span className="text-white font-mono font-black text-base leading-none">$</span>
+                              </div>
                             </div>
                           </div>
                         </div>

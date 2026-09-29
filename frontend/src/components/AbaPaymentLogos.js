@@ -70,23 +70,27 @@ export const KhqrLogo = ({ className = "h-5 w-auto", style = {} }) => (
 
 /**
  * Authentic Red KHQR Voucher Header
- * Strictly matching ABA PayWay Figma Guideline (Image 2)
+ * Strictly matching User & Official NBC KHQR Figma Specifications
  */
 export const KhqrVoucherHeader = () => (
-  <div className="relative w-full bg-[#E21A1A] py-3.5 px-4 flex items-center justify-center rounded-t-2xl overflow-hidden">
-    <svg viewBox="0 0 110 32" fill="none" xmlns="http://www.w3.org/2000/svg" className="h-6 sm:h-7 w-auto">
-      {/* K */}
-      <path d="M12 6V26H16.5V17.5L22.5 26H28.2L20.8 15.6L27.6 6H22L16.5 13.8V6H12Z" fill="white" />
-      {/* H */}
-      <path d="M32 6V26H36.5V18H44.5V26H49V6H44.5V13.8H36.5V6H32Z" fill="white" />
-      {/* Q */}
-      <path d="M53 10C53 7.8 54.8 6 57 6H69C71.2 6 73 7.8 73 10V22C73 24.2 71.2 26 69 26H57C54.8 26 53 24.2 53 22V10ZM57.5 10.5V21.5H68.5V10.5H57.5Z" fill="white" />
-      <rect x="61" y="14" width="4" height="4" fill="white" />
-      {/* R */}
-      <path d="M77 6V26H81.5V18H86.2L91.5 26H96.5L90.8 17.5C93.8 16.8 95.5 14.8 95.5 12C95.5 8 92.5 6 87 6H77ZM81.5 14V10H86.8C89.2 10 90.8 10.8 90.8 12C90.8 13.2 89.2 14 86.8 14H81.5Z" fill="white" />
+  <div className="relative w-full overflow-hidden select-none bg-[#E21A1A]">
+    <svg
+      viewBox="2.20496 2.20502 28.66504 7.34863"
+      fill="none"
+      xmlns="http://www.w3.org/2000/svg"
+      className="w-full h-auto block"
+    >
+      {/* Red banner background with 45-degree ribbon cut on right */}
+      <path
+        d="M30.87 2.20502V9.55365L28.5126 7.19427H2.20496V2.20502H30.87Z"
+        fill="#E21A1A"
+      />
+      {/* Official White KHQR Typography strictly matching user SVG */}
+      <g fill="white">
+        <path d="M17.435 4.55882V5.03676H16.9654C16.9184 5.03676 16.8832 5.00091 16.8832 4.95312V4.55882C16.8832 4.51103 16.9184 4.47518 16.9654 4.47518H17.3411C17.3998 4.46324 17.435 4.51103 17.435 4.55882Z" />
+        <path d="M13.7104 4.6662L14.3677 3.99725H14.6841L13.98 4.71405L14.7202 5.50311H14.3911L13.7104 4.79803V5.50311H13.4399V3.99725H13.7104V4.6662ZM15.2007 4.63007H15.9526V3.99725H16.2104V5.50311H15.9526V4.84589H15.2007V5.50311H14.9312V3.99725H15.2007V4.63007ZM18.9351 3.99725C19.3459 3.9973 19.6743 4.33203 19.6743 4.75018H19.4399C19.4399 4.46346 19.2168 4.23656 18.9351 4.23651C18.712 4.23651 18.5241 4.37984 18.4536 4.59491C18.442 4.64267 18.4302 4.70247 18.4302 4.75018V5.50311H18.4185C18.2893 5.50311 18.1948 5.39506 18.1948 5.27557V4.75018C18.1948 4.54706 18.2775 4.34376 18.4302 4.20038C18.5711 4.06896 18.7472 3.99725 18.9351 3.99725ZM19.6743 5.50311H19.3462L19.2632 5.41913L19.0874 5.23944L18.8413 4.98846H19.1694L19.6743 5.50311ZM17.7378 3.99725C17.8549 3.9975 17.9602 4.09277 17.9604 4.22382V5.34784L17.7261 5.10858V4.39178C17.7261 4.30814 17.655 4.23651 17.5728 4.23651H16.8687C16.7865 4.23651 16.7163 4.30814 16.7163 4.39178V5.10858C16.7164 5.19215 16.7865 5.26385 16.8687 5.26385H17.5728L17.8081 5.49042H16.7163C16.5989 5.49042 16.4927 5.39523 16.4927 5.26385V4.22382C16.4929 4.1045 16.5873 3.99725 16.7163 3.99725H17.7378Z" />
+      </g>
     </svg>
-    {/* Diagonal Corner Cut Fold */}
-    <div className="absolute top-0 right-0 w-0 h-0 border-t-[16px] border-t-white border-l-[16px] border-l-transparent" />
   </div>
 );
 
