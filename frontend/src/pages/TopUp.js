@@ -507,7 +507,7 @@ const TopUp = () => {
     }
   }, [showCustomModal]);
 
-  // Transaction Lifetime Countdown Timer (6 minutes / 360 seconds matching ABA PayWay standard)
+  // Transaction Lifetime Countdown Timer (6 minutes / 360 seconds matching ABA PayWay standard: 5-15 mins)
   useEffect(() => {
     if (!paymentData || paymentPaid) return;
     setTimeLeft(360);
@@ -517,9 +517,15 @@ const TopUp = () => {
       setTimeLeft(prev => {
         if (prev <= 1) {
           clearInterval(timer);
-          // Mark QR as expired — polling will stop automatically
+          // Step ③ & ④: Stop checking & safely end the process within lifetime (5-15 min rule)
           setQrExpired(true);
           qrExpiredRef.current = true;
+          const curTranId = paymentData?.tranId || paymentData?.formData?.tran_id;
+          if (curTranId && paymentData?.gateway === 'aba_payway') {
+            try {
+              paywayAPI.close(curTranId).catch(() => {});
+            } catch (e) {}
+          }
           return 0;
         }
         return prev - 1;
@@ -2565,20 +2571,32 @@ const TopUp = () => {
             }}
           >
             <div className="relative w-full max-w-[392px] my-auto flex flex-col items-end animate-[scaleIn_0.25s_ease-out]">
-              {/* ABA PAYWAY Official Header Brand */}
-              <div className="flex items-center gap-1.5 mb-2 pr-1 select-none pointer-events-none">
-                <img 
-                  src="https://checkout.payway.com.kh/images/payway-logo-white.svg" 
-                  alt="ABA' PAYWAY" 
-                  className="h-6 w-auto object-contain"
-                  onError={(e) => {
-                    e.target.style.display = 'none';
-                    if (e.target.nextElementSibling) e.target.nextElementSibling.style.display = 'flex';
-                  }}
-                />
-                <div className="hidden items-center gap-1">
-                  <span className="font-black text-xl text-white tracking-wide">ABA'</span>
-                  <span className="font-black text-xl tracking-widest uppercase italic text-[#00bcd4]">PAYWAY</span>
+              {/* ABA PAYWAY Header: Live Lifetime Timer (left) + Brand Logo (right) */}
+              <div className="w-full flex items-center justify-between mb-2 px-1 select-none">
+                {/* Live Lifetime Countdown Indicator */}
+                <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-black/50 backdrop-blur-md border border-white/10 text-xs font-mono text-white/90 shadow-sm">
+                  <span className="text-amber-400 text-xs">⏱️</span>
+                  <span className={timeLeft <= 30 ? "text-rose-400 font-bold animate-pulse" : "font-semibold text-emerald-400"}>
+                    {String(Math.floor(timeLeft / 60)).padStart(2, '0')}:{String(timeLeft % 60).padStart(2, '0')}
+                  </span>
+                  <span className="text-[10px] text-white/50 uppercase tracking-wider ml-0.5">Lifetime</span>
+                </div>
+
+                {/* ABA PAYWAY Official Header Brand */}
+                <div className="flex items-center gap-1.5 select-none pointer-events-none">
+                  <img 
+                    src="https://checkout.payway.com.kh/images/payway-logo-white.svg" 
+                    alt="ABA' PAYWAY" 
+                    className="h-6 w-auto object-contain"
+                    onError={(e) => {
+                      e.target.style.display = 'none';
+                      if (e.target.nextElementSibling) e.target.nextElementSibling.style.display = 'flex';
+                    }}
+                  />
+                  <div className="hidden items-center gap-1">
+                    <span className="font-black text-xl text-white tracking-wide">ABA'</span>
+                    <span className="font-black text-xl tracking-widest uppercase italic text-[#00bcd4]">PAYWAY</span>
+                  </div>
                 </div>
               </div>
 
@@ -2601,22 +2619,100 @@ const TopUp = () => {
                   </svg>
                 </button>
 
-                {/* Preloader spinner while iframe loads */}
-                <div className="absolute inset-0 flex flex-col items-center justify-center bg-white z-0">
-                  <div className="w-10 h-10 border-4 border-slate-200 border-t-[#0055a5] rounded-full animate-spin"></div>
-                  <span className="mt-3 text-xs font-semibold text-slate-400">Loading ABA PayWay...</span>
-                </div>
+                {/* Step ④: When lifetime expires (timeLeft === 0 / qrExpired), safely end process */}
+                {qrExpired || timeLeft === 0 ? (
+                  <div className="relative z-20 w-full h-full bg-white flex flex-col items-center justify-center p-6 text-center animate-[scaleIn_0.2s_ease-out]">
+                    <div className="w-16 h-16 rounded-full bg-rose-50 flex items-center justify-center text-3xl mb-3 border border-rose-100 shadow-inner">
+                      ⏱️
+                    </div>
+                    <h3 className="text-lg font-bold text-slate-900 mb-1">
+                      {language === 'km' ? 'ប្រតិបត្តិការផុតកំណត់' : 'Transaction Lifetime Expired'}
+                    </h3>
+                    <p className="text-xs text-slate-500 max-w-xs mb-4">
+                      {language === 'km' 
+                        ? 'រយៈពេលសុពលភាពនៃប្រតិបត្តិការ (៦ នាទី) ត្រូវបានបញ្ចប់។ ការត្រួតពិនិត្យត្រូវបានបិទបញ្ចប់ដោយសុវត្ថិភាព។'
+                        : 'The 6-minute payment session has expired. Background checking has safely ended.'}
+                    </p>
 
-                {/* Official PayWay Iframe */}
-                <div className="relative z-10 w-full h-full bg-transparent">
-                  <iframe
-                    name="aba_webservice"
-                    id="aba_webservice"
-                    title="ABA Payway Checkout"
-                    className="w-full h-full border-none bg-transparent"
-                    style={{ minHeight: '595px' }}
-                  />
-                </div>
+                    {/* Reference Box */}
+                    <div className="w-full bg-slate-50 border border-slate-200/80 rounded-xl p-3 mb-3 text-left text-xs space-y-1.5">
+                      <div className="flex justify-between items-center text-slate-500">
+                        <span>Order ID:</span>
+                        <span className="font-mono font-bold text-slate-800">#{orderId}</span>
+                      </div>
+                      {(paymentData?.tranId || paymentData?.formData?.tran_id) && (
+                        <div className="flex justify-between items-center text-slate-500">
+                          <span>PayWay TranID:</span>
+                          <span className="font-mono font-semibold text-slate-800 text-[11px]">
+                            {paymentData?.tranId || paymentData?.formData?.tran_id}
+                          </span>
+                        </div>
+                      )}
+                      <div className="flex justify-between items-center text-slate-500">
+                        <span>Status:</span>
+                        <span className="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-bold bg-amber-100 text-amber-800">
+                          EXPIRED (SESSION ENDED)
+                        </span>
+                      </div>
+                    </div>
+
+                    {/* ABA Merchant Portal Guidance (Strictly adheres to ABA Step ④) */}
+                    <div className="w-full p-2.5 rounded-lg bg-sky-50 border border-sky-100 text-[11px] text-sky-800 text-left mb-5 flex items-start gap-2">
+                      <span className="text-sky-500 text-sm mt-0.5">💡</span>
+                      <span>
+                        {language === 'km'
+                          ? 'ប្រសិនបើទឹកប្រាក់ត្រូវបានកាត់រួចហើយ សូមផ្ទៀងផ្ទាត់ដោយដៃក្នុង ABA PayWay Merchant Portal ឬទាក់ទងមកយើងខ្ញុំ។'
+                          : 'If funds were deducted from your bank app, please verify manually in the ABA PayWay Merchant Portal.'}
+                      </span>
+                    </div>
+
+                    {/* Actions */}
+                    <div className="w-full flex flex-col gap-2">
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setShowCustomModal(false);
+                          setPaymentData(null);
+                          setOrderId(null);
+                          handleProceedToPayment();
+                        }}
+                        className="w-full py-3 bg-[#0055a5] hover:bg-[#004485] text-white text-xs font-bold rounded-xl shadow-md transition-all active:scale-[0.98]"
+                      >
+                        {language === 'km' ? 'បង្កើតសំណើទូទាត់ថ្មី (Try Again)' : 'Generate Fresh QR / Try Again'}
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setShowCustomModal(false);
+                          setPaymentData(null);
+                          setOrderId(null);
+                        }}
+                        className="w-full py-2.5 border border-slate-200 hover:bg-slate-50 text-slate-600 text-xs font-semibold rounded-xl transition-all active:scale-[0.98]"
+                      >
+                        {language === 'km' ? 'បិទផ្ទាំង (Close)' : 'Close Window'}
+                      </button>
+                    </div>
+                  </div>
+                ) : (
+                  <>
+                    {/* Preloader spinner while iframe loads */}
+                    <div className="absolute inset-0 flex flex-col items-center justify-center bg-white z-0">
+                      <div className="w-10 h-10 border-4 border-slate-200 border-t-[#0055a5] rounded-full animate-spin"></div>
+                      <span className="mt-3 text-xs font-semibold text-slate-400">Loading ABA PayWay...</span>
+                    </div>
+
+                    {/* Official PayWay Iframe */}
+                    <div className="relative z-10 w-full h-full bg-transparent">
+                      <iframe
+                        name="aba_webservice"
+                        id="aba_webservice"
+                        title="ABA Payway Checkout"
+                        className="w-full h-full border-none bg-transparent"
+                        style={{ minHeight: '595px' }}
+                      />
+                    </div>
+                  </>
+                )}
               </div>
             </div>
 

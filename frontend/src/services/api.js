@@ -107,6 +107,8 @@ export const paywayAPI = {
   checkStatus: (tranId, orderId) =>
     api.get(`/payway/status/${tranId}${orderId ? `?orderId=${orderId}` : ''}`),
   callback: (data) => api.post('/payway/callback', data),
+  close: (tranId) => api.post(`/payway/close/${tranId}`),
+  getDetails: (tranId) => api.get(`/payway/details/${tranId}`),
 };
 
 // Bakong Gateway API
