@@ -194,11 +194,126 @@ const OrderStatus = () => {
         </Link>
       </div>
 
+      {/* Dedicated Printable Official Invoice (Visible only when Printing / Saving as PDF) */}
+      <div id="official-printable-invoice" className="hidden print:block text-slate-900 bg-white p-8 max-w-2xl mx-auto font-sans">
+        {/* Top Header Row */}
+        <div className="flex justify-between items-start border-b border-slate-200 pb-6 mb-6">
+          <div className="flex items-center gap-4">
+            <img 
+              src="/tin-logo.png" 
+              alt="Tin-Topup Logo" 
+              className="w-16 h-16 rounded-full object-cover border-2 border-slate-200"
+              onError={(e) => {
+                e.target.src = "https://res.cloudinary.com/dpz7vpmf8/image/upload/v1788238437/profile-photos/tin_topup_official_logo.png";
+              }}
+            />
+            <div>
+              <h2 className="text-xl font-black text-slate-900">
+                ការបញ្ជាទិញរបស់អ្នកបានបញ្ជាក់ហើយ !
+              </h2>
+              <p className="text-sm font-bold text-slate-500">
+                Your order confirmed!
+              </p>
+            </div>
+          </div>
+
+          <div className="text-right">
+            <h3 className="text-lg font-black text-slate-900 tracking-wider">
+              ប័ណ្ណទូទាត់ RECEIPT
+            </h3>
+            <p className="text-xs text-slate-500 font-mono mt-1">
+              កាលបរិច្ឆេទ / Date: {new Date(order?.createdAt || Date.now()).toLocaleDateString('en-GB')}, {new Date(order?.createdAt || Date.now()).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' })}
+            </p>
+            <p className="text-xs font-bold text-slate-800 font-mono mt-0.5">
+              Order ID: #{order?.orderId}
+            </p>
+          </div>
+        </div>
+
+        {/* Total Summary Highlight Box */}
+        <div className="bg-slate-50 border border-slate-200 rounded-xl p-4 mb-6 flex justify-between items-center">
+          <div>
+            <span className="text-xs text-slate-500 uppercase tracking-wider block font-bold">
+              តម្លៃសរុប / TOTAL:
+            </span>
+            <span className="text-2xl font-black text-emerald-600 font-mono">
+              ${order?.amount?.toFixed(2)} USD
+            </span>
+          </div>
+          <div className="text-right">
+            <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-bold bg-emerald-100 text-emerald-800 border border-emerald-200">
+              ✓ PAID & DELIVERED
+            </span>
+            <p className="text-[11px] text-slate-500 mt-1">
+              Payment: ABA PayWay KHQR
+            </p>
+          </div>
+        </div>
+
+        {/* Itemized Table */}
+        <table className="w-full text-left text-xs mb-8 border-collapse">
+          <thead>
+            <tr className="border-b-2 border-slate-300 text-slate-600 font-bold uppercase text-[11px]">
+              <th className="py-2.5">មុខទំនិញ / Description</th>
+              <th className="py-2.5 text-center">ចំនួន / Qty</th>
+              <th className="py-2.5 text-right">តម្លៃរាយ / Rate</th>
+              <th className="py-2.5 text-right">បញ្ចុះតម្លៃ / Disc</th>
+              <th className="py-2.5 text-right">តម្លៃ / Price</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr className="border-b border-slate-200 font-medium">
+              <td className="py-3">
+                <span className="font-bold text-slate-900 block">Mobile Legends: Bang Bang</span>
+                <span className="text-slate-500 text-[11px]">
+                  {order?.diamondAmount ? `${order.diamondAmount} Diamonds` : 'Diamonds Top-Up'} • Player ID: {order?.playerID} (Zone {order?.serverID})
+                </span>
+              </td>
+              <td className="py-3 text-center font-mono">1</td>
+              <td className="py-3 text-right font-mono">${order?.amount?.toFixed(2)} USD</td>
+              <td className="py-3 text-right font-mono">0%</td>
+              <td className="py-3 text-right font-mono font-bold">${order?.amount?.toFixed(2)} USD</td>
+            </tr>
+          </tbody>
+          <tfoot>
+            <tr className="border-t-2 border-slate-300">
+              <td colSpan="4" className="py-2 text-right font-bold text-slate-600">សរុបរង / Subtotal:</td>
+              <td className="py-2 text-right font-mono font-bold">${order?.amount?.toFixed(2)} USD</td>
+            </tr>
+            <tr>
+              <td colSpan="4" className="py-1 text-right text-slate-500">អាករលើតម្លៃបន្ថែម / VAT (0.00%):</td>
+              <td className="py-1 text-right font-mono text-slate-500">$0.00 USD</td>
+            </tr>
+            <tr className="border-t border-slate-200">
+              <td colSpan="4" className="py-2 text-right font-black text-slate-900 text-sm">សរុបចុងក្រោយ / TOTAL:</td>
+              <td className="py-2 text-right font-mono font-black text-slate-900 text-sm">${order?.amount?.toFixed(2)} USD</td>
+            </tr>
+          </tfoot>
+        </table>
+
+        {/* Footer */}
+        <div className="border-t border-slate-200 pt-6 flex justify-between items-end text-[11px] text-slate-500">
+          <div>
+            <strong className="text-slate-900 font-bold block text-xs">Tin TopUp Cambodia</strong>
+            <span>Phnom Penh, Cambodia • Official Support: @tin_topup</span>
+            <span className="block text-[10px] text-slate-400 mt-1">Automated 24/7 Moonton Direct Top-Up API System</span>
+          </div>
+          <div className="text-right">
+            <span className="font-bold text-slate-800 tracking-wider">ABA' PAYWAY</span>
+            <span className="block text-[10px] text-slate-400">Electronic Verified Receipt</span>
+          </div>
+        </div>
+      </div>
+
       <style>{`
         @media print {
           nav, footer, .print\\:hidden, button, a { display: none !important; }
           body { background: white !important; color: black !important; }
-          .card { border: 1px solid #e2e8f0 !important; background: white !important; color: black !important; }
+          #official-printable-invoice { 
+            display: block !important; 
+            width: 100% !important; 
+          }
+          .card { display: none !important; }
         }
       `}</style>
     </div>

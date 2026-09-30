@@ -2459,16 +2459,27 @@ const TopUp = () => {
       {/* PAY-SUCCESSFULLY CELEBRATORY POPUP INTERFACE (z-[9999]) */}
         {/* ======================================================== */}
         {paymentPaid && (
-          <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4 bg-[#081b37]/85 backdrop-blur-md overflow-y-auto animate-fadeIn">
-            <div className="bg-white rounded-3xl max-w-sm w-full shadow-2xl text-center relative overflow-hidden my-auto animate-scaleUp">
+          <div className="fixed inset-0 z-[9999] flex items-center justify-center p-3 sm:p-4 bg-[#081b37]/85 backdrop-blur-md overflow-y-auto animate-fadeIn">
+            <div className="bg-white rounded-[28px] max-w-[395px] w-full shadow-[0_25px_60px_-15px_rgba(0,0,0,0.6)] text-center relative overflow-hidden my-auto animate-scaleUp border border-slate-100">
               
-              {/* Header Gradient Accent */}
-              <div className="w-full h-3 bg-gradient-to-r from-[#0055a5] via-sky-400 to-emerald-400" />
+              {/* Top Banner with Brand Gradient & Shimmer */}
+              <div className="relative bg-gradient-to-br from-[#003e7e] via-[#0055a5] to-[#007cd6] pt-6 pb-5 px-6 text-white overflow-hidden">
+                {/* Ambient glow & decorative mesh */}
+                <div className="absolute -top-12 -left-12 w-32 h-32 bg-sky-400/20 rounded-full blur-2xl pointer-events-none" />
+                <div className="absolute -bottom-8 -right-8 w-28 h-28 bg-emerald-400/20 rounded-full blur-2xl pointer-events-none" />
 
-              {/* Official Store Logo with Verified Badge */}
-              <div className="pt-7 pb-2 flex justify-center">
-                <div className="relative">
-                  <div className="w-24 h-24 rounded-full p-1 bg-gradient-to-tr from-amber-400 via-yellow-200 to-sky-400 shadow-xl shadow-sky-500/10">
+                {/* Top Badge Row */}
+                <div className="flex items-center justify-between text-[11px] font-semibold text-sky-100 mb-3">
+                  <div className="flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-white/10 backdrop-blur-md border border-white/20">
+                    <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-ping" />
+                    <span className="tracking-wide uppercase font-bold text-[10px]">Official Receipt</span>
+                  </div>
+                  <span className="font-mono text-white/80">#{orderId}</span>
+                </div>
+
+                {/* 3D Brand Logo Medallion with Checkmark */}
+                <div className="relative inline-block mb-3">
+                  <div className="w-20 h-20 rounded-full p-1 bg-gradient-to-tr from-amber-300 via-yellow-100 to-sky-300 shadow-2xl mx-auto ring-4 ring-white/20">
                     <img 
                       src="/tin-logo.png" 
                       alt="Tin-Topup Logo" 
@@ -2478,63 +2489,110 @@ const TopUp = () => {
                       }}
                     />
                   </div>
-                  <div className="absolute bottom-0 right-0 w-7 h-7 rounded-full bg-emerald-500 text-white flex items-center justify-center text-sm font-black shadow-md border-2 border-white">
+                  <div className="absolute -bottom-1 -right-1 w-6 h-6 rounded-full bg-emerald-500 text-white flex items-center justify-center text-xs font-black shadow-lg border-2 border-white">
                     ✓
                   </div>
                 </div>
-              </div>
 
-              {/* Confirmation Title (Exact Bilingual Standard) */}
-              <div className="px-6 pt-2 pb-1 text-center">
-                <h2 className="text-xl sm:text-2xl font-black text-[#152745] font-khmer tracking-normal">
+                {/* Confirmation Title (Exact Bilingual Standard) */}
+                <h2 className="text-lg sm:text-xl font-black text-white font-khmer drop-shadow-sm leading-snug">
                   ការបញ្ជាទិញរបស់អ្នកបានបញ្ជាក់ហើយ !
                 </h2>
-                <p className="text-sm font-bold text-slate-500 mt-1">
-                  Your order confirmed!
+                <p className="text-xs text-sky-100 font-medium mt-0.5 opacity-90">
+                  Your order confirmed & delivered!
                 </p>
               </div>
 
+              {/* Perforated Ticket Divider with Left/Right Notches */}
+              <div className="relative py-2 bg-white">
+                <div className="absolute left-[-10px] top-1/2 -translate-y-1/2 w-5 h-5 rounded-full bg-[#081b37] shadow-inner" />
+                <div className="border-b-2 border-dashed border-slate-200 mx-5" />
+                <div className="absolute right-[-10px] top-1/2 -translate-y-1/2 w-5 h-5 rounded-full bg-[#081b37] shadow-inner" />
+              </div>
+
               {/* Order Receipt Details Card */}
-              <div className="px-6 py-3">
-                <div className="bg-slate-50 border border-slate-200/80 rounded-2xl p-4 text-left text-xs space-y-2">
+              <div className="px-6 py-2">
+                <div className="bg-slate-50/80 border border-slate-100 rounded-2xl p-3.5 text-left text-xs space-y-2.5">
                   <div className="flex justify-between items-center text-slate-500">
-                    <span>លេខបញ្ជាទិញ (Order ID):</span>
-                    <span className="font-mono font-bold text-slate-800 text-sm">#{orderId}</span>
+                    <span className="flex items-center gap-1.5">
+                      <span>🎮</span>
+                      <span>ហ្គេម (Game):</span>
+                    </span>
+                    <span className="font-semibold text-slate-800">Mobile Legends</span>
                   </div>
+
                   <div className="flex justify-between items-center text-slate-500">
-                    <span>កញ្ចប់ពេជ្រ (Item):</span>
-                    <span className="font-semibold text-slate-800">{selectedProduct?.name || 'MLBB Diamonds'}</span>
+                    <span className="flex items-center gap-1.5">
+                      <span>💎</span>
+                      <span>កញ្ចប់ (Item):</span>
+                    </span>
+                    <span className="font-bold text-[#0055a5]">
+                      {selectedProduct?.name || 'MLBB Diamonds'}
+                    </span>
                   </div>
+
                   {formData?.playerID && (
                     <div className="flex justify-between items-center text-slate-500">
-                      <span>គណនី (Player ID):</span>
-                      <span className="font-mono font-semibold text-slate-800">
+                      <span className="flex items-center gap-1.5">
+                        <span>👤</span>
+                        <span>គណនី (Player):</span>
+                      </span>
+                      <span className="font-mono font-bold text-slate-800 bg-white px-2 py-0.5 rounded border border-slate-200">
                         {formData.playerID} {formData.serverID ? `(${formData.serverID})` : ''}
                       </span>
                     </div>
                   )}
+
                   <div className="flex justify-between items-center text-slate-500">
-                    <span>ការទូទាត់ (Payment):</span>
-                    <span className="font-semibold text-[#0055a5]">
-                      ABA PayWay KHQR
+                    <span className="flex items-center gap-1.5">
+                      <span>💳</span>
+                      <span>ទូទាត់ (Method):</span>
+                    </span>
+                    <span className="font-semibold text-emerald-600 flex items-center gap-1">
+                      <span>ABA PayWay KHQR</span>
                     </span>
                   </div>
-                  <div className="border-t border-slate-200 pt-2 flex justify-between items-center text-slate-800 font-bold text-sm">
-                    <span>សរុប (Total Paid):</span>
-                    <span className="text-emerald-600 font-mono text-base font-extrabold">
-                      ${paymentData?.amount || selectedProduct?.price} USD
+
+                  <div className="flex justify-between items-center text-slate-500 text-[11px]">
+                    <span className="flex items-center gap-1.5">
+                      <span>🕒</span>
+                      <span>កាលបរិច្ឆេទ (Date):</span>
                     </span>
+                    <span className="font-mono text-slate-600">
+                      {new Date().toLocaleDateString('en-GB', { day: '2-digit', month: '2-digit', year: 'numeric' })}, {new Date().toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' })}
+                    </span>
+                  </div>
+
+                  <div className="border-t border-slate-200/80 pt-2.5 flex justify-between items-center">
+                    <span className="text-slate-800 font-bold text-xs uppercase tracking-wider">
+                      តម្លៃសរុប (Total Paid):
+                    </span>
+                    <div className="text-right">
+                      <span className="text-emerald-600 font-mono text-lg font-black tracking-tight">
+                        ${paymentData?.amount || selectedProduct?.price}
+                      </span>
+                      <span className="text-[10px] font-bold text-slate-400 ml-1">USD</span>
+                    </div>
                   </div>
                 </div>
               </div>
 
+              {/* Security Delivery Stamp */}
+              <div className="px-6 py-1">
+                <div className="flex items-center justify-center gap-1.5 text-[10px] text-slate-400">
+                  <span>🔒</span>
+                  <span>100% Automated Moonton Direct Delivery • Verified</span>
+                </div>
+              </div>
+
               {/* Action Buttons */}
-              <div className="px-6 pb-6 pt-1 space-y-2.5 bg-white">
+              <div className="px-6 pb-6 pt-3 space-y-2.5 bg-white">
                 <Link
                   to={`/order-status/${orderId}`}
-                  className="block w-full py-3 rounded-xl bg-[#0055a5] hover:bg-[#004485] text-white font-bold text-sm shadow-md shadow-[#0055a5]/20 transition-all text-center active:scale-[0.98]"
+                  className="w-full py-3 rounded-xl bg-gradient-to-r from-[#0055a5] to-[#007cd6] hover:from-[#004485] hover:to-[#0066c0] text-white font-bold text-xs sm:text-sm shadow-md shadow-[#0055a5]/25 flex items-center justify-center gap-2 transition-all active:scale-[0.98]"
                 >
-                  {language === 'km' ? 'មើលវិក្កយបត្រ (View Full Receipt)' : 'View Full Receipt'}
+                  <span>🖨️</span>
+                  <span>{language === 'km' ? 'ទាញយកវិក្កយបត្រ (Download PDF)' : 'Download / Print Receipt'}</span>
                 </Link>
                 
                 <button
