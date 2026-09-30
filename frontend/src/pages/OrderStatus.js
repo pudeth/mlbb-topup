@@ -72,6 +72,25 @@ const OrderStatus = () => {
   return (
     <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-10 animate-fadeIn">
       
+      {/* Official Store Logo */}
+      <div className="flex justify-center mb-5">
+        <div className="relative">
+          <div className="w-20 h-20 rounded-full p-1 bg-gradient-to-tr from-amber-400 via-yellow-200 to-sky-400 shadow-xl shadow-sky-500/10">
+            <img 
+              src="/tin-logo.png" 
+              alt="Tin-Topup Logo" 
+              className="w-full h-full rounded-full object-cover bg-slate-900 border-2 border-white"
+              onError={(e) => {
+                e.target.src = "https://res.cloudinary.com/dpz7vpmf8/image/upload/v1788238437/profile-photos/tin_topup_official_logo.png";
+              }}
+            />
+          </div>
+          <div className="absolute bottom-0 right-0 w-6 h-6 rounded-full bg-emerald-500 text-white flex items-center justify-center text-xs font-black shadow border border-white">
+            ✓
+          </div>
+        </div>
+      </div>
+
       {/* Title */}
       <div className="text-center mb-8">
         <span className="badge badge-info text-xs mb-2">⚡ Live Order Tracker</span>

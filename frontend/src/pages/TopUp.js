@@ -820,6 +820,11 @@ const TopUp = () => {
     );
 
     const triggerPaidTransition = async () => {
+      // Immediately dismiss ABA checkout popup so customer transitions straight to our branded receipt!
+      setShowCustomModal(false);
+      if (typeof window !== 'undefined' && window.AbaPayway) {
+        try { window.AbaPayway.closeCheckout(false); } catch (e) {}
+      }
       console.log(
         `%c[ABA PayWay Tracker] 🚀 PAYMENT DETECTED (PAID) for Order #${curOrderId}! Starting delivery transition...`,
         'color: #10b981; font-weight: 900; font-size: 13px; background: #064e3b; padding: 3px 6px; border-radius: 4px;'
@@ -981,6 +986,10 @@ const TopUp = () => {
             // Mark paid flag immediately to stop polling
             paymentPaidRef.current = true;
             es && es.close();
+            setShowCustomModal(false);
+            if (typeof window !== 'undefined' && window.AbaPayway) {
+              try { window.AbaPayway.closeCheckout(false); } catch (e) {}
+            }
 
             // Run the 3-step visual transition
             const run = async () => {
@@ -2450,56 +2459,95 @@ const TopUp = () => {
       {/* PAY-SUCCESSFULLY CELEBRATORY POPUP INTERFACE (z-[9999]) */}
         {/* ======================================================== */}
         {paymentPaid && (
-          <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm overflow-y-auto animate-fadeIn">
+          <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4 bg-[#081b37]/85 backdrop-blur-md overflow-y-auto animate-fadeIn">
             <div className="bg-white rounded-3xl max-w-sm w-full shadow-2xl text-center relative overflow-hidden my-auto animate-scaleUp">
               
-              {/* Top Graphic Section (matching ABA PayWay Guideline) */}
-              <div className="w-full h-48 bg-[#e8f5fb] relative overflow-hidden flex flex-col items-center justify-end pb-8" style={{ backgroundImage: 'radial-gradient(#cbe7f5 1px, transparent 1px)', backgroundSize: '20px 20px' }}>
-                {/* Simulated clouds and landscape */}
-                <div className="absolute bottom-0 left-0 w-full h-16 bg-white/40" style={{ borderRadius: '100% 100% 0 0' }} />
-                
-                {/* Flag pole and flag with Checkmark */}
-                <div className="relative z-10 flex flex-col items-center">
-                  <div className="w-1 h-24 bg-blue-400 absolute -bottom-8 -left-3 rounded-full" />
-                  <div className="bg-white px-8 py-4 rounded-r-2xl shadow-sm relative -ml-4">
-                    <div className="w-16 h-16 rounded-full bg-[#48b668] flex items-center justify-center shadow-md">
-                      <svg xmlns="http://www.w3.org/2000/svg" className="h-8 w-8 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}>
-                        <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
-                      </svg>
-                    </div>
+              {/* Header Gradient Accent */}
+              <div className="w-full h-3 bg-gradient-to-r from-[#0055a5] via-sky-400 to-emerald-400" />
+
+              {/* Official Store Logo with Verified Badge */}
+              <div className="pt-7 pb-2 flex justify-center">
+                <div className="relative">
+                  <div className="w-24 h-24 rounded-full p-1 bg-gradient-to-tr from-amber-400 via-yellow-200 to-sky-400 shadow-xl shadow-sky-500/10">
+                    <img 
+                      src="/tin-logo.png" 
+                      alt="Tin-Topup Logo" 
+                      className="w-full h-full rounded-full object-cover bg-slate-900 border-2 border-white"
+                      onError={(e) => {
+                        e.target.src = "https://res.cloudinary.com/dpz7vpmf8/image/upload/v1788238437/profile-photos/tin_topup_official_logo.png";
+                      }}
+                    />
+                  </div>
+                  <div className="absolute bottom-0 right-0 w-7 h-7 rounded-full bg-emerald-500 text-white flex items-center justify-center text-sm font-black shadow-md border-2 border-white">
+                    ✓
                   </div>
                 </div>
               </div>
 
-              {/* Text Section */}
-              <div className="px-6 py-6 space-y-3 bg-white">
-                <h2 className="text-3xl font-semibold text-[#152745]">
-                  Success
+              {/* Confirmation Title (Exact Bilingual Standard) */}
+              <div className="px-6 pt-2 pb-1 text-center">
+                <h2 className="text-xl sm:text-2xl font-black text-[#152745] font-khmer tracking-normal">
+                  ការបញ្ជាទិញរបស់អ្នកបានបញ្ជាក់ហើយ !
                 </h2>
-                <p className="text-[#8c94a0] text-[13px] leading-relaxed max-w-[260px] mx-auto">
-                  Your diamonds have been automatically credited directly into your in-game mailbox!
+                <p className="text-sm font-bold text-slate-500 mt-1">
+                  Your order confirmed!
                 </p>
               </div>
 
+              {/* Order Receipt Details Card */}
+              <div className="px-6 py-3">
+                <div className="bg-slate-50 border border-slate-200/80 rounded-2xl p-4 text-left text-xs space-y-2">
+                  <div className="flex justify-between items-center text-slate-500">
+                    <span>លេខបញ្ជាទិញ (Order ID):</span>
+                    <span className="font-mono font-bold text-slate-800 text-sm">#{orderId}</span>
+                  </div>
+                  <div className="flex justify-between items-center text-slate-500">
+                    <span>កញ្ចប់ពេជ្រ (Item):</span>
+                    <span className="font-semibold text-slate-800">{selectedProduct?.name || 'MLBB Diamonds'}</span>
+                  </div>
+                  {formData?.playerID && (
+                    <div className="flex justify-between items-center text-slate-500">
+                      <span>គណនី (Player ID):</span>
+                      <span className="font-mono font-semibold text-slate-800">
+                        {formData.playerID} {formData.serverID ? `(${formData.serverID})` : ''}
+                      </span>
+                    </div>
+                  )}
+                  <div className="flex justify-between items-center text-slate-500">
+                    <span>ការទូទាត់ (Payment):</span>
+                    <span className="font-semibold text-[#0055a5]">
+                      ABA PayWay KHQR
+                    </span>
+                  </div>
+                  <div className="border-t border-slate-200 pt-2 flex justify-between items-center text-slate-800 font-bold text-sm">
+                    <span>សរុប (Total Paid):</span>
+                    <span className="text-emerald-600 font-mono text-base font-extrabold">
+                      ${paymentData?.amount || selectedProduct?.price} USD
+                    </span>
+                  </div>
+                </div>
+              </div>
+
               {/* Action Buttons */}
-              <div className="px-6 pb-8 space-y-3 bg-white">
+              <div className="px-6 pb-6 pt-1 space-y-2.5 bg-white">
                 <Link
                   to={`/order-status/${orderId}`}
-                  className="block w-full py-3.5 rounded-xl border border-[#48b668] text-[#48b668] font-bold text-[15px] bg-transparent hover:bg-[#48b668]/5 transition-all text-center"
+                  className="block w-full py-3 rounded-xl bg-[#0055a5] hover:bg-[#004485] text-white font-bold text-sm shadow-md shadow-[#0055a5]/20 transition-all text-center active:scale-[0.98]"
                 >
-                  Download Receipt
+                  {language === 'km' ? 'មើលវិក្កយបត្រ (View Full Receipt)' : 'View Full Receipt'}
                 </Link>
                 
                 <button
+                  type="button"
                   onClick={() => {
                     setFormData(prev => ({ ...prev, playerID: '' }));
                     setOrderId(null);
                     setPaymentData(null);
                     setPaymentPaid(false);
                   }}
-                  className="block w-full py-3.5 rounded-xl bg-[#48b668] text-white font-bold text-[15px] hover:bg-[#3ea05b] shadow-md shadow-[#48b668]/30 transition-all text-center"
+                  className="block w-full py-2.5 rounded-xl border border-slate-200 hover:bg-slate-50 text-slate-600 font-semibold text-xs transition-all text-center active:scale-[0.98]"
                 >
-                  Continue Shopping
+                  {language === 'km' ? 'បន្តទិញទំនិញ (Continue Shopping)' : 'Continue Shopping'}
                 </button>
               </div>
 
