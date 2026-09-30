@@ -485,37 +485,25 @@ const TopUp = () => {
     if (paymentPaid) {
       // INSTANTLY CLOSE checkout popup when paid so the user sees our success receipt!
       if (typeof window !== 'undefined' && window.AbaPayway) {
-        try { window.AbaPayway.closeCheckout(); } catch (e) {}
+        try { window.AbaPayway.closeCheckout(false); } catch (e) {}
       }
       setShowCustomModal(false);
     } else if (paymentData && !paymentPaid && paymentData.gateway === 'aba_payway') {
-      // Trigger official ABA PayWay popup modal (ABA Simulator Beta & Merchant Portal compliant)
-      const timer = setTimeout(() => {
-        if (typeof window !== 'undefined' && window.AbaPayway) {
-          try {
-            window.AbaPayway.checkout();
-          } catch (e) {
-            console.warn('AbaPayway.checkout notice, falling back to embedded modal:', e);
-            setShowCustomModal(true);
-          }
-        } else {
-          setShowCustomModal(true);
-        }
-      }, 150);
-      return () => clearTimeout(timer);
+      setShowCustomModal(true);
     }
   }, [paymentData, paymentPaid]);
   
   // When custom modal is shown, submit form into the iframe
   useEffect(() => {
     if (showCustomModal) {
-      setTimeout(() => {
+      const timer = setTimeout(() => {
         const form = document.getElementById('aba_merchant_request');
         if (form) {
           form.target = 'aba_webservice';
           form.submit();
         }
-      }, 200);
+      }, 100);
+      return () => clearTimeout(timer);
     }
   }, [showCustomModal]);
 
@@ -2564,35 +2552,78 @@ const TopUp = () => {
             <input key={k} type="hidden" name={k} value={v || ''} />
           ))}
               </form>
-{/* Custom React Modal for ABA PayWay (Fallback if script blocked) */}
+{/* Official ABA PayWay Checkout Voucher Modal */}
         {showCustomModal && (
-          <div className="fixed inset-0 z-[999999] flex items-end justify-center bg-black/70 backdrop-blur-sm sm:items-center">
-            <div className="w-full h-[90vh] sm:h-[80vh] sm:max-w-[400px] bg-white rounded-t-3xl sm:rounded-3xl overflow-hidden flex flex-col shadow-2xl animate-[slideUp_0.3s_ease-out]">
-              <div className="w-full flex justify-between items-center p-4 border-b border-gray-100 bg-white">
-                <span className="font-black text-slate-800 text-lg">Payment</span>
+          <div 
+            className="fixed inset-0 z-[999999] flex items-center justify-center bg-[#081b37]/85 backdrop-blur-md p-3 sm:p-4 overflow-y-auto"
+            onClick={(e) => {
+              if (e.target === e.currentTarget) {
+                setShowCustomModal(false);
+                setPaymentData(null);
+                setOrderId(null);
+              }
+            }}
+          >
+            <div className="relative w-full max-w-[392px] my-auto flex flex-col items-end animate-[scaleIn_0.25s_ease-out]">
+              {/* ABA PAYWAY Official Header Brand */}
+              <div className="flex items-center gap-1.5 mb-2 pr-1 select-none pointer-events-none">
+                <img 
+                  src="https://checkout.payway.com.kh/images/payway-logo-white.svg" 
+                  alt="ABA' PAYWAY" 
+                  className="h-6 w-auto object-contain"
+                  onError={(e) => {
+                    e.target.style.display = 'none';
+                    if (e.target.nextElementSibling) e.target.nextElementSibling.style.display = 'flex';
+                  }}
+                />
+                <div className="hidden items-center gap-1">
+                  <span className="font-black text-xl text-white tracking-wide">ABA'</span>
+                  <span className="font-black text-xl tracking-widest uppercase italic text-[#00bcd4]">PAYWAY</span>
+                </div>
+              </div>
+
+              {/* PayWay Voucher Card */}
+              <div className="relative w-full h-[605px] sm:h-[615px] bg-white rounded-2xl shadow-2xl overflow-hidden flex flex-col">
+                {/* Floating Sleek Close Button */}
                 <button 
-                  onClick={() => { setShowCustomModal(false); window.location.reload(); }}
-                  className="w-8 h-8 flex items-center justify-center rounded-full bg-slate-100 text-slate-500 font-bold active:bg-slate-200"
+                  type="button"
+                  onClick={() => {
+                    setShowCustomModal(false);
+                    setPaymentData(null);
+                    setOrderId(null);
+                  }}
+                  className="absolute top-3 right-3 z-30 w-8 h-8 rounded-full flex items-center justify-center text-slate-400 hover:text-slate-700 hover:bg-slate-100 transition-colors"
+                  aria-label="Close"
+                  title="Close payment"
                 >
-                  <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}>
+                  <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
                     <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
                   </svg>
                 </button>
-              </div>
-              <div className="flex-1 w-full bg-slate-50 relative">
-                <iframe
-                  name="aba_webservice"
-                  id="aba_webservice"
-                  title="ABA Payway Checkout"
-                  className="w-full h-full border-none"
-                  
-                />
+
+                {/* Preloader spinner while iframe loads */}
+                <div className="absolute inset-0 flex flex-col items-center justify-center bg-white z-0">
+                  <div className="w-10 h-10 border-4 border-slate-200 border-t-[#0055a5] rounded-full animate-spin"></div>
+                  <span className="mt-3 text-xs font-semibold text-slate-400">Loading ABA PayWay...</span>
+                </div>
+
+                {/* Official PayWay Iframe */}
+                <div className="relative z-10 w-full h-full bg-transparent">
+                  <iframe
+                    name="aba_webservice"
+                    id="aba_webservice"
+                    title="ABA Payway Checkout"
+                    className="w-full h-full border-none bg-transparent"
+                    style={{ minHeight: '595px' }}
+                  />
+                </div>
               </div>
             </div>
+
             <style>{`
-              @keyframes slideUp {
-                from { transform: translateY(100%); }
-                to { transform: translateY(0); }
+              @keyframes scaleIn {
+                from { opacity: 0; transform: scale(0.95); }
+                to { opacity: 1; transform: scale(1); }
               }
             `}</style>
           </div>
