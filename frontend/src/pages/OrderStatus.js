@@ -177,14 +177,30 @@ const OrderStatus = () => {
       </div>
 
       {/* Action Buttons */}
-      <div className="flex flex-col sm:flex-row gap-4">
-        <Link to="/topup" className="btn btn-gold flex-1 text-center py-3.5 font-bold shadow-glow-gold">
+      <div className="flex flex-col sm:flex-row gap-3 mb-6 print:hidden">
+        <button
+          type="button"
+          onClick={() => window.print()}
+          className="flex-1 py-3 px-4 rounded-xl bg-gradient-to-r from-sky-500 to-[#0055a5] hover:from-sky-400 hover:to-[#004485] text-white font-bold text-sm shadow-lg flex items-center justify-center gap-2 transition-all active:scale-[0.98]"
+        >
+          <span>🖨️</span>
+          <span>Download / Print Receipt (PDF)</span>
+        </button>
+        <Link to="/topup" className="btn btn-gold flex-1 text-center py-3 font-bold shadow-glow-gold">
           ⚡ Make Another Top-Up
         </Link>
-        <Link to="/support" className="btn btn-secondary flex-1 text-center py-3.5 font-semibold">
+        <Link to="/support" className="btn btn-secondary flex-1 text-center py-3 font-semibold">
           🎧 Contact Support
         </Link>
       </div>
+
+      <style>{`
+        @media print {
+          nav, footer, .print\\:hidden, button, a { display: none !important; }
+          body { background: white !important; color: black !important; }
+          .card { border: 1px solid #e2e8f0 !important; background: white !important; color: black !important; }
+        }
+      `}</style>
     </div>
   );
 };
