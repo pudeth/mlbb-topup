@@ -1,26 +1,132 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <script src="https://checkout-sandbox.payway.com.kh/plugins/checkout2-0.js"></script>
+    <title>ABA PayWay Checkout Popup Test</title>
+    <!-- 2️⃣. ABA PayWay official js script -->
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
+    <script src="https://checkout.payway.com.kh/plugins/checkout2-0.js"></script>
 </head>
-<body>
-    <form id="aba_merchant_request" method="POST" action="https://checkout-sandbox.payway.com.kh/api/payment-gateway/v1/payments/purchase">
-        <input type="hidden" name="req_time" value="20260916173608" />
-        <input type="hidden" name="merchant_id" value="ec478601" />
-        <input type="hidden" name="tran_id" value="TRX159-80168" />
-        <input type="hidden" name="amount" value="0.95" />
-        <input type="hidden" name="items" value="W3sibmFtZSI6Ik1MQkIgRGlhbW9uZHMgKE9yZGVyICMxNTkpIiwicXVhbnRpdHkiOiIxIiwicHJpY2UiOiIwLjk1In1d" />
-        <input type="hidden" name="firstname" value="Customer" />
-        <input type="hidden" name="lastname" value="Player" />
-        <input type="hidden" name="email" value="customer@mlbb-topup.com" />
-        <input type="hidden" name="phone" value="012345678" />
-        <input type="hidden" name="type" value="purchase" />
-        <input type="hidden" name="payment_option" value="" />
-        <input type="hidden" name="currency" value="USD" />
-        <input type="hidden" name="lifetime" value="6" />
-        <input type="hidden" name="hash" value="Tw39tCtnkP/VzsuYn+4EJvn6zVOSudo0LNJLWi67Lykq2XvZRu00OhD0BlCorbNRuzFM22q6dG1AgHilE2cWXg==" />
-        <button type="button" onclick="AbaPayway.checkout()">Pay with AbaPayway Popup</button>
-        <button type="submit">Pay with standard form submit</button>
+<body style="font-family: sans-serif; padding: 20px; background: #0b1220; color: #fff;">
+    <h2>ABA PayWay Checkout Modal / Popup Test</h2>
+    <p>This implementation adheres strictly to ABA PayWay's official popup integration standard.</p>
+
+    <!-- 1️⃣. target="aba_webservice" in the form body request -->
+    <form id="aba_merchant_request" method="POST" target="aba_webservice" action="https://checkout-sandbox.payway.com.kh/api/payment-gateway/v1/payments/purchase">
+        <!-- Dynamically populated with real signed HMAC-SHA512 hash from backend -->
     </form>
+
+    <div style="margin: 20px 0; display: flex; gap: 15px;">
+        <label style="cursor: pointer;">
+            <input type="radio" class="payment_option" name="payment_option" value="abapay_khqr" checked />
+            ABA PAY / KHQR
+        </label>
+        <label style="cursor: pointer;">
+            <input type="radio" class="payment_option" name="payment_option" value="cards" />
+            Credit/Debit Cards
+        </label>
+    </div>
+
+    <div style="margin-bottom: 15px;">
+        <label>Amount: </label>
+        <input type="text" id="test_amount" value="0.95" style="padding: 6px 10px; border-radius: 6px; border: 1px solid #334155; background: #1e293b; color: white;" /> USD
+    </div>
+
+    <button type="button" id="checkout_button" style="padding: 12px 24px; background: #0055a5; color: white; border: none; border-radius: 8px; font-size: 16px; font-weight: bold; cursor: pointer;">
+        Pay with AbaPayway Popup (AbaPayway.checkout())
+    </button>
+
+    <div id="test_status" style="margin-top: 20px; font-size: 14px; color: #38bdf8;"></div>
+
+    <script>
+        $(document).ready(function(){
+            $('#checkout_button').click(async function(){
+                const btn = $(this);
+                const statusDiv = $('#test_status');
+                btn.prop('disabled', true).text('Generating fresh PayWay transaction...');
+                statusDiv.text('Creating test order in backend...');
+
+                try {
+                    const testAmt = parseFloat($('#test_amount').val()) || 0.95;
+
+                    // 1. Create test order
+                    const orderRes = await fetch('http://localhost:5000/api/orders', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            productId: 12,
+                            playerID: '568656263',
+                            serverID: '1234',
+                            paymentMethod: 'abapayway',
+                            amount: testAmt,
+                            price: testAmt,
+                            currency: 'USD'
+                        })
+                    }).then(r => r.json());
+
+                    if (!orderRes || !orderRes.orderId) {
+                        throw new Error('Failed to create order in backend');
+                    }
+
+                    statusDiv.text(`Order #${orderRes.orderId} created. Generating ABA PayWay transaction...`);
+
+                    // 2. Generate freshly signed transaction with merchant HMAC-SHA512
+                    const payRes = await fetch('http://localhost:5000/api/payway/create', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            orderId: orderRes.orderId,
+                            amount: testAmt,
+                            currency: 'USD'
+                        })
+                    }).then(r => r.json());
+
+                    if (!payRes || !payRes.formData) {
+                        throw new Error(payRes?.message || 'Failed to get signed PayWay formData');
+                    }
+
+                    statusDiv.text(`Transaction ${payRes.tranId} generated! Opening ABA PayWay popup...`);
+
+                    // 3. Clear and populate the form with valid fresh data
+                    const form = $('#aba_merchant_request');
+                    form.empty();
+                    form.attr('action', payRes.purchaseUrl || 'https://checkout-sandbox.payway.com.kh/api/payment-gateway/v1/payments/purchase');
+                    form.attr('target', 'aba_webservice');
+
+                    for (const [key, value] of Object.entries(payRes.formData)) {
+                        form.append($('<input>').attr({
+                            type: 'hidden',
+                            name: key,
+                            value: value
+                        }));
+                    }
+
+                    // 4. Form fields are signed with authentic HMAC-SHA512 hash from backend
+
+                    // 5. Trigger official ABA PayWay popup!
+                    AbaPayway.checkout();
+                    btn.prop('disabled', false).text('Pay with AbaPayway Popup (AbaPayway.checkout())');
+
+                    // 6. Polling: Check status every 3 seconds (ABA recommendation)
+                    statusDiv.html(`⏳ Waiting for payment scan in <b>ABA Simulator Beta</b>... (TranID: <code>${payRes.tranId}</code>)`);
+                    const pollInterval = setInterval(async () => {
+                        try {
+                            const check = await fetch(`http://localhost:5000/api/payway/status/${payRes.tranId}?orderId=${orderRes.orderId}`).then(r => r.json());
+                            if (check && (check.isPaid || (check.status || '').toUpperCase() === 'PAID')) {
+                                clearInterval(pollInterval);
+                                statusDiv.html(`✅ <b>PAYMENT APPROVED!</b> Order #${orderRes.orderId} (TranID: <code>${payRes.tranId}</code>) marked as Paid.`);
+                                if (window.AbaPayway) {
+                                    try { window.AbaPayway.closeCheckout(); } catch(e) {}
+                                }
+                            }
+                        } catch (e) {}
+                    }, 3000);
+
+                } catch (err) {
+                    statusDiv.text('❌ Error: ' + err.message);
+                    btn.prop('disabled', false).text('Pay with AbaPayway Popup (AbaPayway.checkout())');
+                }
+            });
+        });
+    </script>
 </body>
 </html>

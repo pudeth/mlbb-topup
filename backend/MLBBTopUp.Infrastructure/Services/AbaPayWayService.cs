@@ -146,14 +146,16 @@ namespace MLBBTopUp.Infrastructure.Services
                     var checkoutUrl = $"{baseUrl}/pay?tran_id={tranId}&amount={amtStr}&currency={paywayCurrency}";
                     var popupPaymentOption = "abapay_khqr"; 
                     
-                    var returnUrl = "http://localhost:3000/success"; // Success URL for Web Continuation
-                    var continueSuccessUrl = $"{_configuration["FrontendUrl"] ?? "http://localhost:3000"}/topup";
+                    var frontendBase = _configuration["FrontendUrl"] ?? "http://localhost:3001";
+                    var returnUrl = $"{frontendBase}/topup";
+                    var continueSuccessUrl = $"{frontendBase}/topup";
                     var returnDeeplink = "abamobilebank://ababank.com"; // Success URL for Mobile Continuation
-                    var cancelUrl = $"{_configuration["FrontendUrl"] ?? "http://localhost:3000"}/topup";
+                    var cancelUrl = $"{frontendBase}/topup";
+                    var lifetime = "6"; // 6-minute lifetime (aligned with ABA PayWay guidelines)
 
                     var popupHash = GeneratePurchaseHash(reqTime, merchantId, tranId, amtStr, itemsBase64,
                         "", firstName, lastName, email, phone, purchaseType, popupPaymentOption,
-                        returnUrl, cancelUrl, continueSuccessUrl, returnDeeplink, "", paywayCurrency, "", "", "", "", "", "");
+                        returnUrl, cancelUrl, continueSuccessUrl, returnDeeplink, "", paywayCurrency, "", "", lifetime, "", "", "");
 
                     var formData = new Dictionary<string, string>
                     {
@@ -173,6 +175,7 @@ namespace MLBBTopUp.Infrastructure.Services
                         { "continue_success_url", continueSuccessUrl },
                         { "return_deeplink", returnDeeplink },
                         { "currency", paywayCurrency },
+                        { "lifetime", lifetime },
                         { "payment_gate", "0" },
                         { "hash", popupHash }
                     };
@@ -315,13 +318,52 @@ namespace MLBBTopUp.Infrastructure.Services
                     var responseBody = await response.Content.ReadAsStringAsync();
                     using var doc = JsonDocument.Parse(responseBody);
                     var root = doc.RootElement;
-                    var status = root.GetProperty("status").GetInt32();
+                    
+                    bool isPaid = false;
+                    string statusText = "UNPAID";
+
+                    if (root.TryGetProperty("status", out var statusProp))
+                    {
+                        if (statusProp.ValueKind == JsonValueKind.Number)
+                        {
+                            int code = statusProp.GetInt32();
+                            isPaid = (code == 0);
+                            statusText = isPaid ? "PAID" : $"CODE_{code}";
+                        }
+                        else if (statusProp.ValueKind == JsonValueKind.String)
+                        {
+                            var s = statusProp.GetString()?.Trim().ToUpperInvariant() ?? "";
+                            isPaid = (s == "0" || s == "00" || s == "APPROVED" || s == "PAID" || s == "SUCCESS");
+                            statusText = isPaid ? "PAID" : s;
+                        }
+                        else if (statusProp.ValueKind == JsonValueKind.Object)
+                        {
+                            if (statusProp.TryGetProperty("code", out var codeProp))
+                            {
+                                var codeStr = codeProp.ToString().Trim();
+                                isPaid = (codeStr == "0" || codeStr == "00" || codeStr.Equals("APPROVED", StringComparison.OrdinalIgnoreCase));
+                                statusText = isPaid ? "PAID" : codeStr;
+                            }
+                        }
+                    }
+
+                    if (!isPaid && root.TryGetProperty("description", out var descProp))
+                    {
+                        var desc = descProp.GetString()?.Trim().ToUpperInvariant() ?? "";
+                        if (desc == "APPROVED" || desc == "SUCCESS" || desc == "PAID")
+                        {
+                            isPaid = true;
+                            statusText = "PAID";
+                        }
+                    }
+
+                    _logger.LogInformation("ABA PayWay check-transaction for {TranId} result: {StatusText}, IsPaid: {IsPaid}", tranId, statusText, isPaid);
 
                     return new PayWayCheckResult
                     {
                         Success = true,
-                        IsPaid = status == 0,
-                        Status = status == 0 ? "PAID" : "UNPAID"
+                        IsPaid = isPaid,
+                        Status = isPaid ? "PAID" : statusText
                     };
                 }
                 return new PayWayCheckResult { Success = false, ErrorMessage = "Failed to check status" };

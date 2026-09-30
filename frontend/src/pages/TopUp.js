@@ -366,7 +366,7 @@ const TopUp = () => {
   const qrExpiredRef = useRef(false);
   const [processingStep, setProcessingStep] = useState(0); // 0: scanning, 1: verifying, 2: server sync, 3: delivering
   const [currency, setCurrency] = useState('USD'); // 'USD' or 'KHR'
-  const [timeLeft, setTimeLeft] = useState(60); // 1-minute (60 seconds) countdown
+  const [timeLeft, setTimeLeft] = useState(360); // 6-minute (360 seconds) transaction lifetime (ABA PayWay standard)
   const [productCategoryTab, setProductCategoryTab] = useState('all'); // 'all', 'passes', 'diamonds'
   const [layoutMode, setLayoutMode] = useState('tiles'); // 'list', 'tiles', 'grid'
   const checkoutSectionRef = useRef(null);
@@ -480,22 +480,29 @@ const TopUp = () => {
   };
 
 
-  // Automatically trigger ABA Official Checkout if backend QR generation fails
+  // Automatically trigger ABA Official Checkout Popup for ABA PayWay Gateway
   useEffect(() => {
     if (paymentPaid) {
-      // INSTANTLY CLOSE checkout when paid so the user can see our beautifully redesigned success screen!
+      // INSTANTLY CLOSE checkout popup when paid so the user sees our success receipt!
       if (typeof window !== 'undefined' && window.AbaPayway) {
-         window.AbaPayway.closeCheckout();
+        try { window.AbaPayway.closeCheckout(); } catch (e) {}
       }
       setShowCustomModal(false);
-    } else if (paymentData && !paymentPaid && !paymentData.qrString && !paymentData.khqrQRCode) {
-      // Try to use official ABA Payway script first (so Mobile App deeplinks work natively)
-      if (typeof window !== 'undefined' && window.AbaPayway) {
-          window.AbaPayway.checkout();
-      } else {
-          // Fallback to custom modal if script is blocked
+    } else if (paymentData && !paymentPaid && paymentData.gateway === 'aba_payway') {
+      // Trigger official ABA PayWay popup modal (ABA Simulator Beta & Merchant Portal compliant)
+      const timer = setTimeout(() => {
+        if (typeof window !== 'undefined' && window.AbaPayway) {
+          try {
+            window.AbaPayway.checkout();
+          } catch (e) {
+            console.warn('AbaPayway.checkout notice, falling back to embedded modal:', e);
+            setShowCustomModal(true);
+          }
+        } else {
           setShowCustomModal(true);
-      }
+        }
+      }, 150);
+      return () => clearTimeout(timer);
     }
   }, [paymentData, paymentPaid]);
   
@@ -512,10 +519,10 @@ const TopUp = () => {
     }
   }, [showCustomModal]);
 
-  // 1-minute Countdown Timer (60 seconds) strictly for KHQR code scan
+  // Transaction Lifetime Countdown Timer (6 minutes / 360 seconds matching ABA PayWay standard)
   useEffect(() => {
     if (!paymentData || paymentPaid) return;
-    setTimeLeft(60);
+    setTimeLeft(360);
     setQrExpired(false);
     qrExpiredRef.current = false;
     const timer = setInterval(() => {
@@ -924,24 +931,35 @@ const TopUp = () => {
 
 
 
-  // Automatic Real-Time Polling Interval (Every 3 seconds matching Restaurant POS engine)
+  // Automatic Real-Time Polling (ABA PayWay Recommended Logic Flow: wait ~3s, then check every 3-5s)
   useEffect(() => {
-    // Do NOT start or continue polling if QR has expired or payment is done
+    // Step ③: Stop checking when payment is Approved/done or when transaction lifetime expires
     if (!orderId || paymentPaid || qrExpired) return;
 
-    // Initial check right after order creation
-    checkPaymentStatus();
+    let interval = null;
+    
+    // Step ②: Wait ~3 seconds after initiating before starting checks
+    const initialDelay = setTimeout(() => {
+      if (paymentPaidRef.current || qrExpiredRef.current) return;
 
-    // Poll every 2 seconds until payment is detected, QR expires, or component unmounts
-    const interval = setInterval(() => {
-      if (!paymentPaidRef.current && !qrExpiredRef.current) {
-        checkPaymentStatus();
-      } else {
-        clearInterval(interval);
-      }
-    }, 2000);
+      // First check after 3 seconds
+      checkPaymentStatus();
 
-    return () => clearInterval(interval);
+      // Check status every 3 seconds (ABA PayWay 3–5 seconds recommendation)
+      interval = setInterval(() => {
+        // Step ③: Stop checking when status is Approved or when transaction lifetime expires
+        if (!paymentPaidRef.current && !qrExpiredRef.current) {
+          checkPaymentStatus();
+        } else {
+          if (interval) clearInterval(interval);
+        }
+      }, 3000);
+    }, 3000);
+
+    return () => {
+      clearTimeout(initialDelay);
+      if (interval) clearInterval(interval);
+    };
   }, [orderId, paymentPaid, qrExpired, checkPaymentStatus]);
 
   // ── SSE Real-Time Payment Push ─────────────────────────────────────────────
@@ -1102,46 +1120,85 @@ const TopUp = () => {
 
       let createdPayment = null;
 
-      // 1. Prioritize Direct Python ABA KHQR Service (Port 5001) for 100% authentic, camera-scannable KHQR
+      // 1. Prioritize Official ABA PayWay Gateway (Sandbox / Live with ABA Simulator & Merchant Portal sync)
       try {
-        const directRes = await fetch('http://localhost:5001/api/payment/create', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            orderId: activeOrderId,
-            amount: targetAmount,
-            currency: currency,
-            player_id: pId,
-            server_id: sId,
-            account_name: playerAccName,
-            customer_id: customerId,
-            game_name: gameTitle,
-            package_name: pkgName
-          })
-        }).then(r => r.json()).catch(() => null);
-
-        if (directRes?.qr_code || directRes?.khqrString) {
-          const validCode = directRes.qr_code || directRes.khqrString;
+        const directRes = await paywayAPI.create({
+          orderId: activeOrderId,
+          amount: targetAmount,
+          currency: currency,
+          player_id: pId,
+          server_id: sId,
+          account_name: playerAccName,
+          customer_id: customerId,
+          game_name: gameTitle,
+          package_name: pkgName
+        });
+        const pd = directRes?.data;
+        if (pd?.tranId && (pd?.formData || pd?.purchaseUrl)) {
           createdPayment = {
             orderId: activeOrderId,
             amount: targetAmount,
             currency: currency,
-            tranId: directRes.orderId || `TRX${activeOrderId}`,
-            qrString: validCode,
-            khqrQRCode: validCode,
-            abapayDeeplink: directRes.deeplink,
-            khqrDeeplink: directRes.deeplink,
-            md5Hash: directRes.md5 || directRes.md5_hash,
-            khqrMd5Hash: directRes.md5 || directRes.md5_hash,
-            merchantName: directRes.merchantName || 'DETH PHEAK',
-            gateway: 'aba_khqr'
+            tranId: pd.tranId,
+            qrString: pd.qrString || null,
+            abapayDeeplink: pd.abapayDeeplink || pd.checkoutUrl,
+            khqrDeeplink: pd.abapayDeeplink || pd.checkoutUrl,
+            md5Hash: pd.md5,
+            khqrMd5Hash: pd.md5,
+            khqrQRCode: pd.qrString || null,
+            formData: pd.formData,
+            purchaseUrl: pd.purchaseUrl,
+            checkoutUrl: pd.checkoutUrl,
+            merchantName: 'DETH PHEAK',
+            gateway: 'aba_payway'
           };
         }
       } catch (err) {
-        console.warn('Local KHQR service notice:', err?.message);
+        console.warn('ABA PayWay API notice:', err?.message);
       }
 
-      // 2. Cloud Fallback Microservice for Real KHQR
+      // 2. Direct Python ABA KHQR Service (Port 5001) Fallback
+      if (!createdPayment) {
+        try {
+          const directRes = await fetch('http://localhost:5001/api/payment/create', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              orderId: activeOrderId,
+              amount: targetAmount,
+              currency: currency,
+              player_id: pId,
+              server_id: sId,
+              account_name: playerAccName,
+              customer_id: customerId,
+              game_name: gameTitle,
+              package_name: pkgName
+            })
+          }).then(r => r.json()).catch(() => null);
+
+          if (directRes?.qr_code || directRes?.khqrString) {
+            const validCode = directRes.qr_code || directRes.khqrString;
+            createdPayment = {
+              orderId: activeOrderId,
+              amount: targetAmount,
+              currency: currency,
+              tranId: directRes.orderId || `TRX${activeOrderId}`,
+              qrString: validCode,
+              khqrQRCode: validCode,
+              abapayDeeplink: directRes.deeplink,
+              khqrDeeplink: directRes.deeplink,
+              md5Hash: directRes.md5 || directRes.md5_hash,
+              khqrMd5Hash: directRes.md5 || directRes.md5_hash,
+              merchantName: directRes.merchantName || 'DETH PHEAK',
+              gateway: 'aba_khqr'
+            };
+          }
+        } catch (err) {
+          console.warn('Local KHQR service notice:', err?.message);
+        }
+      }
+
+      // 3. Cloud Fallback Microservice for Real KHQR
       if (!createdPayment) {
         try {
           const cloudRes = await fetch('https://mlbb-khqr-api.onrender.com/api/payment/create', {
@@ -1179,45 +1236,6 @@ const TopUp = () => {
           }
         } catch (cloudErr) {
           console.warn('Cloud KHQR service notice:', cloudErr?.message);
-        }
-      }
-
-      // 3. ABA PayWay Gateway Controller Fallback
-      if (!createdPayment) {
-        try {
-          const directRes = await paywayAPI.create({
-            orderId: activeOrderId,
-            amount: targetAmount,
-            currency: currency,
-            player_id: pId,
-            server_id: sId,
-            account_name: playerAccName,
-            customer_id: customerId,
-            game_name: gameTitle,
-            package_name: pkgName
-          });
-          const pd = directRes?.data;
-          if (pd?.qrString || pd?.tranId) {
-            createdPayment = {
-              orderId: activeOrderId,
-              amount: targetAmount,
-              currency: currency,
-              tranId: pd.tranId,
-              qrString: pd.qrString,
-              abapayDeeplink: pd.abapayDeeplink,
-              khqrDeeplink: pd.abapayDeeplink,
-              md5Hash: pd.md5,
-              khqrMd5Hash: pd.md5,
-              khqrQRCode: pd.qrString,
-              formData: pd.formData,
-              purchaseUrl: pd.purchaseUrl,
-              checkoutUrl: pd.checkoutUrl,
-              merchantName: 'DETH PHEAK',
-              gateway: 'aba_payway'
-            };
-          }
-        } catch (err) {
-          console.warn('ABA PayWay API notice:', err?.message);
         }
       }
 
@@ -2141,12 +2159,12 @@ const TopUp = () => {
                 <div className="text-center space-y-3 py-4 font-khmer">
                   <div className="text-3xl">⏱️</div>
                   <h4 className="text-slate-900 font-bold text-base">
-                    {language === 'km' ? 'QR Code ផុតកំណត់ (១ នាទី)' : 'QR Code Expired (1 min)'}
+                    {language === 'km' ? 'ប្រតិបត្តិការផុតកំណត់ (Transaction Expired)' : 'Transaction Expired'}
                   </h4>
                   <p className="text-xs text-slate-500">
                     {language === 'km'
-                      ? 'រយៈពេលកំណត់ ១នាទី ត្រូវបានបញ្ចប់។ សូមបង្កើត QR Code ថ្មីដើម្បីទូទាត់។'
-                      : '1-minute timeout reached. Please generate a new QR code to scan.'}
+                      ? 'រយៈពេលកំណត់នៃប្រតិបត្តិការត្រូវបានបញ្ចប់។ សូមបង្កើតសំណើទូទាត់ថ្មី ឬពិនិត្យក្នុង Merchant Portal។'
+                      : 'Transaction lifetime reached. Please initiate a new top-up request or verify in the merchant portal.'}
                   </p>
                   <div className="flex flex-col gap-2 pt-1">
                     <button
@@ -2154,7 +2172,7 @@ const TopUp = () => {
                       onClick={handleProceedToPayment}
                       className="w-full py-2.5 px-4 bg-[#0055a5] hover:bg-[#004485] text-white text-xs font-bold rounded-xl shadow cursor-pointer transition-all active:scale-[0.98]"
                     >
-                      {language === 'km' ? 'បង្កើត QR ថ្មី (Generate New QR)' : 'Generate New QR'}
+                      {language === 'km' ? 'បង្កើតសំណើថ្មី (Try Again)' : 'Try Again / New QR'}
                     </button>
                     <button
                       type="button"
@@ -2164,26 +2182,29 @@ const TopUp = () => {
                       }}
                       className="w-full py-2 px-4 border border-slate-200 hover:bg-slate-50 text-slate-600 text-xs font-semibold rounded-xl cursor-pointer transition-all active:scale-[0.98]"
                     >
-                      {language === 'km' ? 'បិទ (Close)' : 'Close QR Code'}
+                      {language === 'km' ? 'បិទ (Close)' : 'Close'}
                     </button>
                   </div>
                 </div>
               ) : (
                 <>
-                  {/* Header: Title "ABA KHQR" + 1-Minute Countdown Badge + Cyan Close Icon "✕" */}
+                  {/* Header: Title "ABA KHQR" + Countdown Badge + Cyan Close Icon "✕" */}
                   <div className="flex items-center justify-between pb-3 sm:pb-3.5">
                     <div className="flex items-center gap-2">
                       <h3 className="text-[20px] sm:text-[22px] font-bold text-[#0B2038] tracking-tight">
                         ABA KHQR
                       </h3>
-                      {/* 1-Minute Live Countdown Badge */}
+                      {/* Live Lifetime Countdown Badge */}
                       <span className={`inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-mono font-bold border transition-colors ${
-                        timeLeft <= 15
+                        timeLeft <= 30
                           ? 'bg-rose-50 text-rose-600 border-rose-200 animate-pulse'
                           : 'bg-amber-50 text-amber-700 border-amber-200'
                       }`}>
                         <span>⏱️</span>
-                        <span>00:{String(timeLeft).padStart(2, '0')}</span>
+                        <span>
+                          {String(Math.floor(timeLeft / 60)).padStart(2, '0')}:
+                          {String(timeLeft % 60).padStart(2, '0')}
+                        </span>
                       </span>
                     </div>
 
