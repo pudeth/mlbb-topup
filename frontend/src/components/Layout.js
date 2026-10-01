@@ -43,7 +43,7 @@ const Layout = ({ children }) => {
     location.pathname.startsWith('/register');
 
   return (
-    <div className="min-h-screen flex flex-col bg-dark-bg text-slate-100 relative overflow-hidden">
+    <div className="min-h-screen flex flex-col bg-dark-bg text-slate-100 relative overflow-x-clip">
       {/* Ambient background glows */}
       <div className="fixed top-0 left-1/4 w-96 h-96 bg-cyan-500/10 rounded-full blur-3xl pointer-events-none animate-pulseGlow"></div>
       <div className="fixed top-1/3 right-10 w-96 h-96 bg-purple-600/10 rounded-full blur-3xl pointer-events-none animate-pulseGlow" style={{ animationDelay: '2s' }}></div>

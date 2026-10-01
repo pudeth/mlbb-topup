@@ -317,7 +317,13 @@ html {
 }
 
 body.modal-open {
-  overflow: hidden !important;
+  overflow: hidden;
+}
+
+/* Ensure smooth native touch momentum scrolling on mobile browsers */
+html, body {
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior-y: auto;
 }
 
 body.modal-open .mobile-bottom-nav,
@@ -347,6 +353,13 @@ body:has(.aba-checkout-desktop[style*="display: block"]) .ai-assistant-widget {
 /* 2. Mobile Bottom Sheet Container & Backdrop Blur */
 #aba_checkout_sheet {
   z-index: 999999999 !important;
+}
+
+#aba_checkout_sheet[aria-hidden='true'] {
+  display: none !important;
+  opacity: 0 !important;
+  visibility: hidden !important;
+  pointer-events: none !important;
 }
 
 #aba_checkout_sheet .aba_checkout_overlay {

@@ -63,20 +63,42 @@
           try {
             if (typeof AbaPayway !== 'undefined') {
               window.AbaPayway = AbaPayway;
-              if (typeof AbaPayway.closeCheckout === 'function') {
-                AbaPayway.closeCheckout = function() {
-                  try {
-                    var el = document.getElementById('aba-checkout');
-                    if (el) el.style.display = 'none';
-                    var sheet = document.getElementById('aba_checkout_sheet');
-                    if (sheet) {
-                      sheet.style.display = 'none';
-                      sheet.setAttribute('aria-hidden', 'true');
-                    }
-                    document.body.style.overflowY = 'visible';
-                  } catch(e) {}
-                };
-              }
+              
+              var cleanupAbaUI = function() {
+                try {
+                  var el = document.getElementById('aba-checkout');
+                  if (el) {
+                    el.style.display = 'none';
+                    el.classList.remove('aba-checkout-desktop');
+                    el.innerHTML = '';
+                  }
+                  var sheet = document.getElementById('aba_checkout_sheet');
+                  if (sheet) {
+                    sheet.style.display = 'none';
+                    sheet.setAttribute('aria-hidden', 'true');
+                    sheet.style.pointerEvents = 'none';
+                  }
+                  var exitModal = document.getElementById('aba_checkout_open_exit_modal_mini_app');
+                  if (exitModal) exitModal.style.display = 'none';
+                  var exitCloseModal = document.getElementById('aba_checkout_close_exit_modal_mini_app');
+                  if (exitCloseModal) exitCloseModal.style.display = 'none';
+
+                  // Thoroughly unlock document & body scrolling
+                  document.body.classList.remove('modal-open');
+                  document.body.style.removeProperty('overflow');
+                  document.body.style.removeProperty('overflow-y');
+                  document.documentElement.style.removeProperty('overflow');
+                  document.documentElement.style.removeProperty('overflow-y');
+                  document.body.style.overflow = '';
+                  document.body.style.overflowY = '';
+                  document.documentElement.style.overflow = '';
+                  document.documentElement.style.overflowY = '';
+                  window.dispatchEvent(new CustomEvent('abaCheckoutClosed'));
+                } catch(e) {}
+              };
+
+              AbaPayway.closeCheckout = cleanupAbaUI;
+              AbaPayway.closeCheckoutByContinueUrl = cleanupAbaUI;
               return true;
             }
           } catch (e) {}

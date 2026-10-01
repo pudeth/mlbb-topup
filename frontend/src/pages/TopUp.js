@@ -210,19 +210,36 @@ const getAbaPaywayInstance = () => {
   return null;
 };
 
-// Graceful close of ABA PayWay popup without full page refresh
+// Graceful close of ABA PayWay popup without full page refresh & complete scroll restoration
 const closeAbaCheckoutPopup = () => {
   try {
     const abaCheckout = document.getElementById('aba-checkout');
     if (abaCheckout) {
       abaCheckout.style.display = 'none';
+      abaCheckout.classList.remove('aba-checkout-desktop');
+      abaCheckout.innerHTML = '';
     }
     const sheet = document.getElementById('aba_checkout_sheet');
     if (sheet) {
       sheet.style.display = 'none';
       sheet.setAttribute('aria-hidden', 'true');
+      sheet.style.pointerEvents = 'none';
     }
-    document.body.style.overflowY = 'visible';
+    const exitModal = document.getElementById('aba_checkout_open_exit_modal_mini_app');
+    if (exitModal) exitModal.style.display = 'none';
+    const exitCloseModal = document.getElementById('aba_checkout_close_exit_modal_mini_app');
+    if (exitCloseModal) exitCloseModal.style.display = 'none';
+
+    // Thoroughly unlock document & body scrolling on mobile & desktop
+    document.body.classList.remove('modal-open');
+    document.body.style.removeProperty('overflow');
+    document.body.style.removeProperty('overflow-y');
+    document.documentElement.style.removeProperty('overflow');
+    document.documentElement.style.removeProperty('overflow-y');
+    document.body.style.overflow = '';
+    document.body.style.overflowY = '';
+    document.documentElement.style.overflow = '';
+    document.documentElement.style.overflowY = '';
   } catch (e) {}
 };
 
@@ -627,9 +644,10 @@ const TopUp = () => {
     return () => clearInterval(timer);
   }, [paymentData, paymentPaid]);
 
-  // Lock scroll & hide floating navigation when checkout modal is active
+  // Lock scroll & hide floating navigation ONLY when our internal non-ABA checkout modal is active
   useEffect(() => {
-    if (paymentData && !paymentPaid) {
+    // ABA PayWay manages its own drawer/modal; only lock body for internal modals or receipt
+    if (paymentData && !paymentPaid && paymentData.gateway !== 'aba_payway') {
       document.body.classList.add('modal-open');
     } else {
       document.body.classList.remove('modal-open');
@@ -637,6 +655,7 @@ const TopUp = () => {
 
     const handleKeyDown = (e) => {
       if (e.key === 'Escape' && paymentData && !paymentPaid) {
+        closeAbaCheckoutPopup();
         setPaymentData(null);
         setOrderId(null);
       }
@@ -646,6 +665,61 @@ const TopUp = () => {
     return () => {
       document.body.classList.remove('modal-open');
       window.removeEventListener('keydown', handleKeyDown);
+    };
+  }, [paymentData, paymentPaid]);
+
+  // Listen for ABA PayWay postMessage events and custom close events to guarantee scroll unlock
+  useEffect(() => {
+    const handleAbaMessage = (e) => {
+      try {
+        const data = e.data;
+        if (!data) return;
+        if (data.close || data.merchantUrl === '' || data.merchantUrl) {
+          closeAbaCheckoutPopup();
+        }
+      } catch (err) {}
+    };
+
+    const handleAbaClosedEvent = () => {
+      closeAbaCheckoutPopup();
+    };
+
+    window.addEventListener('message', handleAbaMessage);
+    window.addEventListener('abaCheckoutClosed', handleAbaClosedEvent);
+
+    return () => {
+      window.removeEventListener('message', handleAbaMessage);
+      window.removeEventListener('abaCheckoutClosed', handleAbaClosedEvent);
+      closeAbaCheckoutPopup();
+    };
+  }, []);
+
+  // Watchdog: Guarantee that scrolling is always free whenever ABA sheet or desktop modal is closed
+  useEffect(() => {
+    const unlockIfSheetClosed = () => {
+      const sheet = document.getElementById('aba_checkout_sheet');
+      const isSheetVisible = sheet && sheet.getAttribute('aria-hidden') !== 'true' && sheet.style.display !== 'none';
+      const desktopModal = document.querySelector('.aba-checkout-desktop');
+      const isDesktopVisible = desktopModal && desktopModal.style.display !== 'none';
+
+      // If ABA is closed, and either body or html has locked overflow styles, instantly restore scrolling
+      if (!isSheetVisible && !isDesktopVisible && (!paymentData || paymentData.gateway === 'aba_payway')) {
+        if (
+          document.body.style.overflowY === 'hidden' ||
+          document.body.style.overflow === 'hidden' ||
+          document.documentElement.style.overflowY === 'hidden' ||
+          document.documentElement.style.overflow === 'hidden' ||
+          document.body.classList.contains('modal-open')
+        ) {
+          closeAbaCheckoutPopup();
+        }
+      }
+    };
+
+    const interval = setInterval(unlockIfSheetClosed, 300);
+    return () => {
+      clearInterval(interval);
+      closeAbaCheckoutPopup();
     };
   }, [paymentData, paymentPaid]);
 
@@ -2672,6 +2746,7 @@ const TopUp = () => {
               <div className="px-6 pb-6 pt-3 space-y-2.5 bg-white">
                 <Link
                   to={`/order-status/${orderId}`}
+                  onClick={() => closeAbaCheckoutPopup()}
                   className="w-full py-3 rounded-xl bg-gradient-to-r from-[#0055a5] to-[#007cd6] hover:from-[#004485] hover:to-[#0066c0] text-white font-bold text-xs sm:text-sm shadow-md shadow-[#0055a5]/25 flex items-center justify-center gap-2 transition-all active:scale-[0.98]"
                 >
                   <span>🖨️</span>
@@ -2681,6 +2756,7 @@ const TopUp = () => {
                 <button
                   type="button"
                   onClick={() => {
+                    closeAbaCheckoutPopup();
                     setFormData(prev => ({ ...prev, playerID: '' }));
                     setOrderId(null);
                     setPaymentData(null);
