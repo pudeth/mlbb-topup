@@ -16,9 +16,9 @@ const Navbar = () => {
   const isActive = (path) => location.pathname === path;
 
   const languages = [
-    { code: 'km', name: 'ភាសាខ្មែរ', flagCode: 'kh', flag: '🇰🇭', short: 'ខ្មែរ' },
-    { code: 'en', name: 'English', flagCode: 'gb', flag: '🇬🇧', short: 'EN' },
-    { code: 'zh', name: '中文 (Chinese)', flagCode: 'cn', flag: '🇨🇳', short: '中文' },
+    { code: 'km', name: 'ភាសាខ្មែរ', sub: 'Khmer • កម្ពុជា', flagCode: 'kh', flag: '🇰🇭', short: 'ខ្មែរ' },
+    { code: 'en', name: 'English', sub: 'English • Global', flagCode: 'gb', flag: '🇬🇧', short: 'EN' },
+    { code: 'zh', name: '中文', sub: 'Chinese • 简体', flagCode: 'cn', flag: '🇨🇳', short: '中文' },
   ];
 
   const currentLang = languages.find(l => l.code === language) || languages[1];
@@ -184,50 +184,108 @@ const Navbar = () => {
             </button>
 
             {/* Language Selector Dropdown */}
-            <div className="relative z-50">
+            <div className="relative z-[100]">
               <button
                 type="button"
                 onClick={() => setLangDropdownOpen(!langDropdownOpen)}
-                className="h-10 px-3.5 rounded-xl bg-slate-900/90 hover:bg-slate-800 border border-slate-800 hover:border-slate-700 text-slate-200 text-xs font-bold flex items-center gap-2 transition-all shadow-sm active:scale-95 whitespace-nowrap"
+                className={`h-10 px-3 sm:px-3.5 rounded-xl border transition-all duration-200 text-xs font-bold flex items-center gap-2 shadow-sm active:scale-95 whitespace-nowrap cursor-pointer ${
+                  langDropdownOpen
+                    ? 'bg-slate-800 border-cyan-500/60 text-white ring-2 ring-cyan-500/20 shadow-[0_0_15px_rgba(6,182,212,0.25)]'
+                    : 'bg-slate-900/95 hover:bg-slate-800/95 border-slate-700/80 hover:border-slate-600 text-slate-200'
+                }`}
+                aria-expanded={langDropdownOpen}
+                aria-label="Select Language"
               >
-                <span className={`fi fi-${currentLang.flagCode || 'kh'} rounded-xs shadow-xs text-base leading-none`} />
-                <span className="hidden sm:inline font-bold">{currentLang.short}</span>
-                <svg className={`w-3.5 h-3.5 text-slate-400 transition-transform duration-200 ${langDropdownOpen ? 'rotate-180 text-amber-400' : ''}`} viewBox="0 0 20 20" fill="currentColor">
+                <span className="w-5 h-3.5 rounded-[3px] overflow-hidden shadow-xs border border-white/25 shrink-0 inline-flex items-center justify-center">
+                  <span className={`fi fi-${currentLang.flagCode || 'kh'} w-full h-full object-cover leading-none`} />
+                </span>
+                <span className="hidden sm:inline font-bold tracking-wide">{currentLang.short}</span>
+                <svg
+                  className={`w-3.5 h-3.5 text-slate-400 transition-transform duration-300 ${langDropdownOpen ? 'rotate-180 text-cyan-400' : ''}`}
+                  viewBox="0 0 20 20"
+                  fill="currentColor"
+                >
                   <path fillRule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clipRule="evenodd" />
                 </svg>
               </button>
 
               {langDropdownOpen && (
                 <>
+                  {/* Invisible Dismiss Overlay */}
                   <div
-                    className="fixed inset-0 z-40"
+                    className="fixed inset-0 z-[90]"
                     onClick={() => setLangDropdownOpen(false)}
                   />
-                  <div className="absolute right-0 mt-2 w-48 bg-[#0d1322]/98 backdrop-blur-2xl border border-slate-700/90 rounded-2xl p-1.5 shadow-[0_20px_50px_rgba(0,0,0,0.95)] ring-1 ring-white/10 z-50 animate-fadeIn font-khmer">
-                    <div className="px-3 py-1.5 text-[10px] font-extrabold text-slate-400 uppercase tracking-wider border-b border-slate-800/80 mb-1 flex items-center gap-1">
-                      <span>🌐</span> Language / ភាសា
-                    </div>
-                    {languages.map((l) => (
-                      <button
-                        key={l.code}
-                        type="button"
-                        onClick={() => {
-                          setLanguage(l.code);
-                          setLangDropdownOpen(false);
-                        }}
-                        className={`w-full text-left px-3 py-2 rounded-xl text-xs font-bold flex items-center justify-between transition-all cursor-pointer ${
-                          language === l.code
-                            ? 'bg-cyan-950/40 text-cyan-300 font-black border border-cyan-500/30 shadow-sm'
-                            : 'text-slate-300 hover:bg-slate-800/60 hover:text-white'
-                        }`}
-                      >
-                        <span className="flex items-center gap-2">
-                          <span className={`fi fi-${l.flagCode || 'kh'} rounded-xs shadow-xs text-base leading-none`} />
-                          <span>{l.name}</span>
+
+                  {/* High-End Gaming / Fintech Dropdown Card (Completely Opaque to eliminate bleed-through) */}
+                  <div className="absolute right-0 mt-2.5 w-64 bg-[#0b101c] border border-slate-700/90 rounded-2xl p-2 shadow-[0_25px_60px_rgba(0,0,0,0.95),0_0_30px_rgba(6,182,212,0.12)] ring-1 ring-white/10 z-[100] animate-fadeIn font-khmer select-none">
+                    
+                    {/* Dropdown Header */}
+                    <div className="flex items-center justify-between px-2.5 py-2 border-b border-slate-800/90 mb-1.5">
+                      <div className="flex items-center gap-1.5">
+                        <span className="text-xs">🌐</span>
+                        <span className="text-[10px] font-black text-slate-400 uppercase tracking-wider">
+                          Language / ភាសា
                         </span>
-                        {language === l.code && <span className="text-cyan-400 text-xs font-black">✓</span>}
-                      </button>
-                    ))}
+                      </div>
+                      <span className="text-[9px] font-bold px-2 py-0.5 rounded-full bg-cyan-950/80 border border-cyan-500/30 text-cyan-300">
+                        {languages.length} Available
+                      </span>
+                    </div>
+
+                    {/* Language Options */}
+                    <div className="space-y-1">
+                      {languages.map((l) => {
+                        const isSelected = language === l.code;
+                        return (
+                          <button
+                            key={l.code}
+                            type="button"
+                            onClick={() => {
+                              setLanguage(l.code);
+                              setLangDropdownOpen(false);
+                            }}
+                            className={`w-full text-left px-3 py-2.5 rounded-xl transition-all duration-150 flex items-center justify-between cursor-pointer group ${
+                              isSelected
+                                ? 'bg-gradient-to-r from-cyan-950/80 via-slate-900 to-slate-900 border border-cyan-500/50 shadow-sm text-white'
+                                : 'hover:bg-slate-800/80 border border-transparent hover:border-slate-700/60 text-slate-300 hover:text-white'
+                            }`}
+                          >
+                            <div className="flex items-center gap-3 min-w-0">
+                              <div className={`w-6 h-4.5 rounded-[4px] overflow-hidden shadow-sm border shrink-0 flex items-center justify-center transition-transform group-hover:scale-105 ${
+                                isSelected ? 'border-cyan-400/80 ring-1 ring-cyan-400/40' : 'border-white/20'
+                              }`}>
+                                <span className={`fi fi-${l.flagCode || 'kh'} w-full h-full object-cover text-sm leading-none`} />
+                              </div>
+                              <div className="flex flex-col min-w-0">
+                                <span className={`text-xs font-bold leading-tight truncate ${isSelected ? 'text-cyan-200' : 'text-slate-200 group-hover:text-white'}`}>
+                                  {l.name}
+                                </span>
+                                <span className="text-[10px] text-slate-400 font-medium leading-tight mt-0.5 truncate">
+                                  {l.sub}
+                                </span>
+                              </div>
+                            </div>
+
+                            {isSelected && (
+                              <div className="w-5 h-5 rounded-full bg-cyan-500/20 border border-cyan-400 text-cyan-300 flex items-center justify-center text-[11px] font-black shrink-0 shadow-[0_0_10px_rgba(6,182,212,0.4)]">
+                                ✓
+                              </div>
+                            )}
+                          </button>
+                        );
+                      })}
+                    </div>
+
+                    {/* Subtle Footer */}
+                    <div className="mt-1.5 pt-1.5 border-t border-slate-800/80 px-2 py-0.5 flex items-center justify-between text-[10px] text-slate-400 font-medium">
+                      <span>⚡ Instant Switch</span>
+                      <span className="text-emerald-400 flex items-center gap-1 font-semibold">
+                        <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span>
+                        Active
+                      </span>
+                    </div>
+
                   </div>
                 </>
               )}
