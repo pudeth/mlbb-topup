@@ -507,6 +507,25 @@ const TopUp = () => {
     }
   }, [showCustomModal]);
 
+  // Handle ABA PayWay official close events from postMessage
+  useEffect(() => {
+    const handlePayWayMessage = (event) => {
+      if (
+        event?.data &&
+        (event.data.close ||
+          event.data === 'close' ||
+          event.data?.action === 'close' ||
+          event.data?.type === 'close')
+      ) {
+        setShowCustomModal(false);
+        setPaymentData(null);
+        setOrderId(null);
+      }
+    };
+    window.addEventListener('message', handlePayWayMessage);
+    return () => window.removeEventListener('message', handlePayWayMessage);
+  }, []);
+
   // Transaction Lifetime Countdown Timer (6 minutes / 360 seconds matching ABA PayWay standard: 5-15 mins)
   useEffect(() => {
     if (!paymentData || paymentPaid) return;
@@ -2676,55 +2695,9 @@ const TopUp = () => {
               }
             }}
           >
-            <div className="relative w-full max-w-[392px] my-auto flex flex-col items-end animate-[scaleIn_0.25s_ease-out]">
-              {/* ABA PAYWAY Header: Live Lifetime Timer (left) + Brand Logo (right) */}
-              <div className="w-full flex items-center justify-between mb-2 px-1 select-none">
-                {/* Live Lifetime Countdown Indicator */}
-                <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-black/50 backdrop-blur-md border border-white/10 text-xs font-mono text-white/90 shadow-sm">
-                  <span className="text-amber-400 text-xs">⏱️</span>
-                  <span className={timeLeft <= 30 ? "text-rose-400 font-bold animate-pulse" : "font-semibold text-emerald-400"}>
-                    {String(Math.floor(timeLeft / 60)).padStart(2, '0')}:{String(timeLeft % 60).padStart(2, '0')}
-                  </span>
-                  <span className="text-[10px] text-white/50 uppercase tracking-wider ml-0.5">Lifetime</span>
-                </div>
-
-                {/* ABA PAYWAY Official Header Brand */}
-                <div className="flex items-center gap-1.5 select-none pointer-events-none">
-                  <img 
-                    src="https://checkout.payway.com.kh/images/payway-logo-white.svg" 
-                    alt="ABA' PAYWAY" 
-                    className="h-6 w-auto object-contain"
-                    onError={(e) => {
-                      e.target.style.display = 'none';
-                      if (e.target.nextElementSibling) e.target.nextElementSibling.style.display = 'flex';
-                    }}
-                  />
-                  <div className="hidden items-center gap-1">
-                    <span className="font-black text-xl text-white tracking-wide">ABA'</span>
-                    <span className="font-black text-xl tracking-widest uppercase italic text-[#00bcd4]">PAYWAY</span>
-                  </div>
-                </div>
-              </div>
-
-              {/* PayWay Voucher Card */}
+            <div className="relative w-full max-w-[392px] my-auto flex flex-col items-center animate-[scaleIn_0.25s_ease-out]">
+              {/* Official PayWay Voucher Card - 100% native ABA checkout without custom overlay styling */}
               <div className="relative w-full h-[605px] sm:h-[615px] bg-white rounded-2xl shadow-2xl overflow-hidden flex flex-col">
-                {/* Floating Sleek Close Button */}
-                <button 
-                  type="button"
-                  onClick={() => {
-                    setShowCustomModal(false);
-                    setPaymentData(null);
-                    setOrderId(null);
-                  }}
-                  className="absolute top-3 right-3 z-30 w-8 h-8 rounded-full flex items-center justify-center text-slate-400 hover:text-slate-700 hover:bg-slate-100 transition-colors"
-                  aria-label="Close"
-                  title="Close payment"
-                >
-                  <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
-                  </svg>
-                </button>
-
                 {/* Step ④: When lifetime expires (timeLeft === 0 / qrExpired), safely end process */}
                 {qrExpired || timeLeft === 0 ? (
                   <div className="relative z-20 w-full h-full bg-white flex flex-col items-center justify-center p-6 text-center animate-[scaleIn_0.2s_ease-out]">
