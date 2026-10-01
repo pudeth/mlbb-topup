@@ -1,17 +1,12 @@
 import React, { useState, useEffect, useCallback, useRef, useTransition } from 'react';
 import { useSearchParams, useNavigate, Link } from 'react-router-dom';
-import { QRCodeSVG } from 'qrcode.react';
 import { useLanguage } from '../context/LanguageContext';
-import { ordersAPI, paymentsAPI, topupAPI, paywayAPI } from '../services/api';
+import { ordersAPI, topupAPI, paywayAPI } from '../services/api';
 import { getStoredGames, getMasterTopupStatus, fetchStoredGames, fetchMasterTopupStatus } from '../services/gamesConfig';
 import { CambodiaFlagFrame } from '../components/CambodiaFlagBadge';
 import ProductPackageImage from '../components/ProductPackageImage';
-import {
-  AbaKhqrLogo,
-  KhqrVoucherHeader
-} from '../components/AbaPaymentLogos';
+import { AbaKhqrLogo } from '../components/AbaPaymentLogos';
 import WeAcceptPayments from '../components/WeAcceptPayments';
-import { generateEmvcoKhqr } from '../utils/khqrGenerator';
 
 // Game-specific packages matching upstream supplier catalog
 const GAME_PACKAGES_MAP = {
@@ -199,11 +194,20 @@ const getAbaPaywayInstance = () => {
     }
     if (instance) {
       // Guard closeCheckout to avoid destructive forced reload on success
-      instance.closeCheckout = function() {
+      instance.closeCheckout = function(isAsk) {
+        if (isAsk && typeof window !== 'undefined' && !window.confirm('Are you sure you want to cancel the payment?')) {
+          return;
+        }
         closeAbaCheckoutPopup();
+        if (typeof window !== 'undefined') {
+          window.dispatchEvent(new CustomEvent('abaCheckoutClosed'));
+        }
       };
       instance.closeCheckoutByContinueUrl = function() {
         closeAbaCheckoutPopup();
+        if (typeof window !== 'undefined') {
+          window.dispatchEvent(new CustomEvent('abaCheckoutClosed'));
+        }
       };
       return instance;
     }
@@ -426,81 +430,18 @@ const TopUp = () => {
   const [confirmSent, setConfirmSent] = useState(false); // customer pressed Confirm button
   const [qrExpired, setQrExpired] = useState(false);
   const qrExpiredRef = useRef(false);
+  // eslint-disable-next-line no-unused-vars
   const [processingStep, setProcessingStep] = useState(0); // 0: scanning, 1: verifying, 2: server sync, 3: delivering
   const [currency, setCurrency] = useState('USD'); // 'USD' or 'KHR'
+  // eslint-disable-next-line no-unused-vars
   const [timeLeft, setTimeLeft] = useState(360); // 6-minute (360 seconds) transaction lifetime (ABA PayWay standard)
   const [productCategoryTab, setProductCategoryTab] = useState('all'); // 'all', 'passes', 'diamonds'
   const [layoutMode, setLayoutMode] = useState('tiles'); // 'list', 'tiles', 'grid'
   const checkoutSectionRef = useRef(null);
 
-  const handleSwitchCurrency = async (newCurr) => {
-    if (newCurr === currency && paymentData?.currency === newCurr) return;
+  const handleSwitchCurrency = (newCurr) => {
+    if (newCurr === currency) return;
     setCurrency(newCurr);
-
-    const isRiel = newCurr === 'KHR';
-    const rawPrice = selectedProduct?.price || 0.95;
-    const targetAmount = isRiel ? Math.round(rawPrice * 4100) : rawPrice;
-
-    // Immediately generate authentic EMVCo KHQR for the new currency
-    const clientKhqr = generateEmvcoKhqr({
-      amount: targetAmount,
-      currency: newCurr,
-      merchantName: 'DETH PHEAK',
-      merchantCity: 'Phnom Penh'
-    });
-
-    setPaymentData(prev => prev ? ({
-      ...prev,
-      currency: newCurr,
-      amount: targetAmount,
-      qrString: clientKhqr.qrString,
-      khqrQRCode: clientKhqr.qrString,
-      khqrDeeplink: clientKhqr.deeplink,
-      abapayDeeplink: clientKhqr.deeplink,
-      khqrMd5Hash: clientKhqr.md5Hash,
-      md5Hash: clientKhqr.md5Hash,
-      gateway: 'aba_khqr'
-    }) : prev);
-
-    if (orderId) {
-      try {
-        let currentUser = null;
-        try {
-          const stored = localStorage.getItem('user');
-          if (stored) currentUser = JSON.parse(stored);
-        } catch (e) {}
-
-        const khqrSyncPayload = {
-          orderId,
-          bill_number: `MLBB${orderId}`,
-          amount: targetAmount,
-          currency: newCurr,
-          player_id: formData.playerID ? formData.playerID.trim() : '',
-          server_id: formData.serverID ? formData.serverID.trim() : '',
-          account_name: verifiedAccount?.name || '',
-          customer_id: currentUser?.userId || currentUser?.id || '',
-          game_name: selectedGame?.name || 'Mobile Legends: Bang Bang',
-          package_name: selectedProduct?.name || `${selectedProduct?.diamondAmount || 55} Diamonds`,
-          qr_code: clientKhqr.qrString,
-          md5_hash: clientKhqr.md5Hash
-        };
-
-        // Notify local Python 5001 or cloud Render in background
-        fetch('http://localhost:5001/api/payment/create', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(khqrSyncPayload)
-        }).catch(() => {
-          fetch('https://mlbb-khqr-api.onrender.com/api/payment/create', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(khqrSyncPayload)
-          }).catch(() => {});
-        });
-      } catch (err) {
-        console.warn('Currency switch notice:', err?.message);
-      }
-    }
   };
 
 
@@ -546,19 +487,9 @@ const TopUp = () => {
               });
             }
 
-            // Launch official checkout popup with valid callbacks to prevent undefined invocation
-            const payload = {
-              form_url: purchaseUrl,
-              ...(paymentData.formData || {}),
-              onSuccess: (res) => {
-                console.log('[ABA PayWay] onSuccess callback received:', res);
-              },
-              onError: (err) => {
-                console.warn('[ABA PayWay] onError callback received:', err);
-              }
-            };
-            payway.checkout(payload);
-            console.log('[ABA PayWay] Official popup launched successfully!');
+            // Launch official checkout popup via official standard AbaPayway.checkout()
+            payway.checkout();
+            console.log('[ABA PayWay] Official popup launched successfully via AbaPayway.checkout()!');
             return true;
           } catch (e) {
             console.warn('[ABA PayWay] AbaPayway.checkout() notice:', e);
@@ -644,7 +575,11 @@ const TopUp = () => {
     };
 
     const handleAbaClosedEvent = () => {
-      closeAbaCheckoutPopup();
+      if (!paymentPaidRef.current) {
+        closeAbaCheckoutPopup();
+        setPaymentData(null);
+        setOrderId(null);
+      }
     };
 
     window.addEventListener('message', handleAbaMessage);
@@ -653,7 +588,6 @@ const TopUp = () => {
     return () => {
       window.removeEventListener('message', handleAbaMessage);
       window.removeEventListener('abaCheckoutClosed', handleAbaClosedEvent);
-      closeAbaCheckoutPopup();
     };
   }, []);
 
@@ -674,54 +608,22 @@ const TopUp = () => {
           document.documentElement.style.overflow === 'hidden' ||
           document.body.classList.contains('modal-open')
         ) {
-          closeAbaCheckoutPopup();
+          document.body.classList.remove('modal-open');
+          document.body.style.overflow = '';
+          document.body.style.overflowY = '';
+          document.documentElement.style.overflow = '';
+          document.documentElement.style.overflowY = '';
         }
       }
     };
 
-    const interval = setInterval(unlockIfSheetClosed, 300);
+    const interval = setInterval(unlockIfSheetClosed, 500);
     return () => {
       clearInterval(interval);
-      closeAbaCheckoutPopup();
     };
   }, [paymentData, paymentPaid]);
 
-  // Mobile device detection for mobile banking app deeplink triggers
-  const [isMobileDevice, setIsMobileDevice] = useState(() => {
-    if (typeof window === 'undefined') return false;
-    return (
-      /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) ||
-      window.innerWidth < 768
-    );
-  });
 
-  useEffect(() => {
-    const handleResize = () => {
-      setIsMobileDevice(
-        /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) ||
-        window.innerWidth < 768
-      );
-    };
-    window.addEventListener('resize', handleResize);
-    return () => window.removeEventListener('resize', handleResize);
-  }, []);
-
-  const handleOpenBankApp = () => {
-    const deeplink = paymentData?.abapayDeeplink || paymentData?.khqrDeeplink;
-    const rawQr = paymentData?.qrString || paymentData?.khqrQRCode;
-
-    if (deeplink) {
-      window.location.href = deeplink;
-    } else if (rawQr) {
-      const bakongUrl = `bakong://qr?data=${encodeURIComponent(rawQr)}`;
-      window.location.href = bakongUrl;
-      setTimeout(() => {
-        window.location.href = 'abamobilebank://';
-      }, 500);
-    } else {
-      window.location.href = 'abamobilebank://';
-    }
-  };
 
   const [, startTransition] = useTransition();
   const carouselContainerRef = useRef(null);
@@ -1261,14 +1163,6 @@ const TopUp = () => {
       const activeOrderId = newOrder?.orderId || Math.floor(100000 + Math.random() * 900000);
       setOrderId(activeOrderId);
 
-      // Authentic NBC Bakong & ABA Bank EMVCo KHQR code generator
-      const clientKhqr = generateEmvcoKhqr({
-        amount: targetAmount,
-        currency: currency,
-        merchantName: 'DETH PHEAK',
-        merchantCity: 'Phnom Penh'
-      });
-
       // 1. Initialize official ABA PayWay transaction in backend
       let paywayResData = null;
       try {
@@ -1288,87 +1182,101 @@ const TopUp = () => {
         console.warn('ABA PayWay API notice:', err?.message);
       }
 
-      // 2. Fast check with local KHQR service (800ms race timeout)
-      let khqrApiData = null;
-      try {
-        const khqrSyncPayload = {
-          orderId: activeOrderId,
-          bill_number: `MLBB${activeOrderId}`,
-          amount: targetAmount,
-          currency: currency,
-          player_id: pId,
-          server_id: sId,
-          account_name: playerAccName,
-          customer_id: customerId,
-          game_name: gameTitle,
-          package_name: pkgName,
-          qr_code: clientKhqr.qrString,
-          md5_hash: clientKhqr.md5Hash
-        };
-        const fastFetch = fetch('http://localhost:5001/api/payment/create', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(khqrSyncPayload)
-        }).then(r => r.json()).catch(() => null);
+      if (!paywayResData || !paywayResData.formData) {
+        throw new Error('Failed to initialize official ABA PayWay transaction. Please check connection and try again.');
+      }
 
-        khqrApiData = await Promise.race([
-          fastFetch,
-          new Promise(r => setTimeout(() => r(null), 800))
-        ]);
-      } catch (e) {}
+      const purchaseUrl = paywayResData.purchaseUrl || "https://checkout-sandbox.payway.com.kh/api/payment-gateway/v1/payments/purchase";
+      const tranId = paywayResData.tranId || `TRX${activeOrderId}`;
 
-      const validQr = khqrApiData?.qr_code || khqrApiData?.khqrString || paywayResData?.qrString || clientKhqr.qrString;
-      const validMd5 = khqrApiData?.md5 || khqrApiData?.md5_hash || paywayResData?.md5 || clientKhqr.md5Hash;
-      const validDeeplink = khqrApiData?.deeplink || paywayResData?.abapayDeeplink || clientKhqr.deeplink;
-      const tranId = paywayResData?.tranId || khqrApiData?.orderId || `TRX${activeOrderId}`;
+      // 1️⃣ Add target="aba_webservice" in the form body request & populate inputs per Phuoy Phannit's specification
+      let form = document.getElementById('aba_merchant_request');
+      if (!form) {
+        form = document.createElement('form');
+        form.id = 'aba_merchant_request';
+        form.style.display = 'none';
+        document.body.appendChild(form);
+      }
+      form.method = 'POST';
+      form.target = 'aba_webservice';
+      form.action = purchaseUrl;
+      form.innerHTML = '';
 
-      const createdPayment = {
-        orderId: activeOrderId,
-        amount: targetAmount,
-        currency: currency,
-        tranId: tranId,
-        qrString: validQr,
-        khqrQRCode: validQr,
-        abapayDeeplink: validDeeplink,
-        khqrDeeplink: validDeeplink,
-        md5Hash: validMd5,
-        khqrMd5Hash: validMd5,
-        formData: paywayResData?.formData,
-        purchaseUrl: paywayResData?.purchaseUrl,
-        checkoutUrl: paywayResData?.checkoutUrl,
-        merchantName: 'DETH PHEAK',
-        gateway: 'aba_khqr'
-      };
-
-      // Background notification to cloud render KHQR microservice (for Telegram alerts & SSE)
-      fetch('https://mlbb-khqr-api.onrender.com/api/payment/create', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          orderId: activeOrderId,
-          bill_number: `MLBB${activeOrderId}`,
-          amount: targetAmount,
-          currency: currency,
-          player_id: pId,
-          server_id: sId,
-          account_name: playerAccName,
-          customer_id: customerId,
-          game_name: gameTitle,
-          package_name: pkgName,
-          qr_code: validQr,
-          md5_hash: validMd5
-        })
-      }).catch(() => {});
-
-      setPaymentData({
-        ...createdPayment,
-        amount: targetAmount,
-        currency: currency
+      Object.entries(paywayResData.formData).forEach(([k, v]) => {
+        const inp = document.createElement('input');
+        inp.type = 'hidden';
+        inp.name = k;
+        inp.value = v != null ? String(v) : '';
+        form.appendChild(inp);
       });
 
-      setTimeout(() => {
-        checkoutSectionRef.current?.scrollIntoView({ behavior: 'smooth' });
-      }, 100);
+      // Ensure container #aba-checkout exists for desktop modal
+      let abaContainer = document.getElementById('aba-checkout');
+      if (!abaContainer) {
+        abaContainer = document.createElement('div');
+        abaContainer.id = 'aba-checkout';
+        document.body.appendChild(abaContainer);
+      }
+
+      // 2️⃣ Launch official ABA PayWay checkout popup!
+      const triggerAbaCheckout = () => {
+        const payway = getAbaPaywayInstance();
+        if (payway && typeof payway.checkout === 'function') {
+          try {
+            payway.checkout();
+            console.log('[ABA PayWay] Official popup launched successfully via AbaPayway.checkout()!');
+            return true;
+          } catch (e) {
+            console.warn('[ABA PayWay] AbaPayway.checkout() notice:', e);
+          }
+        }
+        return false;
+      };
+
+      if (!triggerAbaCheckout()) {
+        let attempts = 0;
+        const retryTimer = setInterval(() => {
+          attempts++;
+          if (triggerAbaCheckout() || attempts >= 30) {
+            clearInterval(retryTimer);
+          }
+        }, 100);
+      }
+
+      // Notify cloud render microservice in background for Telegram/SSE monitoring
+      try {
+        fetch('https://mlbb-khqr-api.onrender.com/api/payment/create', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            orderId: activeOrderId,
+            bill_number: `MLBB${activeOrderId}`,
+            amount: targetAmount,
+            currency: currency,
+            player_id: pId,
+            server_id: sId,
+            account_name: playerAccName,
+            customer_id: customerId,
+            game_name: gameTitle,
+            package_name: pkgName,
+            md5_hash: paywayResData?.md5
+          })
+        }).catch(() => {});
+      } catch (e) {}
+
+      // Set payment data for state tracking without triggering custom React white modal
+      setPaymentData({
+        orderId: activeOrderId,
+        tranId: tranId,
+        amount: targetAmount,
+        currency: currency,
+        gateway: 'aba_payway',
+        formData: paywayResData.formData,
+        purchaseUrl: purchaseUrl,
+        checkoutUrl: paywayResData.checkoutUrl,
+        md5Hash: paywayResData.md5
+      });
+
       setLoading(false);
     } catch (err) {
       console.error('Error proceeding to payment:', err);
@@ -2176,252 +2084,7 @@ const TopUp = () => {
 
       </div>
 
-      {/* ======================================================== */}
-      {/* ROOT-LEVEL ABA KHQR PAYMENT MODAL (z-[9999]) */}
-      {paymentData && !paymentPaid && (paymentData.qrString || paymentData.khqrQRCode) && (
-        <div
-          onClick={(e) => {
-            if (e.target === e.currentTarget) {
-              setPaymentData(null);
-              setOrderId(null);
-            }
-          }}
-          className="fixed inset-0 z-[9999] flex items-center justify-center p-3 sm:p-4 bg-slate-950/85 backdrop-blur-md overflow-y-auto animate-fadeIn"
-        >
-          {/* Modal Wrapper aligned column with ABA' PAYWAY at top right */}
-          <div className="w-full max-w-[340px] sm:max-w-[360px] my-auto animate-scaleUp flex flex-col items-end">
-            
-            {/* Top Right Wordmark: ABA' PAYWAY */}
-            <div className="flex items-center gap-1.5 mb-2 pr-1 select-none pointer-events-none">
-              <span className="font-black text-xl text-white tracking-wide">ABA'</span>
-              <span className="font-black text-xl tracking-widest uppercase italic text-white">PAYWAY</span>
-            </div>
 
-            {/* Outer White Container */}
-            <div className="w-full bg-white rounded-[24px] sm:rounded-[28px] p-5 sm:p-6 shadow-2xl relative text-left">
-              
-              {processingStep > 0 ? (
-                /* Payment Processing Steps UI */
-                <div className="text-center space-y-4 py-2">
-                  <div className="flex flex-col items-center gap-1.5">
-                    <div className="w-12 h-12 rounded-full bg-emerald-500 text-white flex items-center justify-center text-xl shadow-lg animate-pulse">
-                      {processingStep < 3 ? '⚡' : '✅'}
-                    </div>
-                    <h4 className="text-sm font-black text-slate-900">
-                      {processingStep === 1 && 'Payment Confirmed!'}
-                      {processingStep === 2 && 'Syncing with Game Server...'}
-                      {processingStep === 3 && 'Delivering Diamonds!'}
-                    </h4>
-                    <p className="text-[10px] text-emerald-700 font-medium">
-                      {processingStep === 1 && 'ABA KHQR verified — starting delivery...'}
-                      {processingStep === 2 && `Connected to Zone ${formData.serverID || 'Default'} server ✓`}
-                      {processingStep === 3 && `Crediting ${selectedProduct?.name || 'diamonds'} to Player ID ${formData.playerID}`}
-                    </p>
-                  </div>
-                  <div className="w-full bg-slate-200 h-2 rounded-full overflow-hidden">
-                    <div
-                      className="bg-emerald-500 h-full rounded-full transition-all duration-700 ease-out"
-                      style={{ width: `${(processingStep / 3) * 100}%` }}
-                    />
-                  </div>
-                </div>
-              ) : timeLeft === 0 ? (
-                /* Expired Screen */
-                <div className="text-center space-y-3 py-4 font-khmer">
-                  <div className="text-3xl">⏱️</div>
-                  <h4 className="text-slate-900 font-bold text-base">
-                    {language === 'km' ? 'ប្រតិបត្តិការផុតកំណត់ (Transaction Expired)' : 'Transaction Expired'}
-                  </h4>
-                  <p className="text-xs text-slate-500">
-                    {language === 'km'
-                      ? 'រយៈពេលកំណត់នៃប្រតិបត្តិការត្រូវបានបញ្ចប់។ សូមបង្កើតសំណើទូទាត់ថ្មី ឬពិនិត្យក្នុង Merchant Portal។'
-                      : 'Transaction lifetime reached. Please initiate a new top-up request or verify in the merchant portal.'}
-                  </p>
-                  <div className="flex flex-col gap-2 pt-1">
-                    <button
-                      type="button"
-                      onClick={handleProceedToPayment}
-                      className="w-full py-2.5 px-4 bg-[#0055a5] hover:bg-[#004485] text-white text-xs font-bold rounded-xl shadow cursor-pointer transition-all active:scale-[0.98]"
-                    >
-                      {language === 'km' ? 'បង្កើតសំណើថ្មី (Try Again)' : 'Try Again / New QR'}
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => {
-                        setPaymentData(null);
-                        setOrderId(null);
-                      }}
-                      className="w-full py-2 px-4 border border-slate-200 hover:bg-slate-50 text-slate-600 text-xs font-semibold rounded-xl cursor-pointer transition-all active:scale-[0.98]"
-                    >
-                      {language === 'km' ? 'បិទ (Close)' : 'Close'}
-                    </button>
-                  </div>
-                </div>
-              ) : (
-                <>
-                  {/* Header: Title "ABA KHQR" + Countdown Badge + Cyan Close Icon "✕" */}
-                  <div className="flex items-center justify-between pb-3 sm:pb-3.5">
-                    <div className="flex items-center gap-2">
-                      <h3 className="text-[20px] sm:text-[22px] font-bold text-[#0B2038] tracking-tight">
-                        ABA KHQR
-                      </h3>
-                      {/* Live Lifetime Countdown Badge */}
-                      <span className={`inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-mono font-bold border transition-colors ${
-                        timeLeft <= 30
-                          ? 'bg-rose-50 text-rose-600 border-rose-200 animate-pulse'
-                          : 'bg-amber-50 text-amber-700 border-amber-200'
-                      }`}>
-                        <span>⏱️</span>
-                        <span>
-                          {String(Math.floor(timeLeft / 60)).padStart(2, '0')}:
-                          {String(timeLeft % 60).padStart(2, '0')}
-                        </span>
-                      </span>
-                    </div>
-
-                    <button
-                      type="button"
-                      onClick={() => {
-                        setPaymentData(null);
-                        setOrderId(null);
-                      }}
-                      className="text-[#00AFD7] hover:text-[#0092b3] p-1 -mr-1 transition-colors cursor-pointer select-none active:scale-95"
-                      title="Close"
-                      aria-label="Close"
-                    >
-                      <svg className="w-5 h-5 sm:w-6 sm:h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
-                        <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
-                      </svg>
-                    </button>
-                  </div>
-
-                  {/* Inner Authentic KHQR Voucher Card */}
-                  <div className="bg-white rounded-[20px] shadow-sm border border-slate-200 overflow-hidden text-left mb-3.5">
-                    
-                    {/* Official Red KHQR Banner */}
-                    <KhqrVoucherHeader />
-
-                    {/* Voucher Body: Store Name & Real Amount */}
-                    {(() => {
-                      const currentCur = paymentData?.currency || currency;
-                      const isRiel = currentCur === 'KHR';
-                      const payAmount = paymentData?.amount != null
-                        ? (isRiel ? Math.round(Number(paymentData.amount)) : Number(paymentData.amount))
-                        : (isRiel ? Math.round(selectedProduct.price * 4100) : selectedProduct.price);
-                      const validQrString = paymentData?.qrString || paymentData?.khqrQRCode;
-
-                      return (
-                        <div>
-                          {/* Store Name & Real Amount */}
-                          <div className="px-5 pt-3.5 pb-2 text-left">
-                            <span className="text-[11px] sm:text-[12px] uppercase font-bold text-slate-700 tracking-wide block font-khmer">
-                              {paymentData?.merchantName || 'MY SHOP'}
-                            </span>
-                            <span className="text-[26px] sm:text-[28px] font-black text-slate-900 tracking-tight block leading-tight mt-1">
-                              {isRiel ? `${payAmount.toLocaleString()} ៛` : `$ ${payAmount.toFixed(2)}`}
-                            </span>
-                          </div>
-
-                          {/* Perforated dashed divider */}
-                          <div className="border-t border-dashed border-slate-300 w-full my-1" />
-
-                          {/* 100% Camera-Readable Dynamic QR Code with Bakong Center Emblem */}
-                          <div className="flex items-center justify-center p-4 pt-3 pb-5 relative">
-                            <div className="relative inline-flex items-center justify-center bg-white">
-                              <QRCodeSVG
-                                value={validQrString}
-                                size={200}
-                                level="H"
-                                includeMargin={false}
-                                className="w-full h-auto max-w-[200px] select-none"
-                              />
-                              {/* Center Bakong $ Emblem */}
-                              <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-                                <div className="w-10 h-10 rounded-full bg-white shadow-sm flex items-center justify-center p-0.5">
-                                  <div className="w-full h-full rounded-full bg-black flex items-center justify-center border-2 border-white">
-                                    <span className="text-white font-mono font-black text-base leading-none">$</span>
-                                  </div>
-                                </div>
-                              </div>
-                            </div>
-                          </div>
-                        </div>
-                      );
-                    })()}
-                  </div>
-
-                  {/* Scan Instruction Footer strictly matching user screenshot */}
-                  <p className="text-[12px] sm:text-[12.5px] text-[#64748B] text-center leading-snug font-khmer px-1">
-                    {language === 'km'
-                      ? 'ស្កេនជាមួយកម្មវិធី Bakong ឬកម្មវិធីធនាគារទាំងអស់ដែលគាំទ្រ KHQR'
-                      : 'Scan with Bakong App or Mobile Banking app that support KHQR'}
-                  </p>
-
-                  {/* MOBILE-ONLY: Ask user to open banking app with automatic launch on YES */}
-                  {isMobileDevice && (
-                    <div className="pt-3 font-khmer">
-                      <div className="bg-sky-50/90 border border-sky-100 rounded-2xl p-3 text-center space-y-2.5 shadow-sm">
-                        <div className="flex items-center justify-center gap-1.5 text-slate-800">
-                          <span className="text-base">📱</span>
-                          <span className="text-xs font-bold font-khmer">
-                            {language === 'km'
-                              ? 'តើអ្នកចង់បើកកម្មវិធីធនាគារដើម្បីទូទាត់ទេ?'
-                              : 'Open banking app on your device to pay?'}
-                          </span>
-                        </div>
-                        <div className="flex items-center gap-2">
-                          {/* Press YES to automatically open banking app in user device */}
-                          <button
-                            type="button"
-                            onClick={handleOpenBankApp}
-                            className="flex-1 py-2.5 px-3 rounded-xl bg-gradient-to-r from-[#003B70] via-[#004d8c] to-[#0055A5] hover:brightness-110 text-white text-xs font-bold shadow-md flex items-center justify-center gap-1.5 cursor-pointer active:scale-95 transition-all"
-                          >
-                            <span>✓</span>
-                            <span>{language === 'km' ? 'បាទ/ចាស (Yes)' : 'Yes, Open App'}</span>
-                          </button>
-                          
-                          {/* Close QR Code */}
-                          <button
-                            type="button"
-                            onClick={() => {
-                              setPaymentData(null);
-                              setOrderId(null);
-                            }}
-                            className="flex-1 py-2.5 px-3 rounded-xl border border-slate-200 bg-white hover:bg-slate-50 text-slate-600 hover:text-slate-900 text-xs font-semibold cursor-pointer active:scale-95 transition-all"
-                          >
-                            <span>✕</span>
-                            <span>{language === 'km' ? 'បិទ (Close)' : 'No, Close'}</span>
-                          </button>
-                        </div>
-                      </div>
-                    </div>
-                  )}
-
-                  {/* DESKTOP-ONLY: Clean Close QR Code option (No bank app button on PC) */}
-                  {!isMobileDevice && (
-                    <div className="pt-3 font-khmer">
-                      <button
-                        type="button"
-                        onClick={() => {
-                          setPaymentData(null);
-                          setOrderId(null);
-                        }}
-                        className="w-full py-2 px-4 rounded-xl border border-slate-200 hover:bg-slate-50 text-slate-600 hover:text-slate-900 text-xs font-semibold transition-all flex items-center justify-center gap-1.5 cursor-pointer active:scale-[0.98]"
-                      >
-                        <span>✕</span>
-                        <span>
-                          {language === 'km' ? 'បិទ QR Code (Close QR Code)' : 'Close QR Code'}
-                        </span>
-                      </button>
-                    </div>
-                  )}
-                </>
-              )}
-
-            </div>
-          </div>
-        </div>
-      )}
 
       {/* ======================================================== */}
       {/* AWAITING BALANCE — PENDING RECEIPT (provider low balance) */}
