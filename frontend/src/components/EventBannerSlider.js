@@ -6,7 +6,6 @@ import {
   fetchStoredBanners
 } from '../services/eventBanners';
 import cyberBannerFrame from '../assets/cyber-banner-frame.png';
-import bannerCutoutMask from '../assets/banner-cutout-mask.png';
 
 export { DEFAULT_EVENT_BANNERS, getStoredBanners };
 
@@ -134,16 +133,8 @@ const EventBannerSlider = ({ className = '' }) => {
       >
         {/* Pixel-Perfect Confined Artwork Layer - Masked strictly to the Cyber Frame inner viewport */}
         <div
-          className="absolute inset-0"
+          className="absolute inset-0 cyber-banner-viewport"
           style={{
-            WebkitMaskImage: `url(${bannerCutoutMask || '/banner-cutout-mask.png'})`,
-            WebkitMaskSize: '100% 100%',
-            WebkitMaskRepeat: 'no-repeat',
-            WebkitMaskPosition: 'center',
-            maskImage: `url(${bannerCutoutMask || '/banner-cutout-mask.png'})`,
-            maskSize: '100% 100%',
-            maskRepeat: 'no-repeat',
-            maskPosition: 'center',
             zIndex: 5
           }}
         >
