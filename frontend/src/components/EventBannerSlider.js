@@ -15,9 +15,10 @@ const EventBannerSlider = ({ className = '' }) => {
   const [banners, setBanners] = useState(() => getStoredBanners());
   const [currentIndex, setCurrentIndex] = useState(0);
   const [isPaused, setIsPaused] = useState(false);
-  const [isHovered, setIsHovered] = useState(false);
+  const [showControls, setShowControls] = useState(false);
   const touchStartXRef = useRef(0);
   const touchEndXRef = useRef(0);
+  const touchMovedRef = useRef(false);
 
   // Sync banners with cloud MongoDB & admin updates across all devices in real-time
   useEffect(() => {
@@ -82,11 +83,14 @@ const EventBannerSlider = ({ className = '' }) => {
   // Touch Swipe Handlers for Mobile
   const handleTouchStart = (e) => {
     touchStartXRef.current = e.targetTouches[0].clientX;
-    setIsHovered((prev) => !prev);
+    touchMovedRef.current = false;
   };
 
   const handleTouchMove = (e) => {
     touchEndXRef.current = e.targetTouches[0].clientX;
+    if (Math.abs(touchStartXRef.current - touchEndXRef.current) > 10) {
+      touchMovedRef.current = true;
+    }
   };
 
   const handleTouchEnd = () => {
@@ -101,6 +105,16 @@ const EventBannerSlider = ({ className = '' }) => {
     touchEndXRef.current = 0;
   };
 
+  // Toggle overlay controls when user presses on banner
+  const handleBannerPress = (e) => {
+    if (e.target.closest('button')) return;
+    if (touchMovedRef.current) {
+      touchMovedRef.current = false;
+      return;
+    }
+    setShowControls((prev) => !prev);
+  };
+
   if (!banners || banners.length === 0) return null;
 
   const currentBanner = banners[currentIndex] || banners[0];
@@ -110,19 +124,16 @@ const EventBannerSlider = ({ className = '' }) => {
       className={`relative w-full group select-none transition-all duration-300 cursor-pointer ${className}`}
       onMouseEnter={() => {
         setIsPaused(true);
-        setIsHovered(true);
+        setShowControls(true);
       }}
       onMouseLeave={() => {
         setIsPaused(false);
-        setIsHovered(false);
+        setShowControls(false);
       }}
       onTouchStart={handleTouchStart}
       onTouchMove={handleTouchMove}
       onTouchEnd={handleTouchEnd}
-      onClick={(e) => {
-        if (e.target.closest('button')) return;
-        navigate(currentBanner.link || `/topup?game=${currentBanner.gameId || 'mlbb'}`);
-      }}
+      onClick={handleBannerPress}
     >
       {/* Main Container with Exact Aspect Ratio of the Cyber Frame (1024 / 423) */}
       <div 
@@ -160,21 +171,29 @@ const EventBannerSlider = ({ className = '' }) => {
                       e.target.onerror = null;
                       e.target.src = banner.localFallbackImage || '/mlbb-logo.png';
                     }}
-                    className="w-full h-full object-cover object-center filter brightness-[0.98] group-hover:brightness-[0.9] transition-all duration-500"
+                    className="w-full h-full object-cover object-center filter brightness-[1.0] group-hover:brightness-[0.92] transition-all duration-500"
                   />
                 </div>
 
-                {/* Cinematic Contrast Gradient tuned for maximum hero artwork brilliance & crisp text readability */}
-                <div className="absolute inset-0 bg-gradient-to-r from-slate-950/85 via-slate-950/35 via-50% to-transparent transition-opacity duration-300 pointer-events-none" />
-                <div className="absolute inset-0 bg-gradient-to-t from-slate-950/70 via-transparent via-40% to-black/20 transition-opacity duration-300 pointer-events-none" />
+                {/* Subtle dark gradient that only appears when controls are shown */}
+                <div className={`absolute inset-0 bg-gradient-to-r from-slate-950/85 via-slate-950/35 to-transparent transition-opacity duration-300 pointer-events-none ${
+                  showControls ? 'opacity-100' : 'opacity-0'
+                }`} />
+                <div className={`absolute inset-0 bg-gradient-to-t from-slate-950/70 via-transparent to-black/20 transition-opacity duration-300 pointer-events-none ${
+                  showControls ? 'opacity-100' : 'opacity-0'
+                }`} />
               </div>
             );
           })}
         </div>
 
-        {/* Content Overlay (Badges, Titles, Buttons) positioned gracefully inside the frame */}
+        {/* Clean Interactive Content Overlay - Hidden by default, reveals on press or hover */}
         <div
-          className="absolute flex flex-col justify-between pointer-events-none"
+          className={`absolute flex flex-col justify-between pointer-events-none transition-all duration-300 ease-out ${
+            showControls
+              ? 'opacity-100 translate-y-0'
+              : 'opacity-0 translate-y-2'
+          }`}
           style={{
             top: '11%',
             bottom: '12%',
