@@ -184,18 +184,28 @@ const playSuccessSound = () => {
 // Safe accessor for official ABA PayWay instance from script scope
 const getAbaPaywayInstance = () => {
   if (typeof window !== 'undefined') {
-    if (window.AbaPayway && typeof window.AbaPayway.checkout === 'function') {
-      return window.AbaPayway;
+    let instance = window.AbaPayway;
+    if (!instance) {
+      try {
+        // Evaluate in global classic script scope where const AbaPayway is declared
+        // eslint-disable-next-line no-eval
+        const g = (0, eval)('typeof AbaPayway !== "undefined" ? AbaPayway : undefined');
+        if (g && typeof g.checkout === 'function') {
+          window.AbaPayway = g;
+          instance = g;
+        }
+      } catch (e) {}
     }
-    try {
-      // Evaluate in global classic script scope where const AbaPayway is declared
-      // eslint-disable-next-line no-eval
-      const g = (0, eval)('typeof AbaPayway !== "undefined" ? AbaPayway : undefined');
-      if (g && typeof g.checkout === 'function') {
-        window.AbaPayway = g;
-        return g;
-      }
-    } catch (e) {}
+    if (instance) {
+      // Guard closeCheckout to avoid destructive forced reload on success
+      instance.closeCheckout = function() {
+        closeAbaCheckoutPopup();
+      };
+      instance.closeCheckoutByContinueUrl = function() {
+        closeAbaCheckoutPopup();
+      };
+      return instance;
+    }
   }
   return null;
 };
@@ -206,17 +216,11 @@ const closeAbaCheckoutPopup = () => {
     const abaCheckout = document.getElementById('aba-checkout');
     if (abaCheckout) {
       abaCheckout.style.display = 'none';
-      abaCheckout.innerHTML = '';
-      abaCheckout.className = '';
     }
     const sheet = document.getElementById('aba_checkout_sheet');
     if (sheet) {
       sheet.style.display = 'none';
       sheet.setAttribute('aria-hidden', 'true');
-    }
-    const appEl = document.getElementById('aba_checkout_app');
-    if (appEl) {
-      appEl.innerHTML = '';
     }
     document.body.style.overflowY = 'visible';
   } catch (e) {}
@@ -562,10 +566,16 @@ const TopUp = () => {
               });
             }
 
-            // Launch official checkout popup
+            // Launch official checkout popup with valid callbacks to prevent undefined invocation
             const payload = {
               form_url: purchaseUrl,
-              ...(paymentData.formData || {})
+              ...(paymentData.formData || {}),
+              onSuccess: (res) => {
+                console.log('[ABA PayWay] onSuccess callback received:', res);
+              },
+              onError: (err) => {
+                console.warn('[ABA PayWay] onError callback received:', err);
+              }
             };
             payway.checkout(payload);
             console.log('[ABA PayWay] Official popup launched successfully!');

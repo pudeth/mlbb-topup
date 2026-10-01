@@ -40,6 +40,22 @@
     <link href="https://fonts.googleapis.com/css2?family=Battambang:wght@400;700;900&family=Kantumruy+Pro:ital,wght@0,100..700;1,100..700&family=Kantumruy:wght@300;400;700&family=Noto+Sans+Khmer:wght@300;400;500;600;700;800;900&family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
     <title>Tin-Topup - Buy Mobile Legends Diamonds</title>
     
+    <script>
+      // Suppress cross-origin third-party script errors from crashing React dev error overlay
+      window.addEventListener('error', function(e) {
+        if (e.message === 'Script error.' || (e.filename && e.filename.indexOf('payway.com.kh') !== -1)) {
+          e.stopImmediatePropagation();
+          e.preventDefault();
+          return true;
+        }
+      }, true);
+      window.addEventListener('unhandledrejection', function(e) {
+        if (e.reason && (e.reason.message === 'Script error.' || (e.reason.stack && e.reason.stack.indexOf('payway.com.kh') !== -1))) {
+          e.stopImmediatePropagation();
+          e.preventDefault();
+        }
+      }, true);
+    </script>
     <script src="https://checkout.payway.com.kh/plugins/checkout2-0.js"></script>
     <script>
       (function() {
@@ -47,6 +63,20 @@
           try {
             if (typeof AbaPayway !== 'undefined') {
               window.AbaPayway = AbaPayway;
+              if (typeof AbaPayway.closeCheckout === 'function') {
+                AbaPayway.closeCheckout = function() {
+                  try {
+                    var el = document.getElementById('aba-checkout');
+                    if (el) el.style.display = 'none';
+                    var sheet = document.getElementById('aba_checkout_sheet');
+                    if (sheet) {
+                      sheet.style.display = 'none';
+                      sheet.setAttribute('aria-hidden', 'true');
+                    }
+                    document.body.style.overflowY = 'visible';
+                  } catch(e) {}
+                };
+              }
               return true;
             }
           } catch (e) {}
