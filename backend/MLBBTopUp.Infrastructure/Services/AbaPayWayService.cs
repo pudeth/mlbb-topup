@@ -150,10 +150,12 @@ namespace MLBBTopUp.Infrastructure.Services
                     var publicCallbackUrl = _configuration["AbaPayWay:CallbackUrl"] ?? "https://mlbb-backend-api.onrender.com/api/payway/callback";
                     var returnUrl = Convert.ToBase64String(Encoding.UTF8.GetBytes(publicCallbackUrl));
 
-                    // Frontend client URLs: public HTTPS on port 443 encoded in Base64
+                    // Frontend client URLs: public HTTPS on port 443 encoded in Base64 (Requirement ④)
                     var frontendBase = _configuration["FrontendUrl"] ?? "https://mlbb-topup-jet.vercel.app";
-                    var cancelUrl = Convert.ToBase64String(Encoding.UTF8.GetBytes($"{frontendBase.TrimEnd('/')}/topup"));
-                    var continueSuccessUrl = Convert.ToBase64String(Encoding.UTF8.GetBytes($"{frontendBase.TrimEnd('/')}/topup"));
+                    var cancelUrlRaw = _configuration["AbaPayWay:CancelUrl"] ?? $"{frontendBase.TrimEnd('/')}/topup";
+                    var continueSuccessUrlRaw = _configuration["AbaPayWay:ContinueSuccessUrl"] ?? $"{frontendBase.TrimEnd('/')}/topup";
+                    var cancelUrl = Convert.ToBase64String(Encoding.UTF8.GetBytes(cancelUrlRaw));
+                    var continueSuccessUrl = Convert.ToBase64String(Encoding.UTF8.GetBytes(continueSuccessUrlRaw));
                     var returnDeeplink = "abamobilebank://ababank.com"; // Success URL for Mobile Continuation
                     var lifetime = "6"; // 6-minute lifetime (aligned with ABA PayWay guidelines)
 
