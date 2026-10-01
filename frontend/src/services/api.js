@@ -106,6 +106,7 @@ export const paywayAPI = {
   create: (data) => api.post('/payway/create', data),
   checkStatus: (tranId, orderId) =>
     api.get(`/payway/status/${tranId}${orderId ? `?orderId=${orderId}` : ''}`),
+  checkTransaction: (tranId) => api.post('/payway/check-transaction', { tran_id: tranId }),
   callback: (data) => api.post('/payway/callback', data),
   close: (tranId) => api.post(`/payway/close/${tranId}`),
   getDetails: (tranId) => api.get(`/payway/details/${tranId}`),

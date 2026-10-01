@@ -17,6 +17,7 @@ public class PayWayController : BaseController
     private readonly IOrderService _orderService;
     private readonly ApplicationDbContext _context;
     private readonly ILogger<PayWayController> _logger;
+    private readonly IServiceScopeFactory _serviceScopeFactory;
 
     public PayWayController(
         IAbaPayWayService abaPayWayService,
@@ -24,7 +25,8 @@ public class PayWayController : BaseController
         IOrderService orderService,
         ApplicationDbContext context,
         ILogger<PayWayController> logger,
-        Microsoft.Extensions.Configuration.IConfiguration configuration)
+        Microsoft.Extensions.Configuration.IConfiguration configuration,
+        IServiceScopeFactory serviceScopeFactory)
     {
         _abaPayWayService = abaPayWayService;
         _paymentService = paymentService;
@@ -32,6 +34,7 @@ public class PayWayController : BaseController
         _context = context;
         _logger = logger;
         _configuration = configuration;
+        _serviceScopeFactory = serviceScopeFactory;
     }
 
     public class CreatePayWayRequest
@@ -74,6 +77,47 @@ public class PayWayController : BaseController
             await _context.SaveChangesAsync();
         }
 
+        // Start background verification poller using the official Check Transaction API (per outline)
+        _ = Task.Run(async () =>
+        {
+            var curTranId = result.TranId;
+            var ordId = request.OrderId;
+            if (string.IsNullOrEmpty(curTranId)) return;
+
+            // Wait 3 seconds before starting checks (matching ABA PayWay guidelines)
+            await Task.Delay(3000);
+
+            // Poll every 3 seconds for up to 6 minutes (120 iterations)
+            for (int i = 0; i < 120; i++)
+            {
+                try
+                {
+                    using var scope = _serviceScopeFactory.CreateScope();
+                    var scopedContext = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+                    var pay = await scopedContext.Payments.FirstOrDefaultAsync(p => p.OrderId == ordId);
+                    if (pay != null && pay.Status == "Completed")
+                    {
+                        break;
+                    }
+
+                    var payWayService = scope.ServiceProvider.GetRequiredService<IAbaPayWayService>();
+                    var checkRes = await payWayService.CheckTransactionAsync(curTranId);
+                    if (checkRes.IsPaid)
+                    {
+                        var scopedPayService = scope.ServiceProvider.GetRequiredService<IPaymentService>();
+                        await scopedPayService.VerifyPaymentAsync(ordId);
+                        break;
+                    }
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine($"[ABA PayWay Background Poller] tran_id {curTranId} notice: {ex.Message}");
+                }
+
+                await Task.Delay(3000);
+            }
+        });
+
         return Ok(new
         {
             success = true,
@@ -94,17 +138,62 @@ public class PayWayController : BaseController
     }
 
     /// <summary>
-    /// Check transaction status with ABA PayWay (up to 600 req/sec)
+    /// Official ABA PayWay Check Transaction API
     /// </summary>
+    [HttpPost("check-transaction")]
+    [HttpGet("check-transaction")]
+    [HttpPost("check-transaction/{tranId}")]
+    [HttpGet("check-transaction/{tranId}")]
     [HttpGet("status/{tranId}")]
     [AllowAnonymous]
-    public async Task<IActionResult> CheckStatus(string tranId, [FromQuery] int? orderId)
+    public async Task<IActionResult> CheckStatus(string? tranId, [FromQuery] int? orderId)
     {
+        if (string.IsNullOrEmpty(tranId))
+        {
+            tranId = Request.Query["tran_id"].ToString();
+            if (string.IsNullOrEmpty(tranId)) tranId = Request.Query["tranId"].ToString();
+        }
+
+        if (string.IsNullOrEmpty(tranId) && Request.HasFormContentType)
+        {
+            var form = await Request.ReadFormAsync();
+            tranId = form["tran_id"].ToString();
+        }
+
+        if (string.IsNullOrEmpty(tranId) && Request.Body != null)
+        {
+            try
+            {
+                using var reader = new System.IO.StreamReader(Request.Body);
+                var raw = await reader.ReadToEndAsync();
+                if (!string.IsNullOrWhiteSpace(raw))
+                {
+                    using var doc = System.Text.Json.JsonDocument.Parse(raw);
+                    if (doc.RootElement.TryGetProperty("tran_id", out var tid)) tranId = tid.GetString();
+                    if (string.IsNullOrEmpty(tranId) && doc.RootElement.TryGetProperty("tranId", out var tid2)) tranId = tid2.GetString();
+                }
+            }
+            catch { }
+        }
+
+        if (string.IsNullOrEmpty(tranId))
+        {
+            return BadRequest(new { message = "tran_id is required" });
+        }
+
         var result = await _abaPayWayService.CheckTransactionAsync(tranId);
 
-        if (result.IsPaid && orderId.HasValue)
+        if (result.IsPaid)
         {
-            await _paymentService.VerifyPaymentAsync(orderId.Value);
+            var payment = await _context.Payments.FirstOrDefaultAsync(p => p.TransactionID == tranId);
+            if (payment != null)
+            {
+                await _paymentService.VerifyPaymentAsync(payment.OrderId);
+            }
+            else if (orderId.HasValue)
+            {
+                await _paymentService.VerifyPaymentAsync(orderId.Value);
+            }
         }
 
         return Ok(result);

@@ -235,7 +235,8 @@ namespace MLBBTopUp.Infrastructure.Services
             };
 
             var content = new StringContent(JsonSerializer.Serialize(payload), Encoding.UTF8, "application/json");
-            using var requestMessage = new HttpRequestMessage(HttpMethod.Post, $"{baseUrl}/api/payment-gateway/v1/payments/check-transaction-2")
+            var primaryEndpoint = $"{baseUrl}/api/payment-gateway/v1/payments/check-transaction";
+            using var requestMessage = new HttpRequestMessage(HttpMethod.Post, primaryEndpoint)
             {
                 Content = content
             };
@@ -243,7 +244,19 @@ namespace MLBBTopUp.Infrastructure.Services
 
             try
             {
-                var response = await _httpClient.SendAsync(requestMessage); if (!response.IsSuccessStatusCode) { _logger.LogError("Generate QR failed: {Error}", await response.Content.ReadAsStringAsync()); }
+                var response = await _httpClient.SendAsync(requestMessage);
+                if (!response.IsSuccessStatusCode)
+                {
+                    // Fallback to check-transaction-2 if check-transaction returns non-200
+                    var fallbackEndpoint = $"{baseUrl}/api/payment-gateway/v1/payments/check-transaction-2";
+                    using var fbReq = new HttpRequestMessage(HttpMethod.Post, fallbackEndpoint)
+                    {
+                        Content = new StringContent(JsonSerializer.Serialize(payload), Encoding.UTF8, "application/json")
+                    };
+                    fbReq.Headers.TryAddWithoutValidation("User-Agent", "Mozilla/5.0");
+                    response = await _httpClient.SendAsync(fbReq);
+                }
+
                 if (response.IsSuccessStatusCode)
                 {
                     var responseBody = await response.Content.ReadAsStringAsync();
@@ -253,6 +266,7 @@ namespace MLBBTopUp.Infrastructure.Services
                     bool isPaid = false;
                     string statusText = "UNPAID";
 
+                    // 1. Direct status number/string (from check-transaction v1)
                     if (root.TryGetProperty("status", out var statusProp))
                     {
                         if (statusProp.ValueKind == JsonValueKind.Number)
@@ -278,6 +292,33 @@ namespace MLBBTopUp.Infrastructure.Services
                         }
                     }
 
+                    // 2. Direct payment_status (from check-transaction or check-transaction-2 data)
+                    if (!isPaid)
+                    {
+                        if (root.TryGetProperty("payment_status", out var psProp))
+                        {
+                            var ps = psProp.GetString()?.Trim().ToUpperInvariant() ?? "";
+                            if (ps == "APPROVED" || ps == "PAID" || ps == "SUCCESS")
+                            {
+                                isPaid = true;
+                                statusText = "PAID";
+                            }
+                        }
+                        else if (root.TryGetProperty("data", out var dataProp) && dataProp.ValueKind == JsonValueKind.Object)
+                        {
+                            if (dataProp.TryGetProperty("payment_status", out var dpsProp))
+                            {
+                                var dps = dpsProp.GetString()?.Trim().ToUpperInvariant() ?? "";
+                                if (dps == "APPROVED" || dps == "PAID" || dps == "SUCCESS")
+                                {
+                                    isPaid = true;
+                                    statusText = "PAID";
+                                }
+                            }
+                        }
+                    }
+
+                    // 3. Description fallback
                     if (!isPaid && root.TryGetProperty("description", out var descProp))
                     {
                         var desc = descProp.GetString()?.Trim().ToUpperInvariant() ?? "";

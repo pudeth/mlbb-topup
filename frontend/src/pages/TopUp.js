@@ -967,8 +967,8 @@ const TopUp = () => {
   const currentOrderIdRef = useRef(orderId);
   currentOrderIdRef.current = orderId;
 
-  const currentTranIdRef = useRef(paymentData?.tranId);
-  currentTranIdRef.current = paymentData?.tranId;
+  const currentTranIdRef = useRef(paymentData?.tranId || paymentData?.tran_id || paymentData?.formData?.tran_id);
+  currentTranIdRef.current = paymentData?.tranId || paymentData?.tran_id || paymentData?.formData?.tran_id;
 
   const currentMd5Ref = useRef(paymentData?.khqrMd5Hash || paymentData?.md5Hash);
   currentMd5Ref.current = paymentData?.khqrMd5Hash || paymentData?.md5Hash;
