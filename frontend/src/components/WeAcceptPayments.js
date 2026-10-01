@@ -11,8 +11,7 @@ export const WeAcceptPayments = ({ className = "" }) => {
 
   return (
     <div
-      className={`inline-flex items-center gap-[4px] select-none ${className}`}
-      style={{ height: '18px' }}
+      className={`flex flex-wrap items-center gap-1 select-none min-h-[18px] ${className}`}
       title="We accept: ABA, KHQR, Visa, Mastercard, UnionPay, JCB, Alipay, WeChat Pay"
     >
       {/* Label: We accept */}

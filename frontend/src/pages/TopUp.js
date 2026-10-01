@@ -2123,16 +2123,10 @@ const TopUp = () => {
                   }}
                   disabled={loading || isTopupDisabled}
                   style={{
-                    width: '276px',
-                    maxWidth: '100%',
-                    height: '60px',
                     opacity: isTopupDisabled ? 0.6 : 1,
-                    borderRadius: '8px',
-                    padding: '10px',
-                    gap: '10px',
                   }}
                   title={isTopupDisabled ? 'Top-Up Temporarily Paused' : 'Click to pay with ABA KHQR'}
-                  className={`relative bg-gradient-to-br from-[#0b1220] via-[#0f172a] to-[#0b1220] border border-slate-700/90 hover:border-sky-400/80 shadow-lg hover:shadow-[0_0_20px_rgba(14,165,233,0.18)] transition-all select-none active:scale-[0.985] flex items-center justify-between text-left group ${
+                  className={`relative w-full sm:w-[320px] md:w-[340px] h-[64px] rounded-2xl px-3.5 py-2.5 bg-gradient-to-br from-[#0b1220] via-[#0f172a] to-[#0b1220] border border-slate-700/90 hover:border-sky-400/80 shadow-lg hover:shadow-[0_0_20px_rgba(14,165,233,0.18)] transition-all select-none active:scale-[0.985] flex items-center justify-between text-left group ${
                     loading ? 'cursor-wait opacity-90' : isTopupDisabled ? 'cursor-not-allowed' : 'cursor-pointer'
                   }`}
                 >
