@@ -176,8 +176,8 @@ const EventBannerSlider = ({ className = '' }) => {
         <div
           className="absolute flex flex-col justify-between pointer-events-none"
           style={{
-            top: '12%',
-            bottom: '13%',
+            top: '11%',
+            bottom: '12%',
             left: '5.5%',
             right: '5.5%',
             zIndex: 20
@@ -186,10 +186,10 @@ const EventBannerSlider = ({ className = '' }) => {
           {/* Top Header / Badges */}
           <div
             key={`badge-${currentIndex}`}
-            className="flex items-center justify-between gap-2 pointer-events-auto transition-transform duration-300"
+            className="flex items-center justify-between gap-1.5 pointer-events-auto transition-transform duration-300"
           >
-            <div className="flex items-center gap-2">
-              <span className={`px-2.5 py-1 rounded-lg text-[10px] sm:text-xs font-black tracking-wider uppercase ${currentBanner.badgeColor || 'bg-amber-400 text-slate-950'}`}>
+            <div className="flex items-center gap-1 sm:gap-2">
+              <span className={`px-1.5 py-0.5 sm:px-2.5 sm:py-1 rounded-md sm:rounded-lg text-[9px] sm:text-xs font-black tracking-wider uppercase ${currentBanner.badgeColor || 'bg-amber-400 text-slate-950'}`}>
                 {currentBanner.tag || 'SPECIAL EVENT'}
               </span>
               <span className="hidden sm:inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-slate-950/80 border border-slate-700/60 text-[10px] sm:text-xs text-slate-300 font-bold backdrop-blur-md">
@@ -199,7 +199,7 @@ const EventBannerSlider = ({ className = '' }) => {
             </div>
 
             {/* Slide Index Counter */}
-            <div className="px-2.5 py-1 rounded-lg bg-slate-950/80 border border-slate-700/60 text-[10px] sm:text-xs font-mono text-slate-300 font-bold backdrop-blur-md">
+            <div className="px-1.5 py-0.5 sm:px-2.5 sm:py-1 rounded-md sm:rounded-lg bg-slate-950/80 border border-slate-700/60 text-[9px] sm:text-xs font-mono text-slate-300 font-bold backdrop-blur-md">
               <span className="text-amber-400 font-black">{currentIndex + 1}</span> / {banners.length}
             </div>
           </div>
@@ -207,20 +207,20 @@ const EventBannerSlider = ({ className = '' }) => {
           {/* Center / Typography Area */}
           <div
             key={`text-${currentIndex}`}
-            className="space-y-1 sm:space-y-1.5 max-w-xl pointer-events-auto font-khmer transition-transform duration-300"
+            className="space-y-0.5 sm:space-y-1.5 max-w-[65%] sm:max-w-xl pointer-events-auto font-khmer transition-transform duration-300"
           >
-            <h3 className="text-base sm:text-2xl md:text-3xl font-black text-white tracking-tight leading-tight line-clamp-1">
+            <h3 className="text-xs sm:text-2xl md:text-3xl font-black text-white tracking-tight leading-tight line-clamp-1">
               {currentBanner.title}
             </h3>
             {currentBanner.subtitle && (
-              <p className="text-xs sm:text-sm text-slate-200 font-medium leading-relaxed line-clamp-2 max-w-lg">
+              <p className="text-[10px] sm:text-sm text-slate-200 font-medium leading-tight sm:leading-relaxed line-clamp-1 sm:line-clamp-2 max-w-lg">
                 {currentBanner.subtitle}
               </p>
             )}
           </div>
 
           {/* Bottom Action & Controls */}
-          <div className="flex items-center justify-between pt-1 pointer-events-auto">
+          <div className="flex items-center justify-between pt-0.5 sm:pt-1 pointer-events-auto">
             <button
               key={`btn-${currentIndex}`}
               type="button"
@@ -228,16 +228,16 @@ const EventBannerSlider = ({ className = '' }) => {
                 e.stopPropagation();
                 navigate(currentBanner.link || `/topup?game=${currentBanner.gameId || 'mlbb'}`);
               }}
-              className="py-1.5 px-3.5 sm:py-2.5 sm:px-5 rounded-xl bg-gradient-to-r from-amber-400 to-yellow-300 hover:from-amber-300 hover:to-yellow-200 text-slate-950 text-xs sm:text-sm font-black tracking-wide transition-all duration-300 cursor-pointer flex items-center gap-2 active:scale-95 group/btn"
+              className="py-1 px-2.5 sm:py-2.5 sm:px-5 rounded-lg sm:rounded-xl bg-gradient-to-r from-amber-400 to-yellow-300 hover:from-amber-300 hover:to-yellow-200 text-slate-950 text-[10px] sm:text-sm font-black tracking-wide transition-all duration-300 cursor-pointer flex items-center gap-1 sm:gap-2 active:scale-95 group/btn"
             >
               <span>{currentBanner.buttonText || 'Top Up Now'}</span>
-              <svg className="w-4 h-4 shrink-0 transition-transform duration-200 group-hover/btn:translate-x-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <svg className="w-3 h-3 sm:w-4 sm:h-4 shrink-0 transition-transform duration-200 group-hover/btn:translate-x-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M9 5l7 7-7 7" />
               </svg>
             </button>
 
             {/* Indicator Dots */}
-            <div className="flex items-center gap-1.5 sm:gap-2 bg-slate-950/70 backdrop-blur-md px-2.5 py-1.5 rounded-full border border-slate-800/70 ml-auto">
+            <div className="flex items-center gap-1 sm:gap-2 bg-slate-950/70 backdrop-blur-md px-1.5 py-1 sm:px-2.5 sm:py-1.5 rounded-full border border-slate-800/70 ml-auto">
               {banners.map((_, idx) => (
                 <button
                   key={idx}
@@ -246,10 +246,10 @@ const EventBannerSlider = ({ className = '' }) => {
                     e.stopPropagation();
                     setCurrentIndex(idx);
                   }}
-                  className={`h-1.5 sm:h-2 rounded-full transition-all duration-500 cursor-pointer ${
+                  className={`h-1 sm:h-2 rounded-full transition-all duration-500 cursor-pointer ${
                     idx === currentIndex
-                      ? 'w-6 sm:w-8 bg-gradient-to-r from-amber-400 to-yellow-300'
-                      : 'w-1.5 sm:w-2 bg-slate-700 hover:bg-slate-500'
+                      ? 'w-4 sm:w-8 bg-gradient-to-r from-amber-400 to-yellow-300'
+                      : 'w-1 sm:w-2 bg-slate-700 hover:bg-slate-500'
                   }`}
                   aria-label={`Go to slide ${idx + 1}`}
                 />
@@ -271,13 +271,13 @@ const EventBannerSlider = ({ className = '' }) => {
           }}
         />
 
-        {/* Left Arrow Button */}
+        {/* Left Arrow Button (Visible on tablet & desktop, touch swipe used on mobile) */}
         {banners.length > 1 && (
           <button
             type="button"
             onClick={handlePrev}
             style={{ zIndex: 25 }}
-            className="absolute left-2.5 sm:left-4 top-1/2 -translate-y-1/2 w-8 h-8 sm:w-10 sm:h-10 rounded-full bg-slate-950/80 hover:bg-amber-400 text-white hover:text-slate-950 border border-slate-700/80 hover:border-amber-300 backdrop-blur-md flex items-center justify-center transition-all duration-300 active:scale-90 cursor-pointer group-hover:scale-105"
+            className="hidden sm:flex absolute left-2.5 sm:left-4 top-1/2 -translate-y-1/2 w-8 h-8 sm:w-10 sm:h-10 rounded-full bg-slate-950/80 hover:bg-amber-400 text-white hover:text-slate-950 border border-slate-700/80 hover:border-amber-300 backdrop-blur-md items-center justify-center transition-all duration-300 active:scale-90 cursor-pointer group-hover:scale-105"
             aria-label="Previous slide"
           >
             <svg className="w-4 h-4 sm:w-5 sm:h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -286,13 +286,13 @@ const EventBannerSlider = ({ className = '' }) => {
           </button>
         )}
 
-        {/* Right Arrow Button */}
+        {/* Right Arrow Button (Visible on tablet & desktop, touch swipe used on mobile) */}
         {banners.length > 1 && (
           <button
             type="button"
             onClick={handleNext}
             style={{ zIndex: 25 }}
-            className="absolute right-2.5 sm:right-4 top-1/2 -translate-y-1/2 w-8 h-8 sm:w-10 sm:h-10 rounded-full bg-slate-950/80 hover:bg-amber-400 text-white hover:text-slate-950 border border-slate-700/80 hover:border-amber-300 backdrop-blur-md flex items-center justify-center transition-all duration-300 active:scale-90 cursor-pointer group-hover:scale-105"
+            className="hidden sm:flex absolute right-2.5 sm:right-4 top-1/2 -translate-y-1/2 w-8 h-8 sm:w-10 sm:h-10 rounded-full bg-slate-950/80 hover:bg-amber-400 text-white hover:text-slate-950 border border-slate-700/80 hover:border-amber-300 backdrop-blur-md items-center justify-center transition-all duration-300 active:scale-90 cursor-pointer group-hover:scale-105"
             aria-label="Next slide"
           >
             <svg className="w-4 h-4 sm:w-5 sm:h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
