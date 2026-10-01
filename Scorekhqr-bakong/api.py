@@ -189,7 +189,7 @@ def send_master_total(message):
     return None
 
 
-def mark_order_paid_everywhere(order_id_or_bill, md5=None):
+def mark_order_paid_everywhere(order_id_or_bill, md5=None, auto_notify=False):
     """
     Universally marks order and payment as PAID across:
     1. Local memory cache (qr_cache)
@@ -197,6 +197,7 @@ def mark_order_paid_everywhere(order_id_or_bill, md5=None):
     3. MySQL database
     4. Backend ASP.NET Core API
     5. Master Total Calculator topic
+    6. Auto Telegram notification (when triggered by real payment, not admin button)
     """
     now_iso = datetime.now().isoformat()
     raw_str = str(order_id_or_bill).replace('MLBB', '').replace('TRX', '').replace('ORD', '').replace('#', '').strip()
@@ -295,7 +296,45 @@ def mark_order_paid_everywhere(order_id_or_bill, md5=None):
     except:
         pass
 
-    # 6. Push instant SSE event to any browser tabs watching this payment
+    # 6. Auto Telegram notification when real payment detected (not admin button)
+    if auto_notify:
+        try:
+            rec = get_payment_record(md5) if md5 else {}
+            if not rec:
+                rec = {}
+            acc_name  = html.escape(str(rec.get('account_name') or 'Player'))
+            cust_id   = rec.get('customer_id') or f'Guest #{clean_id}'
+            p_id      = html.escape(str(rec.get('player_id') or '-'))
+            z_id      = html.escape(str(rec.get('server_id') or '-'))
+            g_name    = html.escape(str(rec.get('game_name') or 'Mobile Legends: Bang Bang'))
+            pkg_label = html.escape(str(rec.get('package_name') or '-'))
+            amt       = rec.get('amount') or 0.0
+            currency  = rec.get('currency') or 'USD'
+            amt_usd   = float(amt) if currency == 'USD' else float(amt) / 4100
+            amt_khr   = round(float(amt) * 4100) if currency == 'USD' else int(float(amt))
+            paid_at_raw = rec.get('paid_at') or rec.get('created_at') or now_iso
+            try:
+                paid_at_str = datetime.fromisoformat(str(paid_at_raw)).strftime('%d %b %Y, %H:%M:%S')
+            except Exception:
+                paid_at_str = str(paid_at_raw)
+            approved_at_str = datetime.now().strftime('%d %b %Y, %H:%M:%S')
+            send_telegram(f"""✅ <b>ORDER #{clean_id} — PAYMENT CONFIRMED!</b>
+━━━━━━━━━━━━━━━━━━━━━━
+🏷️ <b>Game:</b> {g_name}
+👤 <b>Account Player:</b> <b>{acc_name}</b>
+🆔 <b>Player ID:</b> <code>{p_id}</code> (Zone {z_id})
+👤 <b>Customer ID:</b> <code>#{cust_id}</code>
+💎 <b>Package:</b> {pkg_label}
+💰 <b>Amount:</b> ${amt_usd:.2f} USD ({amt_khr:,} ៛)
+📅 <b>Customer Paid At:</b> <code>{paid_at_str}</code>
+✅ <b>Transition Approved At:</b> <code>{approved_at_str}</code>
+⚡ <b>Source:</b> 🤖 Auto-detected via Bakong/ABA gateway
+💎 <b>Diamond delivery sequence dispatched.</b>
+━━━━━━━━━━━━━━━━━━━━━━""")
+        except Exception as tg_e:
+            print(f'[-] Auto Telegram notify error: {tg_e}')
+
+    # 7. Push instant SSE event to any browser tabs watching this payment
     if md5:
         with paid_subscribers_lock:
             subs = paid_subscribers.get(md5, [])
@@ -1895,7 +1934,7 @@ def payway_check_status():
                 if resp.status_code == 200:
                     rdata = resp.json().get('data', {})
                     if rdata.get('payment_status_code') == 0:
-                        mark_order_paid_everywhere(order_id or tran_id, md5)
+                        mark_order_paid_everywhere(order_id or tran_id, md5, auto_notify=True)
                         return jsonify({'status': 'PAID', 'paid': True, 'gateway': 'aba_payway'})
             except Exception as e:
                 print(f"[-] PayWay status check error: {e}")
@@ -1907,7 +1946,7 @@ def payway_check_status():
                 return jsonify({'status': 'PAID', 'paid': True, 'gateway': 'cache'})
             st, _ = query_bakong_nbc_direct(md5)
             if st == 'PAID':
-                mark_order_paid_everywhere(order_id or md5, md5)
+                mark_order_paid_everywhere(order_id or md5, md5, auto_notify=True)
                 return jsonify({'status': 'PAID', 'paid': True, 'gateway': 'bakong'})
 
         return jsonify({'status': 'UNPAID', 'paid': False})
@@ -1933,7 +1972,7 @@ def payway_callback():
         # Standard ABA status 0 or APPROVED means paid
         if str(status) in ['0', '00', 'APPROVED', 'SUCCESS', 'PAID']:
             clean_ord = order_id.split('_')[0].replace('TRX', '').replace('MLBB', '')
-            mark_order_paid_everywhere(clean_ord)
+            mark_order_paid_everywhere(clean_ord, auto_notify=True)
             return jsonify({'status': 0, 'description': 'Success'}), 200
 
         return jsonify({'status': 0, 'description': 'Received'}), 200
