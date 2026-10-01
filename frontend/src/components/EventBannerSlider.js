@@ -124,17 +124,22 @@ const EventBannerSlider = ({ className = '' }) => {
       }}
     >
       {/* Ambient Cyber Neon Under-Glow (Cyan on Left, Magenta-Red on Right) */}
-      <div className="absolute -inset-1 sm:-inset-2 bg-gradient-to-r from-cyan-500/20 via-blue-500/10 to-rose-500/20 blur-xl opacity-60 group-hover:opacity-85 transition-opacity duration-500 pointer-events-none" />
+      <div className="absolute -inset-2 sm:-inset-3 bg-gradient-to-r from-cyan-500/25 via-blue-500/10 to-rose-500/25 rounded-[36px] blur-2xl opacity-60 group-hover:opacity-90 transition-opacity duration-500 pointer-events-none" />
 
       {/* Main Container with Exact Aspect Ratio of the Cyber Frame (1024 / 423) */}
       <div 
-        className="relative w-full"
+        className="relative w-full overflow-hidden rounded-[20px] sm:rounded-[28px]"
         style={{ aspectRatio: '1024 / 423' }}
       >
-        {/* Pixel-Perfect Confined Artwork Layer - Masked strictly to the Cyber Frame inner viewport */}
+        {/* Confined Artwork Layer - Locked strictly behind the Cyber Frame with no edge leakage */}
         <div
-          className="absolute inset-0 cyber-banner-viewport"
+          className="absolute overflow-hidden bg-slate-950"
           style={{
+            top: '7%',
+            bottom: '8%',
+            left: '3%',
+            right: '3%',
+            clipPath: 'polygon(3.5% 0%, 96.5% 0%, 100% 8%, 100% 92%, 96.5% 100%, 3.5% 100%, 0% 92%, 0% 8%)',
             zIndex: 5
           }}
         >
@@ -159,9 +164,9 @@ const EventBannerSlider = ({ className = '' }) => {
                   />
                 </div>
 
-                {/* Cinematic Contrast Gradient for readable typography */}
-                <div className="absolute inset-0 bg-gradient-to-r from-slate-950/90 via-slate-950/50 to-transparent transition-opacity duration-300 pointer-events-none" />
-                <div className="absolute inset-0 bg-gradient-to-t from-slate-950/80 via-transparent to-black/30 transition-opacity duration-300 pointer-events-none" />
+                {/* Cinematic Contrast Gradient tuned for maximum hero artwork brilliance & crisp text readability */}
+                <div className="absolute inset-0 bg-gradient-to-r from-slate-950/85 via-slate-950/35 via-50% to-transparent transition-opacity duration-300 pointer-events-none" />
+                <div className="absolute inset-0 bg-gradient-to-t from-slate-950/70 via-transparent via-40% to-black/20 transition-opacity duration-300 pointer-events-none" />
               </div>
             );
           })}
@@ -172,7 +177,7 @@ const EventBannerSlider = ({ className = '' }) => {
           className="absolute flex flex-col justify-between pointer-events-none"
           style={{
             top: '12%',
-            bottom: '14%',
+            bottom: '13%',
             left: '5.5%',
             right: '5.5%',
             zIndex: 20
