@@ -67,16 +67,10 @@ export const BrandLogo = ({
   const isLarge = size === 'lg';
 
   const avatarSize = isSmall
-    ? 'w-9 h-9 sm:w-10 sm:h-10 rounded-[14px]'
+    ? 'w-10 h-10 sm:w-11 sm:h-11'
     : isLarge
-    ? 'w-12 h-12 sm:w-14 sm:h-14 rounded-[20px]'
-    : 'w-11 h-11 sm:w-12 sm:h-12 rounded-[16px]';
-
-  const outerFrameSize = isSmall
-    ? 'p-[1.5px] rounded-[16px]'
-    : isLarge
-    ? 'p-[2px] rounded-[22px]'
-    : 'p-[2px] rounded-[18px]';
+    ? 'w-14 h-14 sm:w-16 sm:h-16'
+    : 'w-11 h-11 sm:w-12 sm:h-12';
 
   const titleSize = isSmall
     ? 'text-base sm:text-lg'
@@ -86,27 +80,17 @@ export const BrandLogo = ({
 
   return (
     <div className={`flex items-center gap-3 select-none ${className}`}>
-      {/* 3D Cyber-Gold Beveled Avatar Frame */}
-      <div
-        className={`relative ${outerFrameSize} shrink-0 bg-gradient-to-tr from-amber-500 via-yellow-300 to-cyan-400 shadow-[0_0_18px_rgba(245,158,11,0.35),0_0_10px_rgba(56,189,248,0.25)] group-hover:shadow-[0_0_26px_rgba(245,158,11,0.6),0_0_16px_rgba(56,189,248,0.45)] group-hover:scale-105 transition-all duration-300`}
-      >
-        <div className={`relative ${avatarSize} overflow-hidden bg-gradient-to-b from-[#141b2e] via-[#0d1222] to-[#070a14] p-1 flex items-center justify-center`}>
-          {/* Radial Ambient Backlight */}
-          <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,rgba(245,158,11,0.25)_0%,transparent_70%)] pointer-events-none" />
-
-          {/* Diagonal Glass Reflection Sheen */}
-          <div className="absolute inset-0 bg-gradient-to-tr from-transparent via-white/20 to-transparent pointer-events-none opacity-60 group-hover:opacity-100 transition-opacity duration-300" />
-
-          <img
-            src={logoImage}
-            alt={storeName}
-            className="w-full h-full object-contain filter drop-shadow-[0_2px_8px_rgba(0,0,0,0.85)] group-hover:scale-110 transition-transform duration-300 relative z-10"
-            onError={(e) => {
-              e.target.onerror = null;
-              e.target.src = '/tin-logo.png';
-            }}
-          />
-        </div>
+      {/* Frameless Brand Logo */}
+      <div className={`relative ${avatarSize} shrink-0 flex items-center justify-center`}>
+        <img
+          src={logoImage}
+          alt={storeName}
+          className="w-full h-full object-contain filter drop-shadow-[0_2px_8px_rgba(0,0,0,0.6)] group-hover:scale-105 transition-transform duration-300"
+          onError={(e) => {
+            e.target.onerror = null;
+            e.target.src = '/tin-logo.png';
+          }}
+        />
       </div>
 
       {/* Brand Name Typography & Status Telemetry */}
