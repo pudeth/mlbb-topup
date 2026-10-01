@@ -124,15 +124,23 @@ const EventBannerSlider = ({ className = '' }) => {
       }}
     >
       {/* Ambient Cyber Neon Under-Glow (Cyan on Left, Magenta-Red on Right) */}
-      <div className="absolute -inset-1.5 sm:-inset-2 bg-gradient-to-r from-cyan-500/30 via-blue-500/10 to-rose-500/30 rounded-[28px] sm:rounded-[36px] blur-xl opacity-70 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none" />
+      <div className="absolute -inset-2 sm:-inset-3 bg-gradient-to-r from-cyan-500/25 via-blue-500/10 to-rose-500/25 rounded-[36px] blur-2xl opacity-60 group-hover:opacity-90 transition-opacity duration-500 pointer-events-none" />
 
-      {/* Main Container with Exact Aspect Ratio of the Cyber Frame (1024 / 423 = 2.42) */}
-      <div className="relative w-full aspect-[21/9] sm:aspect-[2.42/1] min-h-[190px] sm:min-h-[240px] md:min-h-[290px]">
-        {/* Banner Artwork Shell - Chamfered polygon clips artwork perfectly behind frame */}
+      {/* Main Container with Exact Aspect Ratio of the Cyber Frame (1024 / 423) */}
+      <div 
+        className="relative w-full overflow-hidden rounded-[20px] sm:rounded-[28px]"
+        style={{ aspectRatio: '1024 / 423' }}
+      >
+        {/* Confined Artwork Layer - Locked strictly behind the Cyber Frame with no edge leakage */}
         <div
-          className="absolute inset-0 w-full h-full overflow-hidden bg-slate-950 shadow-2xl"
+          className="absolute overflow-hidden bg-slate-950"
           style={{
-            clipPath: 'polygon(4.5% 0%, 95.5% 0%, 100% 11%, 100% 89%, 95.5% 100%, 4.5% 100%, 0% 89%, 0% 11%)'
+            top: '7%',
+            bottom: '8%',
+            left: '3%',
+            right: '3%',
+            clipPath: 'polygon(3.5% 0%, 96.5% 0%, 100% 8%, 100% 92%, 96.5% 100%, 3.5% 100%, 0% 92%, 0% 8%)',
+            zIndex: 5
           }}
         >
           {banners.map((banner, index) => {
@@ -152,37 +160,33 @@ const EventBannerSlider = ({ className = '' }) => {
                       e.target.onerror = null;
                       e.target.src = banner.localFallbackImage || '/mlbb-logo.png';
                     }}
-                    className="w-full h-full object-cover object-center filter brightness-[0.98] group-hover:brightness-[0.88] transition-all duration-500"
+                    className="w-full h-full object-cover object-center filter brightness-[0.98] group-hover:brightness-[0.9] transition-all duration-500"
                   />
                 </div>
 
-                {/* Clean Cinematic Contrast Gradient - Smoothly reveals on hover */}
-                <div
-                  className={`absolute inset-0 bg-gradient-to-r from-slate-950/90 via-slate-950/65 to-transparent transition-opacity duration-400 ease-out pointer-events-none ${
-                    isHovered ? 'opacity-100' : 'opacity-0'
-                  } group-hover:opacity-100`}
-                />
-                <div
-                  className={`absolute inset-0 bg-gradient-to-t from-slate-950/85 via-transparent to-black/30 transition-opacity duration-400 ease-out pointer-events-none ${
-                    isHovered ? 'opacity-100' : 'opacity-0'
-                  } group-hover:opacity-100`}
-                />
+                {/* Cinematic Contrast Gradient for readable typography */}
+                <div className="absolute inset-0 bg-gradient-to-r from-slate-950/90 via-slate-950/50 to-transparent transition-opacity duration-300 pointer-events-none" />
+                <div className="absolute inset-0 bg-gradient-to-t from-slate-950/80 via-transparent to-black/30 transition-opacity duration-300 pointer-events-none" />
               </div>
             );
           })}
         </div>
 
-        {/* Content Overlay (Badges, Titles, Buttons) inside the transparent window */}
+        {/* Content Overlay (Badges, Titles, Buttons) positioned gracefully inside the frame */}
         <div
-          className="absolute inset-0 flex flex-col justify-between px-6 sm:px-10 md:px-14 py-6 sm:py-8 md:py-9 pointer-events-none"
-          style={{ zIndex: 20 }}
+          className="absolute flex flex-col justify-between pointer-events-none"
+          style={{
+            top: '12%',
+            bottom: '13%',
+            left: '5.5%',
+            right: '5.5%',
+            zIndex: 20
+          }}
         >
           {/* Top Header / Badges */}
           <div
             key={`badge-${currentIndex}`}
-            className={`flex items-center justify-between gap-2 pointer-events-auto transition-all duration-300 ease-out ${
-              isHovered ? 'opacity-100 translate-y-0' : 'opacity-0 -translate-y-3'
-            } group-hover:opacity-100 group-hover:translate-y-0`}
+            className="flex items-center justify-between gap-2 pointer-events-auto transition-transform duration-300"
           >
             <div className="flex items-center gap-2">
               <span className={`px-2.5 py-1 rounded-lg text-[10px] sm:text-xs font-black tracking-wider uppercase shadow-md ${currentBanner.badgeColor || 'bg-amber-400 text-slate-950'}`}>
@@ -203,11 +207,9 @@ const EventBannerSlider = ({ className = '' }) => {
           {/* Center / Typography Area */}
           <div
             key={`text-${currentIndex}`}
-            className={`space-y-1 sm:space-y-2 max-w-xl pointer-events-auto font-khmer transition-all duration-300 ease-out ${
-              isHovered ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'
-            } group-hover:opacity-100 group-hover:translate-y-0`}
+            className="space-y-1 sm:space-y-1.5 max-w-xl pointer-events-auto font-khmer transition-transform duration-300"
           >
-            <h3 className="text-base sm:text-2xl md:text-3xl font-black text-white tracking-tight leading-tight line-clamp-1 drop-shadow-xl">
+            <h3 className="text-base sm:text-2xl md:text-3xl font-black text-white tracking-tight leading-tight line-clamp-1 drop-shadow-[0_2px_8px_rgba(0,0,0,0.9)]">
               {currentBanner.title}
             </h3>
             {currentBanner.subtitle && (
@@ -218,7 +220,7 @@ const EventBannerSlider = ({ className = '' }) => {
           </div>
 
           {/* Bottom Action & Controls */}
-          <div className="flex items-center justify-between pt-2 pointer-events-auto">
+          <div className="flex items-center justify-between pt-1 pointer-events-auto">
             <button
               key={`btn-${currentIndex}`}
               type="button"
@@ -226,9 +228,7 @@ const EventBannerSlider = ({ className = '' }) => {
                 e.stopPropagation();
                 navigate(currentBanner.link || `/topup?game=${currentBanner.gameId || 'mlbb'}`);
               }}
-              className={`py-2 px-4 sm:py-2.5 sm:px-5 rounded-xl bg-gradient-to-r from-amber-400 to-yellow-300 hover:from-amber-300 hover:to-yellow-200 text-slate-950 text-xs sm:text-sm font-black tracking-wide transition-all duration-300 cursor-pointer flex items-center gap-2 shadow-lg shadow-amber-500/25 active:scale-95 group/btn ${
-                isHovered ? 'opacity-100 translate-y-0 pointer-events-auto' : 'opacity-0 translate-y-3 pointer-events-none'
-              } group-hover:opacity-100 group-hover:translate-y-0 group-hover:pointer-events-auto`}
+              className="py-1.5 px-3.5 sm:py-2.5 sm:px-5 rounded-xl bg-gradient-to-r from-amber-400 to-yellow-300 hover:from-amber-300 hover:to-yellow-200 text-slate-950 text-xs sm:text-sm font-black tracking-wide transition-all duration-300 cursor-pointer flex items-center gap-2 shadow-lg shadow-amber-500/25 active:scale-95 group/btn"
             >
               <span>{currentBanner.buttonText || 'Top Up Now'}</span>
               <svg className="w-4 h-4 shrink-0 transition-transform duration-200 group-hover/btn:translate-x-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -237,7 +237,7 @@ const EventBannerSlider = ({ className = '' }) => {
             </button>
 
             {/* Indicator Dots */}
-            <div className="flex items-center gap-1.5 sm:gap-2 bg-slate-950/70 backdrop-blur-md px-2.5 py-1.5 rounded-full border border-slate-800/70 shadow-lg ml-auto opacity-80 group-hover:opacity-100 transition-opacity duration-300">
+            <div className="flex items-center gap-1.5 sm:gap-2 bg-slate-950/70 backdrop-blur-md px-2.5 py-1.5 rounded-full border border-slate-800/70 shadow-lg ml-auto">
               {banners.map((_, idx) => (
                 <button
                   key={idx}
@@ -258,12 +258,12 @@ const EventBannerSlider = ({ className = '' }) => {
           </div>
         </div>
 
-        {/* Futuristic Cyber Esports Overlay Frame (Guaranteed Top Layer) */}
+        {/* Futuristic Cyber Esports Overlay Frame (Guaranteed Top Layer - Covers edges flawlessly) */}
         <img
           src={cyberBannerFrame || '/cyber-banner-frame.png'}
           alt="Cyber Frame"
-          className="absolute inset-0 w-full h-full object-fill select-none filter drop-shadow-[0_0_16px_rgba(6,182,212,0.45)]"
-          style={{ zIndex: 30, pointerEvents: 'none' }}
+          className="absolute inset-0 w-full h-full object-fill select-none filter drop-shadow-[0_0_16px_rgba(6,182,212,0.45)] pointer-events-none"
+          style={{ zIndex: 15 }}
           onError={(e) => {
             if (e.target.src !== `${process.env.PUBLIC_URL || ''}/cyber-banner-frame.png`) {
               e.target.src = `${process.env.PUBLIC_URL || ''}/cyber-banner-frame.png`;
@@ -271,15 +271,13 @@ const EventBannerSlider = ({ className = '' }) => {
           }}
         />
 
-        {/* Left Arrow Button (On top of Frame) */}
+        {/* Left Arrow Button */}
         {banners.length > 1 && (
           <button
             type="button"
             onClick={handlePrev}
-            style={{ zIndex: 35 }}
-            className={`absolute left-3 sm:left-5 top-1/2 -translate-y-1/2 w-8 h-8 sm:w-10 sm:h-10 rounded-full bg-slate-950/80 hover:bg-amber-400 text-white hover:text-slate-950 border border-slate-700/80 hover:border-amber-300 shadow-2xl backdrop-blur-md flex items-center justify-center transition-all duration-300 active:scale-90 cursor-pointer ${
-              isHovered ? 'opacity-100' : 'opacity-0'
-            } group-hover:opacity-100 hover:scale-110`}
+            style={{ zIndex: 25 }}
+            className="absolute left-2.5 sm:left-4 top-1/2 -translate-y-1/2 w-8 h-8 sm:w-10 sm:h-10 rounded-full bg-slate-950/80 hover:bg-amber-400 text-white hover:text-slate-950 border border-slate-700/80 hover:border-amber-300 shadow-2xl backdrop-blur-md flex items-center justify-center transition-all duration-300 active:scale-90 cursor-pointer group-hover:scale-105"
             aria-label="Previous slide"
           >
             <svg className="w-4 h-4 sm:w-5 sm:h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -288,15 +286,13 @@ const EventBannerSlider = ({ className = '' }) => {
           </button>
         )}
 
-        {/* Right Arrow Button (On top of Frame) */}
+        {/* Right Arrow Button */}
         {banners.length > 1 && (
           <button
             type="button"
             onClick={handleNext}
-            style={{ zIndex: 35 }}
-            className={`absolute right-3 sm:right-5 top-1/2 -translate-y-1/2 w-8 h-8 sm:w-10 sm:h-10 rounded-full bg-slate-950/80 hover:bg-amber-400 text-white hover:text-slate-950 border border-slate-700/80 hover:border-amber-300 shadow-2xl backdrop-blur-md flex items-center justify-center transition-all duration-300 active:scale-90 cursor-pointer ${
-              isHovered ? 'opacity-100' : 'opacity-0'
-            } group-hover:opacity-100 hover:scale-110`}
+            style={{ zIndex: 25 }}
+            className="absolute right-2.5 sm:right-4 top-1/2 -translate-y-1/2 w-8 h-8 sm:w-10 sm:h-10 rounded-full bg-slate-950/80 hover:bg-amber-400 text-white hover:text-slate-950 border border-slate-700/80 hover:border-amber-300 shadow-2xl backdrop-blur-md flex items-center justify-center transition-all duration-300 active:scale-90 cursor-pointer group-hover:scale-105"
             aria-label="Next slide"
           >
             <svg className="w-4 h-4 sm:w-5 sm:h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
