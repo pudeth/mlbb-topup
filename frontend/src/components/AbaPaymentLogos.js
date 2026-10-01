@@ -178,18 +178,6 @@ export const AbaAcceptanceMarks = ({ className = "" }) => (
     <span title="KHQR" className="inline-flex items-center px-1.5 py-0.5 rounded-md bg-white/5 border border-white/10 hover:border-white/20 transition-colors">
       <KhqrLogo className="h-4 sm:h-4.5 w-auto" />
     </span>
-    <span title="Visa Card" className="inline-flex items-center px-1.5 py-0.5 rounded-md bg-white/5 border border-white/10 hover:border-white/20 transition-colors">
-      <VisaLogo className="h-3.5 sm:h-4 w-auto" />
-    </span>
-    <span title="Mastercard" className="inline-flex items-center px-1.5 py-0.5 rounded-md bg-white/5 border border-white/10 hover:border-white/20 transition-colors">
-      <MastercardLogo className="h-3.5 sm:h-4 w-auto" />
-    </span>
-    <span title="UnionPay" className="inline-flex items-center px-1.5 py-0.5 rounded-md bg-white/5 border border-white/10 hover:border-white/20 transition-colors">
-      <UnionPayLogo className="h-3.5 sm:h-4 w-auto" />
-    </span>
-    <span title="JCB" className="inline-flex items-center px-1.5 py-0.5 rounded-md bg-white/5 border border-white/10 hover:border-white/20 transition-colors">
-      <JcbLogo className="h-3.5 sm:h-4 w-auto" />
-    </span>
   </div>
 );
 
