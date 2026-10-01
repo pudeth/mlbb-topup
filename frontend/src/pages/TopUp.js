@@ -11,6 +11,7 @@ import {
   KhqrVoucherHeader
 } from '../components/AbaPaymentLogos';
 import WeAcceptPayments from '../components/WeAcceptPayments';
+import { generateEmvcoKhqr } from '../utils/khqrGenerator';
 
 // Game-specific packages matching upstream supplier catalog
 const GAME_PACKAGES_MAP = {
@@ -440,7 +441,26 @@ const TopUp = () => {
     const rawPrice = selectedProduct?.price || 0.95;
     const targetAmount = isRiel ? Math.round(rawPrice * 4100) : rawPrice;
 
-    setPaymentData(prev => prev ? ({ ...prev, currency: newCurr, amount: targetAmount }) : prev);
+    // Immediately generate authentic EMVCo KHQR for the new currency
+    const clientKhqr = generateEmvcoKhqr({
+      amount: targetAmount,
+      currency: newCurr,
+      merchantName: 'DETH PHEAK',
+      merchantCity: 'Phnom Penh'
+    });
+
+    setPaymentData(prev => prev ? ({
+      ...prev,
+      currency: newCurr,
+      amount: targetAmount,
+      qrString: clientKhqr.qrString,
+      khqrQRCode: clientKhqr.qrString,
+      khqrDeeplink: clientKhqr.deeplink,
+      abapayDeeplink: clientKhqr.deeplink,
+      khqrMd5Hash: clientKhqr.md5Hash,
+      md5Hash: clientKhqr.md5Hash,
+      gateway: 'aba_khqr'
+    }) : prev);
 
     if (orderId) {
       try {
@@ -450,90 +470,33 @@ const TopUp = () => {
           if (stored) currentUser = JSON.parse(stored);
         } catch (e) {}
 
-        // Try Python Scorekhqr service first for authentic real-time ABA KHQR
-        const directRes = await fetch('http://localhost:5001/api/payment/create', {
+        const khqrSyncPayload = {
+          orderId,
+          bill_number: `MLBB${orderId}`,
+          amount: targetAmount,
+          currency: newCurr,
+          player_id: formData.playerID ? formData.playerID.trim() : '',
+          server_id: formData.serverID ? formData.serverID.trim() : '',
+          account_name: verifiedAccount?.name || '',
+          customer_id: currentUser?.userId || currentUser?.id || '',
+          game_name: selectedGame?.name || 'Mobile Legends: Bang Bang',
+          package_name: selectedProduct?.name || `${selectedProduct?.diamondAmount || 55} Diamonds`,
+          qr_code: clientKhqr.qrString,
+          md5_hash: clientKhqr.md5Hash
+        };
+
+        // Notify local Python 5001 or cloud Render in background
+        fetch('http://localhost:5001/api/payment/create', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            orderId,
-            amount: targetAmount,
-            currency: newCurr,
-            player_id: formData.playerID ? formData.playerID.trim() : '',
-            server_id: formData.serverID ? formData.serverID.trim() : '',
-            account_name: verifiedAccount?.name || '',
-            customer_id: currentUser?.userId || currentUser?.id || '',
-            game_name: selectedGame?.name || 'Mobile Legends: Bang Bang',
-            package_name: selectedProduct?.name || `${selectedProduct?.diamondAmount || 55} Diamonds`
-          })
-        }).then(r => r.json()).catch(() => null);
-
-        if (directRes?.qr_code || directRes?.khqrString) {
-          const validCode = directRes.qr_code || directRes.khqrString;
-          setPaymentData(prev => ({
-            ...prev,
-            currency: newCurr,
-            amount: targetAmount,
-            qrString: validCode,
-            khqrQRCode: validCode,
-            khqrDeeplink: directRes.deeplink,
-            abapayDeeplink: directRes.deeplink,
-            khqrMd5Hash: directRes.md5 || directRes.md5_hash,
-            md5Hash: directRes.md5 || directRes.md5_hash,
-            merchantName: directRes.merchantName || 'DETH PHEAK'
-          }));
-        } else {
-          // Cloud fallback
-          const cloudRes = await fetch('https://mlbb-khqr-api.onrender.com/api/payment/create', {
+          body: JSON.stringify(khqrSyncPayload)
+        }).catch(() => {
+          fetch('https://mlbb-khqr-api.onrender.com/api/payment/create', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-              orderId,
-              amount: targetAmount,
-              currency: newCurr,
-              player_id: formData.playerID ? formData.playerID.trim() : '',
-              server_id: formData.serverID ? formData.serverID.trim() : '',
-              account_name: verifiedAccount?.name || '',
-              customer_id: currentUser?.userId || currentUser?.id || '',
-              game_name: selectedGame?.name || 'Mobile Legends: Bang Bang',
-              package_name: selectedProduct?.name || `${selectedProduct?.diamondAmount || 55} Diamonds`
-            })
-          }).then(r => r.json()).catch(() => null);
-
-          if (cloudRes?.qr_code || cloudRes?.khqrString) {
-            const validCode = cloudRes.qr_code || cloudRes.khqrString;
-            setPaymentData(prev => ({
-              ...prev,
-              currency: newCurr,
-              amount: targetAmount,
-              qrString: validCode,
-              khqrQRCode: validCode,
-              khqrDeeplink: cloudRes.deeplink,
-              abapayDeeplink: cloudRes.deeplink,
-              khqrMd5Hash: cloudRes.md5 || cloudRes.md5_hash,
-              md5Hash: cloudRes.md5 || cloudRes.md5_hash,
-              merchantName: cloudRes.merchantName || 'DETH PHEAK'
-            }));
-          } else {
-            // Fallback to paywayAPI
-            const payRes = await paywayAPI.create({
-              orderId,
-              amount: targetAmount,
-              currency: newCurr
-            });
-            if (payRes.data) {
-              setPaymentData(prev => ({
-                ...prev,
-                ...payRes.data,
-                currency: newCurr,
-                amount: targetAmount,
-                qrString: payRes.data.qrString,
-                khqrQRCode: payRes.data.qrString,
-                khqrDeeplink: payRes.data.abapayDeeplink,
-                khqrMd5Hash: payRes.data.md5
-              }));
-            }
-          }
-        }
+            body: JSON.stringify(khqrSyncPayload)
+          }).catch(() => {});
+        });
       } catch (err) {
         console.warn('Currency switch notice:', err?.message);
       }
@@ -546,7 +509,7 @@ const TopUp = () => {
     if (paymentPaid) {
       // Gracefully close checkout popup without page reload so customer sees receipt
       closeAbaCheckoutPopup();
-    } else if (paymentData && !paymentPaid && paymentData.gateway === 'aba_payway') {
+    } else if (paymentData && !paymentPaid && paymentData.gateway === 'aba_payway' && !paymentData.qrString) {
       const openOfficialAbaCheckout = () => {
         const payway = getAbaPaywayInstance();
         if (payway && typeof payway.checkout === 'function') {
@@ -647,7 +610,7 @@ const TopUp = () => {
   // Lock scroll & hide floating navigation ONLY when our internal non-ABA checkout modal is active
   useEffect(() => {
     // ABA PayWay manages its own drawer/modal; only lock body for internal modals or receipt
-    if (paymentData && !paymentPaid && paymentData.gateway !== 'aba_payway') {
+    if (paymentData && !paymentPaid && (paymentData.qrString || paymentData.khqrQRCode)) {
       document.body.classList.add('modal-open');
     } else {
       document.body.classList.remove('modal-open');
@@ -1026,8 +989,8 @@ const TopUp = () => {
     try {
       let isPaidConfirmed = false;
 
-      // Real direct bank checking via ABA PayWay endpoint
-      if (curTranId && (paymentData?.gateway === 'aba_payway' || !curMd5)) {
+      // 1. Direct bank checking via ABA PayWay endpoint
+      if (curTranId) {
         try {
           const r = await paywayAPI.checkStatus(curTranId, curOrderId);
           if (r?.data?.isPaid === true || (r?.data?.status || '').toUpperCase() === 'PAID') {
@@ -1039,8 +1002,8 @@ const TopUp = () => {
         }
       } 
       
-      // Legacy KHQR path (Scorekhqr-bakong) - only used if strictly aba_khqr
-      else if (curMd5 && paymentData?.gateway === 'aba_khqr') {
+      // 2. KHQR status check (Local Python / Cloud Render)
+      if (!isPaidConfirmed && curMd5) {
         try {
           const r = await fetch(`http://localhost:5001/api/payment/status/${curMd5}`)
             .then(res => res.json())
@@ -1051,6 +1014,19 @@ const TopUp = () => {
             isPaidConfirmed = true;
           }
         } catch (e) {}
+
+        if (!isPaidConfirmed) {
+          try {
+            const cloudR = await fetch(`https://mlbb-khqr-api.onrender.com/api/payment/status/${curMd5}`)
+              .then(res => res.json())
+              .catch(() => null);
+            const rawCloud = (cloudR?.status || '').toUpperCase();
+            if (rawCloud === 'PAID' || rawCloud === 'SUCCESS' || rawCloud === 'COMPLETED' || cloudR?.paid === true) {
+              console.log(`%c[ABA PayWay Tracker] ✅ Cloud KHQR Cache confirmed PAID`, 'color: #10b981; font-weight: bold;');
+              isPaidConfirmed = true;
+            }
+          } catch (e) {}
+        }
       }
 
       // Always check .NET backend DB via quick-status as fallback
@@ -1285,9 +1261,16 @@ const TopUp = () => {
       const activeOrderId = newOrder?.orderId || Math.floor(100000 + Math.random() * 900000);
       setOrderId(activeOrderId);
 
-      let createdPayment = null;
+      // Authentic NBC Bakong & ABA Bank EMVCo KHQR code generator
+      const clientKhqr = generateEmvcoKhqr({
+        amount: targetAmount,
+        currency: currency,
+        merchantName: 'DETH PHEAK',
+        merchantCity: 'Phnom Penh'
+      });
 
-      // 1. Prioritize Official ABA PayWay Gateway (Sandbox / Live with ABA Simulator & Merchant Portal sync)
+      // 1. Initialize official ABA PayWay transaction in backend
+      let paywayResData = null;
       try {
         const directRes = await paywayAPI.create({
           orderId: activeOrderId,
@@ -1300,159 +1283,88 @@ const TopUp = () => {
           game_name: gameTitle,
           package_name: pkgName
         });
-        const pd = directRes?.data;
-        if (pd?.tranId && (pd?.formData || pd?.purchaseUrl)) {
-          createdPayment = {
-            orderId: activeOrderId,
-            amount: targetAmount,
-            currency: currency,
-            tranId: pd.tranId,
-            qrString: pd.qrString || null,
-            abapayDeeplink: pd.abapayDeeplink || pd.checkoutUrl,
-            khqrDeeplink: pd.abapayDeeplink || pd.checkoutUrl,
-            md5Hash: pd.md5,
-            khqrMd5Hash: pd.md5,
-            khqrQRCode: pd.qrString || null,
-            formData: pd.formData,
-            purchaseUrl: pd.purchaseUrl,
-            checkoutUrl: pd.checkoutUrl,
-            merchantName: 'DETH PHEAK',
-            gateway: 'aba_payway'
-          };
-        }
+        paywayResData = directRes?.data;
       } catch (err) {
         console.warn('ABA PayWay API notice:', err?.message);
       }
 
-      // 2. Direct Python ABA KHQR Service (Port 5001) Fallback
-      if (!createdPayment) {
-        try {
-          const directRes = await fetch('http://localhost:5001/api/payment/create', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-              orderId: activeOrderId,
-              amount: targetAmount,
-              currency: currency,
-              player_id: pId,
-              server_id: sId,
-              account_name: playerAccName,
-              customer_id: customerId,
-              game_name: gameTitle,
-              package_name: pkgName
-            })
-          }).then(r => r.json()).catch(() => null);
-
-          if (directRes?.qr_code || directRes?.khqrString) {
-            const validCode = directRes.qr_code || directRes.khqrString;
-            createdPayment = {
-              orderId: activeOrderId,
-              amount: targetAmount,
-              currency: currency,
-              tranId: directRes.orderId || `TRX${activeOrderId}`,
-              qrString: validCode,
-              khqrQRCode: validCode,
-              abapayDeeplink: directRes.deeplink,
-              khqrDeeplink: directRes.deeplink,
-              md5Hash: directRes.md5 || directRes.md5_hash,
-              khqrMd5Hash: directRes.md5 || directRes.md5_hash,
-              merchantName: directRes.merchantName || 'DETH PHEAK',
-              gateway: 'aba_khqr'
-            };
-          }
-        } catch (err) {
-          console.warn('Local KHQR service notice:', err?.message);
-        }
-      }
-
-      // 3. Cloud Fallback Microservice for Real KHQR
-      if (!createdPayment) {
-        try {
-          const cloudRes = await fetch('https://mlbb-khqr-api.onrender.com/api/payment/create', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-              orderId: activeOrderId,
-              amount: targetAmount,
-              currency: currency,
-              player_id: pId,
-              server_id: sId,
-              account_name: playerAccName,
-              customer_id: customerId,
-              game_name: gameTitle,
-              package_name: pkgName
-            })
-          }).then(r => r.json()).catch(() => null);
-
-          if (cloudRes?.qr_code || cloudRes?.khqrString) {
-            const validCode = cloudRes.qr_code || cloudRes.khqrString;
-            createdPayment = {
-              orderId: activeOrderId,
-              amount: targetAmount,
-              currency: currency,
-              tranId: cloudRes.orderId || `TRX${activeOrderId}`,
-              qrString: validCode,
-              khqrQRCode: validCode,
-              abapayDeeplink: cloudRes.deeplink,
-              khqrDeeplink: cloudRes.deeplink,
-              md5Hash: cloudRes.md5 || cloudRes.md5_hash,
-              khqrMd5Hash: cloudRes.md5 || cloudRes.md5_hash,
-              merchantName: cloudRes.merchantName || 'DETH PHEAK',
-              gateway: 'aba_khqr'
-            };
-          }
-        } catch (cloudErr) {
-          console.warn('Cloud KHQR service notice:', cloudErr?.message);
-        }
-      }
-
-      // 4. Fallback to basic DB payment if API failed
-      if (!createdPayment && (newOrder?.payment?.transactionId || newOrder?.payment?.khqrQRCode)) {
-        createdPayment = {
+      // 2. Fast check with local KHQR service (800ms race timeout)
+      let khqrApiData = null;
+      try {
+        const khqrSyncPayload = {
           orderId: activeOrderId,
-          amount: newOrder.payment.amount || targetAmount,
-          currency: currency,
-          tranId: newOrder.payment.transactionId,
-          qrString: newOrder.payment.khqrQRCode,
-          abapayDeeplink: newOrder.payment.khqrDeeplink,
-          khqrDeeplink: newOrder.payment.khqrDeeplink,
-          md5Hash: newOrder.payment.khqrMd5Hash,
-          khqrMd5Hash: newOrder.payment.khqrMd5Hash,
-          khqrQRCode: newOrder.payment.khqrQRCode,
-          merchantName: 'DETH PHEAK',
-          gateway: 'aba_payway'
-        };
-      }
-
-      // 5. Simulated fallback
-      if (!createdPayment) {
-        const simTranId = `TRX${activeOrderId}_${Math.floor(Date.now() % 100000)}`;
-        const simMd5 = 'aba_' + Math.random().toString(36).substring(2, 10);
-        const simDeeplink = `https://checkout-sandbox.payway.com.kh/pay?tran_id=${simTranId}&amount=${targetAmount}&currency=${currency}`;
-        const fallbackQr = `https://checkout-sandbox.payway.com.kh/pay?tran_id=${simTranId}`;
-        createdPayment = {
-          orderId: activeOrderId,
+          bill_number: `MLBB${activeOrderId}`,
           amount: targetAmount,
           currency: currency,
-          tranId: simTranId,
-          qrString: fallbackQr,
-          abapayDeeplink: simDeeplink,
-          md5Hash: simMd5,
-          khqrMd5Hash: simMd5,
-          khqrQRCode: fallbackQr,
-          khqrDeeplink: simDeeplink,
-          merchantName: 'DETH PHEAK',
-          gateway: 'aba_payway'
+          player_id: pId,
+          server_id: sId,
+          account_name: playerAccName,
+          customer_id: customerId,
+          game_name: gameTitle,
+          package_name: pkgName,
+          qr_code: clientKhqr.qrString,
+          md5_hash: clientKhqr.md5Hash
         };
-      }
+        const fastFetch = fetch('http://localhost:5001/api/payment/create', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(khqrSyncPayload)
+        }).then(r => r.json()).catch(() => null);
 
-      if (createdPayment) {
-        setPaymentData({
-          ...createdPayment,
+        khqrApiData = await Promise.race([
+          fastFetch,
+          new Promise(r => setTimeout(() => r(null), 800))
+        ]);
+      } catch (e) {}
+
+      const validQr = khqrApiData?.qr_code || khqrApiData?.khqrString || paywayResData?.qrString || clientKhqr.qrString;
+      const validMd5 = khqrApiData?.md5 || khqrApiData?.md5_hash || paywayResData?.md5 || clientKhqr.md5Hash;
+      const validDeeplink = khqrApiData?.deeplink || paywayResData?.abapayDeeplink || clientKhqr.deeplink;
+      const tranId = paywayResData?.tranId || khqrApiData?.orderId || `TRX${activeOrderId}`;
+
+      const createdPayment = {
+        orderId: activeOrderId,
+        amount: targetAmount,
+        currency: currency,
+        tranId: tranId,
+        qrString: validQr,
+        khqrQRCode: validQr,
+        abapayDeeplink: validDeeplink,
+        khqrDeeplink: validDeeplink,
+        md5Hash: validMd5,
+        khqrMd5Hash: validMd5,
+        formData: paywayResData?.formData,
+        purchaseUrl: paywayResData?.purchaseUrl,
+        checkoutUrl: paywayResData?.checkoutUrl,
+        merchantName: 'DETH PHEAK',
+        gateway: 'aba_khqr'
+      };
+
+      // Background notification to cloud render KHQR microservice (for Telegram alerts & SSE)
+      fetch('https://mlbb-khqr-api.onrender.com/api/payment/create', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          orderId: activeOrderId,
+          bill_number: `MLBB${activeOrderId}`,
           amount: targetAmount,
-          currency: currency
-        });
-      }
+          currency: currency,
+          player_id: pId,
+          server_id: sId,
+          account_name: playerAccName,
+          customer_id: customerId,
+          game_name: gameTitle,
+          package_name: pkgName,
+          qr_code: validQr,
+          md5_hash: validMd5
+        })
+      }).catch(() => {});
+
+      setPaymentData({
+        ...createdPayment,
+        amount: targetAmount,
+        currency: currency
+      });
 
       setTimeout(() => {
         checkoutSectionRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -2266,8 +2178,7 @@ const TopUp = () => {
 
       {/* ======================================================== */}
       {/* ROOT-LEVEL ABA KHQR PAYMENT MODAL (z-[9999]) */}
-      {/* Only render fallback static modal when NOT using official ABA PayWay popup */}
-      {paymentData && !paymentPaid && paymentData.gateway !== 'aba_payway' && (paymentData.qrString || paymentData.khqrQRCode) && (
+      {paymentData && !paymentPaid && (paymentData.qrString || paymentData.khqrQRCode) && (
         <div
           onClick={(e) => {
             if (e.target === e.currentTarget) {
