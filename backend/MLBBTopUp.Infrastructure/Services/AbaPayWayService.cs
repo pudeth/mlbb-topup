@@ -186,95 +186,20 @@ namespace MLBBTopUp.Infrastructure.Services
                         { "hash", popupHash }
                     };
 
-                if (!string.IsNullOrEmpty(apiKey))
-                {
-                    try
+                    // Requirement ⑤: Exclusively use the official Purchase API (no calls to generate-qr)
+                    var tranMd5 = Convert.ToHexString(MD5.HashData(Encoding.UTF8.GetBytes(tranId))).ToLower();
+                    _logger.LogInformation("ABA PayWay Purchase API payload created for Order #{OrderId} (TranId: {TranId})", orderId, tranId);
+
+                    return new PayWayCreateResult
                     {
-                        var b4hash = $"{reqTime}{merchantId}{tranId}{amtStr}{itemsBase64}{firstName}{lastName}{email}{phone}{purchaseType}{paymentOption}{string.Empty}{string.Empty}{paywayCurrency}{string.Empty}{string.Empty}{string.Empty}{qrLifetime}{qrImageTemplate}";
-                        var qrHash = GenerateHash(b4hash);
-
-                        var qrPayload = new
-                        {
-                            req_time = reqTime,
-                            merchant_id = merchantId,
-                            tran_id = tranId,
-                            amount = amtStr,
-                            items = itemsBase64,
-                            firstname = firstName,
-                            lastname = lastName,
-                            email = email,
-                            phone = phone,
-                            type = purchaseType,
-                            payment_option = paymentOption,
-                            currency = paywayCurrency,
-                            lifetime = 6,
-                            qr_image_template = qrImageTemplate,
-                            hash = qrHash
-                        };
-
-
-
-
-                        var qrEndpoint = $"{baseUrl}/api/payment-gateway/v1/payments/generate-qr";
-                        using var requestMessage = new HttpRequestMessage(HttpMethod.Post, qrEndpoint)
-                        {
-                            Content = new StringContent(JsonSerializer.Serialize(qrPayload), Encoding.UTF8, "application/json")
-                        };
-                        requestMessage.Headers.TryAddWithoutValidation("User-Agent", "Mozilla/5.0");
-
-                        var response = await _httpClient.SendAsync(requestMessage); if (!response.IsSuccessStatusCode) { _logger.LogError("Generate QR failed: {Error}", await response.Content.ReadAsStringAsync()); }
-
-                        if (response.IsSuccessStatusCode)
-                        {
-                            var responseJson = await response.Content.ReadAsStringAsync();
-                            using var doc = JsonDocument.Parse(responseJson);
-                            var root = doc.RootElement;
-
-                            string? qrString = root.TryGetProperty("qr_string", out var qrProp) ? qrProp.GetString() : null;
-                            string? qrImage = root.TryGetProperty("qr_image", out var imgProp) ? imgProp.GetString() : null;
-                            string? deeplink = root.TryGetProperty("abapay_deeplink", out var dlProp) ? dlProp.GetString() : null;
-
-                            if (string.IsNullOrEmpty(deeplink) && !string.IsNullOrEmpty(qrString))
-                            {
-                                deeplink = $"abamobilebank://ababank.com?type=payway&qrcode={Uri.EscapeDataString(qrString)}";
-                            }
-
-                            string md5 = !string.IsNullOrEmpty(qrString)
-                                ? Convert.ToHexString(MD5.HashData(Encoding.UTF8.GetBytes(qrString))).ToLower()
-                                : Convert.ToHexString(MD5.HashData(Encoding.UTF8.GetBytes(tranId))).ToLower();return new PayWayCreateResult
-                            {
-                                Success = true,
-                                TranId = tranId,
-                                QrString = qrString,
-                                QrImage = qrImage,
-                                AbapayDeeplink = deeplink,
-                                Md5Hash = md5,
-                                CheckoutUrl = checkoutUrl,
-                                PurchaseUrl = purchaseUrl,
-                                Hash = popupHash,
-                                FormData = formData
-                            };
-                        }
-                    }
-                    catch (Exception apiEx)
-                    {
-                        _logger.LogWarning(apiEx, "Failed to call live PayWay generate-qr API for Order #{OrderId}", orderId);
-                    }
-                }
-
-                // Fallback result with simulated MD5 hash for order
-                var fallbackMd5 = Convert.ToHexString(MD5.HashData(Encoding.UTF8.GetBytes($"ORDER_{orderId}_{DateTime.UtcNow.Ticks}"))).ToLower();
-                return new PayWayCreateResult
-                {
-                    Success = true,
-                    TranId = tranId,
-                    Md5Hash = fallbackMd5,
-                    AbapayDeeplink = $"https://bakong.nbc.org.kh/pay?md5={fallbackMd5}",
-                    CheckoutUrl = checkoutUrl,
-                    PurchaseUrl = purchaseUrl,
-                    Hash = popupHash,
-                    FormData = formData
-                };
+                        Success = true,
+                        TranId = tranId,
+                        Md5Hash = tranMd5,
+                        CheckoutUrl = checkoutUrl,
+                        PurchaseUrl = purchaseUrl,
+                        Hash = popupHash,
+                        FormData = formData
+                    };
             }
             catch (Exception ex)
             {
