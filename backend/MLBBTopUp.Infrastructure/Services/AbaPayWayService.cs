@@ -146,11 +146,15 @@ namespace MLBBTopUp.Infrastructure.Services
                     var checkoutUrl = $"{baseUrl}/pay?tran_id={tranId}&amount={amtStr}&currency={paywayCurrency}";
                     var popupPaymentOption = "abapay_khqr"; 
                     
-                    var frontendBase = _configuration["FrontendUrl"] ?? "http://localhost:3001";
-                    var returnUrl = $"{frontendBase}/topup";
-                    var continueSuccessUrl = $"{frontendBase}/topup";
+                    // Requirement ③: return_url MUST be publicly reachable via HTTPS on port 443, accept HTTP POST, and be encoded using Base64
+                    var publicCallbackUrl = _configuration["AbaPayWay:CallbackUrl"] ?? "https://mlbb-backend-api.onrender.com/api/payway/callback";
+                    var returnUrl = Convert.ToBase64String(Encoding.UTF8.GetBytes(publicCallbackUrl));
+
+                    // Frontend client URLs: public HTTPS on port 443 encoded in Base64
+                    var frontendBase = _configuration["FrontendUrl"] ?? "https://mlbb-topup-jet.vercel.app";
+                    var cancelUrl = Convert.ToBase64String(Encoding.UTF8.GetBytes($"{frontendBase.TrimEnd('/')}/topup"));
+                    var continueSuccessUrl = Convert.ToBase64String(Encoding.UTF8.GetBytes($"{frontendBase.TrimEnd('/')}/topup"));
                     var returnDeeplink = "abamobilebank://ababank.com"; // Success URL for Mobile Continuation
-                    var cancelUrl = $"{frontendBase}/topup";
                     var lifetime = "6"; // 6-minute lifetime (aligned with ABA PayWay guidelines)
 
                     var popupHash = GeneratePurchaseHash(reqTime, merchantId, tranId, amtStr, itemsBase64,
@@ -658,10 +662,12 @@ namespace MLBBTopUp.Infrastructure.Services
                     var checkoutUrl = $"{baseUrl}/pay?tran_id={tranId}&amount={amtStr}&currency={paywayCurrency}";
                     var popupPaymentOption = "abapay_khqr";
                     
-                    var returnUrl = "http://localhost:3000/success";
-                    var continueSuccessUrl = $"{_configuration["FrontendUrl"] ?? "http://localhost:3000"}/topup";
+                    var publicCallbackSub = _configuration["AbaPayWay:CallbackUrl"] ?? "https://mlbb-backend-api.onrender.com/api/payway/callback";
+                    var returnUrl = Convert.ToBase64String(Encoding.UTF8.GetBytes(publicCallbackSub));
+                    var frontendSubBase = _configuration["FrontendUrl"] ?? "https://mlbb-topup-jet.vercel.app";
+                    var continueSuccessUrl = Convert.ToBase64String(Encoding.UTF8.GetBytes($"{frontendSubBase.TrimEnd('/')}/topup"));
                     var returnDeeplink = "abamobilebank://ababank.com";
-                    var cancelUrl = $"{_configuration["FrontendUrl"] ?? "http://localhost:3000"}/topup";
+                    var cancelUrl = Convert.ToBase64String(Encoding.UTF8.GetBytes($"{frontendSubBase.TrimEnd('/')}/topup"));
 
                     var popupHash = GenerateSubscriptionHash(reqTime, merchantId, tranId, amtStr, itemsBase64,
                         "", firstName, lastName, email, phone, purchaseType, popupPaymentOption,

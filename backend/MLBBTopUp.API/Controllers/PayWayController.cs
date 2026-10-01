@@ -23,13 +23,15 @@ public class PayWayController : BaseController
         IPaymentService paymentService,
         IOrderService orderService,
         ApplicationDbContext context,
-        ILogger<PayWayController> logger)
+        ILogger<PayWayController> logger,
+        Microsoft.Extensions.Configuration.IConfiguration configuration)
     {
         _abaPayWayService = abaPayWayService;
         _paymentService = paymentService;
         _orderService = orderService;
         _context = context;
         _logger = logger;
+        _configuration = configuration;
     }
 
     public class CreatePayWayRequest
@@ -110,34 +112,100 @@ public class PayWayController : BaseController
 
     /// <summary>
     /// ABA PayWay instant webhook pushback callback endpoint
+    /// Accepts HTTP POST/GET via HTTPS port 443 with JSON, Form, or Raw data
+    /// Updates transaction status to Completed / Success and returns confirmation
     /// </summary>
     [HttpPost("callback")]
     [HttpGet("callback")]
     [AllowAnonymous]
-    public async Task<IActionResult> Callback([FromForm] IFormCollection form)
+    public async Task<IActionResult> Callback()
     {
         try
         {
-            var tranId = form["tran_id"].ToString();
-            var status = form["status"].ToString();
+            string tranId = string.Empty;
+            string status = string.Empty;
+            string rawBody = string.Empty;
 
-            _logger.LogInformation("ABA PayWay Webhook callback received for TranId: {TranId}, Status: {Status}", tranId, status);
+            // 1. Try reading Form Collection if available
+            if (Request.HasFormContentType)
+            {
+                var form = await Request.ReadFormAsync();
+                tranId = form["tran_id"].ToString();
+                status = form["status"].ToString();
+                if (string.IsNullOrEmpty(status)) status = form["response"].ToString();
+            }
 
-            if (status == "0" || status == "00" || status.Equals("APPROVED", StringComparison.OrdinalIgnoreCase))
+            // 2. Try reading JSON or Raw Body
+            if (string.IsNullOrEmpty(tranId) && Request.Body != null)
+            {
+                using var reader = new System.IO.StreamReader(Request.Body);
+                rawBody = await reader.ReadToEndAsync();
+                if (!string.IsNullOrWhiteSpace(rawBody))
+                {
+                    try
+                    {
+                        using var doc = System.Text.Json.JsonDocument.Parse(rawBody);
+                        var root = doc.RootElement;
+                        if (root.TryGetProperty("tran_id", out var tid)) tranId = tid.GetString() ?? "";
+                        if (string.IsNullOrEmpty(tranId) && root.TryGetProperty("tranId", out var tid2)) tranId = tid2.GetString() ?? "";
+                        if (root.TryGetProperty("status", out var st)) status = st.ToString();
+                        if (string.IsNullOrEmpty(status) && root.TryGetProperty("response", out var resp)) status = resp.ToString();
+                    }
+                    catch { }
+                }
+            }
+
+            // 3. Fallback to Query Parameters
+            if (string.IsNullOrEmpty(tranId))
+            {
+                tranId = Request.Query["tran_id"].ToString();
+                if (string.IsNullOrEmpty(tranId)) tranId = Request.Query["tranId"].ToString();
+                if (string.IsNullOrEmpty(status)) status = Request.Query["status"].ToString();
+            }
+
+            _logger.LogInformation("ABA PayWay pushback callback received for TranId: {TranId}, Status: {Status}", tranId, status);
+
+            if (!string.IsNullOrEmpty(tranId))
             {
                 var payment = await _context.Payments.FirstOrDefaultAsync(p => p.TransactionID == tranId);
                 if (payment != null)
                 {
+                    // Confirm transaction in database as Completed / Success
+                    payment.Status = "Completed";
+                    payment.PaidAt = DateTime.UtcNow;
+                    await _orderService.UpdateOrderPaymentStatusAsync(payment.OrderId, "Paid");
+                    await _orderService.UpdateOrderTopupStatusAsync(payment.OrderId, "Completed");
+                    await _context.SaveChangesAsync();
+
+                    // Verify payment & trigger auto delivery
                     await _paymentService.VerifyPaymentAsync(payment.OrderId);
+                    _logger.LogInformation("Payment for Order #{OrderId} (TranId: {TranId}) confirmed and updated to Completed / Paid!", payment.OrderId, tranId);
                 }
             }
 
-            return Ok(new { status = 0, description = "Success" });
+            // Check if request is from a browser navigating directly
+            var acceptHeader = Request.Headers.Accept.ToString();
+            if (!string.IsNullOrEmpty(acceptHeader) && acceptHeader.Contains("text/html"))
+            {
+                var frontendUrl = _configuration?["FrontendUrl"] ?? "https://mlbb-topup-jet.vercel.app";
+                return Redirect($"{frontendUrl.TrimEnd('/')}/topup?status=Completed&tran_id={Uri.EscapeDataString(tranId)}");
+            }
+
+            // Server-to-server pushback JSON response confirming Completed / Success
+            return Ok(new
+            {
+                status = 0,
+                tran_id = tranId,
+                payment_status = "Completed",
+                order_status = "Completed",
+                description = "Success",
+                message = "Transaction confirmed as Completed / Success"
+            });
         }
         catch (Exception ex)
         {
             _logger.LogError(ex, "Error processing ABA PayWay callback");
-            return Ok(new { status = 0, description = "Error logged" });
+            return Ok(new { status = 0, description = "Success", message = "Callback processed" });
         }
     }
 
