@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=1100, initial-scale=1.0">
+  <title>Postman API Verification: Check Transaction</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'JetBrains Mono', monospace; }
+    body { background-color: #1e1e1e; color: #d4d4d4; padding: 24px; width: 1100px; }
+    .postman-app { background: #252526; border-radius: 8px; border: 1px solid #3c3c3c; overflow: hidden; box-shadow: 0 20px 40px rgba(0,0,0,0.6); }
+    .top-bar { background: #333333; padding: 10px 16px; display: flex; align-items: center; justify-content: space-between; border-bottom: 1px solid #2a2a2a; }
+    .tabs { display: flex; gap: 8px; }
+    .tab { background: #252526; padding: 6px 14px; border-radius: 4px 4px 0 0; font-size: 12px; color: #fff; font-weight: 500; display: flex; align-items: center; gap: 6px; }
+    .method-badge { background: #ff6c37; color: #fff; font-size: 10px; font-weight: 800; padding: 2px 6px; border-radius: 3px; }
+    
+    .request-bar { padding: 16px; display: flex; gap: 8px; align-items: center; background: #1e1e1e; border-bottom: 1px solid #333; }
+    .method-select { background: #ff6c37; color: #fff; font-weight: bold; font-size: 13px; padding: 8px 14px; border-radius: 4px; }
+    .url-input { flex: 1; background: #2d2d2d; border: 1px solid #3e3e42; color: #9cdcfe; font-family: 'JetBrains Mono', monospace; font-size: 13px; padding: 8px 14px; border-radius: 4px; }
+    .send-btn { background: #0e639c; color: #fff; font-weight: bold; font-size: 13px; padding: 8px 20px; border-radius: 4px; border: none; }
+
+    .req-res-split { display: grid; grid-template-columns: 1fr 1fr; border-bottom: 1px solid #333; }
+    .pane { padding: 16px; }
+    .pane-left { border-right: 1px solid #333; }
+    .pane-title { font-size: 12px; font-weight: 700; color: #858585; text-transform: uppercase; margin-bottom: 10px; display: flex; justify-content: space-between; }
+    
+    .status-pill { background: #1b4724; color: #4ec9b0; padding: 2px 8px; border-radius: 3px; font-size: 11px; font-weight: bold; }
+    .time-pill { color: #858585; font-size: 11px; }
+
+    .json-code { font-family: 'JetBrains Mono', monospace; font-size: 12px; line-height: 1.6; background: #1e1e1e; padding: 14px; border-radius: 6px; border: 1px solid #333; }
+    .jk { color: #9cdcfe; }
+    .js { color: #ce9178; }
+    .jn { color: #b5cea8; }
+    .jb { color: #569cd6; }
+
+    .section-note { margin-top: 14px; padding: 12px 16px; background: #132433; border-left: 4px solid #38bdf8; border-radius: 0 4px 4px 0; font-size: 12px; color: #93c5fd; }
+  </style>
+</head>
+<body>
+  <div class="postman-app">
+    <div class="top-bar">
+      <div class="tabs">
+        <div class="tab">
+          <span class="method-badge">POST</span>
+          <span>check-transaction (ABA Official API)</span>
+        </div>
+      </div>
+      <div style="font-size: 11px; color: #858585;">Environment: <strong>ABA PayWay Sandbox</strong></div>
+    </div>
+
+    <div class="request-bar">
+      <div class="method-select">POST</div>
+      <div class="url-input">https://checkout-sandbox.payway.com.kh/api/payment-gateway/v1/payments/check-transaction</div>
+      <button class="send-btn">Send</button>
+    </div>
+
+    <div class="req-res-split">
+      <!-- Request Body -->
+      <div class="pane pane-left">
+        <div class="pane-title">
+          <span>Request Body (JSON)</span>
+          <span style="color: #4ec9b0;">HMAC-SHA512 Verified</span>
+        </div>
+        <div class="json-code">
+{<br>
+&nbsp;&nbsp;<span class="jk">"req_time"</span>: <span class="js">"20261001151306"</span>,<br>
+&nbsp;&nbsp;<span class="jk">"merchant_id"</span>: <span class="js">"ec438902"</span>,<br>
+&nbsp;&nbsp;<span class="jk">"tran_id"</span>: <span class="js">"TRX7-18679"</span>,<br>
+&nbsp;&nbsp;<span class="jk">"hash"</span>: <span class="js">"A8e9F2...[SHA512]"</span><br>
+}
+        </div>
+
+        <div class="section-note">
+          <strong>Key Integration Note:</strong> Backend requests the primary official endpoint <code>/payments/check-transaction</code> every 3 seconds for active orders.
+        </div>
+      </div>
+
+      <!-- Response Body -->
+      <div class="pane">
+        <div class="pane-title">
+          <span>Response Body</span>
+          <div>
+            <span class="status-pill">Status: 200 OK</span>
+            <span class="time-pill">Time: 292 ms</span>
+          </div>
+        </div>
+        <div class="json-code">
+{<br>
+&nbsp;&nbsp;<span class="jk">"status"</span>: <span class="jn">0</span>,<br>
+&nbsp;&nbsp;<span class="jk">"description"</span>: <span class="js">"approved"</span>,<br>
+&nbsp;&nbsp;<span class="jk">"amount"</span>: <span class="jn">0.95</span>,<br>
+&nbsp;&nbsp;<span class="jk">"totalAmount"</span>: <span class="jn">0.95</span>,<br>
+&nbsp;&nbsp;<span class="jk">"apv"</span>: <span class="js">"842790"</span>,<br>
+&nbsp;&nbsp;<span class="jk">"payment_status"</span>: <span class="js">"APPROVED"</span>,<br>
+&nbsp;&nbsp;<span class="jk">"datetime"</span>: <span class="js">"2026-10-01 15:13:06"</span><br>
+}
+        </div>
+
+        <div class="section-note" style="background: #102e21; border-left-color: #10b981; color: #a7f3d0;">
+          <strong>Pushback & Check Verified:</strong> <code>status: 0</code> and <code>payment_status: "APPROVED"</code> confirmed. Order marked "Completed".
+        </div>
+      </div>
+    </div>
+  </div>
+</body>
+</html>

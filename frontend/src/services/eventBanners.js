@@ -7,7 +7,7 @@ export const DEFAULT_EVENT_BANNERS = [
     tag: '🔥 ALLSTAR 2026 EVENT',
     title: 'Mobile Legends 515 ALLSTAR Special',
     subtitle: 'ទទួលបាន 220 💎 + 70 Aurora ⭐ លើរាល់ការទិញ Weekly Diamond Pass!',
-    image: '/images/banner_mlbb_aldous.jpg',
+    image: 'https://images.unsplash.com/photo-1511512578047-dfb367046420?auto=format&fit=crop&w=1400&q=80',
     localFallbackImage: '/mlbb-logo.png',
     gameId: 'mlbb',
     buttonText: 'Top Up MLBB Now',
@@ -21,7 +21,7 @@ export const DEFAULT_EVENT_BANNERS = [
     tag: '👑 VIP PASS SALE',
     title: 'Twilight Pass & Starlight Pass 2026',
     subtitle: 'Unlock Exclusive Season Skins, Avatar Borders & 29x Draw Tickets!',
-    image: '/images/banner_starlight_cosmic.jpg',
+    image: 'https://images.unsplash.com/photo-1550745165-9bc0b252726f?auto=format&fit=crop&w=1400&q=80',
     localFallbackImage: '/mlbb-logo.png',
     gameId: 'mlbb',
     buttonText: 'Get VIP Pass ($8.50)',
@@ -35,7 +35,7 @@ export const DEFAULT_EVENT_BANNERS = [
     tag: '⚡ ROYALE PASS BONUS',
     title: 'PUBG Mobile UC Mega Season',
     subtitle: 'Fast 10-second automated delivery directly to your Character ID!',
-    image: '/images/banner_pubg_tactical.jpg',
+    image: 'https://images.unsplash.com/photo-1538481199705-c710c4e965fc?auto=format&fit=crop&w=1400&q=80',
     localFallbackImage: '/mlbb-logo.png',
     gameId: 'pubgm',
     buttonText: 'Top Up UC Now',
@@ -49,7 +49,7 @@ export const DEFAULT_EVENT_BANNERS = [
     tag: '🎁 BOOYAH PASS',
     title: 'Free Fire Booyah Pass & Diamonds',
     subtitle: 'បញ្ចុះតម្លៃពិសេស ជាមួយប្រព័ន្ធស្វ័យប្រវត្តិ Bakong KHQR 0% Fee!',
-    image: '/images/banner_freefire_booyah.jpg',
+    image: 'https://images.unsplash.com/photo-1579373903781-fd5c0c30c4cd?auto=format&fit=crop&w=1400&q=80',
     localFallbackImage: '/mlbb-logo.png',
     gameId: 'freefire',
     buttonText: 'Get Free Fire Pass',
@@ -68,8 +68,8 @@ const sanitizeBanners = (list) => {
   if (!Array.isArray(list) || list.length === 0) return DEFAULT_EVENT_BANNERS;
   return list.map((b, idx) => {
     let img = b.image;
-    // Replace old unsplash stock photos with our custom high quality gaming artwork
-    if (!img || img.includes('images.unsplash.com') || img.includes(OLD_KEYBOARD_IMG)) {
+    // Replace old keyboard "AAA" stock photo with vibrant gaming backdrop
+    if (!img || img.includes(OLD_KEYBOARD_IMG)) {
       img = DEFAULT_EVENT_BANNERS[idx % DEFAULT_EVENT_BANNERS.length].image;
     }
     return {
