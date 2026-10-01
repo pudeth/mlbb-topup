@@ -6,6 +6,7 @@ import {
   fetchStoredBanners
 } from '../services/eventBanners';
 import cyberBannerFrame from '../assets/cyber-banner-frame.png';
+import bannerInnerMask from '../assets/banner-inner-mask.png';
 
 export { DEFAULT_EVENT_BANNERS, getStoredBanners };
 
@@ -133,14 +134,16 @@ const EventBannerSlider = ({ className = '' }) => {
       >
         {/* Confined Artwork Layer - Locked strictly behind the Cyber Frame with no edge leakage */}
         <div
-          className="absolute overflow-hidden bg-slate-950"
+          className="absolute inset-0 overflow-hidden bg-slate-950"
           style={{
-            top: '7%',
-            bottom: '8%',
-            left: '3%',
-            right: '3%',
-            clipPath: 'polygon(3.5% 0%, 96.5% 0%, 100% 8%, 100% 92%, 96.5% 100%, 3.5% 100%, 0% 92%, 0% 8%)',
-            zIndex: 5
+            zIndex: 5,
+            WebkitMaskImage: `url(${bannerInnerMask || '/banner-inner-mask.png'})`,
+            maskImage: `url(${bannerInnerMask || '/banner-inner-mask.png'})`,
+            WebkitMaskSize: '100% 100%',
+            maskSize: '100% 100%',
+            WebkitMaskRepeat: 'no-repeat',
+            maskRepeat: 'no-repeat',
+            clipPath: 'polygon(3.5% 15%, 22% 15%, 26% 12%, 56% 12%, 58% 7%, 96.5% 7%, 96.5% 85%, 93% 88%, 76% 88%, 65% 84%, 35% 84%, 25% 88%, 5% 88%, 3.5% 84%)'
           }}
         >
           {banners.map((banner, index) => {
