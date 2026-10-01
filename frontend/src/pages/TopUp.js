@@ -181,6 +181,47 @@ const playSuccessSound = () => {
   } catch (e) {}
 };
 
+// Safe accessor for official ABA PayWay instance from script scope
+const getAbaPaywayInstance = () => {
+  if (typeof window !== 'undefined') {
+    if (window.AbaPayway && typeof window.AbaPayway.checkout === 'function') {
+      return window.AbaPayway;
+    }
+    try {
+      // Evaluate in global classic script scope where const AbaPayway is declared
+      // eslint-disable-next-line no-eval
+      const g = (0, eval)('typeof AbaPayway !== "undefined" ? AbaPayway : undefined');
+      if (g && typeof g.checkout === 'function') {
+        window.AbaPayway = g;
+        return g;
+      }
+    } catch (e) {}
+  }
+  return null;
+};
+
+// Graceful close of ABA PayWay popup without full page refresh
+const closeAbaCheckoutPopup = () => {
+  try {
+    const abaCheckout = document.getElementById('aba-checkout');
+    if (abaCheckout) {
+      abaCheckout.style.display = 'none';
+      abaCheckout.innerHTML = '';
+      abaCheckout.className = '';
+    }
+    const sheet = document.getElementById('aba_checkout_sheet');
+    if (sheet) {
+      sheet.style.display = 'none';
+      sheet.setAttribute('aria-hidden', 'true');
+    }
+    const appEl = document.getElementById('aba_checkout_app');
+    if (appEl) {
+      appEl.innerHTML = '';
+    }
+    document.body.style.overflowY = 'visible';
+  } catch (e) {}
+};
+
 const TopUp = () => {
   const { t, language } = useLanguage();
   const [searchParams, setSearchParams] = useSearchParams();
@@ -482,18 +523,55 @@ const TopUp = () => {
   // Automatically trigger ABA Official Checkout Popup via AbaPayway.checkout() directly in the browser
   useEffect(() => {
     if (paymentPaid) {
-      // INSTANTLY CLOSE checkout popup when paid so the user sees our success receipt!
-      if (typeof window !== 'undefined' && window.AbaPayway) {
-        try { window.AbaPayway.closeCheckout(false); } catch (e) {}
-      }
+      // Gracefully close checkout popup without page reload so customer sees receipt
+      closeAbaCheckoutPopup();
     } else if (paymentData && !paymentPaid && paymentData.gateway === 'aba_payway') {
       const openOfficialAbaCheckout = () => {
-        if (typeof window !== 'undefined' && window.AbaPayway && typeof window.AbaPayway.checkout === 'function') {
+        const payway = getAbaPaywayInstance();
+        if (payway && typeof payway.checkout === 'function') {
           try {
-            window.AbaPayway.checkout();
+            // Ensure official desktop container exists in DOM
+            let abaContainer = document.getElementById('aba-checkout');
+            if (!abaContainer) {
+              abaContainer = document.createElement('div');
+              abaContainer.id = 'aba-checkout';
+              document.body.appendChild(abaContainer);
+            }
+
+            const purchaseUrl = paymentData.purchaseUrl || "https://checkout-sandbox.payway.com.kh/api/payment-gateway/v1/payments/purchase";
+
+            // Prepare #aba_merchant_request form in DOM for compatibility
+            let form = document.getElementById('aba_merchant_request');
+            if (!form) {
+              form = document.createElement('form');
+              form.id = 'aba_merchant_request';
+              form.method = 'POST';
+              form.target = 'aba_webservice';
+              form.style.display = 'none';
+              document.body.appendChild(form);
+            }
+            form.action = purchaseUrl;
+            form.innerHTML = '';
+            if (paymentData.formData) {
+              Object.entries(paymentData.formData).forEach(([k, v]) => {
+                const inp = document.createElement('input');
+                inp.type = 'hidden';
+                inp.name = k;
+                inp.value = v != null ? String(v) : '';
+                form.appendChild(inp);
+              });
+            }
+
+            // Launch official checkout popup
+            const payload = {
+              form_url: purchaseUrl,
+              ...(paymentData.formData || {})
+            };
+            payway.checkout(payload);
+            console.log('[ABA PayWay] Official popup launched successfully!');
             return true;
           } catch (e) {
-            console.warn('AbaPayway.checkout() notice:', e);
+            console.warn('[ABA PayWay] AbaPayway.checkout() notice:', e);
           }
         }
         return false;
@@ -503,7 +581,7 @@ const TopUp = () => {
         let attempts = 0;
         const interval = setInterval(() => {
           attempts++;
-          if (openOfficialAbaCheckout() || attempts >= 30) {
+          if (openOfficialAbaCheckout() || attempts >= 40) {
             clearInterval(interval);
           }
         }, 100);
@@ -826,9 +904,7 @@ const TopUp = () => {
 
     const triggerPaidTransition = async () => {
       // Immediately dismiss ABA checkout popup so customer transitions straight to our branded receipt!
-      if (typeof window !== 'undefined' && window.AbaPayway) {
-        try { window.AbaPayway.closeCheckout(false); } catch (e) {}
-      }
+      closeAbaCheckoutPopup();
       console.log(
         `%c[ABA PayWay Tracker] 🚀 PAYMENT DETECTED (PAID) for Order #${curOrderId}! Starting delivery transition...`,
         'color: #10b981; font-weight: 900; font-size: 13px; background: #064e3b; padding: 3px 6px; border-radius: 4px;'
@@ -990,9 +1066,7 @@ const TopUp = () => {
             // Mark paid flag immediately to stop polling
             paymentPaidRef.current = true;
             es && es.close();
-            if (typeof window !== 'undefined' && window.AbaPayway) {
-              try { window.AbaPayway.closeCheckout(false); } catch (e) {}
-            }
+            closeAbaCheckoutPopup();
 
             // Run the 3-step visual transition
             const run = async () => {
@@ -1056,7 +1130,10 @@ const TopUp = () => {
 
     setLoading(true);
     setError('');
-    // Reset QR expired state for new payment attempt
+    // Reset payment states for new attempt
+    setPaymentPaid(false);
+    paymentPaidRef.current = false;
+    setPaymentData(null);
     setQrExpired(false);
     qrExpiredRef.current = false;
 
@@ -2111,9 +2188,8 @@ const TopUp = () => {
 
       {/* ======================================================== */}
       {/* ROOT-LEVEL ABA KHQR PAYMENT MODAL (z-[9999]) */}
-      {/* Strictly matching User's uploaded screenshot media_1790656805839 */}
-      {/* ======================================================== */}
-      {paymentData && !paymentPaid && (paymentData.qrString || paymentData.khqrQRCode) && (
+      {/* Only render fallback static modal when NOT using official ABA PayWay popup */}
+      {paymentData && !paymentPaid && paymentData.gateway !== 'aba_payway' && (paymentData.qrString || paymentData.khqrQRCode) && (
         <div
           onClick={(e) => {
             if (e.target === e.currentTarget) {

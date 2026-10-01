@@ -41,6 +41,26 @@
     <title>Tin-Topup - Buy Mobile Legends Diamonds</title>
     
     <script src="https://checkout.payway.com.kh/plugins/checkout2-0.js"></script>
+    <script>
+      (function() {
+        function bridgePayway() {
+          try {
+            if (typeof AbaPayway !== 'undefined') {
+              window.AbaPayway = AbaPayway;
+              return true;
+            }
+          } catch (e) {}
+          return false;
+        }
+        bridgePayway();
+        var timer = setInterval(function() {
+          if (bridgePayway()) {
+            clearInterval(timer);
+          }
+        }, 50);
+        setTimeout(function() { clearInterval(timer); }, 15000);
+      })();
+    </script>
   </head>
   <body>
     <noscript>You need to enable JavaScript to run this app.</noscript>
