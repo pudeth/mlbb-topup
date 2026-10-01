@@ -1,12 +1,14 @@
 import React from 'react';
 import abaKhqrImg from '../assets/aba-khqr-logo.png';
+import abaLogoImg from '../assets/aba-logo.png';
+import khqrLogoImg from '../assets/khqr-logo.png';
 
 /**
  * ABA PayWay & KHQR Official Compliance Logos
  * Strictly complying with ABA Bank Merchant Integration Guideline v2.11
  */
 
-export { abaKhqrImg };
+export { abaKhqrImg, abaLogoImg, khqrLogoImg };
 
 export const AbaKhqrLogo = ({ className = "h-6 w-auto", style = {}, alt = "ABA KHQR" }) => (
   <img
@@ -55,17 +57,32 @@ export const AbaPaywayLogo = ({ className = "h-7 w-auto", dark = false, style = 
   </div>
 );
 
+export const AbaLogo = ({ className = "h-5 w-auto", style = {} }) => (
+  <img
+    src={abaLogoImg}
+    alt="ABA"
+    className={`inline-block object-contain shrink-0 rounded-md shadow-sm ${className}`}
+    style={{ maxHeight: '24px', width: 'auto', verticalAlign: 'middle', ...style }}
+    onError={(e) => {
+      if (e.target.src !== `${process.env.PUBLIC_URL || ''}/images/aba-logo.png`) {
+        e.target.src = `${process.env.PUBLIC_URL || ''}/images/aba-logo.png`;
+      }
+    }}
+  />
+);
+
 export const KhqrLogo = ({ className = "h-5 w-auto", style = {} }) => (
-  <svg viewBox="0 0 85 36" fill="none" xmlns="http://www.w3.org/2000/svg" className={`${className} shrink-0`} style={{ maxHeight: '24px', width: 'auto', display: 'inline-block', verticalAlign: 'middle', ...style }} aria-label="KHQR">
-    <rect width="85" height="36" rx="6" fill="#E21A1A" />
-    {/* KHQR Text */}
-    <text x="10" y="24" fill="#FFFFFF" fontSize="15" fontWeight="900" fontFamily="system-ui, -apple-system, sans-serif" letterSpacing="0.5">
-      KHQR
-    </text>
-    {/* Bakong Emblem Swirl */}
-    <circle cx="70" cy="18" r="9" stroke="white" strokeWidth="2.2" fill="none" />
-    <path d="M68 13C71 13 73 15 73 18C73 21 70 23 67 22" stroke="white" strokeWidth="2.2" strokeLinecap="round" />
-  </svg>
+  <img
+    src={khqrLogoImg}
+    alt="KHQR"
+    className={`inline-block object-contain shrink-0 rounded-md shadow-sm ${className}`}
+    style={{ maxHeight: '24px', width: 'auto', verticalAlign: 'middle', ...style }}
+    onError={(e) => {
+      if (e.target.src !== `${process.env.PUBLIC_URL || ''}/images/khqr-logo.png`) {
+        e.target.src = `${process.env.PUBLIC_URL || ''}/images/khqr-logo.png`;
+      }
+    }}
+  />
 );
 
 /**
