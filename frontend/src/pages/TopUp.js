@@ -1,15 +1,11 @@
 import React, { useState, useEffect, useCallback, useRef, useTransition } from 'react';
 import { useSearchParams, useNavigate, Link } from 'react-router-dom';
-import { QRCodeSVG } from 'qrcode.react';
 import { useLanguage } from '../context/LanguageContext';
-import { ordersAPI, paymentsAPI, topupAPI, paywayAPI } from '../services/api';
+import { ordersAPI, topupAPI, paywayAPI } from '../services/api';
 import { getStoredGames, getMasterTopupStatus, fetchStoredGames, fetchMasterTopupStatus } from '../services/gamesConfig';
 import { CambodiaFlagFrame } from '../components/CambodiaFlagBadge';
 import ProductPackageImage from '../components/ProductPackageImage';
-import {
-  AbaKhqrLogo,
-  KhqrVoucherHeader
-} from '../components/AbaPaymentLogos';
+import { AbaKhqrLogo } from '../components/AbaPaymentLogos';
 import WeAcceptPayments from '../components/WeAcceptPayments';
 
 // Game-specific packages matching upstream supplier catalog
@@ -196,16 +192,7 @@ const getAbaPaywayInstance = () => {
         }
       } catch (e) {}
     }
-    if (instance) {
-      // Guard closeCheckout to avoid destructive forced reload on success
-      instance.closeCheckout = function() {
-        closeAbaCheckoutPopup();
-      };
-      instance.closeCheckoutByContinueUrl = function() {
-        closeAbaCheckoutPopup();
-      };
-      return instance;
-    }
+    return instance;
   }
   return null;
 };
@@ -213,6 +200,12 @@ const getAbaPaywayInstance = () => {
 // Graceful close of ABA PayWay popup without full page refresh & complete scroll restoration
 const closeAbaCheckoutPopup = () => {
   try {
+    const payway = getAbaPaywayInstance();
+    if (payway && typeof payway.closeCheckout === 'function') {
+      try {
+        payway.closeCheckout(false);
+      } catch (e) {}
+    }
     const abaCheckout = document.getElementById('aba-checkout');
     if (abaCheckout) {
       abaCheckout.style.display = 'none';
@@ -425,9 +418,8 @@ const TopUp = () => {
   const [confirmSent, setConfirmSent] = useState(false); // customer pressed Confirm button
   const [qrExpired, setQrExpired] = useState(false);
   const qrExpiredRef = useRef(false);
-  const [processingStep, setProcessingStep] = useState(0); // 0: scanning, 1: verifying, 2: server sync, 3: delivering
+  const timeLeftRef = useRef(360); // 6-minute (360 seconds) transaction lifetime (ABA PayWay standard)
   const [currency, setCurrency] = useState('USD'); // 'USD' or 'KHR'
-  const [timeLeft, setTimeLeft] = useState(360); // 6-minute (360 seconds) transaction lifetime (ABA PayWay standard)
   const [productCategoryTab, setProductCategoryTab] = useState('all'); // 'all', 'passes', 'diamonds'
   const [layoutMode, setLayoutMode] = useState('tiles'); // 'list', 'tiles', 'grid'
   const checkoutSectionRef = useRef(null);
@@ -561,7 +553,7 @@ const TopUp = () => {
 
             const purchaseUrl = paymentData.purchaseUrl || "https://checkout-sandbox.payway.com.kh/api/payment-gateway/v1/payments/purchase";
 
-            // Prepare #aba_merchant_request form in DOM for compatibility
+            // Prepare #aba_merchant_request form in DOM with target="aba_webservice"
             let form = document.getElementById('aba_merchant_request');
             if (!form) {
               form = document.createElement('form');
@@ -572,6 +564,7 @@ const TopUp = () => {
               document.body.appendChild(form);
             }
             form.action = purchaseUrl;
+            form.target = 'aba_webservice';
             form.innerHTML = '';
             if (paymentData.formData) {
               Object.entries(paymentData.formData).forEach(([k, v]) => {
@@ -579,23 +572,26 @@ const TopUp = () => {
                 inp.type = 'hidden';
                 inp.name = k;
                 inp.value = v != null ? String(v) : '';
+                if (k === 'payment_option') {
+                  inp.className = 'payment_option';
+                }
                 form.appendChild(inp);
               });
             }
 
-            // Launch official checkout popup with valid callbacks to prevent undefined invocation
-            const payload = {
-              form_url: purchaseUrl,
-              ...(paymentData.formData || {}),
-              onSuccess: (res) => {
-                console.log('[ABA PayWay] onSuccess callback received:', res);
-              },
-              onError: (err) => {
-                console.warn('[ABA PayWay] onError callback received:', err);
-              }
-            };
-            payway.checkout(payload);
-            console.log('[ABA PayWay] Official popup launched successfully!');
+            // Ensure payment_option input exists per ABA guidance
+            if (!form.querySelector('input[name="payment_option"]')) {
+              const opt = document.createElement('input');
+              opt.type = 'hidden';
+              opt.name = 'payment_option';
+              opt.className = 'payment_option';
+              opt.value = 'abapay_khqr';
+              form.appendChild(opt);
+            }
+
+            // Launch official ABA PayWay popup modal per ABA specification
+            payway.checkout();
+            console.log('[ABA PayWay] Official AbaPayway.checkout() launched successfully!');
             return true;
           } catch (e) {
             console.warn('[ABA PayWay] AbaPayway.checkout() notice:', e);
@@ -620,26 +616,25 @@ const TopUp = () => {
   // Transaction Lifetime Countdown Timer (6 minutes / 360 seconds matching ABA PayWay standard: 5-15 mins)
   useEffect(() => {
     if (!paymentData || paymentPaid) return;
-    setTimeLeft(360);
+    timeLeftRef.current = 360;
     setQrExpired(false);
     qrExpiredRef.current = false;
     const timer = setInterval(() => {
-      setTimeLeft(prev => {
-        if (prev <= 1) {
-          clearInterval(timer);
-          // Step ③ & ④: Stop checking & safely end the process within lifetime (5-15 min rule)
-          setQrExpired(true);
-          qrExpiredRef.current = true;
-          const curTranId = paymentData?.tranId || paymentData?.formData?.tran_id;
-          if (curTranId && paymentData?.gateway === 'aba_payway') {
-            try {
-              paywayAPI.close(curTranId).catch(() => {});
-            } catch (e) {}
-          }
-          return 0;
+      timeLeftRef.current -= 1;
+      if (timeLeftRef.current <= 0) {
+        clearInterval(timer);
+        // Step ③ & ④: Stop checking & safely end the process within lifetime (5-15 min rule)
+        setQrExpired(true);
+        qrExpiredRef.current = true;
+        closeAbaCheckoutPopup();
+        setError('Transaction lifetime reached. Please initiate a new top-up request.');
+        const curTranId = paymentData?.tranId || paymentData?.formData?.tran_id;
+        if (curTranId && paymentData?.gateway === 'aba_payway') {
+          try {
+            paywayAPI.close(curTranId).catch(() => {});
+          } catch (e) {}
         }
-        return prev - 1;
-      });
+      }
     }, 1000);
     return () => clearInterval(timer);
   }, [paymentData, paymentPaid]);
@@ -694,71 +689,7 @@ const TopUp = () => {
     };
   }, []);
 
-  // Watchdog: Guarantee that scrolling is always free whenever ABA sheet or desktop modal is closed
-  useEffect(() => {
-    const unlockIfSheetClosed = () => {
-      const sheet = document.getElementById('aba_checkout_sheet');
-      const isSheetVisible = sheet && sheet.getAttribute('aria-hidden') !== 'true' && sheet.style.display !== 'none';
-      const desktopModal = document.querySelector('.aba-checkout-desktop');
-      const isDesktopVisible = desktopModal && desktopModal.style.display !== 'none';
 
-      // If ABA is closed, and either body or html has locked overflow styles, instantly restore scrolling
-      if (!isSheetVisible && !isDesktopVisible && (!paymentData || paymentData.gateway === 'aba_payway')) {
-        if (
-          document.body.style.overflowY === 'hidden' ||
-          document.body.style.overflow === 'hidden' ||
-          document.documentElement.style.overflowY === 'hidden' ||
-          document.documentElement.style.overflow === 'hidden' ||
-          document.body.classList.contains('modal-open')
-        ) {
-          closeAbaCheckoutPopup();
-        }
-      }
-    };
-
-    const interval = setInterval(unlockIfSheetClosed, 300);
-    return () => {
-      clearInterval(interval);
-      closeAbaCheckoutPopup();
-    };
-  }, [paymentData, paymentPaid]);
-
-  // Mobile device detection for mobile banking app deeplink triggers
-  const [isMobileDevice, setIsMobileDevice] = useState(() => {
-    if (typeof window === 'undefined') return false;
-    return (
-      /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) ||
-      window.innerWidth < 768
-    );
-  });
-
-  useEffect(() => {
-    const handleResize = () => {
-      setIsMobileDevice(
-        /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) ||
-        window.innerWidth < 768
-      );
-    };
-    window.addEventListener('resize', handleResize);
-    return () => window.removeEventListener('resize', handleResize);
-  }, []);
-
-  const handleOpenBankApp = () => {
-    const deeplink = paymentData?.abapayDeeplink || paymentData?.khqrDeeplink;
-    const rawQr = paymentData?.qrString || paymentData?.khqrQRCode;
-
-    if (deeplink) {
-      window.location.href = deeplink;
-    } else if (rawQr) {
-      const bakongUrl = `bakong://qr?data=${encodeURIComponent(rawQr)}`;
-      window.location.href = bakongUrl;
-      setTimeout(() => {
-        window.location.href = 'abamobilebank://';
-      }, 500);
-    } else {
-      window.location.href = 'abamobilebank://';
-    }
-  };
 
   const [, startTransition] = useTransition();
   const carouselContainerRef = useRef(null);
@@ -990,37 +921,13 @@ const TopUp = () => {
       // Immediately dismiss ABA checkout popup so customer transitions straight to our branded receipt!
       closeAbaCheckoutPopup();
       console.log(
-        `%c[ABA PayWay Tracker] 🚀 PAYMENT DETECTED (PAID) for Order #${curOrderId}! Starting delivery transition...`,
+        `%c[ABA PayWay Tracker] 🚀 PAYMENT DETECTED (PAID) for Order #${curOrderId}! Displaying receipt...`,
         'color: #10b981; font-weight: 900; font-size: 13px; background: #064e3b; padding: 3px 6px; border-radius: 4px;'
       );
 
-      // ── Step 1: Payment Confirmed ──────────────────────────────────
-      setProcessingStep(1);
       playSuccessSound();
-      console.log(
-        '%c[ABA PayWay Tracker] 💳 Step 1/3: Payment Confirmed! Verifying ABA PayWay Gateway Signature... (100% pipeline start) ✓',
-        'color: #34d399; font-weight: bold; font-size: 12px;'
-      );
-
-      // ── Step 2: Game Server Sync ───────────────────────────────────
-      setTimeout(() => {
-        setProcessingStep(2);
-        console.log(`%c[ABA PayWay Tracker] ⚡ Step 2/3: Connected to Game Server (Zone ${formData.serverID || 'Default'}) ✓`, 'color: #38bdf8; font-weight: bold;');
-      }, 1200);
-
-      // ── Step 3: Crediting Diamonds ─────────────────────────────────
-      setTimeout(() => {
-        setProcessingStep(3);
-        console.log(`%c[ABA PayWay Tracker] 💎 Step 3/3: Crediting ${selectedProduct.name} to Player ID ${formData.playerID} ✓`, 'color: #fbbf24; font-weight: bold;');
-      }, 2400);
-
-      // ── Final: Show Receipt Screen ─────────────────────────────────
-      setTimeout(() => {
-        setPaymentPaid(true);
-        paymentPaidRef.current = true;
-        setProcessingStep(0);
-        console.log(`%c[ABA PayWay Tracker] 🎉 Order #${curOrderId} Completed! Displaying [Pay-Successfully] invoice receipt screen.`, 'color: #a7f3d0; font-weight: bold;');
-      }, 3600);
+      setPaymentPaid(true);
+      paymentPaidRef.current = true;
     };
 
     try {
@@ -1054,15 +961,15 @@ const TopUp = () => {
       }
 
       // Always check .NET backend DB via quick-status as fallback
-        if (!isPaidConfirmed && curOrderId) {
-          try {
-            const ordCheckRes = await ordersAPI.getQuickStatus(curOrderId);
-            const ordCheck = ordCheckRes?.data;
-            if (ordCheck?.isPaid === true || ordCheck?.paymentStatus === 'Paid') {
-              console.log(`%c[ABA PayWay Tracker] ✓ Backend DB confirmed PAID for Order #${curOrderId}`, 'color: #10b981; font-weight: bold;');
-              isPaidConfirmed = true;
-            }
-          } catch (e) {}
+      if (!isPaidConfirmed && curOrderId) {
+        try {
+          const ordCheckRes = await ordersAPI.getQuickStatus(curOrderId);
+          const ordCheck = ordCheckRes?.data;
+          if (ordCheck?.isPaid === true || ordCheck?.paymentStatus === 'Paid') {
+            console.log(`%c[ABA PayWay Tracker] ✓ Backend DB confirmed PAID for Order #${curOrderId}`, 'color: #10b981; font-weight: bold;');
+            isPaidConfirmed = true;
+          }
+        } catch (e) {}
       }
 
 
@@ -1075,7 +982,6 @@ const TopUp = () => {
           // Show pending receipt — admin needs to approve
           setAwaitingBalance(true);
           paymentPaidRef.current = true;
-          setProcessingStep(0);
           return true;
         }
         await triggerPaidTransition();
@@ -1090,7 +996,7 @@ const TopUp = () => {
     }
 
     return false;
-  }, [formData.playerID, formData.serverID, selectedProduct.name]);
+  }, [paymentData?.gateway]);
 
 
 
@@ -1152,31 +1058,12 @@ const TopUp = () => {
             es && es.close();
             closeAbaCheckoutPopup();
 
-            // Run the 3-step visual transition
+            // Run payment confirmation
             const run = async () => {
-              // Confirm on backend (marks order Paid in DB)
               try { await ordersAPI.checkPayment(orderId, true); } catch(e) {}
-
-              // Step 1
-              setProcessingStep(1);
               playSuccessSound();
-              console.log('%c[ABA PayWay Tracker] 💳 Step 1/3: Payment Confirmed! Verifying ABA PayWay Gateway Signature... ✓', 'color: #34d399; font-weight: bold;');
-              // Step 2
-              setTimeout(() => {
-                setProcessingStep(2);
-                console.log(`%c[ABA PayWay Tracker] ⚡ Step 2/3: Connected to Game Server ✓`, 'color: #38bdf8; font-weight: bold;');
-              }, 1200);
-              // Step 3
-              setTimeout(() => {
-                setProcessingStep(3);
-                console.log(`%c[ABA PayWay Tracker] 💎 Step 3/3: Crediting ${selectedProduct?.name} to Player ID ${formData.playerID} ✓`, 'color: #fbbf24; font-weight: bold;');
-              }, 2400);
-              // Receipt
-              setTimeout(() => {
-                setPaymentPaid(true);
-                setProcessingStep(0);
-                console.log(`%c[ABA PayWay Tracker] 🎉 Order #${orderId} Completed! Displaying [Pay-Successfully] invoice receipt screen.`, 'color: #a7f3d0; font-weight: bold;');
-              }, 3600);
+              setPaymentPaid(true);
+              console.log(`%c[ABA PayWay Tracker] 🎉 Order #${orderId} Completed! Displaying [Pay-Successfully] invoice receipt screen.`, 'color: #a7f3d0; font-weight: bold;');
             };
             run();
           }
@@ -1287,7 +1174,7 @@ const TopUp = () => {
 
       let createdPayment = null;
 
-      // 1. Prioritize Official ABA PayWay Gateway (Sandbox / Live with ABA Simulator & Merchant Portal sync)
+      // Official ABA PayWay Gateway (Strict adherence to ABA Technical Specification)
       try {
         const directRes = await paywayAPI.create({
           orderId: activeOrderId,
@@ -1319,131 +1206,12 @@ const TopUp = () => {
             merchantName: 'DETH PHEAK',
             gateway: 'aba_payway'
           };
+        } else {
+          setError(pd?.message || 'Failed to initialize ABA PayWay transaction. Please try again.');
         }
       } catch (err) {
-        console.warn('ABA PayWay API notice:', err?.message);
-      }
-
-      // 2. Direct Python ABA KHQR Service (Port 5001) Fallback
-      if (!createdPayment) {
-        try {
-          const directRes = await fetch('http://localhost:5001/api/payment/create', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-              orderId: activeOrderId,
-              amount: targetAmount,
-              currency: currency,
-              player_id: pId,
-              server_id: sId,
-              account_name: playerAccName,
-              customer_id: customerId,
-              game_name: gameTitle,
-              package_name: pkgName
-            })
-          }).then(r => r.json()).catch(() => null);
-
-          if (directRes?.qr_code || directRes?.khqrString) {
-            const validCode = directRes.qr_code || directRes.khqrString;
-            createdPayment = {
-              orderId: activeOrderId,
-              amount: targetAmount,
-              currency: currency,
-              tranId: directRes.orderId || `TRX${activeOrderId}`,
-              qrString: validCode,
-              khqrQRCode: validCode,
-              abapayDeeplink: directRes.deeplink,
-              khqrDeeplink: directRes.deeplink,
-              md5Hash: directRes.md5 || directRes.md5_hash,
-              khqrMd5Hash: directRes.md5 || directRes.md5_hash,
-              merchantName: directRes.merchantName || 'DETH PHEAK',
-              gateway: 'aba_khqr'
-            };
-          }
-        } catch (err) {
-          console.warn('Local KHQR service notice:', err?.message);
-        }
-      }
-
-      // 3. Cloud Fallback Microservice for Real KHQR
-      if (!createdPayment) {
-        try {
-          const cloudRes = await fetch('https://mlbb-khqr-api.onrender.com/api/payment/create', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-              orderId: activeOrderId,
-              amount: targetAmount,
-              currency: currency,
-              player_id: pId,
-              server_id: sId,
-              account_name: playerAccName,
-              customer_id: customerId,
-              game_name: gameTitle,
-              package_name: pkgName
-            })
-          }).then(r => r.json()).catch(() => null);
-
-          if (cloudRes?.qr_code || cloudRes?.khqrString) {
-            const validCode = cloudRes.qr_code || cloudRes.khqrString;
-            createdPayment = {
-              orderId: activeOrderId,
-              amount: targetAmount,
-              currency: currency,
-              tranId: cloudRes.orderId || `TRX${activeOrderId}`,
-              qrString: validCode,
-              khqrQRCode: validCode,
-              abapayDeeplink: cloudRes.deeplink,
-              khqrDeeplink: cloudRes.deeplink,
-              md5Hash: cloudRes.md5 || cloudRes.md5_hash,
-              khqrMd5Hash: cloudRes.md5 || cloudRes.md5_hash,
-              merchantName: cloudRes.merchantName || 'DETH PHEAK',
-              gateway: 'aba_khqr'
-            };
-          }
-        } catch (cloudErr) {
-          console.warn('Cloud KHQR service notice:', cloudErr?.message);
-        }
-      }
-
-      // 4. Fallback to basic DB payment if API failed
-      if (!createdPayment && (newOrder?.payment?.transactionId || newOrder?.payment?.khqrQRCode)) {
-        createdPayment = {
-          orderId: activeOrderId,
-          amount: newOrder.payment.amount || targetAmount,
-          currency: currency,
-          tranId: newOrder.payment.transactionId,
-          qrString: newOrder.payment.khqrQRCode,
-          abapayDeeplink: newOrder.payment.khqrDeeplink,
-          khqrDeeplink: newOrder.payment.khqrDeeplink,
-          md5Hash: newOrder.payment.khqrMd5Hash,
-          khqrMd5Hash: newOrder.payment.khqrMd5Hash,
-          khqrQRCode: newOrder.payment.khqrQRCode,
-          merchantName: 'DETH PHEAK',
-          gateway: 'aba_payway'
-        };
-      }
-
-      // 5. Simulated fallback
-      if (!createdPayment) {
-        const simTranId = `TRX${activeOrderId}_${Math.floor(Date.now() % 100000)}`;
-        const simMd5 = 'aba_' + Math.random().toString(36).substring(2, 10);
-        const simDeeplink = `https://checkout-sandbox.payway.com.kh/pay?tran_id=${simTranId}&amount=${targetAmount}&currency=${currency}`;
-        const fallbackQr = `https://checkout-sandbox.payway.com.kh/pay?tran_id=${simTranId}`;
-        createdPayment = {
-          orderId: activeOrderId,
-          amount: targetAmount,
-          currency: currency,
-          tranId: simTranId,
-          qrString: fallbackQr,
-          abapayDeeplink: simDeeplink,
-          md5Hash: simMd5,
-          khqrMd5Hash: simMd5,
-          khqrQRCode: fallbackQr,
-          khqrDeeplink: simDeeplink,
-          merchantName: 'DETH PHEAK',
-          gateway: 'aba_payway'
-        };
+        console.error('ABA PayWay API notice:', err);
+        setError(err.response?.data?.message || 'Could not connect to ABA PayWay gateway. Please verify your connection.');
       }
 
       if (createdPayment) {
@@ -1453,10 +1221,6 @@ const TopUp = () => {
           currency: currency
         });
       }
-
-      setTimeout(() => {
-        checkoutSectionRef.current?.scrollIntoView({ behavior: 'smooth' });
-      }, 100);
       setLoading(false);
     } catch (err) {
       console.error('Error proceeding to payment:', err);
@@ -2191,6 +1955,7 @@ const TopUp = () => {
               <div className="flex flex-wrap items-center">
                 <button
                   type="button"
+                  id="checkout_button"
                   onClick={() => {
                     if (loading || isTopupDisabled) return;
                     handleProceedToPayment();
@@ -2264,253 +2029,7 @@ const TopUp = () => {
 
       </div>
 
-      {/* ======================================================== */}
-      {/* ROOT-LEVEL ABA KHQR PAYMENT MODAL (z-[9999]) */}
-      {/* Only render fallback static modal when NOT using official ABA PayWay popup */}
-      {paymentData && !paymentPaid && paymentData.gateway !== 'aba_payway' && (paymentData.qrString || paymentData.khqrQRCode) && (
-        <div
-          onClick={(e) => {
-            if (e.target === e.currentTarget) {
-              setPaymentData(null);
-              setOrderId(null);
-            }
-          }}
-          className="fixed inset-0 z-[9999] flex items-center justify-center p-3 sm:p-4 bg-slate-950/85 backdrop-blur-md overflow-y-auto animate-fadeIn"
-        >
-          {/* Modal Wrapper aligned column with ABA' PAYWAY at top right */}
-          <div className="w-full max-w-[340px] sm:max-w-[360px] my-auto animate-scaleUp flex flex-col items-end">
-            
-            {/* Top Right Wordmark: ABA' PAYWAY */}
-            <div className="flex items-center gap-1.5 mb-2 pr-1 select-none pointer-events-none">
-              <span className="font-black text-xl text-white tracking-wide">ABA'</span>
-              <span className="font-black text-xl tracking-widest uppercase italic text-white">PAYWAY</span>
-            </div>
 
-            {/* Outer White Container */}
-            <div className="w-full bg-white rounded-[24px] sm:rounded-[28px] p-5 sm:p-6 shadow-2xl relative text-left">
-              
-              {processingStep > 0 ? (
-                /* Payment Processing Steps UI */
-                <div className="text-center space-y-4 py-2">
-                  <div className="flex flex-col items-center gap-1.5">
-                    <div className="w-12 h-12 rounded-full bg-emerald-500 text-white flex items-center justify-center text-xl shadow-lg animate-pulse">
-                      {processingStep < 3 ? '⚡' : '✅'}
-                    </div>
-                    <h4 className="text-sm font-black text-slate-900">
-                      {processingStep === 1 && 'Payment Confirmed!'}
-                      {processingStep === 2 && 'Syncing with Game Server...'}
-                      {processingStep === 3 && 'Delivering Diamonds!'}
-                    </h4>
-                    <p className="text-[10px] text-emerald-700 font-medium">
-                      {processingStep === 1 && 'ABA KHQR verified — starting delivery...'}
-                      {processingStep === 2 && `Connected to Zone ${formData.serverID || 'Default'} server ✓`}
-                      {processingStep === 3 && `Crediting ${selectedProduct?.name || 'diamonds'} to Player ID ${formData.playerID}`}
-                    </p>
-                  </div>
-                  <div className="w-full bg-slate-200 h-2 rounded-full overflow-hidden">
-                    <div
-                      className="bg-emerald-500 h-full rounded-full transition-all duration-700 ease-out"
-                      style={{ width: `${(processingStep / 3) * 100}%` }}
-                    />
-                  </div>
-                </div>
-              ) : timeLeft === 0 ? (
-                /* Expired Screen */
-                <div className="text-center space-y-3 py-4 font-khmer">
-                  <div className="text-3xl">⏱️</div>
-                  <h4 className="text-slate-900 font-bold text-base">
-                    {language === 'km' ? 'ប្រតិបត្តិការផុតកំណត់ (Transaction Expired)' : 'Transaction Expired'}
-                  </h4>
-                  <p className="text-xs text-slate-500">
-                    {language === 'km'
-                      ? 'រយៈពេលកំណត់នៃប្រតិបត្តិការត្រូវបានបញ្ចប់។ សូមបង្កើតសំណើទូទាត់ថ្មី ឬពិនិត្យក្នុង Merchant Portal។'
-                      : 'Transaction lifetime reached. Please initiate a new top-up request or verify in the merchant portal.'}
-                  </p>
-                  <div className="flex flex-col gap-2 pt-1">
-                    <button
-                      type="button"
-                      onClick={handleProceedToPayment}
-                      className="w-full py-2.5 px-4 bg-[#0055a5] hover:bg-[#004485] text-white text-xs font-bold rounded-xl shadow cursor-pointer transition-all active:scale-[0.98]"
-                    >
-                      {language === 'km' ? 'បង្កើតសំណើថ្មី (Try Again)' : 'Try Again / New QR'}
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => {
-                        setPaymentData(null);
-                        setOrderId(null);
-                      }}
-                      className="w-full py-2 px-4 border border-slate-200 hover:bg-slate-50 text-slate-600 text-xs font-semibold rounded-xl cursor-pointer transition-all active:scale-[0.98]"
-                    >
-                      {language === 'km' ? 'បិទ (Close)' : 'Close'}
-                    </button>
-                  </div>
-                </div>
-              ) : (
-                <>
-                  {/* Header: Title "ABA KHQR" + Countdown Badge + Cyan Close Icon "✕" */}
-                  <div className="flex items-center justify-between pb-3 sm:pb-3.5">
-                    <div className="flex items-center gap-2">
-                      <h3 className="text-[20px] sm:text-[22px] font-bold text-[#0B2038] tracking-tight">
-                        ABA KHQR
-                      </h3>
-                      {/* Live Lifetime Countdown Badge */}
-                      <span className={`inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-mono font-bold border transition-colors ${
-                        timeLeft <= 30
-                          ? 'bg-rose-50 text-rose-600 border-rose-200 animate-pulse'
-                          : 'bg-amber-50 text-amber-700 border-amber-200'
-                      }`}>
-                        <span>⏱️</span>
-                        <span>
-                          {String(Math.floor(timeLeft / 60)).padStart(2, '0')}:
-                          {String(timeLeft % 60).padStart(2, '0')}
-                        </span>
-                      </span>
-                    </div>
-
-                    <button
-                      type="button"
-                      onClick={() => {
-                        setPaymentData(null);
-                        setOrderId(null);
-                      }}
-                      className="text-[#00AFD7] hover:text-[#0092b3] p-1 -mr-1 transition-colors cursor-pointer select-none active:scale-95"
-                      title="Close"
-                      aria-label="Close"
-                    >
-                      <svg className="w-5 h-5 sm:w-6 sm:h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
-                        <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
-                      </svg>
-                    </button>
-                  </div>
-
-                  {/* Inner Authentic KHQR Voucher Card */}
-                  <div className="bg-white rounded-[20px] shadow-sm border border-slate-200 overflow-hidden text-left mb-3.5">
-                    
-                    {/* Official Red KHQR Banner */}
-                    <KhqrVoucherHeader />
-
-                    {/* Voucher Body: Store Name & Real Amount */}
-                    {(() => {
-                      const currentCur = paymentData?.currency || currency;
-                      const isRiel = currentCur === 'KHR';
-                      const payAmount = paymentData?.amount != null
-                        ? (isRiel ? Math.round(Number(paymentData.amount)) : Number(paymentData.amount))
-                        : (isRiel ? Math.round(selectedProduct.price * 4100) : selectedProduct.price);
-                      const validQrString = paymentData?.qrString || paymentData?.khqrQRCode;
-
-                      return (
-                        <div>
-                          {/* Store Name & Real Amount */}
-                          <div className="px-5 pt-3.5 pb-2 text-left">
-                            <span className="text-[11px] sm:text-[12px] uppercase font-bold text-slate-700 tracking-wide block font-khmer">
-                              {paymentData?.merchantName || 'MY SHOP'}
-                            </span>
-                            <span className="text-[26px] sm:text-[28px] font-black text-slate-900 tracking-tight block leading-tight mt-1">
-                              {isRiel ? `${payAmount.toLocaleString()} ៛` : `$ ${payAmount.toFixed(2)}`}
-                            </span>
-                          </div>
-
-                          {/* Perforated dashed divider */}
-                          <div className="border-t border-dashed border-slate-300 w-full my-1" />
-
-                          {/* 100% Camera-Readable Dynamic QR Code with Bakong Center Emblem */}
-                          <div className="flex items-center justify-center p-4 pt-3 pb-5 relative">
-                            <div className="relative inline-flex items-center justify-center bg-white">
-                              <QRCodeSVG
-                                value={validQrString}
-                                size={200}
-                                level="H"
-                                includeMargin={false}
-                                className="w-full h-auto max-w-[200px] select-none"
-                              />
-                              {/* Center Bakong $ Emblem */}
-                              <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-                                <div className="w-10 h-10 rounded-full bg-white shadow-sm flex items-center justify-center p-0.5">
-                                  <div className="w-full h-full rounded-full bg-black flex items-center justify-center border-2 border-white">
-                                    <span className="text-white font-mono font-black text-base leading-none">$</span>
-                                  </div>
-                                </div>
-                              </div>
-                            </div>
-                          </div>
-                        </div>
-                      );
-                    })()}
-                  </div>
-
-                  {/* Scan Instruction Footer strictly matching user screenshot */}
-                  <p className="text-[12px] sm:text-[12.5px] text-[#64748B] text-center leading-snug font-khmer px-1">
-                    {language === 'km'
-                      ? 'ស្កេនជាមួយកម្មវិធី Bakong ឬកម្មវិធីធនាគារទាំងអស់ដែលគាំទ្រ KHQR'
-                      : 'Scan with Bakong App or Mobile Banking app that support KHQR'}
-                  </p>
-
-                  {/* MOBILE-ONLY: Ask user to open banking app with automatic launch on YES */}
-                  {isMobileDevice && (
-                    <div className="pt-3 font-khmer">
-                      <div className="bg-sky-50/90 border border-sky-100 rounded-2xl p-3 text-center space-y-2.5 shadow-sm">
-                        <div className="flex items-center justify-center gap-1.5 text-slate-800">
-                          <span className="text-base">📱</span>
-                          <span className="text-xs font-bold font-khmer">
-                            {language === 'km'
-                              ? 'តើអ្នកចង់បើកកម្មវិធីធនាគារដើម្បីទូទាត់ទេ?'
-                              : 'Open banking app on your device to pay?'}
-                          </span>
-                        </div>
-                        <div className="flex items-center gap-2">
-                          {/* Press YES to automatically open banking app in user device */}
-                          <button
-                            type="button"
-                            onClick={handleOpenBankApp}
-                            className="flex-1 py-2.5 px-3 rounded-xl bg-gradient-to-r from-[#003B70] via-[#004d8c] to-[#0055A5] hover:brightness-110 text-white text-xs font-bold shadow-md flex items-center justify-center gap-1.5 cursor-pointer active:scale-95 transition-all"
-                          >
-                            <span>✓</span>
-                            <span>{language === 'km' ? 'បាទ/ចាស (Yes)' : 'Yes, Open App'}</span>
-                          </button>
-                          
-                          {/* Close QR Code */}
-                          <button
-                            type="button"
-                            onClick={() => {
-                              setPaymentData(null);
-                              setOrderId(null);
-                            }}
-                            className="flex-1 py-2.5 px-3 rounded-xl border border-slate-200 bg-white hover:bg-slate-50 text-slate-600 hover:text-slate-900 text-xs font-semibold cursor-pointer active:scale-95 transition-all"
-                          >
-                            <span>✕</span>
-                            <span>{language === 'km' ? 'បិទ (Close)' : 'No, Close'}</span>
-                          </button>
-                        </div>
-                      </div>
-                    </div>
-                  )}
-
-                  {/* DESKTOP-ONLY: Clean Close QR Code option (No bank app button on PC) */}
-                  {!isMobileDevice && (
-                    <div className="pt-3 font-khmer">
-                      <button
-                        type="button"
-                        onClick={() => {
-                          setPaymentData(null);
-                          setOrderId(null);
-                        }}
-                        className="w-full py-2 px-4 rounded-xl border border-slate-200 hover:bg-slate-50 text-slate-600 hover:text-slate-900 text-xs font-semibold transition-all flex items-center justify-center gap-1.5 cursor-pointer active:scale-[0.98]"
-                      >
-                        <span>✕</span>
-                        <span>
-                          {language === 'km' ? 'បិទ QR Code (Close QR Code)' : 'Close QR Code'}
-                        </span>
-                      </button>
-                    </div>
-                  )}
-                </>
-              )}
-
-            </div>
-          </div>
-        </div>
-      )}
 
       {/* ======================================================== */}
       {/* AWAITING BALANCE — PENDING RECEIPT (provider low balance) */}
@@ -2820,8 +2339,17 @@ const TopUp = () => {
       >
         {paymentData?.formData &&
           Object.entries(paymentData.formData).map(([k, v]) => (
-            <input key={k} type="hidden" name={k} value={v || ''} />
+            <input
+              key={k}
+              type="hidden"
+              name={k}
+              value={v || ''}
+              className={k === 'payment_option' ? 'payment_option' : undefined}
+            />
           ))}
+        {paymentData?.formData && !paymentData.formData.payment_option && (
+          <input type="hidden" name="payment_option" className="payment_option" value="abapay_khqr" />
+        )}
               </form>
     </div>
   );
