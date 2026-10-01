@@ -364,48 +364,62 @@ def process_single_telegram_update(upd):
         msg = cb.get('message', {})
         msg_id = msg.get('message_id')
         chat_id = msg.get('chat', {}).get('id')
+        thread_id = msg.get('message_thread_id')
+        inline_msg_id = cb.get('inline_message_id')
 
         print(f"[+] Telegram button pressed by {from_user}: {cb_data}")
 
         # Action: Already Completed Button Click
         if cb_data == 'done':
-            try:
-                requests.post(f"https://api.telegram.org/bot{bot_token}/answerCallbackQuery", json={
-                    "callback_query_id": cb_id,
-                    "text": "ℹ️ This order has already been approved and diamonds delivered.",
-                    "show_alert": True
-                }, timeout=3)
-            except Exception:
-                pass
+            if cb_id:
+                try:
+                    requests.post(f"https://api.telegram.org/bot{bot_token}/answerCallbackQuery", json={
+                        "callback_query_id": cb_id,
+                        "text": "ℹ️ This order has already been approved and diamonds delivered.",
+                        "show_alert": True
+                    }, timeout=6)
+                except Exception:
+                    pass
             return
 
         # Action: Confirm & Deliver
         if cb_data.startswith('confirm_'):
-            parts = cb_data.split('_')
-            order_id = parts[1] if len(parts) > 1 else '1'
-            md5 = parts[2] if len(parts) > 2 else ''
+            sub = cb_data[len('confirm_'):]
+            if '_' in sub:
+                last_idx = sub.rfind('_')
+                order_id = sub[:last_idx]
+                md5 = sub[last_idx + 1:]
+            else:
+                order_id = sub
+                md5 = ''
 
-            # STEP 1: IMMEDIATELY answer callback query so Telegram UI unlocks instantly!
-            try:
-                requests.post(f"https://api.telegram.org/bot{bot_token}/answerCallbackQuery", json={
-                    "callback_query_id": cb_id,
-                    "text": f"🎉 Order #{order_id} APPROVED! Diamonds are being credited...",
-                    "show_alert": True
-                }, timeout=3)
-            except Exception as ae:
-                print(f"[-] answerCallbackQuery error: {ae}")
+            # STEP 1: IMMEDIATELY answer callback query with robust 6s timeout
+            if cb_id:
+                try:
+                    requests.post(f"https://api.telegram.org/bot{bot_token}/answerCallbackQuery", json={
+                        "callback_query_id": cb_id,
+                        "text": f"🎉 Order #{order_id} APPROVED! Diamonds are being credited...",
+                        "show_alert": True
+                    }, timeout=6)
+                except Exception as ae:
+                    print(f"[-] answerCallbackQuery error: {ae}")
 
-            # STEP 2: Update the button to show [✅ APPROVED & PAID] (disables further clicks)
+            # STEP 2: Update the button to show [✅ APPROVED & PAID]
             try:
-                requests.post(f"https://api.telegram.org/bot{bot_token}/editMessageReplyMarkup", json={
-                    "chat_id": chat_id,
-                    "message_id": msg_id,
+                edit_payload = {
                     "reply_markup": {
                         "inline_keyboard": [
                             [{"text": f"✅ APPROVED & PAID ({from_user})", "callback_data": "done"}]
                         ]
                     }
-                }, timeout=3)
+                }
+                if inline_msg_id:
+                    edit_payload["inline_message_id"] = inline_msg_id
+                elif chat_id and msg_id:
+                    edit_payload["chat_id"] = chat_id
+                    edit_payload["message_id"] = msg_id
+                
+                requests.post(f"https://api.telegram.org/bot{bot_token}/editMessageReplyMarkup", json=edit_payload, timeout=6)
             except Exception as ee:
                 print(f"[-] editMessageReplyMarkup error: {ee}")
 
@@ -427,6 +441,7 @@ def process_single_telegram_update(upd):
                     except Exception:
                         paid_at_str = str(paid_at)
                 approved_at_str = datetime.now().strftime('%d %b %Y, %H:%M:%S')
+                target_topic = thread_id if thread_id is not None else get_config('TELEGRAM_TOPIC_ID', '35')
                 send_telegram(f"""✅ <b>ORDER #{order_id} APPROVED & PAID!</b>
 ━━━━━━━━━━━━━━━━━━━━━━
 👤 <b>Approved by:</b> {html.escape(from_user)}
@@ -438,39 +453,46 @@ def process_single_telegram_update(upd):
 ✅ <b>Transition Approved At:</b> <code>{approved_at_str}</code>
 ⚡ <b>Customer screen transitioned to [PAID SUCCESS]!</b>
 💎 <b>Diamond delivery sequence dispatched.</b>
-━━━━━━━━━━━━━━━━━━━━━━""", topic_id=get_config('TELEGRAM_TOPIC_ID', '35'))
-            except:
-                pass
+━━━━━━━━━━━━━━━━━━━━━━""", topic_id=target_topic)
+            except Exception as tg_err:
+                print(f"[-] Telegram approve notification error: {tg_err}")
 
             # STEP 4: Asynchronously mark order PAID everywhere
             threading.Thread(target=mark_order_paid_everywhere, args=(order_id, md5), daemon=True).start()
 
         # Action: Check Bakong Status
         elif cb_data.startswith('check_'):
-            parts = cb_data.split('_')
-            order_id = parts[1] if len(parts) > 1 else '1'
-            md5 = parts[2] if len(parts) > 2 else ''
+            sub = cb_data[len('check_'):]
+            if '_' in sub:
+                last_idx = sub.rfind('_')
+                order_id = sub[:last_idx]
+                md5 = sub[last_idx + 1:]
+            else:
+                order_id = sub
+                md5 = ''
 
             st, _ = query_bakong_nbc_direct(md5) if md5 else ("UNPAID", None)
             if st == "PAID":
-                try:
-                    requests.post(f"https://api.telegram.org/bot{bot_token}/answerCallbackQuery", json={
-                        "callback_query_id": cb_id,
-                        "text": f"✅ Payment CONFIRMED on Bakong! Order #{order_id} is PAID.",
-                        "show_alert": True
-                    }, timeout=3)
-                except:
-                    pass
+                if cb_id:
+                    try:
+                        requests.post(f"https://api.telegram.org/bot{bot_token}/answerCallbackQuery", json={
+                            "callback_query_id": cb_id,
+                            "text": f"✅ Payment CONFIRMED on Bakong! Order #{order_id} is PAID.",
+                            "show_alert": True
+                        }, timeout=6)
+                    except:
+                        pass
                 threading.Thread(target=mark_order_paid_everywhere, args=(order_id, md5), daemon=True).start()
             else:
-                try:
-                    requests.post(f"https://api.telegram.org/bot{bot_token}/answerCallbackQuery", json={
-                        "callback_query_id": cb_id,
-                        "text": f"⏳ Order #{order_id} is still UNPAID on Bakong network.",
-                        "show_alert": True
-                    }, timeout=3)
-                except:
-                    pass
+                if cb_id:
+                    try:
+                        requests.post(f"https://api.telegram.org/bot{bot_token}/answerCallbackQuery", json={
+                            "callback_query_id": cb_id,
+                            "text": f"⏳ Order #{order_id} is still UNPAID on Bakong network.",
+                            "show_alert": True
+                        }, timeout=6)
+                    except:
+                        pass
 
     # 2. Handle Text Commands
     elif 'message' in upd:
@@ -520,24 +542,26 @@ I automatically track payments and allow you to approve orders instantly!
 def telegram_bot_poller():
     """
     Background daemon that continuously checks getUpdates with automatic webhook clearance
+    and non-blocking asynchronous update processing.
     """
     print("[+] Telegram Bot Transition Tracking Poller started!")
-    time.sleep(2)
+    time.sleep(1)
 
-    # Check if a webhook is currently active
     bot_token = get_config('TELEGRAM_BOT_TOKEN')
     if bot_token:
         try:
-            wh_info = requests.get(f"https://api.telegram.org/bot{bot_token}/getWebhookInfo", timeout=5).json()
-            wh_url = wh_info.get('result', {}).get('url')
-            if wh_url:
-                print(f"[+] Active Telegram Webhook detected ({wh_url}). Poller will yield to webhook.")
-            else:
-                requests.post(f"https://api.telegram.org/bot{bot_token}/deleteWebhook", json={"drop_pending_updates": False}, timeout=5)
+            print("[+] Ensuring Telegram webhook is clear for active polling...")
+            requests.post(
+                f"https://api.telegram.org/bot{bot_token}/deleteWebhook",
+                json={"drop_pending_updates": False},
+                timeout=10
+            )
         except Exception as we:
             print(f"[-] deleteWebhook error: {we}")
 
     last_update_id = 0
+    consecutive_conflicts = 0
+
     while True:
         try:
             bot_token = get_config('TELEGRAM_BOT_TOKEN')
@@ -545,32 +569,43 @@ def telegram_bot_poller():
                 time.sleep(5)
                 continue
 
-            # Yield to active webhook if configured
-            try:
-                wh_info = requests.get(f"https://api.telegram.org/bot{bot_token}/getWebhookInfo", timeout=5).json()
-                if wh_info.get('result', {}).get('url'):
-                    time.sleep(25)
-                    continue
-            except Exception:
-                pass
-
             url = f"https://api.telegram.org/bot{bot_token}/getUpdates"
             params = {
                 "offset": last_update_id + 1,
-                "timeout": 15,
-                "allowed_updates": ["message", "callback_query"]
+                "timeout": 10,
+                "allowed_updates": json.dumps(["message", "callback_query"])
             }
-            resp = requests.get(url, params=params, timeout=20)
+            resp = requests.get(url, params=params, timeout=15)
+
+            if resp.status_code == 409:
+                consecutive_conflicts += 1
+                if consecutive_conflicts <= 3:
+                    print("[-] Telegram getUpdates 409 conflict (another instance polling). Waiting 5s...")
+                time.sleep(5)
+                continue
+
+            consecutive_conflicts = 0
+
             if resp.status_code != 200:
                 time.sleep(3)
                 continue
 
-            updates = resp.json().get('result', [])
-            for upd in updates:
-                last_update_id = upd.get('update_id', last_update_id)
-                process_single_telegram_update(upd)
+            data = resp.json()
+            if not data.get('ok'):
+                time.sleep(3)
+                continue
 
+            updates = data.get('result', [])
+            for upd in updates:
+                last_update_id = max(last_update_id, upd.get('update_id', 0))
+                # Dispatch each update asynchronously so slow processing NEVER blocks the polling loop!
+                threading.Thread(target=process_single_telegram_update, args=(upd,), daemon=True).start()
+
+        except requests.exceptions.Timeout:
+            # Long polling HTTP timeout is normal, loop again immediately
+            continue
         except Exception as err:
+            print(f"[-] Telegram poller loop error: {err}")
             time.sleep(3)
 
 
