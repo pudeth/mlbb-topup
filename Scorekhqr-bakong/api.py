@@ -380,6 +380,14 @@ def process_single_telegram_update(upd):
             amt = rec.get('amount') or 0.0
 
             try:
+                paid_at = rec.get('paid_at') or rec.get('created_at') or ''
+                paid_at_str = ''
+                if paid_at:
+                    try:
+                        paid_at_str = datetime.fromisoformat(str(paid_at)).strftime('%d %b %Y, %H:%M:%S')
+                    except Exception:
+                        paid_at_str = str(paid_at)
+                approved_at_str = datetime.now().strftime('%d %b %Y, %H:%M:%S')
                 send_telegram(f"""✅ <b>ORDER #{order_id} APPROVED & PAID!</b>
 ━━━━━━━━━━━━━━━━━━━━━━
 👤 <b>Approved by:</b> {html.escape(from_user)}
@@ -387,7 +395,8 @@ def process_single_telegram_update(upd):
 👤 <b>Account Player:</b> <b>{html.escape(acc_name)}</b>
 🆔 <b>Player ID:</b> <code>{html.escape(str(p_id))}</code> (Zone {html.escape(str(z_id))})
 👤 <b>Customer ID:</b> <code>#{cust_id}</code>
-⏰ <b>Timestamp:</b> {datetime.now().strftime('%d %b %Y, %H:%M:%S')}
+📅 <b>Customer Paid At:</b> <code>{paid_at_str or "—"}</code>
+✅ <b>Transition Approved At:</b> <code>{approved_at_str}</code>
 ⚡ <b>Customer screen transitioned to [PAID SUCCESS]!</b>
 💎 <b>Diamond delivery sequence dispatched.</b>
 ━━━━━━━━━━━━━━━━━━━━━━""", topic_id=get_config('TELEGRAM_TOPIC_ID', '35'))
@@ -812,6 +821,7 @@ def create_payment():
         zone_str = f" (Zone {html.escape(server_id)})" if server_id else ""
         p_id_str = f"<code>{html.escape(player_id)}</code>{zone_str}" if player_id else "<code>N/A</code>"
 
+        order_time = datetime.now().strftime('%d %b %Y, %H:%M:%S')
         send_telegram(f"""🎮 <b>NEW TOP-UP ORDER #{clean_ord} — APPROVAL REQUIRED</b>
 ━━━━━━━━━━━━━━━━━━━━━━
 🏷️ <b>Game:</b> {game_label}
@@ -820,8 +830,9 @@ def create_payment():
 👤 <b>Customer ID:</b> {cust_label}
 💎 <b>Package:</b> {pkg_label}
 💰 <b>Total Amount:</b> ${amt_usd:.2f} USD ({amt_khr:,} ៛)
-💳 <b>Merchant ID:</b> <code>{bakong_id}</code>
-🔐 <b>MD5:</b> <code>{md5}</code>
+💳 <b>Gateway:</b> ABAPAYWAY (Bakong KHQR)
+🔐 <b>MD5 Hash:</b> <code>{md5}</code>
+📅 <b>Customer Paid At:</b> <code>{order_time}</code>
 ⏰ <b>Status:</b> ⏳ <b>WAITING FOR ADMIN APPROVAL</b>
 ━━━━━━━━━━━━━━━━━━━━━━
 👇 <i>Received money in bank? Tap below to approve:</i>""", reply_markup=reply_markup)
