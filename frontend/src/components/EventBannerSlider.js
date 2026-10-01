@@ -124,9 +124,6 @@ const EventBannerSlider = ({ className = '' }) => {
         navigate(currentBanner.link || `/topup?game=${currentBanner.gameId || 'mlbb'}`);
       }}
     >
-      {/* Ambient Cyber Neon Under-Glow (Cyan on Left, Magenta-Red on Right) */}
-      <div className="absolute -inset-2 sm:-inset-3 bg-gradient-to-r from-cyan-500/25 via-blue-500/10 to-rose-500/25 rounded-[36px] blur-2xl opacity-60 group-hover:opacity-90 transition-opacity duration-500 pointer-events-none" />
-
       {/* Main Container with Exact Aspect Ratio of the Cyber Frame (1024 / 423) */}
       <div 
         className="relative w-full overflow-hidden rounded-[20px] sm:rounded-[28px]"
@@ -192,17 +189,17 @@ const EventBannerSlider = ({ className = '' }) => {
             className="flex items-center justify-between gap-2 pointer-events-auto transition-transform duration-300"
           >
             <div className="flex items-center gap-2">
-              <span className={`px-2.5 py-1 rounded-lg text-[10px] sm:text-xs font-black tracking-wider uppercase shadow-md ${currentBanner.badgeColor || 'bg-amber-400 text-slate-950'}`}>
+              <span className={`px-2.5 py-1 rounded-lg text-[10px] sm:text-xs font-black tracking-wider uppercase ${currentBanner.badgeColor || 'bg-amber-400 text-slate-950'}`}>
                 {currentBanner.tag || 'SPECIAL EVENT'}
               </span>
-              <span className="hidden sm:inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-slate-950/80 border border-slate-700/60 text-[10px] sm:text-xs text-slate-300 font-bold backdrop-blur-md shadow-sm">
+              <span className="hidden sm:inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-slate-950/80 border border-slate-700/60 text-[10px] sm:text-xs text-slate-300 font-bold backdrop-blur-md">
                 <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
                 <span>Live Event</span>
               </span>
             </div>
 
             {/* Slide Index Counter */}
-            <div className="px-2.5 py-1 rounded-lg bg-slate-950/80 border border-slate-700/60 text-[10px] sm:text-xs font-mono text-slate-300 font-bold backdrop-blur-md shadow-sm">
+            <div className="px-2.5 py-1 rounded-lg bg-slate-950/80 border border-slate-700/60 text-[10px] sm:text-xs font-mono text-slate-300 font-bold backdrop-blur-md">
               <span className="text-amber-400 font-black">{currentIndex + 1}</span> / {banners.length}
             </div>
           </div>
@@ -212,11 +209,11 @@ const EventBannerSlider = ({ className = '' }) => {
             key={`text-${currentIndex}`}
             className="space-y-1 sm:space-y-1.5 max-w-xl pointer-events-auto font-khmer transition-transform duration-300"
           >
-            <h3 className="text-base sm:text-2xl md:text-3xl font-black text-white tracking-tight leading-tight line-clamp-1 drop-shadow-[0_2px_8px_rgba(0,0,0,0.9)]">
+            <h3 className="text-base sm:text-2xl md:text-3xl font-black text-white tracking-tight leading-tight line-clamp-1">
               {currentBanner.title}
             </h3>
             {currentBanner.subtitle && (
-              <p className="text-xs sm:text-sm text-slate-200 font-medium leading-relaxed line-clamp-2 max-w-lg drop-shadow-md">
+              <p className="text-xs sm:text-sm text-slate-200 font-medium leading-relaxed line-clamp-2 max-w-lg">
                 {currentBanner.subtitle}
               </p>
             )}
@@ -231,7 +228,7 @@ const EventBannerSlider = ({ className = '' }) => {
                 e.stopPropagation();
                 navigate(currentBanner.link || `/topup?game=${currentBanner.gameId || 'mlbb'}`);
               }}
-              className="py-1.5 px-3.5 sm:py-2.5 sm:px-5 rounded-xl bg-gradient-to-r from-amber-400 to-yellow-300 hover:from-amber-300 hover:to-yellow-200 text-slate-950 text-xs sm:text-sm font-black tracking-wide transition-all duration-300 cursor-pointer flex items-center gap-2 shadow-lg shadow-amber-500/25 active:scale-95 group/btn"
+              className="py-1.5 px-3.5 sm:py-2.5 sm:px-5 rounded-xl bg-gradient-to-r from-amber-400 to-yellow-300 hover:from-amber-300 hover:to-yellow-200 text-slate-950 text-xs sm:text-sm font-black tracking-wide transition-all duration-300 cursor-pointer flex items-center gap-2 active:scale-95 group/btn"
             >
               <span>{currentBanner.buttonText || 'Top Up Now'}</span>
               <svg className="w-4 h-4 shrink-0 transition-transform duration-200 group-hover/btn:translate-x-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -240,7 +237,7 @@ const EventBannerSlider = ({ className = '' }) => {
             </button>
 
             {/* Indicator Dots */}
-            <div className="flex items-center gap-1.5 sm:gap-2 bg-slate-950/70 backdrop-blur-md px-2.5 py-1.5 rounded-full border border-slate-800/70 shadow-lg ml-auto">
+            <div className="flex items-center gap-1.5 sm:gap-2 bg-slate-950/70 backdrop-blur-md px-2.5 py-1.5 rounded-full border border-slate-800/70 ml-auto">
               {banners.map((_, idx) => (
                 <button
                   key={idx}
@@ -251,7 +248,7 @@ const EventBannerSlider = ({ className = '' }) => {
                   }}
                   className={`h-1.5 sm:h-2 rounded-full transition-all duration-500 cursor-pointer ${
                     idx === currentIndex
-                      ? 'w-6 sm:w-8 bg-gradient-to-r from-amber-400 to-yellow-300 shadow-[0_0_10px_rgba(251,191,36,0.6)]'
+                      ? 'w-6 sm:w-8 bg-gradient-to-r from-amber-400 to-yellow-300'
                       : 'w-1.5 sm:w-2 bg-slate-700 hover:bg-slate-500'
                   }`}
                   aria-label={`Go to slide ${idx + 1}`}
@@ -261,11 +258,11 @@ const EventBannerSlider = ({ className = '' }) => {
           </div>
         </div>
 
-        {/* Futuristic Cyber Esports Overlay Frame (Guaranteed Top Layer - Covers edges flawlessly) */}
+        {/* Futuristic Cyber Esports Overlay Frame (Guaranteed Top Layer - Clean without drop-shadow) */}
         <img
           src={cyberBannerFrame || '/cyber-banner-frame.png'}
           alt="Cyber Frame"
-          className="absolute inset-0 w-full h-full object-fill select-none filter drop-shadow-[0_0_16px_rgba(6,182,212,0.45)] pointer-events-none"
+          className="absolute inset-0 w-full h-full object-fill select-none pointer-events-none"
           style={{ zIndex: 15 }}
           onError={(e) => {
             if (e.target.src !== `${process.env.PUBLIC_URL || ''}/cyber-banner-frame.png`) {
@@ -280,7 +277,7 @@ const EventBannerSlider = ({ className = '' }) => {
             type="button"
             onClick={handlePrev}
             style={{ zIndex: 25 }}
-            className="absolute left-2.5 sm:left-4 top-1/2 -translate-y-1/2 w-8 h-8 sm:w-10 sm:h-10 rounded-full bg-slate-950/80 hover:bg-amber-400 text-white hover:text-slate-950 border border-slate-700/80 hover:border-amber-300 shadow-2xl backdrop-blur-md flex items-center justify-center transition-all duration-300 active:scale-90 cursor-pointer group-hover:scale-105"
+            className="absolute left-2.5 sm:left-4 top-1/2 -translate-y-1/2 w-8 h-8 sm:w-10 sm:h-10 rounded-full bg-slate-950/80 hover:bg-amber-400 text-white hover:text-slate-950 border border-slate-700/80 hover:border-amber-300 backdrop-blur-md flex items-center justify-center transition-all duration-300 active:scale-90 cursor-pointer group-hover:scale-105"
             aria-label="Previous slide"
           >
             <svg className="w-4 h-4 sm:w-5 sm:h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -295,7 +292,7 @@ const EventBannerSlider = ({ className = '' }) => {
             type="button"
             onClick={handleNext}
             style={{ zIndex: 25 }}
-            className="absolute right-2.5 sm:right-4 top-1/2 -translate-y-1/2 w-8 h-8 sm:w-10 sm:h-10 rounded-full bg-slate-950/80 hover:bg-amber-400 text-white hover:text-slate-950 border border-slate-700/80 hover:border-amber-300 shadow-2xl backdrop-blur-md flex items-center justify-center transition-all duration-300 active:scale-90 cursor-pointer group-hover:scale-105"
+            className="absolute right-2.5 sm:right-4 top-1/2 -translate-y-1/2 w-8 h-8 sm:w-10 sm:h-10 rounded-full bg-slate-950/80 hover:bg-amber-400 text-white hover:text-slate-950 border border-slate-700/80 hover:border-amber-300 backdrop-blur-md flex items-center justify-center transition-all duration-300 active:scale-90 cursor-pointer group-hover:scale-105"
             aria-label="Next slide"
           >
             <svg className="w-4 h-4 sm:w-5 sm:h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
