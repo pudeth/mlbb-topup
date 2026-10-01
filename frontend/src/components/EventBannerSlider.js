@@ -6,6 +6,7 @@ import {
   fetchStoredBanners
 } from '../services/eventBanners';
 import cyberBannerFrame from '../assets/cyber-banner-frame.png';
+import bannerCutoutMask from '../assets/banner-cutout-mask.png';
 
 export { DEFAULT_EVENT_BANNERS, getStoredBanners };
 
@@ -124,22 +125,25 @@ const EventBannerSlider = ({ className = '' }) => {
       }}
     >
       {/* Ambient Cyber Neon Under-Glow (Cyan on Left, Magenta-Red on Right) */}
-      <div className="absolute -inset-2 sm:-inset-3 bg-gradient-to-r from-cyan-500/25 via-blue-500/10 to-rose-500/25 rounded-[36px] blur-2xl opacity-60 group-hover:opacity-90 transition-opacity duration-500 pointer-events-none" />
+      <div className="absolute -inset-1 sm:-inset-2 bg-gradient-to-r from-cyan-500/20 via-blue-500/10 to-rose-500/20 blur-xl opacity-60 group-hover:opacity-85 transition-opacity duration-500 pointer-events-none" />
 
       {/* Main Container with Exact Aspect Ratio of the Cyber Frame (1024 / 423) */}
       <div 
-        className="relative w-full overflow-hidden rounded-[20px] sm:rounded-[28px]"
+        className="relative w-full"
         style={{ aspectRatio: '1024 / 423' }}
       >
-        {/* Confined Artwork Layer - Locked strictly behind the Cyber Frame with no edge leakage */}
+        {/* Pixel-Perfect Confined Artwork Layer - Masked strictly to the Cyber Frame inner viewport */}
         <div
-          className="absolute overflow-hidden bg-slate-950"
+          className="absolute inset-0"
           style={{
-            top: '7%',
-            bottom: '8%',
-            left: '3%',
-            right: '3%',
-            clipPath: 'polygon(3.5% 0%, 96.5% 0%, 100% 8%, 100% 92%, 96.5% 100%, 3.5% 100%, 0% 92%, 0% 8%)',
+            WebkitMaskImage: `url(${bannerCutoutMask || '/banner-cutout-mask.png'})`,
+            WebkitMaskSize: '100% 100%',
+            WebkitMaskRepeat: 'no-repeat',
+            WebkitMaskPosition: 'center',
+            maskImage: `url(${bannerCutoutMask || '/banner-cutout-mask.png'})`,
+            maskSize: '100% 100%',
+            maskRepeat: 'no-repeat',
+            maskPosition: 'center',
             zIndex: 5
           }}
         >
@@ -177,7 +181,7 @@ const EventBannerSlider = ({ className = '' }) => {
           className="absolute flex flex-col justify-between pointer-events-none"
           style={{
             top: '12%',
-            bottom: '13%',
+            bottom: '14%',
             left: '5.5%',
             right: '5.5%',
             zIndex: 20
