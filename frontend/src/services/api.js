@@ -13,10 +13,12 @@ const API_URL = getDefaultApiUrl();
 // Create axios instance
 const api = axios.create({
   baseURL: API_URL,
+  timeout: 25000, // 25s — allows Render cold start without hanging forever
   headers: {
     'Content-Type': 'application/json',
   },
 });
+
 
 // Request interceptor to add auth token
 api.interceptors.request.use(

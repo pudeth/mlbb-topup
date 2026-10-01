@@ -1175,18 +1175,41 @@ const TopUp = () => {
       let createdPayment = null;
 
       // Official ABA PayWay Gateway (Strict adherence to ABA Technical Specification)
+      // Retry once on failure to handle Render.com cold starts (backend may need ~30s to wake)
+      const paywayPayload = {
+        orderId: activeOrderId,
+        amount: targetAmount,
+        currency: currency,
+        player_id: pId,
+        server_id: sId,
+        account_name: playerAccName,
+        customer_id: customerId,
+        game_name: gameTitle,
+        package_name: pkgName
+      };
+
+      let directRes = null;
       try {
-        const directRes = await paywayAPI.create({
-          orderId: activeOrderId,
-          amount: targetAmount,
-          currency: currency,
-          player_id: pId,
-          server_id: sId,
-          account_name: playerAccName,
-          customer_id: customerId,
-          game_name: gameTitle,
-          package_name: pkgName
-        });
+        directRes = await paywayAPI.create(paywayPayload);
+      } catch (firstErr) {
+        console.warn('ABA PayWay first attempt failed, retrying in 4s...', firstErr?.message);
+        // Show "connecting" feedback while backend wakes up
+        setError('');
+        setLoading(true);
+        await new Promise(r => setTimeout(r, 4000));
+        try {
+          directRes = await paywayAPI.create(paywayPayload);
+        } catch (retryErr) {
+          console.error('ABA PayWay retry also failed:', retryErr);
+          setError(
+            retryErr.response?.data?.message ||
+            firstErr.response?.data?.message ||
+            'Could not connect to ABA PayWay gateway. Please check your internet and try again.'
+          );
+        }
+      }
+
+      if (directRes) {
         const pd = directRes?.data;
         if (pd?.tranId && (pd?.formData || pd?.purchaseUrl)) {
           createdPayment = {
@@ -1209,9 +1232,6 @@ const TopUp = () => {
         } else {
           setError(pd?.message || 'Failed to initialize ABA PayWay transaction. Please try again.');
         }
-      } catch (err) {
-        console.error('ABA PayWay API notice:', err);
-        setError(err.response?.data?.message || 'Could not connect to ABA PayWay gateway. Please verify your connection.');
       }
 
       if (createdPayment) {
