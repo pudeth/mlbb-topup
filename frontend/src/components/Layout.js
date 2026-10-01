@@ -3,7 +3,6 @@ import { useLocation } from 'react-router-dom';
 import Navbar from './Navbar';
 import Footer from './Footer';
 import AiAssistant from './AiAssistant';
-import ScrollNavigator from './ScrollNavigator';
 import MobileBottomNav from './MobileBottomNav';
 
 const Layout = ({ children }) => {
@@ -58,7 +57,6 @@ const Layout = ({ children }) => {
         {children}
       </main>
       {!isAuthPath && <AiAssistant />}
-      {!isAuthPath && <ScrollNavigator />}
       {!isAuthPath && <MobileBottomNav />}
       {!hideFooter && <Footer />}
     </div>
