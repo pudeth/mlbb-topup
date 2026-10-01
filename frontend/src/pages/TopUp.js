@@ -199,9 +199,6 @@ const TopUp = () => {
   const [masterStatus, setMasterStatus] = useState(() => getMasterTopupStatus());
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
-  const [showCustomModal, setShowCustomModal] = useState(false);
-  const [frameHeight, setFrameHeight] = useState(595);
-  const [iframeLoading, setIframeLoading] = useState(true);
   const [autoDetectedMessage, setAutoDetectedMessage] = useState('');
   const [showIdGuide, setShowIdGuide] = useState(false);
 
@@ -482,73 +479,38 @@ const TopUp = () => {
   };
 
 
-  // Automatically trigger ABA Official Checkout Popup for ABA PayWay Gateway
+  // Automatically trigger ABA Official Checkout Popup via AbaPayway.checkout() directly in the browser
   useEffect(() => {
     if (paymentPaid) {
       // INSTANTLY CLOSE checkout popup when paid so the user sees our success receipt!
       if (typeof window !== 'undefined' && window.AbaPayway) {
         try { window.AbaPayway.closeCheckout(false); } catch (e) {}
       }
-      setShowCustomModal(false);
     } else if (paymentData && !paymentPaid && paymentData.gateway === 'aba_payway') {
-      setFrameHeight(595);
-      setIframeLoading(true);
-      setShowCustomModal(true);
+      const openOfficialAbaCheckout = () => {
+        if (typeof window !== 'undefined' && window.AbaPayway && typeof window.AbaPayway.checkout === 'function') {
+          try {
+            window.AbaPayway.checkout();
+            return true;
+          } catch (e) {
+            console.warn('AbaPayway.checkout() notice:', e);
+          }
+        }
+        return false;
+      };
+
+      if (!openOfficialAbaCheckout()) {
+        let attempts = 0;
+        const interval = setInterval(() => {
+          attempts++;
+          if (openOfficialAbaCheckout() || attempts >= 30) {
+            clearInterval(interval);
+          }
+        }, 100);
+        return () => clearInterval(interval);
+      }
     }
   }, [paymentData, paymentPaid]);
-  
-  // When custom modal is shown, submit form into the iframe immediately
-  useEffect(() => {
-    if (showCustomModal) {
-      const timer = setTimeout(() => {
-        const form = document.getElementById('aba_merchant_request');
-        if (form) {
-          form.target = 'aba_webservice';
-          form.submit();
-        }
-      }, 0);
-      return () => clearTimeout(timer);
-    }
-  }, [showCustomModal]);
-
-  // Handle ABA PayWay official events (frameHeight dynamic resize, close) from postMessage
-  useEffect(() => {
-    const handlePayWayMessage = (event) => {
-      const data = event?.data;
-      if (!data) return;
-
-      // Extract dynamic responsive frameHeight sent by ABA PayWay checkout iframe
-      let h = null;
-      if (typeof data === 'object') {
-        if (data.frameHeight) h = parseInt(data.frameHeight, 10);
-        else if (data.height) h = parseInt(data.height, 10);
-      } else if (typeof data === 'string') {
-        try {
-          const parsed = JSON.parse(data);
-          if (parsed?.frameHeight) h = parseInt(parsed.frameHeight, 10);
-          else if (parsed?.height) h = parseInt(parsed.height, 10);
-        } catch (e) {}
-      }
-
-      if (h && !isNaN(h) && h >= 200 && h <= 1000) {
-        setFrameHeight(h);
-        setIframeLoading(false);
-      }
-
-      if (
-        data.close ||
-        data === 'close' ||
-        data?.action === 'close' ||
-        data?.type === 'close'
-      ) {
-        setShowCustomModal(false);
-        setPaymentData(null);
-        setOrderId(null);
-      }
-    };
-    window.addEventListener('message', handlePayWayMessage);
-    return () => window.removeEventListener('message', handlePayWayMessage);
-  }, []);
 
   // Transaction Lifetime Countdown Timer (6 minutes / 360 seconds matching ABA PayWay standard: 5-15 mins)
   useEffect(() => {
@@ -864,7 +826,6 @@ const TopUp = () => {
 
     const triggerPaidTransition = async () => {
       // Immediately dismiss ABA checkout popup so customer transitions straight to our branded receipt!
-      setShowCustomModal(false);
       if (typeof window !== 'undefined' && window.AbaPayway) {
         try { window.AbaPayway.closeCheckout(false); } catch (e) {}
       }
@@ -1029,7 +990,6 @@ const TopUp = () => {
             // Mark paid flag immediately to stop polling
             paymentPaidRef.current = true;
             es && es.close();
-            setShowCustomModal(false);
             if (typeof window !== 'undefined' && window.AbaPayway) {
               try { window.AbaPayway.closeCheckout(false); } catch (e) {}
             }
@@ -2707,160 +2667,6 @@ const TopUp = () => {
             <input key={k} type="hidden" name={k} value={v || ''} />
           ))}
               </form>
-{/* Official ABA PayWay Checkout Voucher Modal */}
-        {showCustomModal && (
-          <div 
-            className="fixed inset-0 z-[999999] flex items-center justify-center bg-[#081b37]/85 backdrop-blur-md p-3 sm:p-4 overflow-y-auto animate-[fadeIn_0.12s_ease-out]"
-            onClick={(e) => {
-              if (e.target === e.currentTarget) {
-                setShowCustomModal(false);
-                setPaymentData(null);
-                setOrderId(null);
-              }
-            }}
-          >
-            <div className="relative w-full max-w-[392px] my-auto flex flex-col items-center animate-[scaleIn_0.15s_cubic-bezier(0.16,1,0.3,1)]">
-              {/* Official ABA' PAYWAY logo positioned at top-right exactly matching Bank reference */}
-              <div className="w-full flex justify-end mb-2 pr-1 select-none pointer-events-none">
-                <img 
-                  src="https://checkout.payway.com.kh/images/payway-logo-white.svg" 
-                  alt="ABA' PAYWAY" 
-                  className="h-6 w-auto object-contain opacity-95"
-                  onError={(e) => {
-                    e.target.style.display = 'none';
-                    if (e.target.nextElementSibling) e.target.nextElementSibling.style.display = 'flex';
-                  }}
-                />
-                <div className="hidden items-center gap-1">
-                  <span className="font-black text-xl text-white tracking-wide">ABA'</span>
-                  <span className="font-black text-xl tracking-widest uppercase italic text-[#00bcd4]">PAYWAY</span>
-                </div>
-              </div>
-
-              {/* Official PayWay Voucher Card with Fast Smooth Height Transition */}
-              <div 
-                className="relative w-full bg-white rounded-2xl shadow-2xl overflow-hidden flex flex-col transition-[height] duration-150 ease-out"
-                style={{
-                  height: qrExpired || timeLeft === 0 ? 'auto' : `${frameHeight}px`,
-                  maxHeight: '90vh'
-                }}
-              >
-                {/* Step ④: When lifetime expires (timeLeft === 0 / qrExpired), safely end process */}
-                {qrExpired || timeLeft === 0 ? (
-                  <div className="relative z-20 w-full h-full bg-white flex flex-col items-center justify-center p-6 text-center animate-[scaleIn_0.15s_ease-out]">
-                    <div className="w-16 h-16 rounded-full bg-rose-50 flex items-center justify-center text-3xl mb-3 border border-rose-100 shadow-inner">
-                      ⏱️
-                    </div>
-                    <h3 className="text-lg font-bold text-slate-900 mb-1">
-                      {language === 'km' ? 'ប្រតិបត្តិការផុតកំណត់' : 'Transaction Lifetime Expired'}
-                    </h3>
-                    <p className="text-xs text-slate-500 max-w-xs mb-4">
-                      {language === 'km' 
-                        ? 'រយៈពេលសុពលភាពនៃប្រតិបត្តិការ (៦ នាទី) ត្រូវបានបញ្ចប់។ ការត្រួតពិនិត្យត្រូវបានបិទបញ្ចប់ដោយសុវត្ថិភាព។'
-                        : 'The 6-minute payment session has expired. Background checking has safely ended.'}
-                    </p>
-
-                    {/* Reference Box */}
-                    <div className="w-full bg-slate-50 border border-slate-200/80 rounded-xl p-3 mb-3 text-left text-xs space-y-1.5">
-                      <div className="flex justify-between items-center text-slate-500">
-                        <span>Order ID:</span>
-                        <span className="font-mono font-bold text-slate-800">#{orderId}</span>
-                      </div>
-                      {(paymentData?.tranId || paymentData?.formData?.tran_id) && (
-                        <div className="flex justify-between items-center text-slate-500">
-                          <span>PayWay TranID:</span>
-                          <span className="font-mono font-semibold text-slate-800 text-[11px]">
-                            {paymentData?.tranId || paymentData?.formData?.tran_id}
-                          </span>
-                        </div>
-                      )}
-                      <div className="flex justify-between items-center text-slate-500">
-                        <span>Status:</span>
-                        <span className="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-bold bg-amber-100 text-amber-800">
-                          EXPIRED (SESSION ENDED)
-                        </span>
-                      </div>
-                    </div>
-
-                    {/* ABA Merchant Portal Guidance (Strictly adheres to ABA Step ④) */}
-                    <div className="w-full p-2.5 rounded-lg bg-sky-50 border border-sky-100 text-[11px] text-sky-800 text-left mb-5 flex items-start gap-2">
-                      <span className="text-sky-500 text-sm mt-0.5">💡</span>
-                      <span>
-                        {language === 'km'
-                          ? 'ប្រសិនបើទឹកប្រាក់ត្រូវបានកាត់រួចហើយ សូមផ្ទៀងផ្ទាត់ដោយដៃក្នុង ABA PayWay Merchant Portal ឬទាក់ទងមកយើងខ្ញុំ។'
-                          : 'If funds were deducted from your bank app, please verify manually in the ABA PayWay Merchant Portal.'}
-                      </span>
-                    </div>
-
-                    {/* Actions */}
-                    <div className="w-full flex flex-col gap-2">
-                      <button
-                        type="button"
-                        onClick={() => {
-                          setShowCustomModal(false);
-                          setPaymentData(null);
-                          setOrderId(null);
-                          handleProceedToPayment();
-                        }}
-                        className="w-full py-3 bg-[#0055a5] hover:bg-[#004485] text-white text-xs font-bold rounded-xl shadow-md transition-all active:scale-[0.98]"
-                      >
-                        {language === 'km' ? 'បង្កើតសំណើទូទាត់ថ្មី (Try Again)' : 'Generate Fresh QR / Try Again'}
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => {
-                          setShowCustomModal(false);
-                          setPaymentData(null);
-                          setOrderId(null);
-                        }}
-                        className="w-full py-2.5 border border-slate-200 hover:bg-slate-50 text-slate-600 text-xs font-semibold rounded-xl transition-all active:scale-[0.98]"
-                      >
-                        {language === 'km' ? 'បិទផ្ទាំង (Close)' : 'Close Window'}
-                      </button>
-                    </div>
-                  </div>
-                ) : (
-                  <>
-                    {/* Preloader spinner while iframe loads */}
-                    {iframeLoading && (
-                      <div className="absolute inset-0 flex flex-col items-center justify-center bg-white z-0 pointer-events-none transition-opacity duration-150">
-                        <div className="w-10 h-10 border-4 border-slate-200 border-t-[#0055a5] rounded-full animate-spin"></div>
-                        <span className="mt-3 text-xs font-semibold text-slate-400">Loading ABA PayWay...</span>
-                      </div>
-                    )}
-
-                    {/* Official PayWay Iframe with Fast Dynamic Responsive Smooth Height */}
-                    <iframe
-                      name="aba_webservice"
-                      id="aba_webservice"
-                      title="ABA Payway Checkout"
-                      className="w-full border-none bg-transparent block relative z-10 transition-[height] duration-150 ease-out"
-                      style={{
-                        height: `${frameHeight}px`
-                      }}
-                      onLoad={() => {
-                        setIframeLoading(false);
-                      }}
-                    />
-                  </>
-                )}
-              </div>
-            </div>
-
-            <style>{`
-              @keyframes fadeIn {
-                from { opacity: 0; }
-                to { opacity: 1; }
-              }
-              @keyframes scaleIn {
-                from { opacity: 0; transform: scale(0.96) translateY(4px); }
-                to { opacity: 1; transform: scale(1) translateY(0); }
-              }
-            `}</style>
-          </div>
-        )}
-
-
     </div>
   );
 };
