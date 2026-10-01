@@ -497,7 +497,7 @@ const TopUp = () => {
     }
   }, [paymentData, paymentPaid]);
   
-  // When custom modal is shown, submit form into the iframe
+  // When custom modal is shown, submit form into the iframe immediately
   useEffect(() => {
     if (showCustomModal) {
       const timer = setTimeout(() => {
@@ -506,7 +506,7 @@ const TopUp = () => {
           form.target = 'aba_webservice';
           form.submit();
         }
-      }, 100);
+      }, 0);
       return () => clearTimeout(timer);
     }
   }, [showCustomModal]);
@@ -2710,7 +2710,7 @@ const TopUp = () => {
 {/* Official ABA PayWay Checkout Voucher Modal */}
         {showCustomModal && (
           <div 
-            className="fixed inset-0 z-[999999] flex items-center justify-center bg-[#081b37]/85 backdrop-blur-md p-3 sm:p-4 overflow-y-auto"
+            className="fixed inset-0 z-[999999] flex items-center justify-center bg-[#081b37]/85 backdrop-blur-md p-3 sm:p-4 overflow-y-auto animate-[fadeIn_0.12s_ease-out]"
             onClick={(e) => {
               if (e.target === e.currentTarget) {
                 setShowCustomModal(false);
@@ -2719,7 +2719,7 @@ const TopUp = () => {
               }
             }}
           >
-            <div className="relative w-full max-w-[392px] my-auto flex flex-col items-center animate-[scaleIn_0.25s_ease-out]">
+            <div className="relative w-full max-w-[392px] my-auto flex flex-col items-center animate-[scaleIn_0.15s_cubic-bezier(0.16,1,0.3,1)]">
               {/* Official ABA' PAYWAY logo positioned at top-right exactly matching Bank reference */}
               <div className="w-full flex justify-end mb-2 pr-1 select-none pointer-events-none">
                 <img 
@@ -2737,9 +2737,9 @@ const TopUp = () => {
                 </div>
               </div>
 
-              {/* Official PayWay Voucher Card with Smooth Height Transition */}
+              {/* Official PayWay Voucher Card with Fast Smooth Height Transition */}
               <div 
-                className="relative w-full bg-white rounded-2xl shadow-2xl overflow-hidden flex flex-col transition-[height] duration-300 ease-out"
+                className="relative w-full bg-white rounded-2xl shadow-2xl overflow-hidden flex flex-col transition-[height] duration-150 ease-out"
                 style={{
                   height: qrExpired || timeLeft === 0 ? 'auto' : `${frameHeight}px`,
                   maxHeight: '90vh'
@@ -2747,7 +2747,7 @@ const TopUp = () => {
               >
                 {/* Step ④: When lifetime expires (timeLeft === 0 / qrExpired), safely end process */}
                 {qrExpired || timeLeft === 0 ? (
-                  <div className="relative z-20 w-full h-full bg-white flex flex-col items-center justify-center p-6 text-center animate-[scaleIn_0.2s_ease-out]">
+                  <div className="relative z-20 w-full h-full bg-white flex flex-col items-center justify-center p-6 text-center animate-[scaleIn_0.15s_ease-out]">
                     <div className="w-16 h-16 rounded-full bg-rose-50 flex items-center justify-center text-3xl mb-3 border border-rose-100 shadow-inner">
                       ⏱️
                     </div>
@@ -2823,23 +2823,23 @@ const TopUp = () => {
                   <>
                     {/* Preloader spinner while iframe loads */}
                     {iframeLoading && (
-                      <div className="absolute inset-0 flex flex-col items-center justify-center bg-white z-0 pointer-events-none transition-opacity duration-200">
+                      <div className="absolute inset-0 flex flex-col items-center justify-center bg-white z-0 pointer-events-none transition-opacity duration-150">
                         <div className="w-10 h-10 border-4 border-slate-200 border-t-[#0055a5] rounded-full animate-spin"></div>
                         <span className="mt-3 text-xs font-semibold text-slate-400">Loading ABA PayWay...</span>
                       </div>
                     )}
 
-                    {/* Official PayWay Iframe with Dynamic Responsive Smooth Height */}
+                    {/* Official PayWay Iframe with Fast Dynamic Responsive Smooth Height */}
                     <iframe
                       name="aba_webservice"
                       id="aba_webservice"
                       title="ABA Payway Checkout"
-                      className="w-full border-none bg-transparent block relative z-10 transition-[height] duration-300 ease-out"
+                      className="w-full border-none bg-transparent block relative z-10 transition-[height] duration-150 ease-out"
                       style={{
                         height: `${frameHeight}px`
                       }}
                       onLoad={() => {
-                        setTimeout(() => setIframeLoading(false), 600);
+                        setIframeLoading(false);
                       }}
                     />
                   </>
@@ -2848,9 +2848,13 @@ const TopUp = () => {
             </div>
 
             <style>{`
+              @keyframes fadeIn {
+                from { opacity: 0; }
+                to { opacity: 1; }
+              }
               @keyframes scaleIn {
-                from { opacity: 0; transform: scale(0.95); }
-                to { opacity: 1; transform: scale(1); }
+                from { opacity: 0; transform: scale(0.96) translateY(4px); }
+                to { opacity: 1; transform: scale(1) translateY(0); }
               }
             `}</style>
           </div>
