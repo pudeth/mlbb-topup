@@ -943,9 +943,17 @@ const TopUp = () => {
       if (curTranId) {
         try {
           const r = await paywayAPI.checkStatus(curTranId, curOrderId);
-          if (r?.data?.isPaid === true || (r?.data?.status || '').toUpperCase() === 'PAID') {
+          const payStatus = (r?.data?.status || '').toUpperCase();
+          if (r?.data?.isPaid === true || payStatus === 'APPROVED' || payStatus === 'PAID' || payStatus === 'SUCCESS') {
             console.log(`%c[ABA PayWay Tracker] ✅ PayWay Bank API confirmed PAID (TranID: ${curTranId})`, 'color: #10b981; font-weight: bold;');
             isPaidConfirmed = true;
+          } else if (payStatus === 'EXPIRED' || payStatus === 'DECLINED' || payStatus === 'CANCELLED') {
+            console.log(`%c[ABA PayWay Tracker] ⏹ Transaction ${payStatus} (TranID: ${curTranId})`, 'color: #ef4444; font-weight: bold;');
+            setQrExpired(true);
+            qrExpiredRef.current = true;
+            return false;
+          } else {
+            console.log(`%c[ABA PayWay Tracker] ⏳ PayWay Bank API status: ${payStatus || 'PENDING'} (TranID: ${curTranId})`, 'color: #94a3b8;');
           }
         } catch (pwErr) {
           console.warn('[ABA PayWay Tracker] PayWay status error:', pwErr?.message);

@@ -224,13 +224,13 @@ namespace MLBBTopUp.Infrastructure.Services
                 return new PayWayCheckResult { Success = true, IsPaid = false, Status = "UNPAID" };
             }
 
-            // Strictly throttle to 2.9s minimum interval per transaction ID to guarantee consistent 3s intervals to ABA
+            // Light burst guard (1.0s) while ensuring every 3s client poll directly hits ABA PayWay endpoint
             if (_checkThrottleCache.TryGetValue(tranId, out var cached))
             {
                 var elapsed = (DateTime.UtcNow - cached.LastCheckedUtc).TotalSeconds;
-                if (elapsed < 2.9)
+                if (elapsed < 1.0)
                 {
-                    _logger.LogDebug("[ABA PayWay RateLimit] Throttling check for {TranId} (last checked {Elapsed:F2}s ago) - returning cached result", tranId, elapsed);
+                    _logger.LogDebug("[ABA PayWay RateLimit] Burst guard for {TranId} (last checked {Elapsed:F2}s ago) - returning cached result", tranId, elapsed);
                     return cached.Result;
                 }
             }
@@ -278,68 +278,69 @@ namespace MLBBTopUp.Infrastructure.Services
                     var root = doc.RootElement;
                     
                     bool isPaid = false;
-                    string statusText = "UNPAID";
+                    string statusText = "PENDING";
 
-                    // 1. Direct status number/string (from check-transaction v1)
-                    if (root.TryGetProperty("status", out var statusProp))
+                    // ABA PayWay Check Transaction API V2 response structure:
+                    // {
+                    //   "data": {
+                    //     "payment_status": "PENDING" | "APPROVED" | "DECLINED" | "EXPIRED",
+                    //     "payment_status_code": 2 (Pending) | 0 (Approved) | ...
+                    //   },
+                    //   "status": {
+                    //     "code": "00",
+                    //     "message": "Success!"
+                    //   }
+                    // }
+                    // NOTE: "status.code": "00" only means the HTTP API call succeeded.
+                    // The actual payment status is exclusively determined by data.payment_status == "APPROVED"!
+
+                    if (root.TryGetProperty("data", out var dataProp) && dataProp.ValueKind == JsonValueKind.Object)
                     {
+                        if (dataProp.TryGetProperty("payment_status", out var dpsProp))
+                        {
+                            var dps = dpsProp.GetString()?.Trim().ToUpperInvariant() ?? "";
+                            statusText = string.IsNullOrEmpty(dps) ? "PENDING" : dps;
+                            isPaid = (statusText == "APPROVED" || statusText == "PAID" || statusText == "SUCCESS");
+                        }
+                        else if (dataProp.TryGetProperty("payment_status_code", out var dpscProp))
+                        {
+                            if (dpscProp.ValueKind == JsonValueKind.Number)
+                            {
+                                int psc = dpscProp.GetInt32();
+                                isPaid = (psc == 0);
+                                statusText = isPaid ? "APPROVED" : (psc == 2 ? "PENDING" : $"CODE_{psc}");
+                            }
+                            else if (dpscProp.ValueKind == JsonValueKind.String)
+                            {
+                                var pscStr = dpscProp.GetString()?.Trim() ?? "";
+                                isPaid = (pscStr == "0" || pscStr == "00" || pscStr.Equals("APPROVED", StringComparison.OrdinalIgnoreCase));
+                                statusText = isPaid ? "APPROVED" : pscStr;
+                            }
+                        }
+                    }
+                    else if (root.TryGetProperty("payment_status", out var rootPsProp))
+                    {
+                        var rps = rootPsProp.GetString()?.Trim().ToUpperInvariant() ?? "";
+                        if (!string.IsNullOrEmpty(rps))
+                        {
+                            statusText = rps;
+                            isPaid = (rps == "APPROVED" || rps == "PAID" || rps == "SUCCESS");
+                        }
+                    }
+                    else if (root.TryGetProperty("status", out var statusProp))
+                    {
+                        // Fallback only if no data object (Legacy V1 endpoint format where status is integer 0 for approved)
                         if (statusProp.ValueKind == JsonValueKind.Number)
                         {
                             int code = statusProp.GetInt32();
                             isPaid = (code == 0);
-                            statusText = isPaid ? "PAID" : $"CODE_{code}";
+                            statusText = isPaid ? "APPROVED" : $"CODE_{code}";
                         }
                         else if (statusProp.ValueKind == JsonValueKind.String)
                         {
                             var s = statusProp.GetString()?.Trim().ToUpperInvariant() ?? "";
                             isPaid = (s == "0" || s == "00" || s == "APPROVED" || s == "PAID" || s == "SUCCESS");
-                            statusText = isPaid ? "PAID" : s;
-                        }
-                        else if (statusProp.ValueKind == JsonValueKind.Object)
-                        {
-                            if (statusProp.TryGetProperty("code", out var codeProp))
-                            {
-                                var codeStr = codeProp.ToString().Trim();
-                                isPaid = (codeStr == "0" || codeStr == "00" || codeStr.Equals("APPROVED", StringComparison.OrdinalIgnoreCase));
-                                statusText = isPaid ? "PAID" : codeStr;
-                            }
-                        }
-                    }
-
-                    // 2. Direct payment_status (from check-transaction or check-transaction-2 data)
-                    if (!isPaid)
-                    {
-                        if (root.TryGetProperty("payment_status", out var psProp))
-                        {
-                            var ps = psProp.GetString()?.Trim().ToUpperInvariant() ?? "";
-                            if (ps == "APPROVED" || ps == "PAID" || ps == "SUCCESS")
-                            {
-                                isPaid = true;
-                                statusText = "PAID";
-                            }
-                        }
-                        else if (root.TryGetProperty("data", out var dataProp) && dataProp.ValueKind == JsonValueKind.Object)
-                        {
-                            if (dataProp.TryGetProperty("payment_status", out var dpsProp))
-                            {
-                                var dps = dpsProp.GetString()?.Trim().ToUpperInvariant() ?? "";
-                                if (dps == "APPROVED" || dps == "PAID" || dps == "SUCCESS")
-                                {
-                                    isPaid = true;
-                                    statusText = "PAID";
-                                }
-                            }
-                        }
-                    }
-
-                    // 3. Description fallback
-                    if (!isPaid && root.TryGetProperty("description", out var descProp))
-                    {
-                        var desc = descProp.GetString()?.Trim().ToUpperInvariant() ?? "";
-                        if (desc == "APPROVED" || desc == "SUCCESS" || desc == "PAID")
-                        {
-                            isPaid = true;
-                            statusText = "PAID";
+                            statusText = isPaid ? "APPROVED" : s;
                         }
                     }
 
@@ -349,7 +350,7 @@ namespace MLBBTopUp.Infrastructure.Services
                     {
                         Success = true,
                         IsPaid = isPaid,
-                        Status = isPaid ? "PAID" : statusText
+                        Status = isPaid ? "APPROVED" : statusText
                     };
 
                     _checkThrottleCache[tranId] = (DateTime.UtcNow, checkResult);
