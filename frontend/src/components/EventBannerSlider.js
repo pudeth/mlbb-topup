@@ -134,19 +134,13 @@ const EventBannerSlider = ({ className = '' }) => {
 
 
         {/* ── Layer 1 · Banner images — clipped to frame inner shape ── */}
+        {/* Uses clip-path (universally supported, including iOS Safari)      */}
+        {/* Polygon traces the white inner area of the banner frame shape     */}
         <div
           className="absolute inset-0"
           style={{
-            WebkitMaskImage: 'url(/banner-mask.png)',
-            WebkitMaskSize: '100% 100%',
-            WebkitMaskRepeat: 'no-repeat',
-            WebkitMaskPosition: 'center',
-            WebkitMaskMode: 'luminance',
-            maskImage: 'url(/banner-mask.png)',
-            maskSize: '100% 100%',
-            maskRepeat: 'no-repeat',
-            maskPosition: 'center',
-            maskMode: 'luminance',
+            clipPath: 'polygon(6% 11%, 94% 11%, 97% 14%, 97% 86%, 94% 89%, 6% 89%, 3% 86%, 3% 14%)',
+            WebkitClipPath: 'polygon(6% 11%, 94% 11%, 97% 14%, 97% 86%, 94% 89%, 6% 89%, 3% 86%, 3% 14%)',
           }}
         >
           {banners.map((banner, index) => {
