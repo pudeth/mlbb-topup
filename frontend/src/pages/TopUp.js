@@ -2004,7 +2004,7 @@ const TopUp = () => {
                       >
                         {loading
                           ? (language === 'km' ? 'កំពុងភ្ជាប់ទៅកាន់ ABA...' : 'Connecting to ABA...')
-                          : (language === 'km' ? 'ចុចទីនេះដើម្បីស្កេនទូទាត់' : 'Scan to pay with any banking app')}
+                          : (language === 'km' ? 'ស្គែនទូទាត់តាមធនាគារជាសមាជិក' : 'Scan to pay with any banking app')}
                       </span>
                     </div>
                   </div>
