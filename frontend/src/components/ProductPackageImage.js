@@ -12,11 +12,13 @@ export const ProductPackageImage = ({
   if (pkg.customImage || pkg.image) {
     const imgSrc = pkg.customImage || pkg.image;
     const sizeClasses =
-      size === 'sm'
-        ? 'w-6 h-6'
+      size === 'xs'
+        ? 'w-7 h-7 sm:w-8 sm:h-8'
+        : size === 'sm'
+        ? 'w-6 h-6 sm:w-7 sm:h-7'
         : size === 'lg'
-        ? 'w-16 h-16 sm:w-20 sm:h-20'
-        : 'w-10 h-10 sm:w-12 sm:h-12';
+        ? 'w-12 h-12 sm:w-14 sm:h-14'
+        : 'w-8 h-8 sm:w-10 sm:h-10';
 
     return (
       <div className={`relative inline-flex items-center justify-center shrink-0 drop-shadow-md ${sizeClasses} ${className}`}>
@@ -39,11 +41,13 @@ export const ProductPackageImage = ({
 
   // Size dimensions
   const dims =
-    size === 'sm'
-      ? 'w-6 h-6'
+    size === 'xs'
+      ? 'w-7 h-7 sm:w-8 sm:h-8'
+      : size === 'sm'
+      ? 'w-6 h-6 sm:w-7 sm:h-7'
       : size === 'lg'
-      ? 'w-16 h-16 sm:w-20 sm:h-20'
-      : 'w-10 h-10 sm:w-12 sm:h-12';
+      ? 'w-12 h-12 sm:w-14 sm:h-14'
+      : 'w-8 h-8 sm:w-10 sm:h-10';
 
   // 3. Weekly Diamond Pass 3D Artwork
   if (isPass) {
