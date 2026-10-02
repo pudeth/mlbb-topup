@@ -136,12 +136,8 @@ const EventBannerSlider = ({ className = '' }) => {
 
         {/* ── Layer 1 · Banner images — clipped to frame inner shape ── */}
         <div
-          className="absolute"
+          className="absolute inset-0"
           style={{
-            top: '6%',
-            left: '3%',
-            right: '3%',
-            bottom: '6%',
             WebkitMaskImage: 'url(/banner-mask.png)',
             WebkitMaskSize: '100% 100%',
             WebkitMaskRepeat: 'no-repeat',
