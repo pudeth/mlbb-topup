@@ -136,16 +136,22 @@ const EventBannerSlider = ({ className = '' }) => {
 
         {/* ── Layer 1 · Banner images — clipped to frame inner shape ── */}
         <div
-          className="absolute inset-0"
+          className="absolute"
           style={{
+            top: '6%',
+            left: '3%',
+            right: '3%',
+            bottom: '6%',
             WebkitMaskImage: 'url(/banner-mask.png)',
             WebkitMaskSize: '100% 100%',
             WebkitMaskRepeat: 'no-repeat',
             WebkitMaskPosition: 'center',
+            WebkitMaskMode: 'luminance',
             maskImage: 'url(/banner-mask.png)',
             maskSize: '100% 100%',
             maskRepeat: 'no-repeat',
             maskPosition: 'center',
+            maskMode: 'luminance',
           }}
         >
           {banners.map((banner, index) => {
@@ -191,7 +197,7 @@ const EventBannerSlider = ({ className = '' }) => {
           alt=""
           aria-hidden="true"
           className="absolute inset-0 w-full h-full object-fill z-30 pointer-events-none select-none"
-          style={{ mixBlendMode: 'screen' }}
+          style={{ mixBlendMode: 'multiply' }}
         />
 
         {/* ── Layer 3 · Content overlay (text / badges / controls) ── */}
