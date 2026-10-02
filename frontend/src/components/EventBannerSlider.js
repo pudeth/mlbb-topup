@@ -123,7 +123,7 @@ const EventBannerSlider = ({ className = '' }) => {
       }}
     >
       {/* Banner Canvas Area */}
-      <div className="relative aspect-[16/9] sm:aspect-[18/9] md:aspect-[21/9] min-h-[190px] sm:min-h-[240px] md:min-h-[290px] w-full overflow-hidden">
+      <div className="relative aspect-[21/9] sm:aspect-[24/9] md:aspect-[3/1] min-h-[190px] sm:min-h-[230px] md:min-h-[270px] w-full overflow-hidden">
         {banners.map((banner, index) => {
           const isActive = index === currentIndex;
           return (

@@ -7670,9 +7670,9 @@ const PRICING_GAMES = [
                   <div className="grid grid-cols-2 sm:grid-cols-4 gap-1.5">
                     {[
                       {
-                        name: 'Aldous One Shot One Kill',
-                        url: '/aldous-banner.jpg',
-                        badge: 'ALDOUS 2026'
+                        name: 'MLBB 515 ALLSTAR',
+                        url: 'https://images.unsplash.com/photo-1511512578047-dfb367046420?auto=format&fit=crop&w=1400&q=80',
+                        badge: 'ALLSTAR 2026'
                       },
                       {
                         name: 'Starlight & Twilight',

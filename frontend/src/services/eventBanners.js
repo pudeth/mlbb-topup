@@ -4,15 +4,15 @@
 export const DEFAULT_EVENT_BANNERS = [
   {
     id: 'banner-1',
-    tag: '🔥 ALDOUS ONE SHOT ONE KILL',
-    title: 'Mobile Legends Aldous Special Promo',
+    tag: '🔥 ALLSTAR 2026 EVENT',
+    title: 'Mobile Legends 515 ALLSTAR Special',
     subtitle: 'ទទួលបាន 220 💎 + 70 Aurora ⭐ លើរាល់ការទិញ Weekly Diamond Pass!',
-    image: '/aldous-banner.jpg',
-    localFallbackImage: '/aldous-banner.jpg',
+    image: 'https://images.unsplash.com/photo-1511512578047-dfb367046420?auto=format&fit=crop&w=1400&q=80',
+    localFallbackImage: '/mlbb-logo.png',
     gameId: 'mlbb',
     buttonText: 'Top Up MLBB Now',
     link: '/topup?game=mlbb',
-    badgeColor: 'bg-gradient-to-r from-cyan-400 via-blue-500 to-rose-500 text-white',
+    badgeColor: 'bg-amber-400 text-slate-950',
     status: 'Active',
     order: 1
   },
@@ -60,7 +60,7 @@ export const DEFAULT_EVENT_BANNERS = [
   }
 ];
 
-const STORAGE_KEY = 'admin_event_banners_v3';
+const STORAGE_KEY = 'admin_event_banners';
 const EVENT_NAME = 'eventBannersUpdated';
 const OLD_KEYBOARD_IMG = 'photo-1542751371-adc38448a05e';
 
@@ -68,14 +68,14 @@ const sanitizeBanners = (list) => {
   if (!Array.isArray(list) || list.length === 0) return DEFAULT_EVENT_BANNERS;
   return list.map((b, idx) => {
     let img = b.image;
-    // Ensure banner-1 always displays the new framed esports banner
-    if (b.id === 'banner-1' || !img || img.includes(OLD_KEYBOARD_IMG) || img.includes('photo-1511512578047-dfb367046420')) {
-      img = (b.id === 'banner-1') ? '/aldous-banner.jpg' : DEFAULT_EVENT_BANNERS[idx % DEFAULT_EVENT_BANNERS.length].image;
+    // Replace old keyboard "AAA" stock photo with vibrant gaming backdrop
+    if (!img || img.includes(OLD_KEYBOARD_IMG)) {
+      img = DEFAULT_EVENT_BANNERS[idx % DEFAULT_EVENT_BANNERS.length].image;
     }
     return {
       ...b,
       image: img,
-      localFallbackImage: b.localFallbackImage || (b.id === 'banner-1' ? '/aldous-banner.jpg' : '/mlbb-logo.png')
+      localFallbackImage: b.localFallbackImage || '/mlbb-logo.png'
     };
   });
 };
