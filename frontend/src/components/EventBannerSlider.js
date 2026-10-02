@@ -129,19 +129,15 @@ const EventBannerSlider = ({ className = '' }) => {
       {/*  so it "stands forward" over the clipped image.                    */}
       <div
         className="relative w-full"
-        style={{ aspectRatio: '21/9' }}
+        style={{ aspectRatio: '1024/363' }}
       >
         {/* ── Layer 0 · Dark base so frame corners look right ── */}
         <div className="absolute inset-0 bg-slate-950 rounded-2xl sm:rounded-3xl" />
 
         {/* ── Layer 1 · Banner images — clipped to frame inner shape ── */}
         <div
-          className="absolute"
+          className="absolute inset-0"
           style={{
-            top: '6%',
-            left: '3%',
-            right: '3%',
-            bottom: '6%',
             WebkitMaskImage: 'url(/banner-mask.png)',
             WebkitMaskSize: '100% 100%',
             WebkitMaskRepeat: 'no-repeat',
