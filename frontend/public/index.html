@@ -56,140 +56,16 @@
         }
       }, true);
     </script>
-    <style>
-      /* Official ABA PayWay Mobile Bottom Sheet Styling */
-      .aba_checkout_column { display: flex; flex-direction: column; }
-      .aba_checkout_column.aba_checkout_items_center { align-items: center; }
-      .aba_checkout_column.justify-center { justify-content: center; }
-      .aba_checkout_column.aba_checkout_justify_end { justify-content: flex-end; }
-      #aba_checkout_sheet {
-        display: none;
-        position: fixed;
-        top: 0; left: 0; right: 0; bottom: 0;
-        z-index: 999999999;
-        visibility: visible;
-        transition: opacity 0.35s ease, visibility 0.35s ease;
-      }
-      #aba_checkout_sheet[aria-hidden='true'] {
-        opacity: 0;
-        visibility: hidden;
-        pointer-events: none;
-      }
-      #aba_checkout_sheet .aba_checkout_overlay {
-        position: absolute;
-        top: 0; left: 0; right: 0; bottom: 0;
-        z-index: -1;
-        background: rgba(0, 0, 0, 0.72);
-        -webkit-backdrop-filter: blur(4px);
-        backdrop-filter: blur(4px);
-      }
-      #aba_checkout_sheet .aba_checkout_contents {
-        border-radius: 24px 24px 0 0;
-        width: 100%;
-        background: #ffffff;
-        position: relative;
-        overflow: hidden;
-        transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1), height 0.4s cubic-bezier(0.16, 1, 0.3, 1);
-        transform: translateY(0);
-        max-height: 94vh;
-        height: 540px;
-        max-width: 480px;
-        margin: 0 auto;
-        box-sizing: border-box;
-        box-shadow: 0 -12px 40px rgba(0, 0, 0, 0.5);
-      }
-      #aba_checkout_sheet[aria-hidden='true'] .aba_checkout_contents {
-        transform: translateY(100%);
-      }
-      #aba_checkout_sheet .aba_checkout_draggable_area {
-        z-index: 100;
-        position: relative;
-        top: 0; left: 0; right: 0;
-        margin: 0 auto;
-        padding: 12px 1rem 8px 1rem;
-        cursor: grab;
-        width: 100%;
-        text-align: center;
-        background: #ffffff;
-      }
-      #aba_checkout_sheet .aba_checkout_draggable-thumb {
-        width: 44px;
-        height: 4.5px;
-        background: #cbd5e1;
-        border-radius: 9999px;
-        margin: 0 auto;
-      }
-      #aba_checkout_sheet #aba_checkout_app {
-        width: 100%;
-        height: calc(100% - 24px);
-        min-height: 480px;
-        position: relative;
-        overflow: hidden;
-        background: #ffffff;
-      }
-      #aba_checkout_sheet #aba_webservice {
-        width: 100%;
-        height: 100%;
-        min-height: 480px;
-        border: none;
-        background: #ffffff;
-      }
-    </style>
   </head>
   <body>
     <noscript>You need to enable JavaScript to run this app.</noscript>
     <div id="root"></div>
     <div id="aba-checkout"></div>
 
-    <!-- Official ABA PayWay Mobile Bottom Sheet Container (Pre-rendered for mobile devices) -->
-    <div id="aba_checkout_sheet" class="aba_checkout_column aba_checkout_items_center aba_checkout_justify_end" aria-hidden="true">
-      <div class="aba_checkout_overlay"></div>
-      <div class="aba_checkout_contents aba_checkout_column">
-        <header class="aba_checkout_column_header">
-          <div class="aba_checkout_draggable_area">
-            <div class="aba_checkout_draggable-thumb"></div>
-          </div>
-        </header>
-        <main class="aba_checkout_column" id="aba_checkout_app">
-        </main>
-      </div>
-    </div>
-
     <!-- Official ABA PayWay Script Loader in Body -->
     <script src="https://checkout.payway.com.kh/plugins/checkout2-0.js"></script>
     <script>
       (function() {
-        // Safe helpers for Mobile Bottom Sheet resizing and display
-        window.abaCheckoutSetSheetHeight = window.abaCheckoutSetSheetHeight || function(val) {
-          var contents = document.querySelector('#aba_checkout_sheet .aba_checkout_contents');
-          if (contents) {
-            contents.style.height = (typeof val === 'number' ? val + 'px' : val);
-          }
-        };
-
-        window.abaCheckoutSetIsSheetShown = window.abaCheckoutSetIsSheetShown || function(val) {
-          var sheet = document.getElementById('aba_checkout_sheet');
-          if (sheet) {
-            sheet.setAttribute('aria-hidden', String(!val));
-            if (val) {
-              sheet.style.display = 'flex';
-            } else {
-              setTimeout(function() {
-                if (sheet.getAttribute('aria-hidden') === 'true') {
-                  sheet.style.display = 'none';
-                }
-              }, 350);
-            }
-          }
-        };
-
-        // Dismiss when tapping overlay
-        document.addEventListener('click', function(e) {
-          if (e.target && e.target.classList && e.target.classList.contains('aba_checkout_overlay')) {
-            window.abaCheckoutSetIsSheetShown(false);
-          }
-        });
-
         function bridgePayway() {
           try {
             if (typeof AbaPayway !== 'undefined') {
