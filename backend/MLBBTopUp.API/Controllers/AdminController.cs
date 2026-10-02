@@ -148,6 +148,7 @@ public class AdminController : BaseController
     /// Get Master Top-Up Status (Public)
     /// </summary>
     [HttpGet("master-status")]
+    [HttpGet("/api/master-status")]
     [AllowAnonymous]
     public IActionResult GetMasterStatus()
     {
@@ -159,6 +160,8 @@ public class AdminController : BaseController
     /// </summary>
     [HttpPost("master-status")]
     [HttpPut("master-status")]
+    [HttpPost("/api/master-status")]
+    [HttpPut("/api/master-status")]
     [AllowAnonymous]
     public IActionResult UpdateMasterStatus([FromBody] object data)
     {
