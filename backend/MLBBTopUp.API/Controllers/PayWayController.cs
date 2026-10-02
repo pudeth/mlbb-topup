@@ -146,6 +146,36 @@ public class PayWayController : BaseController
             return BadRequest(new { message = "tran_id is required" });
         }
 
+        // If a server-side background poller is already tracking this transaction,
+        // do NOT send a duplicate outbound request to ABA! Return the latest known status.
+        if (!string.IsNullOrEmpty(tranId) && _pollingAuditLogs.TryGetValue(tranId, out var logs))
+        {
+            ServerPollingLogEntry? latest;
+            lock (logs) { latest = logs.LastOrDefault(); }
+            if (latest != null)
+            {
+                if (latest.IsPaid)
+                {
+                    var payment = await _context.Payments.FirstOrDefaultAsync(p => p.TransactionID == tranId);
+                    if (payment != null)
+                    {
+                        await _paymentService.VerifyPaymentAsync(payment.OrderId);
+                    }
+                    else if (orderId.HasValue)
+                    {
+                        await _paymentService.VerifyPaymentAsync(orderId.Value);
+                    }
+                }
+
+                return Ok(new PayWayCheckResult
+                {
+                    Success = true,
+                    IsPaid = latest.IsPaid,
+                    Status = latest.Status
+                });
+            }
+        }
+
         var result = await _abaPayWayService.CheckTransactionAsync(tranId);
 
         if (result.IsPaid)
@@ -286,6 +316,13 @@ public class PayWayController : BaseController
                     if (checkResult.IsPaid)
                     {
                         _logger.LogInformation("[ABA Server Poller] Payment APPROVED for {TranId}! Verifying order #{OrderId}", tranId, orderId);
+                        var payment = await _context.Payments.FirstOrDefaultAsync(p => p.TransactionID == tranId);
+                        if (payment != null)
+                        {
+                            payment.Status = "Completed";
+                            payment.PaidAt = DateTime.UtcNow;
+                            await _context.SaveChangesAsync();
+                        }
                         await paymentService.VerifyPaymentAsync(orderId);
                         break;
                     }

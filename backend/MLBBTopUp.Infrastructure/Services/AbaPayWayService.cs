@@ -249,17 +249,6 @@ namespace MLBBTopUp.Infrastructure.Services
             try
             {
                 var response = await _httpClient.SendAsync(requestMessage);
-                if (!response.IsSuccessStatusCode)
-                {
-                    // Fallback to check-transaction if check-transaction-2 returns non-200
-                    var fallbackEndpoint = $"{baseUrl}/api/payment-gateway/v1/payments/check-transaction";
-                    using var fbReq = new HttpRequestMessage(HttpMethod.Post, fallbackEndpoint)
-                    {
-                        Content = new StringContent(JsonSerializer.Serialize(payload), Encoding.UTF8, "application/json")
-                    };
-                    fbReq.Headers.TryAddWithoutValidation("User-Agent", "Mozilla/5.0");
-                    response = await _httpClient.SendAsync(fbReq);
-                }
 
                 if (response.IsSuccessStatusCode)
                 {
@@ -343,9 +332,10 @@ namespace MLBBTopUp.Infrastructure.Services
                         Status = isPaid ? "APPROVED" : statusText
                     };
 
-                    return checkResult;
                 }
-                return new PayWayCheckResult { Success = false, ErrorMessage = "Failed to check status" };
+                var errBody = await response.Content.ReadAsStringAsync();
+                _logger.LogWarning("ABA PayWay check-transaction-2 returned {StatusCode} for {TranId}: {Body}", response.StatusCode, tranId, errBody);
+                return new PayWayCheckResult { Success = true, IsPaid = false, Status = "PENDING" };
             }
             catch (Exception ex)
             {
