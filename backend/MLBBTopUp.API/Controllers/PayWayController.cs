@@ -77,7 +77,11 @@ public class PayWayController : BaseController
             await _context.SaveChangesAsync();
         }
 
-
+        // Start automated server-side background polling every 3s to guarantee compliance with ABA PayWay requirements
+        if (!string.IsNullOrEmpty(result.TranId))
+        {
+            StartBackgroundTransactionPolling(result.TranId, request.OrderId);
+        }
 
         return Ok(new
         {
@@ -158,6 +162,85 @@ public class PayWayController : BaseController
         }
 
         return Ok(result);
+    }
+
+    private static readonly System.Collections.Concurrent.ConcurrentDictionary<string, CancellationTokenSource> _activePollingTasks = new();
+
+    private void StartBackgroundTransactionPolling(string tranId, int orderId)
+    {
+        if (string.IsNullOrEmpty(tranId)) return;
+
+        if (_activePollingTasks.TryRemove(tranId, out var existingCts))
+        {
+            try { existingCts.Cancel(); existingCts.Dispose(); } catch { }
+        }
+
+        var cts = new CancellationTokenSource();
+        _activePollingTasks[tranId] = cts;
+
+        _ = Task.Run(async () =>
+        {
+            _logger.LogInformation("[ABA Server Poller] Started consistent 3s check loop for TranId: {TranId}, OrderId: {OrderId}", tranId, orderId);
+
+            // Step ②: Wait exactly 3 seconds after initiating before starting the first check
+            try
+            {
+                await Task.Delay(3000, cts.Token);
+            }
+            catch (OperationCanceledException)
+            {
+                return;
+            }
+
+            var stopwatch = System.Diagnostics.Stopwatch.StartNew();
+            // Maximum lifetime 10 minutes (600 seconds) matching ABA PayWay 5-15 min rule
+            while (!cts.Token.IsCancellationRequested && stopwatch.Elapsed.TotalSeconds < 600)
+            {
+                try
+                {
+                    using var scope = _serviceScopeFactory.CreateScope();
+                    var paywayService = scope.ServiceProvider.GetRequiredService<IAbaPayWayService>();
+                    var paymentService = scope.ServiceProvider.GetRequiredService<IPaymentService>();
+
+                    var checkResult = await paywayService.CheckTransactionAsync(tranId);
+                    _logger.LogInformation("[ABA Server Poller] 3s Check for {TranId}: Status={Status}, IsPaid={IsPaid}", tranId, checkResult.Status, checkResult.IsPaid);
+
+                    if (checkResult.IsPaid)
+                    {
+                        _logger.LogInformation("[ABA Server Poller] Payment APPROVED for {TranId}! Verifying order #{OrderId}", tranId, orderId);
+                        await paymentService.VerifyPaymentAsync(orderId);
+                        break;
+                    }
+
+                    if (checkResult.Status == "EXPIRED" || checkResult.Status == "DECLINED" || checkResult.Status == "CANCELLED")
+                    {
+                        _logger.LogInformation("[ABA Server Poller] Transaction {Status} for {TranId}. Terminating poll loop.", checkResult.Status, tranId);
+                        break;
+                    }
+                }
+                catch (OperationCanceledException)
+                {
+                    break;
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogWarning("[ABA Server Poller] Notice during check for {TranId}: {Msg}", tranId, ex.Message);
+                }
+
+                // Consistently wait exactly 3 seconds AFTER previous request completes before sending next check
+                try
+                {
+                    await Task.Delay(3000, cts.Token);
+                }
+                catch (OperationCanceledException)
+                {
+                    break;
+                }
+            }
+
+            _activePollingTasks.TryRemove(tranId, out _);
+            _logger.LogInformation("[ABA Server Poller] Stopped 3s polling for {TranId}", tranId);
+        }, cts.Token);
     }
 
     /// <summary>

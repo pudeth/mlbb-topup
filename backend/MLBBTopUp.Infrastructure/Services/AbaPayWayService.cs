@@ -66,7 +66,6 @@ namespace MLBBTopUp.Infrastructure.Services
         private readonly HttpClient _httpClient;
         private readonly IConfiguration _configuration;
         private readonly ILogger<AbaPayWayService> _logger;
-        private static readonly ConcurrentDictionary<string, (DateTime LastCheckedUtc, PayWayCheckResult Result)> _checkThrottleCache = new();
 
         public AbaPayWayService(HttpClient httpClient, IConfiguration configuration, ILogger<AbaPayWayService> logger)
         {
@@ -224,16 +223,7 @@ namespace MLBBTopUp.Infrastructure.Services
                 return new PayWayCheckResult { Success = true, IsPaid = false, Status = "UNPAID" };
             }
 
-            // Light burst guard (1.0s) while ensuring every 3s client poll directly hits ABA PayWay endpoint
-            if (_checkThrottleCache.TryGetValue(tranId, out var cached))
-            {
-                var elapsed = (DateTime.UtcNow - cached.LastCheckedUtc).TotalSeconds;
-                if (elapsed < 1.0)
-                {
-                    _logger.LogDebug("[ABA PayWay RateLimit] Burst guard for {TranId} (last checked {Elapsed:F2}s ago) - returning cached result", tranId, elapsed);
-                    return cached.Result;
-                }
-            }
+
 
             var reqTime = DateTime.UtcNow.ToString("yyyyMMddHHmmss");
             var b4hash = $"{reqTime}{merchantId}{tranId}";
@@ -353,7 +343,6 @@ namespace MLBBTopUp.Infrastructure.Services
                         Status = isPaid ? "APPROVED" : statusText
                     };
 
-                    _checkThrottleCache[tranId] = (DateTime.UtcNow, checkResult);
                     return checkResult;
                 }
                 return new PayWayCheckResult { Success = false, ErrorMessage = "Failed to check status" };
