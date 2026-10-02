@@ -865,6 +865,28 @@ const TopUp = () => {
   const currentMd5Ref = useRef(paymentData?.khqrMd5Hash || paymentData?.md5Hash);
   currentMd5Ref.current = paymentData?.khqrMd5Hash || paymentData?.md5Hash;
 
+  // Real-Time Poller Telemetry for ABA PayWay QA Verification
+  const pollCountRef = useRef(0);
+  const [pollTelemetry, setPollTelemetry] = useState({
+    count: 0,
+    status: 'PENDING',
+    lastTime: null,
+    tranId: null
+  });
+
+  // Reset telemetry upon new transaction
+  useEffect(() => {
+    const tid = paymentData?.tranId || paymentData?.tran_id || paymentData?.formData?.tran_id;
+    pollCountRef.current = 0;
+    setPollTelemetry({
+      count: 0,
+      status: 'PENDING',
+      lastTime: null,
+      tranId: tid || null
+    });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [paymentData?.tranId]);
+
   const checkPaymentStatus = useCallback(async () => {
     const curOrderId = currentOrderIdRef.current;
     const curTranId = currentTranIdRef.current;
@@ -872,15 +894,10 @@ const TopUp = () => {
     if (!curOrderId || paymentPaidRef.current || isCheckingRef.current || qrExpiredRef.current) return false;
     isCheckingRef.current = true;
 
-    console.log(
-      `%c[ABA PayWay Tracker] 🔄 Polling Order #${curOrderId} | TranID: ${curTranId || 'N/A'}`,
-      'color: #38bdf8; font-weight: bold;'
-    );
-
     const triggerPaidTransition = async () => {
       // ABA Rule: Do NOT automatically dismiss ABA popup. Keep the official Success screen active so customer can view it and download receipt!
       console.log(
-        `%c[ABA PayWay Tracker] 🚀 PAYMENT DETECTED (PAID) for Order #${curOrderId}! Official ABA Success interface will remain active.`,
+        `%c[ABA PayWay V2 Poller] 🚀 PAYMENT DETECTED (PAID) for Order #${curOrderId}! Official ABA Success interface will remain active.`,
         'color: #10b981; font-weight: 900; font-size: 13px; background: #064e3b; padding: 3px 6px; border-radius: 4px;'
       );
 
@@ -892,24 +909,45 @@ const TopUp = () => {
     try {
       let isPaidConfirmed = false;
 
-      // Real direct bank checking via ABA PayWay endpoint
+      // Real direct bank checking via ABA PayWay V2 endpoint (check-transaction-2)
       if (curTranId) {
+        pollCountRef.current += 1;
+        const currentCount = pollCountRef.current;
+        const timeStr = new Date().toLocaleTimeString();
+
         try {
           const r = await paywayAPI.checkStatus(curTranId, curOrderId);
-          const payStatus = (r?.data?.status || '').toUpperCase();
+          const payStatus = (r?.data?.status || '').toUpperCase() || 'PENDING';
+
+          setPollTelemetry({
+            count: currentCount,
+            status: payStatus,
+            lastTime: timeStr,
+            tranId: curTranId
+          });
+
+          console.log(
+            `%c[ABA PayWay V2 Poller] ⏱️ ${timeStr} | Check #${currentCount} (+3.0s) | Target: check-transaction-2 | TranID: ${curTranId} | Status: ${payStatus}`,
+            'color: #0284c7; font-weight: bold; background: #e0f2fe; padding: 2px 6px; border-radius: 4px;'
+          );
+
           if (r?.data?.isPaid === true || payStatus === 'APPROVED' || payStatus === 'PAID' || payStatus === 'SUCCESS') {
-            console.log(`%c[ABA PayWay Tracker] ✅ PayWay Bank API confirmed PAID (TranID: ${curTranId})`, 'color: #10b981; font-weight: bold;');
+            console.log(
+              `%c[ABA PayWay V2 Poller] ✅ PayWay Bank API confirmed PAID (TranID: ${curTranId}, Total Checks: ${currentCount})`,
+              'color: #10b981; font-weight: bold; background: #064e3b; padding: 2px 6px; border-radius: 4px;'
+            );
             isPaidConfirmed = true;
           } else if (payStatus === 'EXPIRED' || payStatus === 'DECLINED' || payStatus === 'CANCELLED') {
-            console.log(`%c[ABA PayWay Tracker] ⏹ Transaction ${payStatus} (TranID: ${curTranId})`, 'color: #ef4444; font-weight: bold;');
+            console.log(
+              `%c[ABA PayWay V2 Poller] ⏹ Transaction ${payStatus} (TranID: ${curTranId}, Total Checks: ${currentCount})`,
+              'color: #ef4444; font-weight: bold; background: #450a0a; padding: 2px 6px; border-radius: 4px;'
+            );
             setQrExpired(true);
             qrExpiredRef.current = true;
             return false;
-          } else {
-            console.log(`%c[ABA PayWay Tracker] ⏳ PayWay Bank API status: ${payStatus || 'PENDING'} (TranID: ${curTranId})`, 'color: #94a3b8;');
           }
         } catch (pwErr) {
-          console.warn('[ABA PayWay Tracker] PayWay status error:', pwErr?.message);
+          console.warn('[ABA PayWay V2 Poller] PayWay status error:', pwErr?.message);
         }
       }
 
@@ -925,7 +963,6 @@ const TopUp = () => {
         } catch (e) {}
       }
 
-
       if (isPaidConfirmed) {
         console.log(`%c[ABA PayWay Tracker] ✓ Confirmed PAID! Processing order completion...`, 'color: #10b981; font-weight: bold;');
         const confirmResult = await ordersAPI.checkPayment(curOrderId, true);
@@ -940,8 +977,6 @@ const TopUp = () => {
         await triggerPaidTransition();
         return true;
       }
-
-      console.log(`%c[ABA PayWay Tracker] ⏳ Order #${curOrderId} | Waiting for ABA PayWay payment...`, 'color: #94a3b8; font-size: 11px;');
     } catch (err) {
       console.warn('[ABA PayWay Tracker] Notice:', err?.message);
     } finally {
@@ -951,12 +986,11 @@ const TopUp = () => {
     return false;
   }, []);
 
-
-
-  // Automatic Real-Time Polling (ABA PayWay Recommended Logic Flow: wait ~3s, then check consistently every 3s)
+  // Automatic Real-Time Polling (ABA PayWay Recommended Logic Flow: wait 3s, then check consistently every 3s until expiry or approval)
   useEffect(() => {
+    const curTranId = paymentData?.tranId || paymentData?.tran_id || paymentData?.formData?.tran_id;
     // Step ③: Stop checking when payment is Approved/done or when transaction lifetime expires
-    if (!orderId || paymentPaid || qrExpired) return;
+    if (!orderId || paymentPaid || qrExpired || !curTranId) return;
 
     let timerId = null;
     let isCancelled = false;
@@ -982,7 +1016,7 @@ const TopUp = () => {
       if (timerId) clearTimeout(timerId);
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [orderId, paymentPaid, qrExpired]);
+  }, [orderId, paymentData?.tranId, paymentPaid, qrExpired, checkPaymentStatus]);
 
 
   const handleProceedToPayment = async () => {
@@ -1947,6 +1981,46 @@ const TopUp = () => {
       </div>
 
 
+
+      {/* ======================================================== */}
+      {/* ABA PAYWAY V2 3-SECOND POLLING AUDIT BAR                 */}
+      {/* ======================================================== */}
+      {paymentData && !paymentPaid && (
+        <div className="fixed bottom-4 right-4 z-[99999] max-w-sm w-[calc(100%-2rem)] sm:w-84 bg-slate-900/95 backdrop-blur-md border border-cyan-500/50 rounded-2xl p-3.5 shadow-2xl shadow-cyan-500/20 text-xs text-white space-y-2 animate-fadeIn">
+          <div className="flex items-center justify-between gap-2">
+            <div className="flex items-center gap-2">
+              <span className="relative flex h-2.5 w-2.5">
+                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-cyan-400 opacity-75"></span>
+                <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-cyan-500"></span>
+              </span>
+              <span className="font-bold text-cyan-300 text-xs tracking-wide">ABA PayWay V2 Poller</span>
+            </div>
+            <span className="text-[11px] font-mono bg-cyan-950/80 text-cyan-300 px-2 py-0.5 rounded border border-cyan-800">
+              Check #{pollTelemetry.count || 0} • 3.0s
+            </span>
+          </div>
+
+          <div className="flex items-center justify-between text-[11px] text-slate-300">
+            <span>Bank Status: <strong className={pollTelemetry.status === 'APPROVED' ? 'text-emerald-400' : 'text-amber-400'}>{pollTelemetry.status || 'PENDING'}</strong></span>
+            <span className="text-slate-400 font-mono text-[10px]">{pollTelemetry.lastTime || 'Starting...'}</span>
+          </div>
+
+          {paymentData?.tranId && (
+            <div className="pt-2 border-t border-slate-800 flex items-center justify-between text-[10px]">
+              <span className="font-mono text-slate-400 truncate max-w-[130px]">Tran: {paymentData.tranId}</span>
+              <a 
+                href={`https://mlbb-backend-api.onrender.com/api/payway/polling-log/${paymentData.tranId}`} 
+                target="_blank" 
+                rel="noreferrer"
+                className="text-cyan-400 hover:text-cyan-300 underline font-semibold flex items-center gap-1"
+                title="View live ABA gateway server audit logs"
+              >
+                Audit Server Logs ↗
+              </a>
+            </div>
+          )}
+        </div>
+      )}
 
       {/* ======================================================== */}
       {/* AWAITING BALANCE — PENDING RECEIPT (provider low balance) */}

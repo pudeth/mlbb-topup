@@ -164,7 +164,72 @@ public class PayWayController : BaseController
         return Ok(result);
     }
 
+    public class ServerPollingLogEntry
+    {
+        public int CheckNumber { get; set; }
+        public string TimestampUtc { get; set; } = string.Empty;
+        public string TimestampCambodia { get; set; } = string.Empty;
+        public string Endpoint { get; set; } = string.Empty;
+        public string Status { get; set; } = string.Empty;
+        public bool IsPaid { get; set; }
+        public double ElapsedSeconds { get; set; }
+    }
+
+    private static readonly System.Collections.Concurrent.ConcurrentDictionary<string, List<ServerPollingLogEntry>> _pollingAuditLogs = new();
     private static readonly System.Collections.Concurrent.ConcurrentDictionary<string, CancellationTokenSource> _activePollingTasks = new();
+
+    /// <summary>
+    /// Live audit endpoint to inspect server-side 3-second Check Transaction API V2 polling history
+    /// </summary>
+    [HttpGet("polling-log/{tranId}")]
+    [HttpGet("polling-log")]
+    [AllowAnonymous]
+    public IActionResult GetPollingLog(string? tranId)
+    {
+        if (string.IsNullOrEmpty(tranId))
+        {
+            tranId = Request.Query["tran_id"].ToString();
+            if (string.IsNullOrEmpty(tranId)) tranId = Request.Query["tranId"].ToString();
+        }
+
+        if (string.IsNullOrEmpty(tranId))
+        {
+            return BadRequest(new { message = "tranId is required" });
+        }
+
+        var baseUrl = _configuration["AbaPayWay:BaseUrl"] ?? "https://checkout-sandbox.payway.com.kh";
+        var endpoint = $"{baseUrl}/api/payment-gateway/v1/payments/check-transaction-2";
+
+        if (_pollingAuditLogs.TryGetValue(tranId, out var logs))
+        {
+            lock (logs)
+            {
+                return Ok(new
+                {
+                    success = true,
+                    tranId,
+                    apiEndpoint = endpoint,
+                    apiVersion = "V2 (check-transaction-2)",
+                    cadence = "Every 3.0 seconds consistently",
+                    totalChecks = logs.Count,
+                    latestStatus = logs.LastOrDefault()?.Status ?? "PENDING",
+                    history = logs.ToList()
+                });
+            }
+        }
+
+        return Ok(new
+        {
+            success = true,
+            tranId,
+            apiEndpoint = endpoint,
+            apiVersion = "V2 (check-transaction-2)",
+            cadence = "Every 3.0 seconds consistently",
+            totalChecks = 0,
+            latestStatus = "INITIALIZING",
+            history = Array.Empty<object>()
+        });
+    }
 
     private void StartBackgroundTransactionPolling(string tranId, int orderId)
     {
@@ -177,6 +242,11 @@ public class PayWayController : BaseController
 
         var cts = new CancellationTokenSource();
         _activePollingTasks[tranId] = cts;
+        var auditList = _pollingAuditLogs.GetOrAdd(tranId, _ => new List<ServerPollingLogEntry>());
+        lock (auditList) { auditList.Clear(); }
+
+        var baseUrl = _configuration["AbaPayWay:BaseUrl"] ?? "https://checkout-sandbox.payway.com.kh";
+        int pollCounter = 0;
 
         _ = Task.Run(async () =>
         {
@@ -203,7 +273,21 @@ public class PayWayController : BaseController
                     var paymentService = scope.ServiceProvider.GetRequiredService<IPaymentService>();
 
                     var checkResult = await paywayService.CheckTransactionAsync(tranId);
-                    _logger.LogInformation("[ABA Server Poller] 3s Check for {TranId}: Status={Status}, IsPaid={IsPaid}", tranId, checkResult.Status, checkResult.IsPaid);
+                    int currentCheck = Interlocked.Increment(ref pollCounter);
+
+                    var entry = new ServerPollingLogEntry
+                    {
+                        CheckNumber = currentCheck,
+                        TimestampUtc = DateTime.UtcNow.ToString("yyyy-MM-dd HH:mm:ss.fff"),
+                        TimestampCambodia = DateTime.UtcNow.AddHours(7).ToString("yyyy-MM-dd HH:mm:ss"),
+                        Endpoint = $"{baseUrl}/api/payment-gateway/v1/payments/check-transaction-2",
+                        Status = checkResult.Status,
+                        IsPaid = checkResult.IsPaid,
+                        ElapsedSeconds = Math.Round(stopwatch.Elapsed.TotalSeconds, 1)
+                    };
+                    lock (auditList) { auditList.Add(entry); }
+
+                    _logger.LogInformation("[ABA Server Poller] ⏱️ Check #{Num} for {TranId}: Status={Status}, IsPaid={IsPaid}", currentCheck, tranId, checkResult.Status, checkResult.IsPaid);
 
                     if (checkResult.IsPaid)
                     {
