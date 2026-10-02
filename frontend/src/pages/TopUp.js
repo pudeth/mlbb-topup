@@ -442,89 +442,43 @@ const TopUp = () => {
           if (stored) currentUser = JSON.parse(stored);
         } catch (e) {}
 
-        // Try Python Scorekhqr service first for authentic real-time ABA KHQR
-        const directRes = await fetch('http://localhost:5001/api/payment/create', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            orderId,
-            amount: targetAmount,
-            currency: newCurr,
-            player_id: formData.playerID ? formData.playerID.trim() : '',
-            server_id: formData.serverID ? formData.serverID.trim() : '',
-            account_name: verifiedAccount?.name || '',
-            customer_id: currentUser?.userId || currentUser?.id || '',
-            game_name: selectedGame?.name || 'Mobile Legends: Bang Bang',
-            package_name: selectedProduct?.name || `${selectedProduct?.diamondAmount || 55} Diamonds`
-          })
-        }).then(r => r.json()).catch(() => null);
+        const pId = formData.playerID ? formData.playerID.trim() : '';
+        const sId = formData.serverID ? formData.serverID.trim() : '11446';
+        const playerAccName = verifiedAccount?.name || '';
+        const customerId = currentUser?.userId || currentUser?.id || '';
+        const gameTitle = selectedGame?.name || 'Mobile Legends: Bang Bang';
+        const pkgName = selectedProduct?.name || `${selectedProduct?.diamondAmount || 55} Diamonds`;
 
-        if (directRes?.qr_code || directRes?.khqrString) {
-          const validCode = directRes.qr_code || directRes.khqrString;
+        const payRes = await paywayAPI.create({
+          orderId,
+          amount: targetAmount,
+          currency: newCurr,
+          player_id: pId,
+          server_id: sId,
+          account_name: playerAccName,
+          customer_id: customerId,
+          game_name: gameTitle,
+          package_name: pkgName
+        });
+
+        if (payRes?.data) {
+          const pd = payRes.data;
           setPaymentData(prev => ({
             ...prev,
-            currency: newCurr,
+            ...pd,
             amount: targetAmount,
-            qrString: validCode,
-            khqrQRCode: validCode,
-            khqrDeeplink: directRes.deeplink,
-            abapayDeeplink: directRes.deeplink,
-            khqrMd5Hash: directRes.md5 || directRes.md5_hash,
-            md5Hash: directRes.md5 || directRes.md5_hash,
-            merchantName: directRes.merchantName || 'DETH PHEAK'
+            currency: newCurr,
+            tranId: pd.tranId,
+            qrString: pd.qrString || null,
+            abapayDeeplink: pd.abapayDeeplink || pd.checkoutUrl,
+            khqrDeeplink: pd.abapayDeeplink || pd.checkoutUrl,
+            md5Hash: pd.md5,
+            formData: pd.formData,
+            purchaseUrl: pd.purchaseUrl,
+            checkoutUrl: pd.checkoutUrl,
+            merchantName: 'DETH PHEAK',
+            gateway: 'aba_payway'
           }));
-        } else {
-          // Cloud fallback
-          const cloudRes = await fetch('https://mlbb-khqr-api.onrender.com/api/payment/create', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-              orderId,
-              amount: targetAmount,
-              currency: newCurr,
-              player_id: formData.playerID ? formData.playerID.trim() : '',
-              server_id: formData.serverID ? formData.serverID.trim() : '',
-              account_name: verifiedAccount?.name || '',
-              customer_id: currentUser?.userId || currentUser?.id || '',
-              game_name: selectedGame?.name || 'Mobile Legends: Bang Bang',
-              package_name: selectedProduct?.name || `${selectedProduct?.diamondAmount || 55} Diamonds`
-            })
-          }).then(r => r.json()).catch(() => null);
-
-          if (cloudRes?.qr_code || cloudRes?.khqrString) {
-            const validCode = cloudRes.qr_code || cloudRes.khqrString;
-            setPaymentData(prev => ({
-              ...prev,
-              currency: newCurr,
-              amount: targetAmount,
-              qrString: validCode,
-              khqrQRCode: validCode,
-              khqrDeeplink: cloudRes.deeplink,
-              abapayDeeplink: cloudRes.deeplink,
-              khqrMd5Hash: cloudRes.md5 || cloudRes.md5_hash,
-              md5Hash: cloudRes.md5 || cloudRes.md5_hash,
-              merchantName: cloudRes.merchantName || 'DETH PHEAK'
-            }));
-          } else {
-            // Fallback to paywayAPI
-            const payRes = await paywayAPI.create({
-              orderId,
-              amount: targetAmount,
-              currency: newCurr
-            });
-            if (payRes.data) {
-              setPaymentData(prev => ({
-                ...prev,
-                ...payRes.data,
-                currency: newCurr,
-                amount: targetAmount,
-                qrString: payRes.data.qrString,
-                khqrQRCode: payRes.data.qrString,
-                khqrDeeplink: payRes.data.abapayDeeplink,
-                khqrMd5Hash: payRes.data.md5
-              }));
-            }
-          }
         }
       } catch (err) {
         console.warn('Currency switch notice:', err?.message);
@@ -907,7 +861,6 @@ const TopUp = () => {
   const checkPaymentStatus = useCallback(async () => {
     const curOrderId = currentOrderIdRef.current;
     const curTranId = currentTranIdRef.current;
-    const curMd5 = currentMd5Ref.current;
 
     if (!curOrderId || paymentPaidRef.current || isCheckingRef.current || qrExpiredRef.current) return false;
     isCheckingRef.current = true;
@@ -933,7 +886,7 @@ const TopUp = () => {
       let isPaidConfirmed = false;
 
       // Real direct bank checking via ABA PayWay endpoint
-      if (curTranId && (paymentData?.gateway === 'aba_payway' || !curMd5)) {
+      if (curTranId) {
         try {
           const r = await paywayAPI.checkStatus(curTranId, curOrderId);
           if (r?.data?.isPaid === true || (r?.data?.status || '').toUpperCase() === 'PAID') {
@@ -943,20 +896,6 @@ const TopUp = () => {
         } catch (pwErr) {
           console.warn('[ABA PayWay Tracker] PayWay status error:', pwErr?.message);
         }
-      } 
-      
-      // Legacy KHQR path (Scorekhqr-bakong) - only used if strictly aba_khqr
-      else if (curMd5 && paymentData?.gateway === 'aba_khqr') {
-        try {
-          const r = await fetch(`http://localhost:5001/api/payment/status/${curMd5}`)
-            .then(res => res.json())
-            .catch(() => null);
-          const raw = (r?.status || '').toUpperCase();
-          if (raw === 'PAID' || raw === 'SUCCESS' || raw === 'COMPLETED' || r?.paid === true) {
-            console.log(`%c[ABA PayWay Tracker] ✅ KHQR Cache confirmed PAID (md5: ${curMd5.slice(0,8)}...)`, 'color: #10b981; font-weight: bold;');
-            isPaidConfirmed = true;
-          }
-        } catch (e) {}
       }
 
       // Always check .NET backend DB via quick-status as fallback
@@ -995,7 +934,7 @@ const TopUp = () => {
     }
 
     return false;
-  }, [paymentData?.gateway]);
+  }, []);
 
 
 
@@ -1030,61 +969,6 @@ const TopUp = () => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [orderId, paymentPaid, qrExpired]);
 
-  // ── SSE Real-Time Payment Push ─────────────────────────────────────────────
-  // Connects to Scorekhqr-bakong SSE endpoint. Fires INSTANTLY when Telegram
-  // "✅ Approve" button is clicked — no polling delay needed.
-  useEffect(() => {
-    const md5 = paymentData?.khqrMd5Hash || paymentData?.md5Hash;
-    if (!md5 || paymentPaid || qrExpired || !orderId) return;
-
-    let es = null;
-    let active = true;
-
-    const connectSSE = () => {
-      try {
-        es = new EventSource(`http://localhost:5001/api/payment/sse/${md5}`);
-
-        es.onmessage = (ev) => {
-          if (!active) return;
-          const data = (ev.data || '').trim().toUpperCase();
-          if (data === 'PAID' && !paymentPaidRef.current) {
-            console.log(
-              `%c[ABA PayWay Tracker] ⚡ SSE PUSH: PAID event received for md5 ${md5.slice(0, 8)}... — triggering instant transition!`,
-              'color: #10b981; font-weight: 900; font-size: 13px; background: #064e3b; padding: 3px 6px; border-radius: 4px;'
-            );
-            // Mark paid flag immediately to stop polling
-            paymentPaidRef.current = true;
-            es && es.close();
-
-            // Run payment confirmation
-            const run = async () => {
-              try { await ordersAPI.checkPayment(orderId, true); } catch(e) {}
-              playSuccessSound();
-              setPaymentPaid(true);
-              console.log(`%c[ABA PayWay Tracker] 🎉 Order #${orderId} Completed! Displaying [Pay-Successfully] invoice receipt screen.`, 'color: #a7f3d0; font-weight: bold;');
-            };
-            run();
-          }
-        };
-
-        es.onerror = () => {
-          // SSE disconnected — polling interval handles detection as fallback
-          if (active && !paymentPaidRef.current) {
-            setTimeout(() => { if (active && !paymentPaidRef.current) connectSSE(); }, 3000);
-          }
-        };
-      } catch (e) {
-        // EventSource not supported or blocked — polling fallback handles it
-      }
-    };
-
-    connectSSE();
-
-    return () => {
-      active = false;
-      es && es.close();
-    };
-  }, [orderId, paymentData, paymentPaid, qrExpired, selectedProduct?.name, formData.playerID]);
 
   const handleProceedToPayment = async () => {
     if (isTopupDisabled) {
