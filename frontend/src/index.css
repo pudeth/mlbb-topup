@@ -335,20 +335,7 @@ body.modal-open .ai-assistant-widget {
   transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1) !important;
 }
 
-/* ==========================================================================
-   ABA PayWay Ultra-Responsive & Premium Mobile/Desktop Interface Polish
-   ========================================================================== */
 
-/* 1. Hide floating widgets when ABA checkout is active */
-body:has(#aba_checkout_sheet:not([aria-hidden="true"])) .mobile-bottom-nav,
-body:has(#aba_checkout_sheet:not([aria-hidden="true"])) .ai-assistant-widget,
-body:has(.aba-checkout-desktop[style*="display: block"]) .mobile-bottom-nav,
-body:has(.aba-checkout-desktop[style*="display: block"]) .ai-assistant-widget {
-  opacity: 0 !important;
-  pointer-events: none !important;
-  transform: translateY(80px) !important;
-  transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1) !important;
-}
 
 
 
