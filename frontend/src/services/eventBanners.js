@@ -60,7 +60,7 @@ export const DEFAULT_EVENT_BANNERS = [
   }
 ];
 
-const STORAGE_KEY = 'admin_event_banners';
+const STORAGE_KEY = 'admin_event_banners_v3';
 const EVENT_NAME = 'eventBannersUpdated';
 const OLD_KEYBOARD_IMG = 'photo-1542751371-adc38448a05e';
 
@@ -68,9 +68,9 @@ const sanitizeBanners = (list) => {
   if (!Array.isArray(list) || list.length === 0) return DEFAULT_EVENT_BANNERS;
   return list.map((b, idx) => {
     let img = b.image;
-    // Replace old keyboard "AAA" stock photo or previous default unsplash banner with new framed banner
-    if (!img || img.includes(OLD_KEYBOARD_IMG) || (b.id === 'banner-1' && img.includes('photo-1511512578047-dfb367046420'))) {
-      img = DEFAULT_EVENT_BANNERS[idx % DEFAULT_EVENT_BANNERS.length].image;
+    // Ensure banner-1 always displays the new framed esports banner
+    if (b.id === 'banner-1' || !img || img.includes(OLD_KEYBOARD_IMG) || img.includes('photo-1511512578047-dfb367046420')) {
+      img = (b.id === 'banner-1') ? '/aldous-banner.jpg' : DEFAULT_EVENT_BANNERS[idx % DEFAULT_EVENT_BANNERS.length].image;
     }
     return {
       ...b,
