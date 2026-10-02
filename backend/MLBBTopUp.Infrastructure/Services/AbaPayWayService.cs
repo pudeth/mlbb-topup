@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Net.Http;
 using System.Security.Cryptography;
@@ -65,6 +66,7 @@ namespace MLBBTopUp.Infrastructure.Services
         private readonly HttpClient _httpClient;
         private readonly IConfiguration _configuration;
         private readonly ILogger<AbaPayWayService> _logger;
+        private static readonly ConcurrentDictionary<string, (DateTime LastCheckedUtc, PayWayCheckResult Result)> _checkThrottleCache = new();
 
         public AbaPayWayService(HttpClient httpClient, IConfiguration configuration, ILogger<AbaPayWayService> logger)
         {
@@ -222,6 +224,17 @@ namespace MLBBTopUp.Infrastructure.Services
                 return new PayWayCheckResult { Success = true, IsPaid = false, Status = "UNPAID" };
             }
 
+            // Strictly throttle to 2.9s minimum interval per transaction ID to guarantee consistent 3s intervals to ABA
+            if (_checkThrottleCache.TryGetValue(tranId, out var cached))
+            {
+                var elapsed = (DateTime.UtcNow - cached.LastCheckedUtc).TotalSeconds;
+                if (elapsed < 2.9)
+                {
+                    _logger.LogDebug("[ABA PayWay RateLimit] Throttling check for {TranId} (last checked {Elapsed:F2}s ago) - returning cached result", tranId, elapsed);
+                    return cached.Result;
+                }
+            }
+
             var reqTime = DateTime.UtcNow.ToString("yyyyMMddHHmmss");
             var b4hash = $"{reqTime}{merchantId}{tranId}";
             var hash = GenerateHash(b4hash);
@@ -235,7 +248,8 @@ namespace MLBBTopUp.Infrastructure.Services
             };
 
             var content = new StringContent(JsonSerializer.Serialize(payload), Encoding.UTF8, "application/json");
-            var primaryEndpoint = $"{baseUrl}/api/payment-gateway/v1/payments/check-transaction";
+            // Check Transaction API V2 as required by ABA PayWay guidelines
+            var primaryEndpoint = $"{baseUrl}/api/payment-gateway/v1/payments/check-transaction-2";
             using var requestMessage = new HttpRequestMessage(HttpMethod.Post, primaryEndpoint)
             {
                 Content = content
@@ -247,8 +261,8 @@ namespace MLBBTopUp.Infrastructure.Services
                 var response = await _httpClient.SendAsync(requestMessage);
                 if (!response.IsSuccessStatusCode)
                 {
-                    // Fallback to check-transaction-2 if check-transaction returns non-200
-                    var fallbackEndpoint = $"{baseUrl}/api/payment-gateway/v1/payments/check-transaction-2";
+                    // Fallback to check-transaction if check-transaction-2 returns non-200
+                    var fallbackEndpoint = $"{baseUrl}/api/payment-gateway/v1/payments/check-transaction";
                     using var fbReq = new HttpRequestMessage(HttpMethod.Post, fallbackEndpoint)
                     {
                         Content = new StringContent(JsonSerializer.Serialize(payload), Encoding.UTF8, "application/json")
@@ -329,14 +343,17 @@ namespace MLBBTopUp.Infrastructure.Services
                         }
                     }
 
-                    _logger.LogInformation("ABA PayWay check-transaction for {TranId} result: {StatusText}, IsPaid: {IsPaid}", tranId, statusText, isPaid);
+                    _logger.LogInformation("ABA PayWay check-transaction-2 for {TranId} result: {StatusText}, IsPaid: {IsPaid}", tranId, statusText, isPaid);
 
-                    return new PayWayCheckResult
+                    var checkResult = new PayWayCheckResult
                     {
                         Success = true,
                         IsPaid = isPaid,
                         Status = isPaid ? "PAID" : statusText
                     };
+
+                    _checkThrottleCache[tranId] = (DateTime.UtcNow, checkResult);
+                    return checkResult;
                 }
                 return new PayWayCheckResult { Success = false, ErrorMessage = "Failed to check status" };
             }

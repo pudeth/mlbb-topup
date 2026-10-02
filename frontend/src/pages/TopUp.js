@@ -999,36 +999,36 @@ const TopUp = () => {
 
 
 
-  // Automatic Real-Time Polling (ABA PayWay Recommended Logic Flow: wait ~3s, then check every 3-5s)
+  // Automatic Real-Time Polling (ABA PayWay Recommended Logic Flow: wait ~3s, then check consistently every 3s)
   useEffect(() => {
     // Step ③: Stop checking when payment is Approved/done or when transaction lifetime expires
     if (!orderId || paymentPaid || qrExpired) return;
 
-    let interval = null;
-    
-    // Step ②: Wait ~3 seconds after initiating before starting checks
-    const initialDelay = setTimeout(() => {
-      if (paymentPaidRef.current || qrExpiredRef.current) return;
+    let timerId = null;
+    let isCancelled = false;
 
-      // First check after 3 seconds
-      checkPaymentStatus();
+    const poll = async () => {
+      if (isCancelled || paymentPaidRef.current || qrExpiredRef.current) return;
 
-      // Check status every 3 seconds (ABA PayWay 3–5 seconds recommendation)
-      interval = setInterval(() => {
-        // Step ③: Stop checking when status is Approved or when transaction lifetime expires
-        if (!paymentPaidRef.current && !qrExpiredRef.current) {
-          checkPaymentStatus();
-        } else {
-          if (interval) clearInterval(interval);
-        }
-      }, 3000);
-    }, 3000);
+      try {
+        await checkPaymentStatus();
+      } catch (e) {}
+
+      // Consistently wait exactly 3 seconds AFTER previous request completes before sending next check
+      if (!isCancelled && !paymentPaidRef.current && !qrExpiredRef.current) {
+        timerId = setTimeout(poll, 3000);
+      }
+    };
+
+    // Step ②: Wait exactly 3 seconds after initiating before starting the first check
+    timerId = setTimeout(poll, 3000);
 
     return () => {
-      clearTimeout(initialDelay);
-      if (interval) clearInterval(interval);
+      isCancelled = true;
+      if (timerId) clearTimeout(timerId);
     };
-  }, [orderId, paymentPaid, qrExpired, checkPaymentStatus]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [orderId, paymentPaid, qrExpired]);
 
   // ── SSE Real-Time Payment Push ─────────────────────────────────────────────
   // Connects to Scorekhqr-bakong SSE endpoint. Fires INSTANTLY when Telegram

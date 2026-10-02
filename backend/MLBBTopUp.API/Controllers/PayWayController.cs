@@ -77,46 +77,7 @@ public class PayWayController : BaseController
             await _context.SaveChangesAsync();
         }
 
-        // Start background verification poller using the official Check Transaction API (per outline)
-        _ = Task.Run(async () =>
-        {
-            var curTranId = result.TranId;
-            var ordId = request.OrderId;
-            if (string.IsNullOrEmpty(curTranId)) return;
 
-            // Wait 3 seconds before starting checks (matching ABA PayWay guidelines)
-            await Task.Delay(3000);
-
-            // Poll every 3 seconds for up to 6 minutes (120 iterations)
-            for (int i = 0; i < 120; i++)
-            {
-                try
-                {
-                    using var scope = _serviceScopeFactory.CreateScope();
-                    var scopedContext = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
-                    var pay = await scopedContext.Payments.FirstOrDefaultAsync(p => p.OrderId == ordId);
-                    if (pay != null && pay.Status == "Completed")
-                    {
-                        break;
-                    }
-
-                    var payWayService = scope.ServiceProvider.GetRequiredService<IAbaPayWayService>();
-                    var checkRes = await payWayService.CheckTransactionAsync(curTranId);
-                    if (checkRes.IsPaid)
-                    {
-                        var scopedPayService = scope.ServiceProvider.GetRequiredService<IPaymentService>();
-                        await scopedPayService.VerifyPaymentAsync(ordId);
-                        break;
-                    }
-                }
-                catch (Exception ex)
-                {
-                    Console.WriteLine($"[ABA PayWay Background Poller] tran_id {curTranId} notice: {ex.Message}");
-                }
-
-                await Task.Delay(3000);
-            }
-        });
 
         return Ok(new
         {
