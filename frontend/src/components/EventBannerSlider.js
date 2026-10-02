@@ -105,7 +105,7 @@ const EventBannerSlider = ({ className = '' }) => {
 
   return (
     <div
-      className={`relative w-full select-none cursor-pointer overflow-hidden ${className}`}
+      className={`relative w-full overflow-hidden rounded-2xl sm:rounded-3xl border border-slate-800/80 bg-slate-950 group select-none transition-all duration-300 cursor-pointer shadow-2xl ${className}`}
       onMouseEnter={() => {
         setIsPaused(true);
         setIsHovered(true);
@@ -122,81 +122,46 @@ const EventBannerSlider = ({ className = '' }) => {
         navigate(currentBanner.link || `/topup?game=${currentBanner.gameId || 'mlbb'}`);
       }}
     >
-      {/* ── Banner Canvas ─────────────────────────────────────── */}
-      {/* Responsive aspect ratio: taller on mobile, wide on desktop */}
-      <div
-        className="relative w-full group overflow-hidden"
-        style={{ aspectRatio: 'var(--banner-ratio, 16/7)' }}
-      >
-        <style>{`
-          :root { --banner-ratio: 16/7; }
-          @media (min-width: 640px) { :root { --banner-ratio: 20/9; } }
-          @media (min-width: 1024px) { :root { --banner-ratio: 21/9; } }
-        `}</style>
-
-        {/* ── Layer 1 · Banner image — clipped to frame inner shape via luminance mask ── */}
-        <div
-          className="absolute inset-0"
-          style={{
-            WebkitMaskImage: 'url(/banner-mask.png)',
-            WebkitMaskSize: '100% 100%',
-            WebkitMaskRepeat: 'no-repeat',
-            WebkitMaskPosition: 'center',
-            WebkitMaskMode: 'luminance',
-            maskImage: 'url(/banner-mask.png)',
-            maskSize: '100% 100%',
-            maskRepeat: 'no-repeat',
-            maskPosition: 'center',
-            maskMode: 'luminance',
-          }}
-        >
-          {banners.map((banner, index) => {
-            const isActive = index === currentIndex;
-            return (
-              <div
-                key={banner.id || index}
-                className={`absolute inset-0 transition-opacity duration-700 ease-in-out ${
-                  isActive ? 'opacity-100 z-10 pointer-events-auto' : 'opacity-0 z-0 pointer-events-none'
-                }`}
-              >
-                <div className={`w-full h-full ${isActive ? 'animate-zoom-out' : ''}`}>
-                  <img
-                    src={banner.image}
-                    alt={banner.title}
-                    onError={(e) => {
-                      e.target.onerror = null;
-                      e.target.src = banner.localFallbackImage || '/mlbb-logo.png';
-                    }}
-                    className="w-full h-full object-cover object-center brightness-[0.98] group-hover:brightness-[0.88] transition-all duration-500"
-                  />
-                </div>
-
-                {/* Cinematic gradient reveal on hover */}
-                <div
-                  className={`absolute inset-0 bg-gradient-to-r from-slate-950/90 via-slate-950/50 to-transparent transition-opacity duration-400 ease-out pointer-events-none ${
-                    isHovered ? 'opacity-100' : 'opacity-0'
-                  } group-hover:opacity-100`}
-                />
-                <div
-                  className={`absolute inset-0 bg-gradient-to-t from-slate-950/75 via-transparent to-transparent transition-opacity duration-400 ease-out pointer-events-none ${
-                    isHovered ? 'opacity-100' : 'opacity-0'
-                  } group-hover:opacity-100`}
+      {/* Banner Canvas Area */}
+      <div className="relative aspect-[21/9] sm:aspect-[24/9] md:aspect-[3/1] min-h-[190px] sm:min-h-[230px] md:min-h-[270px] w-full overflow-hidden">
+        {banners.map((banner, index) => {
+          const isActive = index === currentIndex;
+          return (
+            <div
+              key={banner.id || index}
+              className={`absolute inset-0 transition-opacity duration-700 ease-in-out ${
+                isActive ? 'opacity-100 z-10 pointer-events-auto' : 'opacity-0 z-0 pointer-events-none'
+              }`}
+            >
+              <div className={`w-full h-full ${isActive ? 'animate-zoom-out' : ''}`}>
+                <img
+                  src={banner.image}
+                  alt={banner.title}
+                  onError={(e) => {
+                    e.target.onerror = null;
+                    e.target.src = banner.localFallbackImage || '/mlbb-logo.png';
+                  }}
+                  className="w-full h-full object-cover object-center filter brightness-[0.98] group-hover:brightness-[0.88] transition-all duration-500"
                 />
               </div>
-            );
-          })}
-        </div>
 
-        {/* ── Layer 2 · Neon frame — alpha-transparent PNG, no blend mode needed ── */}
-        <img
-          src="/banner-frame.png"
-          alt=""
-          aria-hidden="true"
-          className="absolute inset-0 w-full h-full object-fill z-30 pointer-events-none select-none"
-        />
+              {/* Clean Cinematic Contrast Gradient - 100% hidden by default so image is clean, smoothly reveals on hover */}
+              <div
+                className={`absolute inset-0 bg-gradient-to-r from-slate-950/90 via-slate-950/65 to-transparent transition-opacity duration-400 ease-out pointer-events-none ${
+                  isHovered ? 'opacity-100' : 'opacity-0'
+                } group-hover:opacity-100`}
+              />
+              <div
+                className={`absolute inset-0 bg-gradient-to-t from-slate-950/85 via-transparent to-black/30 transition-opacity duration-400 ease-out pointer-events-none ${
+                  isHovered ? 'opacity-100' : 'opacity-0'
+                } group-hover:opacity-100`}
+              />
+            </div>
+          );
+        })}
 
-        {/* ── Layer 3 · Content overlay (text / badges / controls) ── */}
-        <div className="absolute inset-0 z-40 flex flex-col justify-between p-4 sm:p-6 md:p-8 pointer-events-none">
+        {/* Content Overlay - All text and badges hidden by default, smoothly animated on hover */}
+        <div className="absolute inset-0 z-20 flex flex-col justify-between p-4 sm:p-6 md:p-8 pointer-events-none">
           
           {/* Top Header / Badges */}
           <div 
@@ -257,7 +222,7 @@ const EventBannerSlider = ({ className = '' }) => {
               </svg>
             </button>
 
-            {/* Indicator Dots */}
+            {/* Indicator Dots - subtle and clean at bottom right */}
             <div className="flex items-center gap-1.5 sm:gap-2 bg-slate-950/50 backdrop-blur-md px-2.5 py-1.5 rounded-full border border-slate-800/70 shadow-lg ml-auto opacity-75 group-hover:opacity-100 transition-opacity duration-300">
               {banners.map((_, idx) => (
                 <button
@@ -284,7 +249,7 @@ const EventBannerSlider = ({ className = '' }) => {
           <button
             type="button"
             onClick={handlePrev}
-            className={`absolute left-2.5 sm:left-4 top-1/2 -translate-y-1/2 z-50 w-8 h-8 sm:w-10 sm:h-10 rounded-full bg-slate-950/75 hover:bg-amber-400 text-white hover:text-slate-950 border border-slate-700/80 hover:border-amber-300 shadow-2xl backdrop-blur-md flex items-center justify-center transition-all duration-300 active:scale-90 cursor-pointer ${
+            className={`absolute left-2.5 sm:left-4 top-1/2 -translate-y-1/2 z-30 w-8 h-8 sm:w-10 sm:h-10 rounded-full bg-slate-950/75 hover:bg-amber-400 text-white hover:text-slate-950 border border-slate-700/80 hover:border-amber-300 shadow-2xl backdrop-blur-md flex items-center justify-center transition-all duration-300 active:scale-90 cursor-pointer ${
               isHovered ? 'opacity-100' : 'opacity-0'
             } group-hover:opacity-100 hover:scale-110`}
             aria-label="Previous slide"
@@ -300,7 +265,7 @@ const EventBannerSlider = ({ className = '' }) => {
           <button
             type="button"
             onClick={handleNext}
-            className={`absolute right-2.5 sm:right-4 top-1/2 -translate-y-1/2 z-50 w-8 h-8 sm:w-10 sm:h-10 rounded-full bg-slate-950/75 hover:bg-amber-400 text-white hover:text-slate-950 border border-slate-700/80 hover:border-amber-300 shadow-2xl backdrop-blur-md flex items-center justify-center transition-all duration-300 active:scale-90 cursor-pointer ${
+            className={`absolute right-2.5 sm:right-4 top-1/2 -translate-y-1/2 z-30 w-8 h-8 sm:w-10 sm:h-10 rounded-full bg-slate-950/75 hover:bg-amber-400 text-white hover:text-slate-950 border border-slate-700/80 hover:border-amber-300 shadow-2xl backdrop-blur-md flex items-center justify-center transition-all duration-300 active:scale-90 cursor-pointer ${
               isHovered ? 'opacity-100' : 'opacity-0'
             } group-hover:opacity-100 hover:scale-110`}
             aria-label="Next slide"
