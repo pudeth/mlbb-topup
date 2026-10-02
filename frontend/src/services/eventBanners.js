@@ -4,15 +4,15 @@
 export const DEFAULT_EVENT_BANNERS = [
   {
     id: 'banner-1',
-    tag: '🔥 ALLSTAR 2026 EVENT',
-    title: 'Mobile Legends 515 ALLSTAR Special',
+    tag: '🔥 ALDOUS ONE SHOT ONE KILL',
+    title: 'Mobile Legends Aldous Special Promo',
     subtitle: 'ទទួលបាន 220 💎 + 70 Aurora ⭐ លើរាល់ការទិញ Weekly Diamond Pass!',
-    image: 'https://images.unsplash.com/photo-1511512578047-dfb367046420?auto=format&fit=crop&w=1400&q=80',
-    localFallbackImage: '/mlbb-logo.png',
+    image: '/aldous-banner.jpg',
+    localFallbackImage: '/aldous-banner.jpg',
     gameId: 'mlbb',
     buttonText: 'Top Up MLBB Now',
     link: '/topup?game=mlbb',
-    badgeColor: 'bg-amber-400 text-slate-950',
+    badgeColor: 'bg-gradient-to-r from-cyan-400 via-blue-500 to-rose-500 text-white',
     status: 'Active',
     order: 1
   },
@@ -68,14 +68,14 @@ const sanitizeBanners = (list) => {
   if (!Array.isArray(list) || list.length === 0) return DEFAULT_EVENT_BANNERS;
   return list.map((b, idx) => {
     let img = b.image;
-    // Replace old keyboard "AAA" stock photo with vibrant gaming backdrop
-    if (!img || img.includes(OLD_KEYBOARD_IMG)) {
+    // Replace old keyboard "AAA" stock photo or previous default unsplash banner with new framed banner
+    if (!img || img.includes(OLD_KEYBOARD_IMG) || (b.id === 'banner-1' && img.includes('photo-1511512578047-dfb367046420'))) {
       img = DEFAULT_EVENT_BANNERS[idx % DEFAULT_EVENT_BANNERS.length].image;
     }
     return {
       ...b,
       image: img,
-      localFallbackImage: b.localFallbackImage || '/mlbb-logo.png'
+      localFallbackImage: b.localFallbackImage || (b.id === 'banner-1' ? '/aldous-banner.jpg' : '/mlbb-logo.png')
     };
   });
 };
