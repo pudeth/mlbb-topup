@@ -12,8 +12,8 @@ const Home = () => {
       
 
       {/* News of Event Game Banner Slider */}
-      <section className="pt-5 sm:pt-7 pb-6 sm:pb-8">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <section className="pt-3 sm:pt-7 pb-3 sm:pb-8">
+        <div className="max-w-7xl mx-auto px-2 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between mb-3.5 px-1 font-khmer">
             <div className="flex items-center gap-2.5">
               <div className="w-8 h-8 rounded-xl bg-gradient-to-tr from-amber-500/20 to-yellow-500/10 border border-amber-500/30 text-amber-400 flex items-center justify-center text-sm shadow-sm">

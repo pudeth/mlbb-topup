@@ -105,7 +105,7 @@ const EventBannerSlider = ({ className = '' }) => {
 
   return (
     <div
-      className={`relative w-full select-none transition-all duration-300 cursor-pointer ${className}`}
+      className={`relative w-full select-none cursor-pointer overflow-hidden ${className}`}
       onMouseEnter={() => {
         setIsPaused(true);
         setIsHovered(true);
@@ -123,10 +123,16 @@ const EventBannerSlider = ({ className = '' }) => {
       }}
     >
       {/* ── Banner Canvas ─────────────────────────────────────── */}
+      {/* Responsive aspect ratio: taller on mobile, wide on desktop */}
       <div
-        className="relative w-full group"
-        style={{ aspectRatio: '21/9' }}
+        className="relative w-full group overflow-hidden"
+        style={{ aspectRatio: 'var(--banner-ratio, 16/7)' }}
       >
+        <style>{`
+          :root { --banner-ratio: 16/7; }
+          @media (min-width: 640px) { :root { --banner-ratio: 20/9; } }
+          @media (min-width: 1024px) { :root { --banner-ratio: 21/9; } }
+        `}</style>
 
         {/* ── Layer 1 · Banner image — clipped to frame inner shape via luminance mask ── */}
         <div
