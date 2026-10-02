@@ -81,17 +81,14 @@ const sanitizeBanners = (list) => {
 };
 
 const getApiUrls = () => {
-  if (typeof window !== 'undefined' && (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1')) {
-    return ['http://localhost:5001/api', 'http://localhost:5000/api/admin'];
-  }
-  const urls = [
-    '/api/khqr',
-    'https://mlbb-khqr-api.onrender.com/api',
-    'https://mlbb-backend-api.onrender.com/api'
+  const isLocal = typeof window !== 'undefined' && (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1');
+  const base = process.env.REACT_APP_API_URL || (isLocal ? 'http://localhost:5000/api' : 'https://mlbb-backend-api.onrender.com/api');
+  const cleanBase = base.endsWith('/') ? base.slice(0, -1) : base;
+
+  return [
+    `${cleanBase}/admin`,
+    cleanBase
   ];
-  if (process.env.REACT_APP_KHQR_API_URL) urls.unshift(`${process.env.REACT_APP_KHQR_API_URL}/api`);
-  if (process.env.REACT_APP_API_URL) urls.unshift(`${process.env.REACT_APP_API_URL}`);
-  return urls;
 };
 
 // Get cached or default banners synchronously

@@ -34,21 +34,13 @@ const STORAGE_ACTIVE_KEY = 'admin_active_provider_pinned';
 const EVENT_NAME = 'providerSettingsUpdated';
 
 const getApiUrls = () => {
-  if (typeof window !== 'undefined' && (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1')) {
-    return [
-      'http://localhost:5000/api/admin',
-      'http://localhost:5000/api',
-      'http://localhost:5001/api',
-      'https://mlbb-backend-api.onrender.com/api/admin',
-      'https://mlbb-backend-api.onrender.com/api',
-      'https://mlbb-khqr-api.onrender.com/api'
-    ];
-  }
+  const isLocal = typeof window !== 'undefined' && (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1');
+  const base = process.env.REACT_APP_API_URL || (isLocal ? 'http://localhost:5000/api' : 'https://mlbb-backend-api.onrender.com/api');
+  const cleanBase = base.endsWith('/') ? base.slice(0, -1) : base;
+
   return [
-    'https://mlbb-backend-api.onrender.com/api/admin',
-    'https://mlbb-backend-api.onrender.com/api',
-    'https://mlbb-khqr-api.onrender.com/api',
-    'http://localhost:5001/api'
+    `${cleanBase}/admin`,
+    cleanBase
   ];
 };
 

@@ -467,14 +467,14 @@ export const DEFAULT_GAMES = [
 const STORAGE_KEY = 'mlbb_topup_custom_games_v5';
 
 const getApiUrls = () => {
-  if (typeof window !== 'undefined' && (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1')) {
-    return ['http://localhost:5001/api', 'http://localhost:5000/api/admin'];
-  }
-  // In production, use the Vercel proxy path (/api/khqr → Render backend)
-  // This is a same-origin request so CORS never applies
-  const urls = ['/api/khqr'];
-  if (process.env.REACT_APP_KHQR_API_URL) urls.unshift(`${process.env.REACT_APP_KHQR_API_URL}/api`);
-  return urls;
+  const isLocal = typeof window !== 'undefined' && (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1');
+  const base = process.env.REACT_APP_API_URL || (isLocal ? 'http://localhost:5000/api' : 'https://mlbb-backend-api.onrender.com/api');
+  const cleanBase = base.endsWith('/') ? base.slice(0, -1) : base;
+
+  return [
+    `${cleanBase}/admin`,
+    cleanBase
+  ];
 };
 
 export const normalizeGameFlags = (game) => {

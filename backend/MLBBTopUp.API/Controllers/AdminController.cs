@@ -54,6 +54,7 @@ public class AdminController : BaseController
     /// Get Store Branding settings (Public)
     /// </summary>
     [HttpGet("branding")]
+    [HttpGet("/api/branding")]
     [AllowAnonymous]
     public IActionResult GetBranding()
     {
@@ -65,6 +66,8 @@ public class AdminController : BaseController
     /// </summary>
     [HttpPost("branding")]
     [HttpPut("branding")]
+    [HttpPost("/api/branding")]
+    [HttpPut("/api/branding")]
     [AllowAnonymous]
     public IActionResult UpdateBranding([FromBody] object data)
     {
@@ -87,6 +90,7 @@ public class AdminController : BaseController
     /// Get Store Games Catalog & Status (Public)
     /// </summary>
     [HttpGet("games")]
+    [HttpGet("/api/games")]
     [AllowAnonymous]
     public IActionResult GetGames()
     {
@@ -98,6 +102,8 @@ public class AdminController : BaseController
     /// </summary>
     [HttpPost("games")]
     [HttpPut("games")]
+    [HttpPost("/api/games")]
+    [HttpPut("/api/games")]
     [AllowAnonymous]
     public IActionResult UpdateGames([FromBody] object data)
     {
@@ -114,6 +120,7 @@ public class AdminController : BaseController
     /// Get Store Promotional Event Banners (Public)
     /// </summary>
     [HttpGet("banners")]
+    [HttpGet("/api/banners")]
     [AllowAnonymous]
     public IActionResult GetBanners()
     {
@@ -125,6 +132,8 @@ public class AdminController : BaseController
     /// </summary>
     [HttpPost("banners")]
     [HttpPut("banners")]
+    [HttpPost("/api/banners")]
+    [HttpPut("/api/banners")]
     [AllowAnonymous]
     public IActionResult UpdateBanners([FromBody] object data)
     {

@@ -41,12 +41,12 @@ const EventBannerSlider = ({ className = '' }) => {
     window.addEventListener('eventBannersUpdated', handleBannersUpdated);
     window.addEventListener('storage', handleBannersUpdated);
 
-    // 3. Periodic cloud polling (every 4s) so smartphone changes appear on desktop & clients automatically
+    // 3. Periodic cloud polling (every 30s) so changes appear automatically without network spam
     const pollInterval = setInterval(() => {
       fetchStoredBanners().then((cloudList) => {
         if (cloudList && cloudList.length > 0) syncBanners(cloudList);
       });
-    }, 4000);
+    }, 30000);
 
     return () => {
       isMounted = false;
