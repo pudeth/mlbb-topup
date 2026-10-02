@@ -129,67 +129,67 @@ const EventBannerSlider = ({ className = '' }) => {
       {/*  so it "stands forward" over the clipped image.                    */}
       <div
         className="relative w-full"
-        style={{ aspectRatio: '1024/363' }}
+        style={{ aspectRatio: '21/9' }}
       >
+        {/* ── Layer 0 · Dark base so frame corners look right ── */}
+        <div className="absolute inset-0 bg-slate-950 rounded-2xl sm:rounded-3xl" />
 
-        {/* ── Layer 1 · Banner images via SVG Mask ──────────────────────────── */}
-        {/* SVG <mask> luminance mode: white=show, black=hide. Works everywhere. */}
-        <svg
-          className="absolute inset-0 w-full h-full"
-          viewBox="0 0 1024 363"
-          preserveAspectRatio="none"
-          aria-hidden="true"
+        {/* ── Layer 1 · Banner images — clipped to frame inner shape ── */}
+        <div
+          className="absolute"
+          style={{
+            top: '6%',
+            left: '3%',
+            right: '3%',
+            bottom: '6%',
+            WebkitMaskImage: 'url(/banner-mask.png)',
+            WebkitMaskSize: '100% 100%',
+            WebkitMaskRepeat: 'no-repeat',
+            WebkitMaskPosition: 'center',
+            WebkitMaskMode: 'luminance',
+            maskImage: 'url(/banner-mask.png)',
+            maskSize: '100% 100%',
+            maskRepeat: 'no-repeat',
+            maskPosition: 'center',
+            maskMode: 'luminance',
+          }}
         >
-          <defs>
-            <mask id="bannerFrameMask" maskUnits="userSpaceOnUse" x="0" y="0" width="1024" height="363">
-              <image href="/banner-mask.png" x="0" y="0" width="1024" height="363" />
-            </mask>
-          </defs>
+          {banners.map((banner, index) => {
+            const isActive = index === currentIndex;
+            return (
+              <div
+                key={banner.id || index}
+                className={`absolute inset-0 transition-opacity duration-700 ease-in-out ${
+                  isActive ? 'opacity-100 z-10 pointer-events-auto' : 'opacity-0 z-0 pointer-events-none'
+                }`}
+              >
+                <div className={`w-full h-full ${isActive ? 'animate-zoom-out' : ''}`}>
+                  <img
+                    src={banner.image}
+                    alt={banner.title}
+                    onError={(e) => {
+                      e.target.onerror = null;
+                      e.target.src = banner.localFallbackImage || '/mlbb-logo.png';
+                    }}
+                    className="w-full h-full object-cover object-center filter brightness-[0.98] group-hover:brightness-[0.88] transition-all duration-500"
+                  />
+                </div>
 
-          <g mask="url(#bannerFrameMask)">
-            {/* Black fill — covers any gaps if image doesn't reach edge */}
-            <rect x="0" y="0" width="1024" height="363" fill="#000" />
-
-            {banners.map((banner, index) => {
-              const isActive = index === currentIndex;
-              return (
-                /* Image is placed slightly OVERSIZED (-5% each side) so it
-                   always fills edge-to-edge no matter the banner aspect ratio */
-                <image
-                  key={banner.id || index}
-                  href={banner.image}
-                  x="-52" y="-18"
-                  width="1128" height="399"
-                  preserveAspectRatio="xMidYMid slice"
-                  style={{
-                    opacity: isActive ? 1 : 0,
-                    transition: 'opacity 0.7s ease-in-out',
-                    filter: isHovered ? 'brightness(0.88)' : 'brightness(0.98)',
-                  }}
+                {/* Cinematic gradient reveal on hover */}
+                <div
+                  className={`absolute inset-0 bg-gradient-to-r from-slate-950/90 via-slate-950/55 to-transparent transition-opacity duration-400 ease-out pointer-events-none ${
+                    isHovered ? 'opacity-100' : 'opacity-0'
+                  } group-hover:opacity-100`}
                 />
-              );
-            })}
-
-            {/* Cinematic gradient on hover */}
-            <defs>
-              <linearGradient id="bannerGradLR" x1="0%" y1="0%" x2="100%" y2="0%">
-                <stop offset="0%" stopColor="#020617" stopOpacity="0.9" />
-                <stop offset="55%" stopColor="#020617" stopOpacity="0.4" />
-                <stop offset="100%" stopColor="#020617" stopOpacity="0" />
-              </linearGradient>
-              <linearGradient id="bannerGradTB" x1="0%" y1="100%" x2="0%" y2="0%">
-                <stop offset="0%" stopColor="#020617" stopOpacity="0.8" />
-                <stop offset="50%" stopColor="#020617" stopOpacity="0" />
-                <stop offset="100%" stopColor="#000000" stopOpacity="0.2" />
-              </linearGradient>
-            </defs>
-            <rect x="0" y="0" width="1024" height="363" fill="url(#bannerGradLR)"
-              style={{ opacity: isHovered ? 1 : 0, transition: 'opacity 0.4s ease-out', pointerEvents: 'none' }} />
-            <rect x="0" y="0" width="1024" height="363" fill="url(#bannerGradTB)"
-              style={{ opacity: isHovered ? 1 : 0, transition: 'opacity 0.4s ease-out', pointerEvents: 'none' }} />
-          </g>
-        </svg>
-
+                <div
+                  className={`absolute inset-0 bg-gradient-to-t from-slate-950/80 via-transparent to-black/20 transition-opacity duration-400 ease-out pointer-events-none ${
+                    isHovered ? 'opacity-100' : 'opacity-0'
+                  } group-hover:opacity-100`}
+                />
+              </div>
+            );
+          })}
+        </div>
 
         {/* ── Layer 2 · Neon frame — sits ON TOP, forward-standing ── */}
         <img
@@ -200,11 +200,8 @@ const EventBannerSlider = ({ className = '' }) => {
           style={{ mixBlendMode: 'screen' }}
         />
 
-        {/* ── Layer 3 · Content overlay — constrained inside the frame's inner window ── */}
-        <div
-          className="absolute z-40 flex flex-col justify-between pointer-events-none"
-          style={{ top: '11%', bottom: '11%', left: '5%', right: '5%', padding: '8px 12px' }}
-        >
+        {/* ── Layer 3 · Content overlay (text / badges / controls) ── */}
+        <div className="absolute inset-0 z-40 flex flex-col justify-between p-4 sm:p-6 md:p-8 pointer-events-none">
           
           {/* Top Header / Badges */}
           <div 
@@ -292,13 +289,12 @@ const EventBannerSlider = ({ className = '' }) => {
           <button
             type="button"
             onClick={handlePrev}
-            className={`absolute top-1/2 -translate-y-1/2 z-50 w-7 h-7 sm:w-9 sm:h-9 rounded-full bg-slate-950/75 hover:bg-amber-400 text-white hover:text-slate-950 border border-slate-700/80 hover:border-amber-300 shadow-2xl backdrop-blur-md flex items-center justify-center transition-all duration-300 active:scale-90 cursor-pointer ${
+            className={`absolute left-2.5 sm:left-4 top-1/2 -translate-y-1/2 z-50 w-8 h-8 sm:w-10 sm:h-10 rounded-full bg-slate-950/75 hover:bg-amber-400 text-white hover:text-slate-950 border border-slate-700/80 hover:border-amber-300 shadow-2xl backdrop-blur-md flex items-center justify-center transition-all duration-300 active:scale-90 cursor-pointer ${
               isHovered ? 'opacity-100' : 'opacity-0'
             } group-hover:opacity-100 hover:scale-110`}
-            style={{ left: '6%' }}
             aria-label="Previous slide"
           >
-            <svg className="w-3.5 h-3.5 sm:w-4 sm:h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <svg className="w-4 h-4 sm:w-5 sm:h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M15 19l-7-7 7-7" />
             </svg>
           </button>
@@ -309,18 +305,16 @@ const EventBannerSlider = ({ className = '' }) => {
           <button
             type="button"
             onClick={handleNext}
-            className={`absolute top-1/2 -translate-y-1/2 z-50 w-7 h-7 sm:w-9 sm:h-9 rounded-full bg-slate-950/75 hover:bg-amber-400 text-white hover:text-slate-950 border border-slate-700/80 hover:border-amber-300 shadow-2xl backdrop-blur-md flex items-center justify-center transition-all duration-300 active:scale-90 cursor-pointer ${
+            className={`absolute right-2.5 sm:right-4 top-1/2 -translate-y-1/2 z-50 w-8 h-8 sm:w-10 sm:h-10 rounded-full bg-slate-950/75 hover:bg-amber-400 text-white hover:text-slate-950 border border-slate-700/80 hover:border-amber-300 shadow-2xl backdrop-blur-md flex items-center justify-center transition-all duration-300 active:scale-90 cursor-pointer ${
               isHovered ? 'opacity-100' : 'opacity-0'
             } group-hover:opacity-100 hover:scale-110`}
-            style={{ right: '6%' }}
             aria-label="Next slide"
           >
-            <svg className="w-3.5 h-3.5 sm:w-4 sm:h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <svg className="w-4 h-4 sm:w-5 sm:h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M9 5l7 7-7 7" />
             </svg>
           </button>
         )}
-
       </div>
     </div>
   );
