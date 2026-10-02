@@ -122,19 +122,13 @@ const EventBannerSlider = ({ className = '' }) => {
         navigate(currentBanner.link || `/topup?game=${currentBanner.gameId || 'mlbb'}`);
       }}
     >
-      {/* ── Clipping-mask Banner Canvas ───────────────────────────────────── */}
-      {/*  The banner image is clipped to the frame's inner shape via         */}
-      {/*  CSS mask-image (banner-mask.png — white=show, black=hide).         */}
-      {/*  The neon frame (banner-frame.png) is layered on top (z-30)        */}
-      {/*  so it "stands forward" over the clipped image.                    */}
+      {/* ── Banner Canvas ─────────────────────────────────────── */}
       <div
-        className="relative w-full"
+        className="relative w-full group"
         style={{ aspectRatio: '21/9' }}
       >
-        {/* ── Layer 0 · Dark base so frame corners look right ── */}
-        <div className="absolute inset-0 bg-slate-950 rounded-2xl sm:rounded-3xl" />
 
-        {/* ── Layer 1 · Banner images — clipped to frame inner shape ── */}
+        {/* ── Layer 1 · Banner image — clipped to frame inner shape via luminance mask ── */}
         <div
           className="absolute inset-0"
           style={{
@@ -167,18 +161,18 @@ const EventBannerSlider = ({ className = '' }) => {
                       e.target.onerror = null;
                       e.target.src = banner.localFallbackImage || '/mlbb-logo.png';
                     }}
-                    className="w-full h-full object-cover object-center filter brightness-[0.98] group-hover:brightness-[0.88] transition-all duration-500"
+                    className="w-full h-full object-cover object-center brightness-[0.98] group-hover:brightness-[0.88] transition-all duration-500"
                   />
                 </div>
 
                 {/* Cinematic gradient reveal on hover */}
                 <div
-                  className={`absolute inset-0 bg-gradient-to-r from-slate-950/90 via-slate-950/55 to-transparent transition-opacity duration-400 ease-out pointer-events-none ${
+                  className={`absolute inset-0 bg-gradient-to-r from-slate-950/90 via-slate-950/50 to-transparent transition-opacity duration-400 ease-out pointer-events-none ${
                     isHovered ? 'opacity-100' : 'opacity-0'
                   } group-hover:opacity-100`}
                 />
                 <div
-                  className={`absolute inset-0 bg-gradient-to-t from-slate-950/80 via-transparent to-black/20 transition-opacity duration-400 ease-out pointer-events-none ${
+                  className={`absolute inset-0 bg-gradient-to-t from-slate-950/75 via-transparent to-transparent transition-opacity duration-400 ease-out pointer-events-none ${
                     isHovered ? 'opacity-100' : 'opacity-0'
                   } group-hover:opacity-100`}
                 />
@@ -187,13 +181,12 @@ const EventBannerSlider = ({ className = '' }) => {
           })}
         </div>
 
-        {/* ── Layer 2 · Neon frame — sits ON TOP, forward-standing ── */}
+        {/* ── Layer 2 · Neon frame — alpha-transparent PNG, no blend mode needed ── */}
         <img
           src="/banner-frame.png"
           alt=""
           aria-hidden="true"
           className="absolute inset-0 w-full h-full object-fill z-30 pointer-events-none select-none"
-          style={{ mixBlendMode: 'screen' }}
         />
 
         {/* ── Layer 3 · Content overlay (text / badges / controls) ── */}
