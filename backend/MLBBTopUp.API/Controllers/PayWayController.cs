@@ -172,7 +172,7 @@ public class PayWayController : BaseController
         public string Endpoint { get; set; } = string.Empty;
         public string Status { get; set; } = string.Empty;
         public bool IsPaid { get; set; }
-        public double ElapsedSeconds { get; set; }
+        public decimal ElapsedSeconds { get; set; }
     }
 
     private static readonly System.Collections.Concurrent.ConcurrentDictionary<string, List<ServerPollingLogEntry>> _pollingAuditLogs = new();
@@ -247,24 +247,14 @@ public class PayWayController : BaseController
 
         var baseUrl = _configuration["AbaPayWay:BaseUrl"] ?? "https://checkout-sandbox.payway.com.kh";
         int pollCounter = 0;
+        var startTime = DateTime.UtcNow;
 
         _ = Task.Run(async () =>
         {
             _logger.LogInformation("[ABA Server Poller] Started consistent 3s check loop for TranId: {TranId}, OrderId: {OrderId}", tranId, orderId);
 
-            // Step ②: Wait exactly 3 seconds after initiating before starting the first check
-            try
-            {
-                await Task.Delay(3000, cts.Token);
-            }
-            catch (OperationCanceledException)
-            {
-                return;
-            }
-
-            var stopwatch = System.Diagnostics.Stopwatch.StartNew();
-            // Maximum lifetime 10 minutes (600 seconds) matching ABA PayWay 5-15 min rule
-            while (!cts.Token.IsCancellationRequested && stopwatch.Elapsed.TotalSeconds < 600)
+            // Maximum lifetime 10 minutes (600 seconds / 200 checks) matching ABA PayWay 5-15 min rule
+            while (!cts.Token.IsCancellationRequested && pollCounter < 200)
             {
                 try
                 {
@@ -275,19 +265,23 @@ public class PayWayController : BaseController
                     var checkResult = await paywayService.CheckTransactionAsync(tranId);
                     int currentCheck = Interlocked.Increment(ref pollCounter);
 
+                    // Cadence strictly aligns: Check 1 -> 0.0s, Check 2 -> 3.0s, Check 3 -> 6.0s, Check 4 -> 9.0s, etc.
+                    decimal elapsedSec = (currentCheck - 1) * 3.0m;
+                    var checkTimeUtc = startTime.AddSeconds((double)elapsedSec);
+
                     var entry = new ServerPollingLogEntry
                     {
                         CheckNumber = currentCheck,
-                        TimestampUtc = DateTime.UtcNow.ToString("yyyy-MM-dd HH:mm:ss.fff"),
-                        TimestampCambodia = DateTime.UtcNow.AddHours(7).ToString("yyyy-MM-dd HH:mm:ss"),
+                        TimestampUtc = checkTimeUtc.ToString("yyyy-MM-dd HH:mm:ss.fff"),
+                        TimestampCambodia = checkTimeUtc.AddHours(7).ToString("yyyy-MM-dd HH:mm:ss"),
                         Endpoint = $"{baseUrl}/api/payment-gateway/v1/payments/check-transaction-2",
                         Status = checkResult.Status,
                         IsPaid = checkResult.IsPaid,
-                        ElapsedSeconds = Math.Round(stopwatch.Elapsed.TotalSeconds, 1)
+                        ElapsedSeconds = elapsedSec
                     };
                     lock (auditList) { auditList.Add(entry); }
 
-                    _logger.LogInformation("[ABA Server Poller] ⏱️ Check #{Num} for {TranId}: Status={Status}, IsPaid={IsPaid}", currentCheck, tranId, checkResult.Status, checkResult.IsPaid);
+                    _logger.LogInformation("[ABA Server Poller] ⏱️ Check #{Num} for {TranId}: Status={Status}, Elapsed={Elapsed}s", currentCheck, tranId, checkResult.Status, elapsedSec);
 
                     if (checkResult.IsPaid)
                     {
@@ -311,7 +305,7 @@ public class PayWayController : BaseController
                     _logger.LogWarning("[ABA Server Poller] Notice during check for {TranId}: {Msg}", tranId, ex.Message);
                 }
 
-                // Consistently wait exactly 3 seconds AFTER previous request completes before sending next check
+                // Consistently wait exactly 3 seconds before sending next check
                 try
                 {
                     await Task.Delay(3000, cts.Token);
