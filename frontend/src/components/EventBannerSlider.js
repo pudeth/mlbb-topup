@@ -132,63 +132,49 @@ const EventBannerSlider = ({ className = '' }) => {
         style={{ aspectRatio: '1024/363' }}
       >
 
-        {/* ── Layer 1 · Banner images via SVG Mask ──────────────────────────── */}
-        {/* SVG <mask> is luminance-based by default: white=show, black=hide.   */}
-        {/* Works on ALL browsers including iOS Safari — unlike CSS mask-mode.  */}
+        {/* ── Layer 1 · Banner images — fill full container, frame overlay handles borders ── */}
         <svg
           className="absolute inset-0 w-full h-full"
           viewBox="0 0 1024 363"
           preserveAspectRatio="none"
           aria-hidden="true"
-          style={{ overflow: 'visible' }}
         >
           <defs>
-            <mask id="bannerFrameMask" maskUnits="userSpaceOnUse" x="0" y="0" width="1024" height="363">
-              <image href="/banner-mask.png" x="0" y="0" width="1024" height="363" />
-            </mask>
+            <linearGradient id="bannerGradLR" x1="0%" y1="0%" x2="100%" y2="0%">
+              <stop offset="0%" stopColor="#020617" stopOpacity="0.9" />
+              <stop offset="55%" stopColor="#020617" stopOpacity="0.4" />
+              <stop offset="100%" stopColor="#020617" stopOpacity="0" />
+            </linearGradient>
+            <linearGradient id="bannerGradTB" x1="0%" y1="100%" x2="0%" y2="0%">
+              <stop offset="0%" stopColor="#020617" stopOpacity="0.8" />
+              <stop offset="50%" stopColor="#020617" stopOpacity="0" />
+              <stop offset="100%" stopColor="#000000" stopOpacity="0.2" />
+            </linearGradient>
           </defs>
-          <g mask="url(#bannerFrameMask)">
-            {banners.map((banner, index) => {
-              const isActive = index === currentIndex;
-              return (
-                <image
-                  key={banner.id || index}
-                  href={banner.image}
-                  x="0" y="0"
-                  width="1024" height="363"
-                  preserveAspectRatio="xMidYMid slice"
-                  style={{
-                    opacity: isActive ? 1 : 0,
-                    transition: 'opacity 0.7s ease-in-out',
-                    filter: isHovered ? 'brightness(0.88)' : 'brightness(0.98)',
-                  }}
-                />
-              );
-            })}
-            {/* Cinematic gradient on hover — using SVG rect with gradient fill */}
-            <defs>
-              <linearGradient id="bannerGradLR" x1="0%" y1="0%" x2="100%" y2="0%">
-                <stop offset="0%" stopColor="#020617" stopOpacity="0.9" />
-                <stop offset="55%" stopColor="#020617" stopOpacity="0.4" />
-                <stop offset="100%" stopColor="#020617" stopOpacity="0" />
-              </linearGradient>
-              <linearGradient id="bannerGradTB" x1="0%" y1="100%" x2="0%" y2="0%">
-                <stop offset="0%" stopColor="#020617" stopOpacity="0.8" />
-                <stop offset="50%" stopColor="#020617" stopOpacity="0" />
-                <stop offset="100%" stopColor="#000000" stopOpacity="0.2" />
-              </linearGradient>
-            </defs>
-            <rect
-              x="0" y="0" width="1024" height="363"
-              fill="url(#bannerGradLR)"
-              style={{ opacity: isHovered ? 1 : 0, transition: 'opacity 0.4s ease-out', pointerEvents: 'none' }}
-            />
-            <rect
-              x="0" y="0" width="1024" height="363"
-              fill="url(#bannerGradTB)"
-              style={{ opacity: isHovered ? 1 : 0, transition: 'opacity 0.4s ease-out', pointerEvents: 'none' }}
-            />
-          </g>
+
+          {banners.map((banner, index) => {
+            const isActive = index === currentIndex;
+            return (
+              <image
+                key={banner.id || index}
+                href={banner.image}
+                x="0" y="0"
+                width="1024" height="363"
+                preserveAspectRatio="xMidYMid slice"
+                style={{
+                  opacity: isActive ? 1 : 0,
+                  transition: 'opacity 0.7s ease-in-out',
+                  filter: isHovered ? 'brightness(0.88)' : 'brightness(0.98)',
+                }}
+              />
+            );
+          })}
+
+          {/* Cinematic gradient reveal on hover */}
+          <rect x="0" y="0" width="1024" height="363" fill="url(#bannerGradLR)"
+            style={{ opacity: isHovered ? 1 : 0, transition: 'opacity 0.4s ease-out', pointerEvents: 'none' }} />
+          <rect x="0" y="0" width="1024" height="363" fill="url(#bannerGradTB)"
+            style={{ opacity: isHovered ? 1 : 0, transition: 'opacity 0.4s ease-out', pointerEvents: 'none' }} />
         </svg>
 
         {/* ── Layer 2 · Neon frame — sits ON TOP, forward-standing ── */}
