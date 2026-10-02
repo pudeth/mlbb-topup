@@ -363,7 +363,7 @@ const matchIntent = (query, currentLang) => {
 };
 
 // Futuristic Vector AI Core Logo Component
-const AiLogoIcon = ({ className = "w-6 h-6", glowing = true }) => (
+export const AiLogoIcon = ({ className = "w-6 h-6", glowing = true }) => (
   <svg
     viewBox="0 0 48 48"
     fill="none"
@@ -464,7 +464,7 @@ const AiAssistant = () => {
           typeof parsed.y === 'number' &&
           parsed.x >= 0 &&
           parsed.x < (typeof window !== 'undefined' ? window.innerWidth : 1000) &&
-          parsed.y >= 0 &&
+          parsed.y >= 90 &&
           parsed.y < (typeof window !== 'undefined' ? window.innerHeight : 1000)
         ) {
           return parsed;
@@ -491,10 +491,10 @@ const AiAssistant = () => {
         const btnW = btnRef.current.offsetWidth || 56;
         const btnH = btnRef.current.offsetHeight || 56;
         const maxX = Math.max(10, window.innerWidth - btnW - 8);
-        const maxY = Math.max(60, window.innerHeight - btnH - 12);
+        const maxY = Math.max(90, window.innerHeight - btnH - 12);
         return {
           x: Math.min(Math.max(prev.x, 8), maxX),
-          y: Math.min(Math.max(prev.y, 50), maxY),
+          y: Math.min(Math.max(prev.y, 85), maxY),
         };
       });
     };
@@ -517,8 +517,8 @@ const AiAssistant = () => {
       const btnH = btnRef.current ? btnRef.current.offsetHeight : 56;
       const minX = 6;
       const maxX = window.innerWidth - btnW - 6;
-      const minY = 50;
-      const maxY = window.innerHeight - btnH - 10;
+      const minY = 85;
+      const maxY = window.innerHeight - btnH - 12;
 
       setPos({
         x: Math.min(Math.max(data.elemX + dx, minX), maxX),
@@ -552,8 +552,8 @@ const AiAssistant = () => {
       const btnH = btnRef.current ? btnRef.current.offsetHeight : 56;
       const minX = 6;
       const maxX = window.innerWidth - btnW - 6;
-      const minY = 50;
-      const maxY = window.innerHeight - btnH - 10;
+      const minY = 85;
+      const maxY = window.innerHeight - btnH - 12;
 
       setPos({
         x: Math.min(Math.max(data.elemX + dx, minX), maxX),
@@ -656,16 +656,22 @@ const AiAssistant = () => {
       {/* Mobile Backdrop Overlay when chat is open */}
       {isOpen && (
         <div
-          className="fixed inset-0 bg-black/50 backdrop-blur-[2px] z-40 sm:hidden animate-fadeIn"
+          className="fixed inset-0 bg-black/50 backdrop-blur-[2px] z-[9995] sm:hidden animate-fadeIn"
           onClick={() => setIsOpen(false)}
         />
       )}
 
-      {/* Flexible Draggable Floating AI Trigger */}
+      {/* Flexible Draggable Floating AI Trigger - Always Forward Layer */}
       <button
         ref={btnRef}
         type="button"
         onClick={handleClick}
+        onDoubleClick={() => {
+          setPos(null);
+          try {
+            localStorage.removeItem('ai_assistant_pos');
+          } catch (e) {}
+        }}
         onMouseDown={(e) => {
           if (e.button === 0) handleDragStart(e.clientX, e.clientY);
         }}
@@ -687,25 +693,25 @@ const AiAssistant = () => {
                 touchAction: 'none',
               }
         }
-        className={`ai-assistant-widget fixed z-40 w-14 h-14 sm:w-16 sm:h-16 md:w-20 md:h-20 select-none cursor-grab active:cursor-grabbing bg-transparent border-0 outline-none p-0 transition-transform ${
+        className={`ai-assistant-widget fixed z-[9990] w-14 h-14 sm:w-16 sm:h-16 md:w-20 md:h-20 select-none cursor-grab active:cursor-grabbing bg-transparent border-0 outline-none p-0 transition-transform ${
           pos ? '' : 'bottom-20 right-3.5 sm:bottom-6 sm:right-6'
         } ${isDragging ? 'scale-115 opacity-90' : 'hover:scale-110 active:scale-95'}`}
         aria-label="Open AI Assistant"
-        title="Drag to move anywhere / ចុចឬអូសផ្លាស់ប្តូរទីតាំង"
+        title="Drag to move anywhere • Double-click to reset / ចុចឬអូសផ្លាស់ប្តូរទីតាំង"
       >
         {/* MLBB Bot Badge - Full icon */}
-        <div className="relative w-full h-full pointer-events-none">
+        <div className="relative w-full h-full pointer-events-none flex items-center justify-center">
           <img
             src="/ai-bot-icon.png"
             alt="AI Assistant"
-            className="w-full h-full object-contain filter drop-shadow-[0_4px_12px_rgba(56,189,248,0.4)] transition-all duration-300"
+            className="w-full h-full object-contain filter drop-shadow-[0_6px_20px_rgba(56,189,248,0.5)] transition-all duration-300"
           />
         </div>
       </button>
 
       {/* AI Assistant Chat Modal Drawer */}
       {isOpen && (
-        <div className="fixed bottom-20 sm:bottom-24 left-1/2 -translate-x-1/2 sm:left-auto sm:translate-x-0 sm:right-6 w-[94vw] max-w-[400px] max-h-[620px] h-[78vh] sm:h-[80vh] z-50 flex flex-col rounded-[24px] overflow-hidden shadow-[0_20px_60px_rgba(0,0,0,0.75)] animate-fadeIn border border-slate-800/80">
+        <div className="fixed bottom-20 sm:bottom-24 left-1/2 -translate-x-1/2 sm:left-auto sm:translate-x-0 sm:right-6 w-[94vw] max-w-[400px] max-h-[620px] h-[78vh] sm:h-[80vh] z-[9999] flex flex-col rounded-[24px] overflow-hidden shadow-[0_20px_60px_rgba(0,0,0,0.75)] animate-fadeIn border border-slate-800/80">
 
           {/* ── HEADER (Messenger style) ── */}
           <div className="bg-[#0f1724] px-4 py-3 flex items-center gap-3 border-b border-slate-800/60 shrink-0">
