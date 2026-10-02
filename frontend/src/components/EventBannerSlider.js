@@ -131,8 +131,7 @@ const EventBannerSlider = ({ className = '' }) => {
         className="relative w-full"
         style={{ aspectRatio: '1024/363' }}
       >
-        {/* ── Layer 0 · Dark base so frame corners look right ── */}
-        <div className="absolute inset-0 bg-slate-950 rounded-2xl sm:rounded-3xl" />
+
 
         {/* ── Layer 1 · Banner images — clipped to frame inner shape ── */}
         <div
