@@ -3,6 +3,20 @@
 
 export const DEFAULT_EVENT_BANNERS = [
   {
+    id: 'banner-0',
+    tag: '⚔️ NEW EVENT',
+    title: 'Epic Esports Season 2026',
+    subtitle: 'Fast 10-second top-up with ABA KHQR & Bakong — 100% Safe & Automated!',
+    image: '/banner-default.jpg',
+    localFallbackImage: '/mlbb-logo.png',
+    gameId: 'mlbb',
+    buttonText: 'Top Up Now',
+    link: '/topup?game=mlbb',
+    badgeColor: 'bg-cyan-400 text-slate-950',
+    status: 'Active',
+    order: 0
+  },
+  {
     id: 'banner-1',
     tag: '🔥 ALLSTAR 2026 EVENT',
     title: 'Mobile Legends 515 ALLSTAR Special',
