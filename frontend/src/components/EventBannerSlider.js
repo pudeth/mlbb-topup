@@ -133,29 +133,33 @@ const EventBannerSlider = ({ className = '' }) => {
       >
 
         {/* ── Layer 1 · Banner images via SVG Mask ──────────────────────────── */}
-        {/* SVG <mask> is luminance-based by default: white=show, black=hide.   */}
-        {/* Works on ALL browsers including iOS Safari — unlike CSS mask-mode.  */}
+        {/* SVG <mask> luminance mode: white=show, black=hide. Works everywhere. */}
         <svg
           className="absolute inset-0 w-full h-full"
           viewBox="0 0 1024 363"
           preserveAspectRatio="none"
           aria-hidden="true"
-          style={{ overflow: 'visible' }}
         >
           <defs>
             <mask id="bannerFrameMask" maskUnits="userSpaceOnUse" x="0" y="0" width="1024" height="363">
               <image href="/banner-mask.png" x="0" y="0" width="1024" height="363" />
             </mask>
           </defs>
+
           <g mask="url(#bannerFrameMask)">
+            {/* Black fill — covers any gaps if image doesn't reach edge */}
+            <rect x="0" y="0" width="1024" height="363" fill="#000" />
+
             {banners.map((banner, index) => {
               const isActive = index === currentIndex;
               return (
+                /* Image is placed slightly OVERSIZED (-5% each side) so it
+                   always fills edge-to-edge no matter the banner aspect ratio */
                 <image
                   key={banner.id || index}
                   href={banner.image}
-                  x="0" y="0"
-                  width="1024" height="363"
+                  x="-52" y="-18"
+                  width="1128" height="399"
                   preserveAspectRatio="xMidYMid slice"
                   style={{
                     opacity: isActive ? 1 : 0,
@@ -165,7 +169,8 @@ const EventBannerSlider = ({ className = '' }) => {
                 />
               );
             })}
-            {/* Cinematic gradient on hover — using SVG rect with gradient fill */}
+
+            {/* Cinematic gradient on hover */}
             <defs>
               <linearGradient id="bannerGradLR" x1="0%" y1="0%" x2="100%" y2="0%">
                 <stop offset="0%" stopColor="#020617" stopOpacity="0.9" />
@@ -178,18 +183,13 @@ const EventBannerSlider = ({ className = '' }) => {
                 <stop offset="100%" stopColor="#000000" stopOpacity="0.2" />
               </linearGradient>
             </defs>
-            <rect
-              x="0" y="0" width="1024" height="363"
-              fill="url(#bannerGradLR)"
-              style={{ opacity: isHovered ? 1 : 0, transition: 'opacity 0.4s ease-out', pointerEvents: 'none' }}
-            />
-            <rect
-              x="0" y="0" width="1024" height="363"
-              fill="url(#bannerGradTB)"
-              style={{ opacity: isHovered ? 1 : 0, transition: 'opacity 0.4s ease-out', pointerEvents: 'none' }}
-            />
+            <rect x="0" y="0" width="1024" height="363" fill="url(#bannerGradLR)"
+              style={{ opacity: isHovered ? 1 : 0, transition: 'opacity 0.4s ease-out', pointerEvents: 'none' }} />
+            <rect x="0" y="0" width="1024" height="363" fill="url(#bannerGradTB)"
+              style={{ opacity: isHovered ? 1 : 0, transition: 'opacity 0.4s ease-out', pointerEvents: 'none' }} />
           </g>
         </svg>
+
 
         {/* ── Layer 2 · Neon frame — sits ON TOP, forward-standing ── */}
         <img
