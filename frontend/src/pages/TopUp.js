@@ -535,10 +535,10 @@ const TopUp = () => {
 
   // Automatically trigger ABA Official Checkout Popup via AbaPayway.checkout() directly in the browser
   useEffect(() => {
-    if (paymentPaid) {
-      // Gracefully close checkout popup without page reload so customer sees receipt
-      closeAbaCheckoutPopup();
-    } else if (paymentData && !paymentPaid && paymentData.gateway === 'aba_payway') {
+    // ABA Rule: Do NOT automatically close or hide the official ABA checkout popup upon payment.
+    // The official popup must remain visible so the customer can view the Success screen,
+    // download the official ABA receipt, and click "Continues Shopping" at their own discretion.
+    if (paymentData && !paymentPaid && paymentData.gateway === 'aba_payway') {
       const openOfficialAbaCheckout = () => {
         const payway = getAbaPaywayInstance();
         if (payway && typeof payway.checkout === 'function') {
@@ -918,10 +918,9 @@ const TopUp = () => {
     );
 
     const triggerPaidTransition = async () => {
-      // Immediately dismiss ABA checkout popup so customer transitions straight to our branded receipt!
-      closeAbaCheckoutPopup();
+      // ABA Rule: Do NOT automatically dismiss ABA popup. Keep the official Success screen active so customer can view it and download receipt!
       console.log(
-        `%c[ABA PayWay Tracker] 🚀 PAYMENT DETECTED (PAID) for Order #${curOrderId}! Displaying receipt...`,
+        `%c[ABA PayWay Tracker] 🚀 PAYMENT DETECTED (PAID) for Order #${curOrderId}! Official ABA Success interface will remain active.`,
         'color: #10b981; font-weight: 900; font-size: 13px; background: #064e3b; padding: 3px 6px; border-radius: 4px;'
       );
 
@@ -1056,7 +1055,6 @@ const TopUp = () => {
             // Mark paid flag immediately to stop polling
             paymentPaidRef.current = true;
             es && es.close();
-            closeAbaCheckoutPopup();
 
             // Run payment confirmation
             const run = async () => {
