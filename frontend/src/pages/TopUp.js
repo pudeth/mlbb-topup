@@ -497,12 +497,49 @@ const TopUp = () => {
         const payway = getAbaPaywayInstance();
         if (payway && typeof payway.checkout === 'function') {
           try {
-            // Ensure official desktop container exists in DOM
+            // 1. Ensure official desktop container exists in DOM
             let abaContainer = document.getElementById('aba-checkout');
             if (!abaContainer) {
               abaContainer = document.createElement('div');
               abaContainer.id = 'aba-checkout';
               document.body.appendChild(abaContainer);
+            }
+
+            // 2. Ensure official mobile bottom sheet container exists in DOM
+            let sheet = document.getElementById('aba_checkout_sheet');
+            if (!sheet) {
+              const sheetHTML = `
+<div id="aba_checkout_sheet" class="aba_checkout_column aba_checkout_items_center aba_checkout_justify_end" aria-hidden="true">
+  <div class="aba_checkout_overlay"></div>
+  <div class="aba_checkout_contents aba_checkout_column">
+    <header class="aba_checkout_column_header">
+      <div class="aba_checkout_draggable_area">
+        <div class="aba_checkout_draggable-thumb"></div>
+      </div>
+    </header>
+    <main class="aba_checkout_column" id="aba_checkout_app">
+    </main>
+  </div>
+</div>`;
+              document.body.insertAdjacentHTML('beforeend', sheetHTML);
+              sheet = document.getElementById('aba_checkout_sheet');
+            }
+
+            // Ensure window helpers exist for bottom sheet animation
+            if (typeof window.abaCheckoutSetSheetHeight !== 'function') {
+              window.abaCheckoutSetSheetHeight = function(val) {
+                const c = document.querySelector('#aba_checkout_sheet .aba_checkout_contents');
+                if (c) c.style.height = typeof val === 'number' ? `${val}px` : val;
+              };
+            }
+            if (typeof window.abaCheckoutSetIsSheetShown !== 'function') {
+              window.abaCheckoutSetIsSheetShown = function(val) {
+                const s = document.getElementById('aba_checkout_sheet');
+                if (s) {
+                  s.setAttribute('aria-hidden', String(!val));
+                  if (val) s.style.display = 'flex';
+                }
+              };
             }
 
             const purchaseUrl = paymentData.purchaseUrl || "https://checkout-sandbox.payway.com.kh/api/payment-gateway/v1/payments/purchase";
@@ -543,9 +580,26 @@ const TopUp = () => {
               form.appendChild(opt);
             }
 
-            // Launch official ABA PayWay popup modal per ABA specification
+            // Launch official ABA PayWay popup / mobile drawer per ABA specification
             payway.checkout();
-            console.log('[ABA PayWay] Official AbaPayway.checkout() launched successfully!');
+
+            // Mobile-specific smoothness: Ensure bottom sheet animates up smoothly
+            const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) || (typeof window !== 'undefined' && window.innerWidth <= 768);
+            if (isMobile) {
+              setTimeout(() => {
+                const s = document.getElementById('aba_checkout_sheet');
+                if (s) {
+                  s.style.display = 'flex';
+                  s.setAttribute('aria-hidden', 'false');
+                  const c = s.querySelector('.aba_checkout_contents');
+                  if (c && (!c.style.height || c.style.height === '0px')) {
+                    c.style.height = '530px';
+                  }
+                }
+              }, 400);
+            }
+
+            console.log('[ABA PayWay] Official AbaPayway.checkout() launched successfully (Mobile & Desktop)!');
             return true;
           } catch (e) {
             console.warn('[ABA PayWay] AbaPayway.checkout() notice:', e);
