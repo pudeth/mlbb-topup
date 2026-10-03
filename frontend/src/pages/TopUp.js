@@ -1641,15 +1641,15 @@ const TopUp = () => {
                   if (!tag) return '';
                   const lower = tag.toLowerCase();
                   if (lower.includes('hot') || lower.includes('bonus') || lower.includes('best') || lower.includes('popular') || lower.includes('arura')) {
-                    return 'bg-gradient-to-r from-amber-500/20 via-orange-500/20 to-yellow-500/20 text-amber-300 border border-amber-400/50 shadow-[0_0_8px_rgba(245,158,11,0.2)]';
+                    return 'border-[1.5px] border-[#FFE169] bg-gradient-to-b from-[#ff8c00] via-[#e65100] to-[#b32600] text-white shadow-[0_0_10px_rgba(255,140,0,0.4),inset_0_1px_1px_rgba(255,255,255,0.4)]';
                   }
                   if (lower.includes('starter') || lower.includes('ticket')) {
-                    return 'bg-gradient-to-r from-cyan-500/20 to-sky-500/20 text-cyan-300 border border-cyan-400/50 shadow-[0_0_8px_rgba(6,182,212,0.2)]';
+                    return 'border-[1.5px] border-cyan-400 bg-gradient-to-b from-[#0284c7] via-[#0369a1] to-[#075985] text-white shadow-[0_0_10px_rgba(6,182,212,0.4),inset_0_1px_1px_rgba(255,255,255,0.3)]';
                   }
                   if (lower.includes('wdp') || lower.includes('pass') || lower.includes('starlight') || lower.includes('vip')) {
-                    return 'bg-gradient-to-r from-purple-500/25 via-fuchsia-500/20 to-pink-500/25 text-purple-200 border border-purple-400/50 shadow-[0_0_8px_rgba(168,85,247,0.2)]';
+                    return 'border-[1.5px] border-purple-400 bg-gradient-to-b from-[#9333ea] via-[#7e22ce] to-[#581c87] text-white shadow-[0_0_10px_rgba(168,85,247,0.4),inset_0_1px_1px_rgba(255,255,255,0.3)]';
                   }
-                  return 'bg-gradient-to-r from-emerald-500/20 to-teal-500/20 text-emerald-300 border border-emerald-400/40 shadow-[0_0_8px_rgba(16,185,129,0.2)]';
+                  return 'border-[1.5px] border-emerald-400 bg-gradient-to-b from-[#059669] via-[#047857] to-[#065f46] text-white shadow-[0_0_10px_rgba(16,185,129,0.4),inset_0_1px_1px_rgba(255,255,255,0.3)]';
                 };
 
                 const filtered = products.filter(pkg => {
@@ -1667,88 +1667,153 @@ const TopUp = () => {
                 }
 
                 // ==================== MODE 1: TILES VIEW (COMPACT 2-3 COLUMNS) ====================
+                // ==================== MODE 1: 100% POLISHED 2-COLUMN CYBER CARDS ====================
                 if (layoutMode === 'tiles') {
                   return (
-                    <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 gap-2 sm:gap-2.5">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 sm:gap-3 lg:gap-3.5">
                       {filtered.map((pkg) => {
                         const isSelected = selectedProduct.productId === pkg.productId;
                         const isPass = isPassItem(pkg);
+
+                        // Tag logic matching screenshot exactly
+                        const isPopular =
+                          pkg.productId === 12 ||
+                          pkg.diamondAmount === 55 ||
+                          (pkg.tag && (pkg.tag.toLowerCase().includes('popular') || pkg.tag.toLowerCase().includes('starter')));
+
+                        const isRecommend =
+                          pkg.productId === 13 ||
+                          pkg.diamondAmount === 86 ||
+                          (pkg.tag && (pkg.tag.toLowerCase().includes('bonus') || pkg.tag.toLowerCase().includes('recommend') || pkg.tag.toLowerCase().includes('best')));
 
                         return (
                           <div
                             key={pkg.productId}
                             onClick={() => setSelectedProduct(pkg)}
-                            className={`group relative rounded-xl sm:rounded-2xl p-2 sm:p-2.5 cursor-pointer select-none transition-all duration-200 flex flex-col justify-between overflow-hidden ${
+                            className={`group relative rounded-xl sm:rounded-2xl p-2.5 sm:p-3 cursor-pointer select-none transition-all duration-200 flex flex-col justify-between overflow-hidden ${
                               isSelected
-                                ? 'bg-gradient-to-b from-[#1c1233] via-[#140d26] to-[#0d0918] border-2 border-amber-400 shadow-[0_0_18px_rgba(251,191,36,0.3),inset_0_0_12px_rgba(245,158,11,0.06)] scale-[1.01] -translate-y-0.5 z-10'
-                                : 'bg-gradient-to-b from-[#111827] via-[#0d1320] to-[#080d16] border border-slate-700/60 hover:border-amber-400/50 hover:bg-gradient-to-b hover:from-[#152033] hover:via-[#101828] hover:to-[#0a0f1c] hover:-translate-y-0.5 hover:shadow-[0_8px_16px_-4px_rgba(0,0,0,0.5),0_0_12px_rgba(251,191,36,0.12)] shadow-[inset_0_1px_0_rgba(255,255,255,0.05)]'
+                                ? 'bg-gradient-to-br from-[#0c142b] via-[#070d1e] to-[#040814] border-2 border-amber-400 shadow-[0_0_20px_rgba(251,191,36,0.35)] scale-[1.01] -translate-y-0.5 z-10'
+                                : 'bg-gradient-to-br from-[#081024] via-[#050b1a] to-[#02050e] border border-sky-500/40 hover:border-sky-400/90 shadow-[0_4px_16px_rgba(0,0,0,0.4)] hover:shadow-[0_0_14px_rgba(56,189,248,0.2)] hover:-translate-y-0.5'
                             }`}
                           >
-                            {/* Selected Active Checkmark Badge */}
-                            {isSelected && (
-                              <div className="absolute top-1.5 right-1.5 z-20 w-4 h-4 rounded-full bg-gradient-to-tr from-amber-400 to-yellow-300 text-slate-950 flex items-center justify-center font-black text-[9px] shadow-[0_0_8px_rgba(245,158,11,0.8)]">
-                                ✓
-                              </div>
-                            )}
-
-                            {/* Top Row: 3D Artwork with Ambient Spotlight & Tag */}
-                            <div className="flex items-start justify-between mb-1.5 relative z-10">
-                              <div className="relative">
-                                {/* Ambient Light behind 3D artwork */}
-                                <div
-                                  className={`absolute -inset-1 rounded-full blur-md opacity-40 group-hover:opacity-85 transition-opacity duration-300 ${
-                                    isPass
-                                      ? 'bg-gradient-to-tr from-purple-500 to-pink-500'
-                                      : 'bg-gradient-to-tr from-amber-400 to-yellow-300'
-                                  }`}
-                                />
-                                <ProductPackageImage
-                                  pkg={pkg}
-                                  size="xs"
-                                  className="relative z-10 transition-transform duration-300 group-hover:scale-105 drop-shadow-[0_3px_8px_rgba(0,0,0,0.5)]"
-                                />
-                              </div>
-
-                              {/* Tag Badge (Pill) - hidden if selected to let checkmark shine */}
-                              {pkg.tag && !isSelected && (
-                                <div className="shrink-0 max-w-[62%]">
-                                  <span className={`inline-flex items-center px-1.5 py-0.5 rounded-full text-[8px] sm:text-[8.5px] font-bold tracking-wide shadow-sm truncate backdrop-blur-md ${getTagStyle(pkg.tag)}`}>
+                            {/* Card Top Row: Badges & Checkmark */}
+                            <div className="flex items-center justify-between mb-1.5 min-h-[26px] relative z-10">
+                              {/* Left Badge: Popular / Custom Tag */}
+                              <div className="min-w-0 pr-1">
+                                {isPopular ? (
+                                  <div className="inline-flex items-center gap-1.5 px-2.5 sm:px-3 py-1 rounded-lg border-[1.5px] border-[#FFE169] bg-gradient-to-b from-[#ff8c00] via-[#e65100] to-[#b32600] shadow-[0_0_12px_rgba(255,140,0,0.5),inset_0_1px_1px_rgba(255,255,255,0.45)]">
+                                    <svg className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-[#FFE279] fill-current drop-shadow-[0_1px_2px_rgba(0,0,0,0.5)] shrink-0" viewBox="0 0 24 24">
+                                      <path d="M5 16L3 5l5.5 5L12 4l3.5 6L21 5l-2 11H5zm14 3c0 .55-.45 1-1 1H6c-.55 0-1-.45-1-1v-1h14v1z"/>
+                                    </svg>
+                                    <span className="text-white font-extrabold text-[11px] sm:text-xs tracking-normal drop-shadow-[0_1px_2px_rgba(0,0,0,0.6)] leading-none">
+                                      Popular
+                                    </span>
+                                  </div>
+                                ) : pkg.tag && !isRecommend ? (
+                                  <span className={`inline-flex items-center gap-1 px-2.5 py-0.5 rounded-lg text-[9.5px] sm:text-[10px] font-bold tracking-wide truncate max-w-[140px] ${getTagStyle(pkg.tag)}`}>
                                     {formatTagText(pkg.tag)}
                                   </span>
+                                ) : null}
+                              </div>
+
+                              {/* Right Badge: Recommend OR Selected Checkmark */}
+                              <div className="flex items-center gap-1.5 shrink-0 ml-auto">
+                                {isRecommend && !isSelected && (
+                                  <div className="inline-flex items-center gap-1.5 px-2.5 sm:px-3 py-1 rounded-lg border-[1.5px] border-[#FFE169] bg-gradient-to-b from-[#1a1306] via-[#100c04] to-[#080602] shadow-[0_0_10px_rgba(251,191,36,0.3),inset_0_1px_1px_rgba(255,255,255,0.15)]">
+                                    <svg className="w-3.5 h-3.5 text-[#FFE279] fill-current drop-shadow-[0_1px_2px_rgba(0,0,0,0.5)] shrink-0" viewBox="0 0 24 24">
+                                      <path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z"/>
+                                    </svg>
+                                    <span className="text-amber-300 font-extrabold text-[11px] sm:text-xs tracking-normal drop-shadow-sm leading-none">
+                                      Recommend
+                                    </span>
+                                  </div>
+                                )}
+                                {isSelected && (
+                                  <div className="w-5 h-5 rounded-full bg-amber-400 text-slate-950 flex items-center justify-center font-black text-xs shadow-md shadow-amber-400/40">
+                                    ✓
+                                  </div>
+                                )}
+                              </div>
+                            </div>
+
+                            {/* Card Body: 2-Column Horizontal Layout */}
+                            <div className="flex items-center gap-2.5 sm:gap-3 flex-1 relative z-10">
+                              {/* Left Column: Original 3D Artwork with Ambient Glow */}
+                              <div className="relative w-16 h-16 sm:w-20 sm:h-20 lg:w-22 lg:h-22 shrink-0 flex items-center justify-center">
+                                {/* Ambient Spotlight Glow */}
+                                <div
+                                  className={`absolute -inset-1 rounded-full blur-lg pointer-events-none transition-opacity duration-300 ${
+                                    isSelected
+                                      ? 'bg-gradient-to-tr from-amber-500/30 via-orange-500/20 to-yellow-400/30 opacity-90'
+                                      : isPass
+                                      ? 'bg-gradient-to-tr from-purple-500/35 via-fuchsia-500/25 to-pink-500/35 opacity-70 group-hover:opacity-95'
+                                      : 'bg-gradient-to-tr from-cyan-500/35 via-blue-600/25 to-indigo-600/30 opacity-70 group-hover:opacity-95'
+                                  }`}
+                                />
+
+                                <ProductPackageImage
+                                  pkg={pkg}
+                                  size="lg"
+                                  className="relative z-10 transition-transform duration-300 group-hover:scale-105 drop-shadow-[0_4px_10px_rgba(0,0,0,0.5)]"
+                                />
+                              </div>
+
+                              {/* Right Column: Title, Subtitle, Price & Buy Button */}
+                              <div className="flex-1 flex flex-col justify-center min-w-0">
+                                <h3 className="font-black text-xs sm:text-sm lg:text-[15px] text-white tracking-tight leading-snug group-hover:text-amber-300 transition-colors line-clamp-2">
+                                  {pkg.name}
+                                </h3>
+
+                                {/* Subtitle */}
+                                <div className="flex items-center gap-1 text-[10px] sm:text-[11px] font-bold text-sky-300 mt-0.5 mb-1.5 truncate">
+                                  {isPass ? (
+                                    <>
+                                      <span className="text-amber-400">⚡</span>
+                                      <span>Daily Pass</span>
+                                    </>
+                                  ) : (
+                                    <>
+                                      <span className="text-cyan-400">💎</span>
+                                      <span>{pkg.diamondAmount} ពេជ្រ</span>
+                                    </>
+                                  )}
                                 </div>
-                              )}
-                            </div>
 
-                            {/* Middle: Title & Meta */}
-                            <div className="mb-2 relative z-10">
-                              <span className="font-black text-xs sm:text-[13px] leading-tight text-white group-hover:text-amber-300 transition-colors drop-shadow-sm line-clamp-1 block">
-                                {pkg.name}
-                              </span>
-                              <span className="text-[8.5px] sm:text-[9.5px] font-medium text-slate-400 group-hover:text-slate-300 block mt-0.5 truncate tracking-wide">
-                                {isPass ? '⚡ Daily Pass' : `💎 ${pkg.diamondAmount} Diamonds`}
-                              </span>
-                            </div>
+                                {/* Price & Buy Button Combined Capsule (Matching Reference Image) */}
+                                <div
+                                  className={`mt-auto pt-1 flex items-center justify-between rounded-full pl-3 sm:pl-3.5 pr-0.5 sm:pr-1 py-0.5 sm:py-1 transition-all duration-200 ${
+                                    isSelected
+                                      ? 'bg-slate-950/90 border border-amber-400/40 shadow-inner'
+                                      : 'bg-slate-950/75 border border-slate-800/90 shadow-inner'
+                                  }`}
+                                >
+                                  {/* Price on Left */}
+                                  <span
+                                    className={`font-black text-sm sm:text-base lg:text-lg font-mono tracking-tight leading-none ${
+                                      isSelected
+                                        ? 'text-amber-400 drop-shadow-[0_0_8px_rgba(251,191,36,0.5)]'
+                                        : 'text-[#00F5B8] drop-shadow-[0_0_8px_rgba(0,245,184,0.4)]'
+                                    }`}
+                                  >
+                                    ${pkg.price.toFixed(2)}
+                                  </span>
 
-                            {/* Bottom: Price Pill */}
-                            <div
-                              className={`mt-auto relative z-10 flex items-center justify-between px-2 py-1 rounded-lg transition-all duration-200 ${
-                                isSelected
-                                  ? 'bg-slate-950/80 border border-amber-400/40 shadow-inner'
-                                  : 'bg-slate-950/65 border border-slate-800/80 group-hover:border-slate-700/80 shadow-inner'
-                              }`}
-                            >
-                              <span className="text-[9px] sm:text-[9.5px] font-mono font-medium text-slate-400 group-hover:text-slate-300">
-                                ~{Math.round(pkg.price * 4100).toLocaleString()} ៛
-                              </span>
-                              <span
-                                className={`font-black text-[11.5px] sm:text-xs font-mono tracking-tight ${
-                                  isSelected
-                                    ? 'text-amber-300 drop-shadow-[0_0_6px_rgba(251,191,36,0.5)]'
-                                    : 'text-emerald-400 group-hover:text-emerald-300 drop-shadow-[0_0_5px_rgba(52,211,153,0.3)]'
-                                }`}
-                              >
-                                ${pkg.price.toFixed(2)}
-                              </span>
+                                  {/* Buy Button Pill on Right: 🛒 ទិញឥឡូវ > */}
+                                  <div
+                                    className={`px-3 sm:px-3.5 py-1 sm:py-1.5 rounded-full font-black text-[11px] sm:text-xs flex items-center gap-1 shrink-0 transition-transform hover:scale-[1.02] active:scale-95 shadow-sm cursor-pointer ${
+                                      isSelected
+                                        ? 'bg-amber-400 hover:bg-amber-300 text-slate-950 shadow-amber-400/30'
+                                        : 'bg-[#00E599] hover:bg-[#00F5B8] text-slate-950 shadow-emerald-400/25'
+                                    }`}
+                                  >
+                                    <svg className="w-3.5 h-3.5 shrink-0 fill-current" viewBox="0 0 24 24">
+                                      <path d="M7 18c-1.1 0-1.99.9-1.99 2S5.9 22 7 22s2-.9 2-2-.9-2-2-2zM1 2v2h2l3.6 7.59-1.35 2.45c-.16.28-.25.61-.25.96 0 1.1.9 2 2 2h12v-2H7.42c-.14 0-.25-.11-.25-.25l.03-.12.9-1.63h7.45c.75 0 1.41-.41 1.75-1.03l3.58-6.49c.08-.14.12-.31.12-.48 0-.55-.45-1-1-1H5.21l-.94-2H1zm16 16c-1.1 0-1.99.9-1.99 2s.89 2 1.99 2 2-.9 2-2-.9-2-2-2z"/>
+                                    </svg>
+                                    <span>ទិញឥឡូវ</span>
+                                    <span className="font-extrabold text-[10px]">&gt;</span>
+                                  </div>
+                                </div>
+                              </div>
                             </div>
                           </div>
                         );

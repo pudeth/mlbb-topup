@@ -11,12 +11,18 @@ export const ProductPackageImage = ({
 
   // Standard container dimensions
   const dims =
-    size === 'xs'
+    size === '2xl'
+      ? 'w-24 h-24 sm:w-28 sm:h-28'
+      : size === 'xl'
+      ? 'w-20 h-20 sm:w-24 sm:h-24'
+      : size === 'xs'
       ? 'w-7 h-7 sm:w-8 sm:h-8'
       : size === 'sm'
       ? 'w-6 h-6 sm:w-7 sm:h-7'
       : size === 'lg'
       ? 'w-12 h-12 sm:w-14 sm:h-14'
+      : size === 'full'
+      ? 'w-full h-full'
       : 'w-8 h-8 sm:w-10 sm:h-10';
 
   const custom = (pkg.customImage || pkg.image || '').trim();
@@ -112,8 +118,8 @@ export const ProductPackageImage = ({
     <div className={`relative inline-flex items-center justify-center shrink-0 ${dims} ${className}`}>
       <img
         src="/images/treasure-chest.png"
-        alt="Diamond Treasure Chest"
-        className="w-full h-full object-contain filter drop-shadow-[0_4px_12px_rgba(251,191,36,0.45)] hover:scale-105 transition-transform duration-300"
+        alt={pkg.name || "Diamond Treasure Chest"}
+        className="w-full h-full object-contain filter drop-shadow-[0_4px_14px_rgba(251,191,36,0.45)] hover:scale-105 transition-transform duration-300"
         onError={(e) => {
           e.target.style.display = 'none';
         }}
