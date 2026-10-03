@@ -787,18 +787,25 @@ const PRICING_GAMES = [
     return () => clearInterval(interval);
   }, [loadData]);
 
-  // Click outside listener for Navigation Dropdown
+  // Click outside & Escape key listener for Navigation Dropdown
   useEffect(() => {
     const handleClickOutside = (e) => {
       if (navDropdownRef.current && !navDropdownRef.current.contains(e.target)) {
         setNavDropdownOpen(false);
       }
     };
+    const handleKeyDown = (e) => {
+      if (e.key === 'Escape') {
+        setNavDropdownOpen(false);
+      }
+    };
     if (navDropdownOpen) {
       document.addEventListener('mousedown', handleClickOutside);
+      window.addEventListener('keydown', handleKeyDown);
     }
     return () => {
       document.removeEventListener('mousedown', handleClickOutside);
+      window.removeEventListener('keydown', handleKeyDown);
     };
   }, [navDropdownOpen]);
 
@@ -2100,104 +2107,111 @@ const PRICING_GAMES = [
                 </span>
               </button>
 
-              {/* Mobile Backdrop Overlay */}
+              {/* Unified Centered Responsive Admin Navigation Modal */}
               {navDropdownOpen && (
-                <div
-                  className="fixed inset-0 bg-black/85 z-50 backdrop-blur-md transition-opacity animate-fadeIn"
-                  onClick={() => setNavDropdownOpen(false)}
-                />
-              )}
+                <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-5 md:p-6 animate-fadeIn">
+                  {/* Backdrop Overlay */}
+                  <div
+                    className="fixed inset-0 bg-black/80 backdrop-blur-md transition-opacity"
+                    onClick={() => setNavDropdownOpen(false)}
+                  />
 
-              {/* Smooth Dropdown Menu (100% Solid, Non-Translucent Background) */}
-              {navDropdownOpen && (
-                <div className="fixed inset-x-3 top-20 sm:top-full sm:absolute sm:inset-auto sm:left-1/2 sm:-translate-x-1/2 sm:mt-3 w-auto sm:w-[520px] md:w-[640px] bg-[#0B0F19] border-2 border-slate-700/90 rounded-3xl p-3.5 sm:p-4 shadow-[0_25px_70px_rgba(0,0,0,0.95)] z-50 animate-slideDown max-h-[72vh] sm:max-h-[78vh] overflow-y-auto pb-6 sm:pb-4">
-                  
-                  {/* Dropdown Header */}
-                  <div className="flex items-center justify-between pb-3 mb-3 border-b border-slate-800 px-1 bg-[#0B0F19]">
-                    <div className="flex items-center gap-2">
-                      <span className="text-base">🗂️</span>
-                      <span className="text-xs font-black text-white uppercase tracking-wider">
-                        Admin Navigation Menu
-                      </span>
-                    </div>
+                  {/* Centered Modal Content Card */}
+                  <div className="relative w-full max-w-lg sm:max-w-xl md:max-w-2xl bg-[#0B0F19] border-2 border-slate-700/90 rounded-2xl sm:rounded-3xl p-3.5 sm:p-5 shadow-[0_25px_70px_rgba(0,0,0,0.95)] z-10 animate-scaleUp max-h-[85vh] sm:max-h-[88vh] flex flex-col my-auto">
+                    {/* Header */}
+                    <div className="flex items-center justify-between pb-3 mb-3 border-b border-slate-800 shrink-0">
+                      <div className="flex items-center gap-2.5">
+                        <span className="text-xl">🗂️</span>
+                        <div>
+                          <div className="flex items-center gap-2">
+                            <span className="text-xs sm:text-sm font-black text-white uppercase tracking-wider block">
+                              Admin Navigation Menu
+                            </span>
+                            <span className="text-[10px] text-amber-300 font-bold bg-amber-500/10 border border-amber-500/30 px-2 py-0.5 rounded-full">
+                              12 Modules
+                            </span>
+                          </div>
+                          <span className="text-[10px] text-slate-400 font-medium hidden xs:block">
+                            Select an administration module to navigate
+                          </span>
+                        </div>
+                      </div>
 
-                    <div className="flex items-center gap-2">
-                      <span className="text-[10px] text-slate-400 font-medium bg-[#111728] px-2 py-0.5 rounded-full border border-slate-800 hidden xs:inline">
-                        12 Modules
-                      </span>
                       <button
                         type="button"
                         onClick={() => setNavDropdownOpen(false)}
-                        className="w-7 h-7 rounded-lg bg-[#151D30] hover:bg-[#1E2A45] border border-slate-700 text-slate-300 hover:text-white flex items-center justify-center text-xs font-bold transition-all"
+                        className="w-8 h-8 rounded-xl bg-slate-800 hover:bg-slate-700 border border-slate-700 text-slate-300 hover:text-white flex items-center justify-center text-sm font-bold transition-all cursor-pointer shadow-sm active:scale-95"
                         aria-label="Close menu"
                       >
                         ✕
                       </button>
                     </div>
-                  </div>
 
-                  {/* 2-Column Responsive Grid with 100% Solid Cards */}
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
-                    {menuTabs.map((tab) => {
-                      const isSelected = activeTab === tab.id;
+                    {/* Scrollable 2-Column Responsive Grid */}
+                    <div className="overflow-y-auto pr-1 space-y-2 max-h-[calc(85vh-85px)] scrollbar-thin scrollbar-thumb-slate-700">
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 sm:gap-2.5">
+                        {menuTabs.map((tab) => {
+                          const isSelected = activeTab === tab.id;
 
-                      return (
-                        <button
-                          key={tab.id}
-                          type="button"
-                          onClick={() => {
-                            setActiveTab(tab.id);
-                            setNavDropdownOpen(false);
-                          }}
-                          className={`p-3 rounded-2xl text-left transition-all duration-200 flex items-start gap-2.5 sm:gap-3 border cursor-pointer active:scale-[0.98] ${
-                            isSelected
-                              ? 'bg-[#182236] border-2 border-amber-400 text-white shadow-lg ring-1 ring-amber-400/40'
-                              : 'bg-[#111728] hover:bg-[#192238] border-slate-800 hover:border-slate-600 text-slate-300 hover:text-white'
-                          }`}
-                        >
-                          {/* Icon Tile */}
-                          <div
-                            className={`w-9 h-9 rounded-xl flex items-center justify-center text-base sm:text-lg shrink-0 transition-all ${
-                              isSelected
-                                ? 'bg-amber-400 text-black font-black shadow-glow-gold'
-                                : 'bg-[#0B0F19] border border-slate-700 text-white'
-                            }`}
-                          >
-                            {tab.icon}
-                          </div>
-
-                          {/* Content */}
-                          <div className="flex-1 min-w-0">
-                            <div className="flex items-center justify-between gap-1 mb-0.5">
-                              <span
-                                className={`text-xs font-bold truncate ${
-                                  isSelected ? 'text-amber-300 font-black' : 'text-white'
+                          return (
+                            <button
+                              key={tab.id}
+                              type="button"
+                              onClick={() => {
+                                setActiveTab(tab.id);
+                                setNavDropdownOpen(false);
+                              }}
+                              className={`p-2.5 sm:p-3 rounded-2xl text-left transition-all duration-200 flex items-center sm:items-start gap-2.5 sm:gap-3 border cursor-pointer active:scale-[0.98] ${
+                                isSelected
+                                  ? 'bg-[#182236] border-2 border-amber-400 text-white shadow-lg ring-1 ring-amber-400/40'
+                                  : 'bg-[#111728] hover:bg-[#192238] border-slate-800 hover:border-slate-600 text-slate-300 hover:text-white'
+                              }`}
+                            >
+                              {/* Icon Tile */}
+                              <div
+                                className={`w-9 h-9 sm:w-10 sm:h-10 rounded-xl flex items-center justify-center text-base sm:text-lg shrink-0 transition-all ${
+                                  isSelected
+                                    ? 'bg-amber-400 text-black font-black shadow-glow-gold'
+                                    : 'bg-[#0B0F19] border border-slate-700 text-white'
                                 }`}
                               >
-                                {tab.label}
-                              </span>
-
-                              <div className="flex items-center gap-1 shrink-0">
-                                {tab.count !== undefined && tab.count > 0 && (
-                                  <span
-                                    className={`px-1.5 py-0.2 rounded-full text-[9px] font-black ${tab.badgeColor}`}
-                                  >
-                                    {tab.count}
-                                  </span>
-                                )}
-                                {isSelected && (
-                                  <span className="text-amber-400 text-xs font-black">✓</span>
-                                )}
+                                {tab.icon}
                               </div>
-                            </div>
 
-                            <p className="text-[10px] text-slate-400 leading-snug line-clamp-1">
-                              {tab.desc}
-                            </p>
-                          </div>
-                        </button>
-                      );
-                    })}
+                              {/* Content */}
+                              <div className="flex-1 min-w-0">
+                                <div className="flex items-center justify-between gap-1 mb-0.5">
+                                  <span
+                                    className={`text-xs sm:text-[13px] font-bold truncate ${
+                                      isSelected ? 'text-amber-300 font-black' : 'text-white'
+                                    }`}
+                                  >
+                                    {tab.label}
+                                  </span>
+
+                                  <div className="flex items-center gap-1 shrink-0">
+                                    {tab.count !== undefined && tab.count > 0 && (
+                                      <span
+                                        className={`px-1.5 py-0.2 rounded-full text-[9px] font-black ${tab.badgeColor}`}
+                                      >
+                                        {tab.count}
+                                      </span>
+                                    )}
+                                    {isSelected && (
+                                      <span className="text-amber-400 text-xs font-black">✓</span>
+                                    )}
+                                  </div>
+                                </div>
+
+                                <p className="text-[10px] text-slate-400 leading-snug line-clamp-1">
+                                  {tab.desc}
+                                </p>
+                              </div>
+                            </button>
+                          );
+                        })}
+                      </div>
+                    </div>
                   </div>
                 </div>
               )}
@@ -5165,8 +5179,10 @@ const PRICING_GAMES = [
         </button>
 
         <button
-          onClick={() => setMobileMenuOpen(true)}
-          className="flex flex-col items-center gap-1 p-1.5 rounded-xl text-[10px] font-bold text-slate-400 hover:text-white"
+          onClick={() => setNavDropdownOpen(true)}
+          className={`flex flex-col items-center gap-1 p-1.5 rounded-xl text-[10px] font-bold cursor-pointer transition-colors ${
+            navDropdownOpen ? 'text-amber-400' : 'text-slate-400 hover:text-white'
+          }`}
         >
           <span className="text-lg">☰</span>
           <span>More</span>
