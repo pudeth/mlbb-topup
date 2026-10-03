@@ -1428,7 +1428,7 @@ const TopUp = () => {
         {/* ========================================== */}
         {/* LEFT COLUMN: GAME ARTWORK SHOWCASE & BANNER */}
         {/* ========================================== */}
-        <div className="w-[38%] xs:w-[40%] sm:w-[45%] lg:w-1/2 relative rounded-2xl sm:rounded-3xl lg:rounded-[28px] overflow-hidden bg-[#040817] border border-sky-500/40 shadow-[0_0_25px_rgba(14,165,233,0.22)] flex flex-col justify-between group min-h-[380px] xs:min-h-[420px] sm:min-h-[460px] shrink-0">
+        <div className="w-[34%] xs:w-[36%] sm:w-[38%] lg:w-[40%] relative rounded-2xl sm:rounded-3xl lg:rounded-[28px] overflow-hidden bg-[#040817] border border-sky-500/40 shadow-[0_0_25px_rgba(14,165,233,0.22)] flex flex-col justify-between group min-h-[300px] xs:min-h-[330px] sm:min-h-[400px] shrink-0">
           
           {/* Background Image / Banner Carousel */}
           <div className="absolute inset-0 z-0">
@@ -1543,7 +1543,7 @@ const TopUp = () => {
         {/* ======================================================== */}
         {/* RIGHT COLUMN: GAME INFO, 4 FEATURE PILLS & PLAYER INFO HUB */}
         {/* ======================================================== */}
-        <div className="w-[62%] xs:w-[60%] sm:w-[55%] lg:w-1/2 rounded-2xl sm:rounded-3xl lg:rounded-[28px] border border-sky-500/40 bg-[#060c21]/95 backdrop-blur-2xl p-2.5 xs:p-3 sm:p-5 lg:p-6 shadow-[0_0_25px_rgba(14,165,233,0.22)] flex flex-col justify-between space-y-2 sm:space-y-3.5">
+        <div className="flex-1 min-w-0 rounded-2xl sm:rounded-3xl lg:rounded-[28px] border border-sky-500/40 bg-[#060c21]/95 backdrop-blur-2xl p-2.5 xs:p-3 sm:p-5 lg:p-6 shadow-[0_0_25px_rgba(14,165,233,0.22)] flex flex-col justify-between space-y-2 sm:space-y-3.5">
           
           <div>
             {/* Row 1: Game Header with Glowing Icon, Title, Subtitle & Popular Badge */}
@@ -1588,26 +1588,6 @@ const TopUp = () => {
                 ? 'Join the ultimate 5v5 battle arena! Team up with your friends, choose your hero, and fight for victory in Mobile Legends: Bang Bang.'
                 : (selectedGame.description || 'Fast, secure, and instant automated direct UID game top-up delivery with official API.')}
             </p>
-
-            {/* Row 3: 4 Feature Badges (clean SVG icons) */}
-            <div className="grid grid-cols-2 sm:grid-cols-4 gap-1.5 sm:gap-2 mt-2.5 sm:mt-3">
-              {[
-                { title: '5v5', sub: 'Battle', path: 'M14.5 17.5L3 6V3h3l11.5 11.5M13 19l6-6M16 16l4 4M19 21l2-2M9.5 6.5L13 3h3v3l-3.5 3.5M5 14l4 4M7 17l-3 3M3 19l2 2' },
-                { title: 'Multiple', sub: 'Heroes', path: 'M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2M9 11a4 4 0 100-8 4 4 0 000 8zM23 21v-2a4 4 0 00-3-3.87M16 3.13a4 4 0 010 7.75' },
-                { title: 'Fast', sub: 'Match', path: 'M13 2L3 14h9l-1 8 10-12h-9l1-8z' },
-                { title: 'Stable', sub: 'Server', path: 'M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10zM9 12l2 2 4-4' },
-              ].map((f) => (
-                <div key={f.title} className="group/f rounded-xl bg-gradient-to-br from-[#0b1633] to-[#070e22] border border-sky-500/20 hover:border-sky-400/60 px-2 py-1.5 sm:px-2.5 sm:py-2 flex items-center gap-2 transition-colors">
-                  <div className="w-6 h-6 sm:w-8 sm:h-8 rounded-lg bg-sky-500/15 ring-1 ring-sky-400/30 flex items-center justify-center text-sky-300 shrink-0 group-hover/f:text-cyan-200 group-hover/f:shadow-[0_0_10px_rgba(56,189,248,0.45)] transition-all">
-                    <svg className="w-3.5 h-3.5 sm:w-4 sm:h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d={f.path} /></svg>
-                  </div>
-                  <div className="min-w-0">
-                    <span className="text-[10px] sm:text-[11px] font-bold text-white block truncate leading-none">{f.title}</span>
-                    <span className="text-[9px] sm:text-[10px] text-slate-400 block truncate leading-tight mt-0.5">{f.sub}</span>
-                  </div>
-                </div>
-              ))}
-            </div>
           </div>
 
           {/* ======================================================== */}
