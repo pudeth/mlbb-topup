@@ -59,12 +59,16 @@ const Layout = ({ children }) => {
       {/* Main Container shifted right on desktop / laptop */}
       <div className={`flex flex-col min-h-screen ${!isAuthPath ? 'lg:pl-60 xl:pl-64' : ''}`}>
         <Navbar />
-        <main className={`flex-grow relative z-10 ${isAuthPath ? 'pb-0 flex flex-col' : 'pb-20 lg:pb-12'}`}>
+        <main className={`flex-grow relative z-10 ${isAuthPath ? 'pb-0 flex flex-col' : 'pb-16 sm:pb-20 lg:pb-10'}`}>
           {children}
         </main>
         {!isAuthPath && <AiAssistant />}
         {!isAuthPath && <MobileBottomNav />}
-        {!hideFooter && <Footer />}
+        {!hideFooter && (
+          <div className="hidden lg:block">
+            <Footer />
+          </div>
+        )}
       </div>
     </div>
   );

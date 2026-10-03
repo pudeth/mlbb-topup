@@ -647,19 +647,6 @@ const GameSelection = () => {
         </div>
       </div>
 
-      {/* Bottom Floating Pill Dock & 24/7 Status Indicator (Matching screenshot) */}
-      <div className="pt-8 pb-4 flex flex-col sm:flex-row items-center justify-between gap-4 text-xs text-slate-500 border-t border-slate-800/60 select-none">
-        <div>
-          © 2025 Tin-TopUp PRO. All rights reserved.
-        </div>
-
-        {/* Live Support Indicator */}
-        <div className="flex items-center gap-2 px-3 py-1 rounded-full bg-slate-900 border border-slate-800 text-[11px]">
-          <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
-          <span className="text-slate-300 font-bold">Online - 24/7</span>
-        </div>
-      </div>
-
     </section>
   );
 };
