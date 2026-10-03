@@ -10,7 +10,7 @@ const Footer = () => {
   const { branding } = useStoreBranding();
 
   return (
-    <footer className="bg-[#07090E] border-t border-slate-800/80 text-slate-400 mt-12 sm:mt-16 relative z-0">
+    <footer className="bg-[#07090E] border-t border-slate-800/80 text-slate-400 mt-6 sm:mt-10 pb-28 sm:pb-24 lg:pb-12 relative z-0 select-none font-khmer">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-10 space-y-6">
         {/* BRAND HUB & SOCIAL BAR */}
         <div>

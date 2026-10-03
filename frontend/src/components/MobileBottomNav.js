@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { useLanguage } from '../context/LanguageContext';
 
@@ -6,33 +6,7 @@ const MobileBottomNav = () => {
   const location = useLocation();
   const { language } = useLanguage();
 
-  const [isVisible, setIsVisible] = useState(true);
-  const lastScrollYRef = useRef(0);
-  const tickingRef = useRef(false);
-
-  useEffect(() => {
-    const handleScroll = () => {
-      if (!tickingRef.current) {
-        window.requestAnimationFrame(() => {
-          const currentScrollY = window.scrollY;
-          const delta = currentScrollY - lastScrollYRef.current;
-
-          if (delta > 10 && currentScrollY > 80) {
-            setIsVisible(false);
-          } else if (delta < -8 || currentScrollY <= 60) {
-            setIsVisible(true);
-          }
-
-          lastScrollYRef.current = currentScrollY;
-          tickingRef.current = false;
-        });
-        tickingRef.current = true;
-      }
-    };
-
-    window.addEventListener('scroll', handleScroll, { passive: true });
-    return () => window.removeEventListener('scroll', handleScroll);
-  }, []);
+  const [isVisible] = useState(true);
 
   const pathname = location.pathname;
   const isHome = pathname === '/' && !location.hash;
