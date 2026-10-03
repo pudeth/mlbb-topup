@@ -133,11 +133,15 @@ export const ProductPackageImage = ({
   return (
     <div className={`relative inline-flex items-center justify-center shrink-0 ${dims} ${className}`}>
       <img
-        src="/images/treasure-chest.png"
-        alt={pkg.name || "Diamond Treasure Chest"}
-        className="w-full h-full object-contain filter drop-shadow-[0_4px_14px_rgba(251,191,36,0.45)] hover:scale-105 transition-transform duration-300"
+        src="/images/diamond-chest-3d.png"
+        alt={pkg.name || "Diamond Chest"}
+        className="w-full h-full object-contain filter drop-shadow-[0_4px_14px_rgba(6,182,212,0.65)] hover:scale-105 transition-transform duration-300"
         onError={(e) => {
-          e.target.style.display = 'none';
+          if (e.target.src !== 'https://res.cloudinary.com/dpz7vpmf8/image/upload/v1791034826/product_packages/e6nwxlzaubp8k9qnxbzp.png') {
+            e.target.src = 'https://res.cloudinary.com/dpz7vpmf8/image/upload/v1791034826/product_packages/e6nwxlzaubp8k9qnxbzp.png';
+          } else {
+            e.target.style.display = 'none';
+          }
         }}
       />
     </div>
