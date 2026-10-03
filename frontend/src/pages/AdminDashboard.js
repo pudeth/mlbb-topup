@@ -3400,8 +3400,14 @@ const PRICING_GAMES = [
 
                       {/* Icon & Amount / Name */}
                       <div className="text-center py-1">
-                        <div className="text-2xl sm:text-3xl mb-0.5 group-hover:scale-110 transition-transform">
-                          {isPass ? '🌟' : prod.game === 'pubgm' ? '🎯' : prod.game === 'freefire' ? '🔥' : prod.game === 'genshin' ? '🌙' : '💎'}
+                        <div className="flex items-center justify-center min-h-[36px] mb-1 group-hover:scale-110 transition-transform">
+                          {prod.customImage || prod.game === 'mlbb' || isPass ? (
+                            <ProductPackageImage pkg={prod} size="sm" />
+                          ) : (
+                            <span className="text-2xl sm:text-3xl">
+                              {prod.game === 'pubgm' ? '🎯' : prod.game === 'freefire' ? '🔥' : prod.game === 'genshin' ? '🌙' : '💎'}
+                            </span>
+                          )}
                         </div>
                         <div className="font-black text-xs sm:text-sm text-white group-hover:text-amber-300 transition-colors leading-tight truncate">
                           {prod.name || `${prod.diamondAmount} Diamonds / Units`}
@@ -3436,23 +3442,7 @@ const PRICING_GAMES = [
                       {/* Compact Action Buttons */}
                       <div className="flex items-center gap-1.5 pt-1 border-t border-dark-border">
                         <button
-                          onClick={() => {
-                            setEditingProduct(prod);
-                            setProductFormData({
-                              diamondAmount: prod.diamondAmount || '',
-                              price: prod.price !== undefined ? prod.price : '',
-                              costPrice: prod.costPrice !== undefined ? prod.costPrice : '',
-                              costPriceFazerCards: prod.costPriceFazerCards !== undefined ? prod.costPriceFazerCards : (prod.costPrice || ''),
-                              costPriceKhmerTopUp: prod.costPriceKhmerTopUp !== undefined ? prod.costPriceKhmerTopUp : '',
-                              resellerPrice: prod.resellerPrice !== undefined ? prod.resellerPrice : (Number(prod.price) * 0.92).toFixed(2),
-                              status: prod.status || 'Active',
-                              description: prod.description || '',
-                              name: prod.name || '',
-                              tag: prod.tag || '',
-                              game: prod.game || 'mlbb'
-                            });
-                            setProductModalOpen(true);
-                          }}
+                          onClick={() => handleOpenProductModal(prod)}
                           className="btn btn-secondary flex-1 text-[10px] sm:text-xs py-1 px-2 font-bold cursor-pointer"
                           title="Edit package price and details"
                         >
@@ -5412,9 +5402,9 @@ const PRICING_GAMES = [
                       <button
                         type="button"
                         onClick={() => setProductFormData({ ...productFormData, customImage: '/images/weekly-pass.png' })}
-                        className={`p-1.5 rounded-xl border text-[10px] font-black transition-all flex items-center justify-center gap-1 ${
-                          productFormData.customImage === '/images/weekly-pass.png'
-                            ? 'bg-purple-600 text-white border-purple-400 shadow-md'
+                        className={`p-1.5 rounded-xl border text-[10px] font-black transition-all flex items-center justify-center gap-1 cursor-pointer ${
+                          (productFormData.customImage === '/images/weekly-pass.png' || (!productFormData.customImage && (productFormData.game === 'special_passes' || (productFormData.name && productFormData.name.toLowerCase().includes('pass')))))
+                            ? 'bg-purple-600 text-white border-purple-400 shadow-md ring-1 ring-purple-300'
                             : 'bg-slate-900 text-slate-300 border-slate-800 hover:border-slate-700'
                         }`}
                       >
@@ -5425,9 +5415,9 @@ const PRICING_GAMES = [
                       <button
                         type="button"
                         onClick={() => setProductFormData({ ...productFormData, customImage: '/images/treasure-chest.png' })}
-                        className={`p-1.5 rounded-xl border text-[10px] font-black transition-all flex items-center justify-center gap-1 ${
-                          productFormData.customImage === '/images/treasure-chest.png'
-                            ? 'bg-amber-500 text-black border-amber-300 shadow-md'
+                        className={`p-1.5 rounded-xl border text-[10px] font-black transition-all flex items-center justify-center gap-1 cursor-pointer ${
+                          (productFormData.customImage === '/images/treasure-chest.png' || (!productFormData.customImage && !(productFormData.game === 'special_passes' || (productFormData.name && productFormData.name.toLowerCase().includes('pass')))))
+                            ? 'bg-amber-500 text-black border-amber-300 shadow-md ring-1 ring-amber-200'
                             : 'bg-slate-900 text-slate-300 border-slate-800 hover:border-slate-700'
                         }`}
                       >
@@ -5437,10 +5427,10 @@ const PRICING_GAMES = [
 
                       <button
                         type="button"
-                        onClick={() => setProductFormData({ ...productFormData, customImage: '' })}
-                        className={`p-1.5 rounded-xl border text-[10px] font-black transition-all flex items-center justify-center gap-1 ${
-                          !productFormData.customImage
-                            ? 'bg-cyan-500 text-black border-cyan-300 shadow-md'
+                        onClick={() => setProductFormData({ ...productFormData, customImage: 'gem' })}
+                        className={`p-1.5 rounded-xl border text-[10px] font-black transition-all flex items-center justify-center gap-1 cursor-pointer ${
+                          productFormData.customImage === 'gem' || productFormData.customImage === '3d_gem' || productFormData.customImage === '3d-gem' || productFormData.customImage === '/images/diamond-gem.png'
+                            ? 'bg-cyan-500 text-black border-cyan-300 shadow-md ring-1 ring-cyan-200'
                             : 'bg-slate-900 text-slate-300 border-slate-800 hover:border-slate-700'
                         }`}
                       >

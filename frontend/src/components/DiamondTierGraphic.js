@@ -9,10 +9,12 @@ export const DiamondTierGraphic = ({ amount = 50, size = 'md', className = '' })
 
   // Determine size classes
   const sizeClasses = {
+    xs: 'w-7 h-7 sm:w-8 sm:h-8',
     sm: 'w-10 h-10',
     md: 'w-14 h-14 sm:w-16 sm:h-16',
     lg: 'w-20 h-20 sm:w-24 sm:h-24',
     xl: 'w-28 h-28 sm:w-32 sm:h-32',
+    full: 'w-full h-full',
   }[size] || 'w-14 h-14 sm:w-16 sm:h-16';
 
   // Tier 1: 50 Diamonds - Single Brilliant Diamond Gem

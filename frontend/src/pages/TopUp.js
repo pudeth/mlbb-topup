@@ -354,7 +354,8 @@ const TopUp = () => {
                 price: (cleanedPrice && cleanedPrice >= 0.5) ? cleanedPrice : item.price,
                 name: match.name || item.name,
                 tag: match.tag !== undefined ? match.tag : item.tag,
-                status: match.status || 'Active'
+                status: match.status || 'Active',
+                customImage: match.customImage !== undefined ? match.customImage : item.customImage
               };
             }
             return item;
@@ -1933,7 +1934,7 @@ const TopUp = () => {
                     )}
                   </div>
                   <div className="flex items-center gap-2">
-                    <span className="text-base">💎</span>
+                    <ProductPackageImage pkg={selectedProduct} size="xs" />
                     <span className="font-black text-amber-300 text-sm sm:text-base tracking-wide font-khmer">
                       {selectedProduct.name}
                     </span>
