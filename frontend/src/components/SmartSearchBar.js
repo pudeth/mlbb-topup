@@ -262,17 +262,21 @@ export const SmartSearchBar = ({ isMobile = false, onFilterClick }) => {
   };
 
   return (
-    <div ref={containerRef} className={`relative w-full ${isMobile ? '' : 'font-khmer'}`}>
-      <div className="relative w-full flex items-center">
+    <div ref={containerRef} className={`relative w-full ${isMobile ? '' : 'font-khmer'} ${isOpen && query.trim().length > 0 ? 'z-[9999]' : 'z-30'}`}>
+      <div className={`relative w-full flex items-center ${isOpen && query.trim().length > 0 ? 'z-[9999]' : 'z-10'}`}>
         {/* Search Input Box */}
         <div className="relative flex-1">
           <input
             type="text"
             value={query}
             placeholder={language === 'km' ? 'ស្វែងរកហ្គេម ឬប្រភេទ...' : 'Search games or categories...'}
-            className={`w-full bg-[#0b101e] border border-slate-700/80 ${
-              isMobile ? 'rounded-2xl pl-10 pr-9 py-2.5' : 'rounded-full pl-10 pr-9 py-2'
-            } text-xs text-white placeholder-slate-400 focus:outline-none focus:border-sky-500 focus:ring-1 focus:ring-sky-500 transition-all shadow-inner`}
+            className={`w-full ${
+              isOpen && query.trim().length > 0
+                ? 'bg-[#0f172a] border-sky-400 text-white font-bold ring-2 ring-sky-500/40 shadow-[0_0_20px_rgba(56,189,248,0.25)]'
+                : 'bg-[#0b101e] border-slate-700/80 text-white font-medium'
+            } border ${
+              isMobile ? 'rounded-2xl pl-10 pr-9 py-2.5 text-sm' : 'rounded-full pl-10 pr-9 py-2 text-xs'
+            } placeholder-slate-400 focus:outline-none focus:border-sky-400 focus:ring-2 focus:ring-sky-500/40 transition-all shadow-inner text-white`}
             onChange={handleInputChange}
             onFocus={() => {
               if (query.trim().length > 0) setIsOpen(true);
@@ -293,7 +297,7 @@ export const SmartSearchBar = ({ isMobile = false, onFilterClick }) => {
           />
 
           {/* Left Magnifying Glass Icon */}
-          <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 text-xs pointer-events-none select-none">
+          <span className={`absolute left-3.5 top-1/2 -translate-y-1/2 ${isOpen && query.trim().length > 0 ? 'text-sky-400' : 'text-slate-400'} text-sm pointer-events-none select-none transition-colors`}>
             🔍
           </span>
 
@@ -302,7 +306,7 @@ export const SmartSearchBar = ({ isMobile = false, onFilterClick }) => {
             <button
               type="button"
               onClick={handleClear}
-              className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 rounded-full bg-slate-800 hover:bg-slate-700 text-slate-400 hover:text-white flex items-center justify-center text-[10px] font-bold cursor-pointer transition-colors"
+              className="absolute right-3 top-1/2 -translate-y-1/2 w-5 h-5 rounded-full bg-slate-800 hover:bg-slate-700 text-slate-200 hover:text-white flex items-center justify-center text-xs font-bold cursor-pointer transition-colors shadow-sm"
               title="Clear search"
             >
               ✕
@@ -318,10 +322,12 @@ export const SmartSearchBar = ({ isMobile = false, onFilterClick }) => {
               const el = document.getElementById('games-section');
               if (el) el.scrollIntoView({ behavior: 'smooth' });
             })}
-            className="ml-2 w-9 h-9 rounded-2xl bg-[#0b101e] border border-slate-700/80 text-slate-300 hover:text-white flex items-center justify-center shrink-0 shadow-sm active:scale-95 transition-transform cursor-pointer"
+            className={`ml-2 w-10 h-10 rounded-2xl ${
+              isOpen && query.trim().length > 0 ? 'bg-[#0f172a] border-sky-500/60 text-sky-300' : 'bg-[#0b101e] border-slate-700/80 text-slate-300'
+            } border hover:text-white flex items-center justify-center shrink-0 shadow-sm active:scale-95 transition-all cursor-pointer`}
             aria-label="Filter games"
           >
-            <svg className="w-4 h-4 text-slate-300" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4" />
             </svg>
           </button>
@@ -333,9 +339,9 @@ export const SmartSearchBar = ({ isMobile = false, onFilterClick }) => {
       {/* ========================================================= */}
       {isOpen && query.trim().length > 0 && (
         <>
-          {/* Backdrop overlay to completely dim and block the background */}
+          {/* Backdrop overlay to completely dim and block the background - behind input (z-[9980]) */}
           <div
-            className="fixed inset-0 bg-black/80 backdrop-blur-xs z-[9998]"
+            className="fixed inset-0 bg-black/80 backdrop-blur-xs z-[9980]"
             onClick={() => setIsOpen(false)}
           />
 
