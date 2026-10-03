@@ -3,6 +3,7 @@ import { Link, useLocation } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { useLanguage } from '../context/LanguageContext';
 import { BrandLogo } from './BrandLogo';
+import { SmartSearchBar } from './SmartSearchBar';
 const Navbar = () => {
   const { user, logout, isAuthenticated, isAdmin } = useAuth();
   const { language, setLanguage, t } = useLanguage();
@@ -70,27 +71,9 @@ const Navbar = () => {
                 </Link>
               </div>
 
-              {/* Desktop Central Search Bar matching screenshot */}
-              <div className="hidden lg:flex items-center flex-1 max-w-xl mx-4 font-khmer">
-                <div className="relative w-full">
-                  <input
-                    type="text"
-                    placeholder={language === 'km' ? 'ស្វែងរកហ្គេម ឬប្រភេទ...' : 'Search games or categories...'}
-                    className="w-full bg-[#0b101e] border border-slate-700/80 rounded-full pl-10 pr-4 py-2 text-xs text-white placeholder-slate-400 focus:outline-none focus:border-sky-500 focus:ring-1 focus:ring-sky-500 transition-all shadow-inner"
-                    onChange={(e) => {
-                      window.dispatchEvent(new CustomEvent('filterGames', { detail: e.target.value }));
-                    }}
-                    onKeyDown={(e) => {
-                      if (e.key === 'Enter') {
-                        const el = document.getElementById('games-section');
-                        if (el) el.scrollIntoView({ behavior: 'smooth' });
-                      }
-                    }}
-                  />
-                  <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 text-xs">
-                    🔍
-                  </span>
-                </div>
+              {/* Desktop Central Smart Search Bar */}
+              <div className="hidden lg:flex items-center flex-1 max-w-xl mx-4">
+                <SmartSearchBar isMobile={false} />
               </div>
 
           {/* Right: Actions */}
@@ -272,43 +255,15 @@ const Navbar = () => {
           </div>
         </div>
 
-        {/* Mobile Search Bar matching screenshot */}
+        {/* Mobile Smart Search Bar matching screenshot */}
         <div className="lg:hidden pb-3 pt-1">
-          <div className="relative w-full flex items-center gap-2">
-            <div className="relative flex-1">
-              <input
-                type="text"
-                placeholder={language === 'km' ? 'ស្វែងរកហ្គេម ឬប្រភេទ...' : 'Search games or categories...'}
-                className="w-full bg-[#0b101e] border border-slate-700/80 rounded-2xl pl-10 pr-4 py-2 text-xs text-white placeholder-slate-400 focus:outline-none focus:border-sky-500 focus:ring-1 focus:ring-sky-500 transition-all shadow-inner"
-                onChange={(e) => {
-                  window.dispatchEvent(new CustomEvent('filterGames', { detail: e.target.value }));
-                }}
-                onKeyDown={(e) => {
-                  if (e.key === 'Enter') {
-                    const el = document.getElementById('games-section');
-                    if (el) el.scrollIntoView({ behavior: 'smooth' });
-                  }
-                }}
-              />
-              <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 text-xs">
-                🔍
-              </span>
-            </div>
-            {/* Filter Sliders Icon Button */}
-            <button
-              type="button"
-              onClick={() => {
-                const el = document.getElementById('games-section');
-                if (el) el.scrollIntoView({ behavior: 'smooth' });
-              }}
-              className="w-9 h-9 rounded-2xl bg-[#0b101e] border border-slate-700/80 text-slate-300 hover:text-white flex items-center justify-center shrink-0 shadow-sm active:scale-95 transition-transform cursor-pointer"
-              aria-label="Filter games"
-            >
-              <svg className="w-4 h-4 text-slate-300" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4" />
-              </svg>
-            </button>
-          </div>
+          <SmartSearchBar
+            isMobile={true}
+            onFilterClick={() => {
+              const el = document.getElementById('games-section');
+              if (el) el.scrollIntoView({ behavior: 'smooth' });
+            }}
+          />
         </div>
       </div>
 
