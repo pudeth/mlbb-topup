@@ -2109,15 +2109,15 @@ const PRICING_GAMES = [
 
               {/* Unified Centered Responsive Admin Navigation Modal */}
               {navDropdownOpen && (
-                <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-5 md:p-6 animate-fadeIn">
+                <div className="fixed inset-0 z-50 flex items-center justify-center p-3 pb-24 sm:p-5 sm:pb-28 xl:pb-6 animate-fadeIn">
                   {/* Backdrop Overlay */}
                   <div
                     className="fixed inset-0 bg-black/80 backdrop-blur-md transition-opacity"
                     onClick={() => setNavDropdownOpen(false)}
                   />
 
-                  {/* Centered Modal Content Card */}
-                  <div className="relative w-full max-w-lg sm:max-w-xl md:max-w-2xl bg-[#0B0F19] border-2 border-slate-700/90 rounded-2xl sm:rounded-3xl p-3.5 sm:p-5 shadow-[0_25px_70px_rgba(0,0,0,0.95)] z-10 animate-scaleUp max-h-[85vh] sm:max-h-[88vh] flex flex-col my-auto">
+                  {/* Centered Modal Content Card - Positioned comfortably above the bottom navigation bar */}
+                  <div className="relative w-full max-w-lg sm:max-w-xl md:max-w-2xl bg-[#0B0F19] border-2 border-slate-700/90 rounded-2xl sm:rounded-3xl p-3.5 sm:p-5 shadow-[0_25px_70px_rgba(0,0,0,0.95)] z-10 animate-scaleUp max-h-[calc(100vh-170px)] xl:max-h-[85vh] flex flex-col my-auto">
                     {/* Header */}
                     <div className="flex items-center justify-between pb-3 mb-3 border-b border-slate-800 shrink-0">
                       <div className="flex items-center gap-2.5">
@@ -2148,7 +2148,7 @@ const PRICING_GAMES = [
                     </div>
 
                     {/* Scrollable 2-Column Responsive Grid */}
-                    <div className="overflow-y-auto pr-1 space-y-2 max-h-[calc(85vh-85px)] scrollbar-thin scrollbar-thumb-slate-700">
+                    <div className="overflow-y-auto pr-1 space-y-2 max-h-[calc(100vh-260px)] xl:max-h-[calc(85vh-85px)] scrollbar-thin scrollbar-thumb-slate-700">
                       <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 sm:gap-2.5">
                         {menuTabs.map((tab) => {
                           const isSelected = activeTab === tab.id;
@@ -5128,13 +5128,16 @@ const PRICING_GAMES = [
       </main>
 
       {/* ========================================================= */}
-      {/* MOBILE BOTTOM STICKY QUICK TAB BAR */}
+      {/* MOBILE BOTTOM STICKY QUICK TAB BAR - ELEVATED (z-[60]) TO NEVER BE BLOCKED */}
       {/* ========================================================= */}
-      <div className="xl:hidden fixed bottom-0 left-0 right-0 z-40 bg-dark-card/95 backdrop-blur-xl border-t border-dark-border px-3 py-2 flex items-center justify-around shadow-2xl">
+      <div className="xl:hidden fixed bottom-0 left-0 right-0 z-[60] bg-dark-card/95 backdrop-blur-xl border-t border-dark-border px-3 py-2 flex items-center justify-around shadow-2xl">
         <button
-          onClick={() => setActiveTab('pending')}
-          className={`flex flex-col items-center gap-1 p-1.5 rounded-xl text-[10px] font-bold ${
-            activeTab === 'pending' ? 'text-amber-400' : 'text-slate-400'
+          onClick={() => {
+            setActiveTab('pending');
+            setNavDropdownOpen(false);
+          }}
+          className={`flex flex-col items-center gap-1 p-1.5 rounded-xl text-[10px] font-bold cursor-pointer transition-colors ${
+            activeTab === 'pending' ? 'text-amber-400' : 'text-slate-400 hover:text-white'
           }`}
         >
           <span className="text-lg relative">
@@ -5149,9 +5152,12 @@ const PRICING_GAMES = [
         </button>
 
         <button
-          onClick={() => setActiveTab('pricing')}
-          className={`flex flex-col items-center gap-1 p-1.5 rounded-xl text-[10px] font-bold ${
-            activeTab === 'pricing' ? 'text-amber-400' : 'text-slate-400'
+          onClick={() => {
+            setActiveTab('pricing');
+            setNavDropdownOpen(false);
+          }}
+          className={`flex flex-col items-center gap-1 p-1.5 rounded-xl text-[10px] font-bold cursor-pointer transition-colors ${
+            activeTab === 'pricing' ? 'text-amber-400' : 'text-slate-400 hover:text-white'
           }`}
         >
           <span className="text-lg">💎</span>
@@ -5159,9 +5165,12 @@ const PRICING_GAMES = [
         </button>
 
         <button
-          onClick={() => setActiveTab('orders')}
-          className={`flex flex-col items-center gap-1 p-1.5 rounded-xl text-[10px] font-bold ${
-            activeTab === 'orders' ? 'text-amber-400' : 'text-slate-400'
+          onClick={() => {
+            setActiveTab('orders');
+            setNavDropdownOpen(false);
+          }}
+          className={`flex flex-col items-center gap-1 p-1.5 rounded-xl text-[10px] font-bold cursor-pointer transition-colors ${
+            activeTab === 'orders' ? 'text-amber-400' : 'text-slate-400 hover:text-white'
           }`}
         >
           <span className="text-lg">📦</span>
@@ -5169,9 +5178,12 @@ const PRICING_GAMES = [
         </button>
 
         <button
-          onClick={() => setActiveTab('financials')}
-          className={`flex flex-col items-center gap-1 p-1.5 rounded-xl text-[10px] font-bold ${
-            activeTab === 'financials' ? 'text-amber-400' : 'text-slate-400'
+          onClick={() => {
+            setActiveTab('financials');
+            setNavDropdownOpen(false);
+          }}
+          className={`flex flex-col items-center gap-1 p-1.5 rounded-xl text-[10px] font-bold cursor-pointer transition-colors ${
+            activeTab === 'financials' ? 'text-amber-400' : 'text-slate-400 hover:text-white'
           }`}
         >
           <span className="text-lg">💰</span>
@@ -5179,13 +5191,13 @@ const PRICING_GAMES = [
         </button>
 
         <button
-          onClick={() => setNavDropdownOpen(true)}
-          className={`flex flex-col items-center gap-1 p-1.5 rounded-xl text-[10px] font-bold cursor-pointer transition-colors ${
-            navDropdownOpen ? 'text-amber-400' : 'text-slate-400 hover:text-white'
+          onClick={() => setNavDropdownOpen(!navDropdownOpen)}
+          className={`flex flex-col items-center gap-1 p-1.5 rounded-xl text-[10px] font-bold cursor-pointer transition-all ${
+            navDropdownOpen ? 'text-amber-300 font-black' : 'text-slate-400 hover:text-white'
           }`}
         >
-          <span className="text-lg">☰</span>
-          <span>More</span>
+          <span className="text-lg">{navDropdownOpen ? '✕' : '☰'}</span>
+          <span>{navDropdownOpen ? 'Close' : 'More'}</span>
         </button>
       </div>
 
