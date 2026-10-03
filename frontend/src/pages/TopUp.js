@@ -1419,12 +1419,16 @@ const TopUp = () => {
       {/* 1. NEW LUXURY GAME SHOWCASE & PLAYER INFORMATION HERO     */}
       {/* Exactly matching reference design media_1791047969801.png */}
       {/* ========================================================= */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-5 sm:gap-6 items-stretch mb-8">
+      {/* ========================================================= */}
+      {/* 1. NEW LUXURY GAME SHOWCASE & PLAYER INFORMATION HERO     */}
+      {/* Side-by-side with best mobile responsiveness               */}
+      {/* ========================================================= */}
+      <div className="flex flex-row gap-2 sm:gap-4 md:gap-6 items-stretch mb-6 sm:mb-8">
 
         {/* ========================================== */}
-        {/* LEFT CARD: GAME ARTWORK SHOWCASE & BANNER */}
+        {/* LEFT COLUMN: GAME ARTWORK SHOWCASE & BANNER */}
         {/* ========================================== */}
-        <div className="relative rounded-3xl sm:rounded-[28px] overflow-hidden bg-[#040817] border border-sky-500/40 shadow-[0_0_35px_rgba(14,165,233,0.25)] flex flex-col justify-between group min-h-[360px] sm:min-h-[460px]">
+        <div className="w-[38%] xs:w-[40%] sm:w-[45%] lg:w-1/2 relative rounded-2xl sm:rounded-3xl lg:rounded-[28px] overflow-hidden bg-[#040817] border border-sky-500/40 shadow-[0_0_25px_rgba(14,165,233,0.22)] flex flex-col justify-between group min-h-[380px] xs:min-h-[420px] sm:min-h-[460px] shrink-0">
           
           {/* Background Image / Banner Carousel */}
           <div className="absolute inset-0 z-0">
@@ -1447,22 +1451,22 @@ const TopUp = () => {
           </div>
 
           {/* Top Bar: Official Game Brand Emblem (Left) & Back Button (Right) */}
-          <div className="relative z-10 p-4 sm:p-5 flex items-center justify-between">
+          <div className="relative z-10 p-2.5 xs:p-3 sm:p-5 flex items-center justify-between">
             {/* Official Game Logo Badge */}
-            <div className="flex items-center gap-2.5 bg-black/60 backdrop-blur-md px-3 py-1.5 rounded-2xl border border-white/10 shadow-lg">
+            <div className="flex items-center gap-1.5 xs:gap-2 sm:gap-2.5 bg-black/60 backdrop-blur-md px-2 py-1 xs:px-2.5 sm:px-3 sm:py-1.5 rounded-xl sm:rounded-2xl border border-white/10 shadow-lg">
               {selectedGame.id.startsWith('mlbb') ? (
-                <div className="flex items-center gap-2">
-                  <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-amber-400 to-yellow-600 p-0.5 flex items-center justify-center shadow-md">
-                    <span className="font-black text-slate-950 text-sm tracking-tighter">M</span>
+                <div className="flex items-center gap-1.5 sm:gap-2">
+                  <div className="w-5 h-5 xs:w-6 xs:h-6 sm:w-8 sm:h-8 rounded-lg bg-gradient-to-br from-amber-400 to-yellow-600 p-0.5 flex items-center justify-center shadow-md shrink-0">
+                    <span className="font-black text-slate-950 text-[10px] xs:text-xs sm:text-sm tracking-tighter">M</span>
                   </div>
                   <div className="flex flex-col">
-                    <span className="text-[11px] font-black text-white tracking-widest leading-none drop-shadow">MOBILE LEGENDS</span>
-                    <span className="text-[9px] font-bold text-amber-400 tracking-wider leading-none mt-0.5">BANG BANG</span>
+                    <span className="text-[8px] xs:text-[9px] sm:text-[11px] font-black text-white tracking-wider sm:tracking-widest leading-none drop-shadow">MOBILE LEGENDS</span>
+                    <span className="text-[7px] xs:text-[8px] sm:text-[9px] font-bold text-amber-400 tracking-wider leading-none mt-0.5 hidden xs:block">BANG BANG</span>
                   </div>
                 </div>
               ) : (
-                <div className="flex items-center gap-2">
-                  <span className="text-xs font-black text-white tracking-wide">{selectedGame.name}</span>
+                <div className="flex items-center gap-1.5">
+                  <span className="text-[9px] sm:text-xs font-black text-white tracking-wide truncate max-w-[80px] xs:max-w-none">{selectedGame.name}</span>
                 </div>
               )}
             </div>
@@ -1471,7 +1475,7 @@ const TopUp = () => {
             <button
               type="button"
               onClick={() => navigate('/')}
-              className="w-9 h-9 rounded-full bg-slate-950/80 hover:bg-slate-900 backdrop-blur-xl text-white hover:text-cyan-300 flex items-center justify-center text-lg font-black border border-white/20 hover:border-cyan-400/80 cursor-pointer transition-all duration-300 hover:scale-110 active:scale-95 shadow-md"
+              className="w-7 h-7 sm:w-9 sm:h-9 rounded-full bg-slate-950/80 hover:bg-slate-900 backdrop-blur-xl text-white hover:text-cyan-300 flex items-center justify-center text-sm sm:text-lg font-black border border-white/20 hover:border-cyan-400/80 cursor-pointer transition-all duration-300 hover:scale-110 active:scale-95 shadow-md shrink-0 ml-1"
               title="Back to Home"
             >
               ‹
@@ -1479,38 +1483,38 @@ const TopUp = () => {
           </div>
 
           {/* Bottom Artwork Content: Slogan, 5v5 Emblem & Carousel Dots */}
-          <div className="relative z-10 p-4 sm:p-6 mt-auto flex flex-col justify-end space-y-4">
+          <div className="relative z-10 p-2.5 xs:p-3 sm:p-6 mt-auto flex flex-col justify-end space-y-2 sm:space-y-4">
             {/* Slogan & 5v5 Metallic Emblem Row */}
-            <div className="flex items-end justify-between gap-3">
+            <div className="flex items-end justify-between gap-1 sm:gap-3">
               {/* Glowing Slogan: LEGENDS NEVER FADE */}
               <div className="flex flex-col select-none">
-                <span className="text-2xl sm:text-3xl lg:text-4xl font-black italic tracking-wider leading-none uppercase text-transparent bg-clip-text bg-gradient-to-r from-sky-200 via-cyan-300 to-blue-400 drop-shadow-[0_0_18px_rgba(34,211,238,0.85)] font-sans">
+                <span className="text-xs xs:text-sm sm:text-2xl lg:text-3xl font-black italic tracking-wide sm:tracking-wider leading-none uppercase text-transparent bg-clip-text bg-gradient-to-r from-sky-200 via-cyan-300 to-blue-400 drop-shadow-[0_0_12px_rgba(34,211,238,0.85)] font-sans">
                   LEGENDS
                 </span>
-                <span className="text-2xl sm:text-3xl lg:text-4xl font-black italic tracking-wider leading-tight uppercase text-transparent bg-clip-text bg-gradient-to-r from-cyan-300 via-sky-300 to-indigo-300 drop-shadow-[0_0_18px_rgba(56,189,248,0.85)] font-sans">
+                <span className="text-xs xs:text-sm sm:text-2xl lg:text-3xl font-black italic tracking-wide sm:tracking-wider leading-tight uppercase text-transparent bg-clip-text bg-gradient-to-r from-cyan-300 via-sky-300 to-indigo-300 drop-shadow-[0_0_12px_rgba(56,189,248,0.85)] font-sans">
                   NEVER FADE
                 </span>
               </div>
 
               {/* 3D Golden 5v5 Emblem */}
               <div className="relative select-none shrink-0">
-                <div className="text-3xl sm:text-4xl lg:text-5xl font-black tracking-tighter text-transparent bg-clip-text bg-gradient-to-b from-[#FFF2B2] via-[#E8B931] to-[#9E6E00] drop-shadow-[0_4px_12px_rgba(0,0,0,0.95)]">
+                <div className="text-lg xs:text-2xl sm:text-4xl lg:text-5xl font-black tracking-tighter text-transparent bg-clip-text bg-gradient-to-b from-[#FFF2B2] via-[#E8B931] to-[#9E6E00] drop-shadow-[0_2px_8px_rgba(0,0,0,0.95)]">
                   5v5
                 </div>
               </div>
             </div>
 
             {/* Carousel Pagination Controls: < ● ○ ○ ○ > */}
-            <div className="flex items-center justify-center gap-3 pt-2">
+            <div className="flex items-center justify-center gap-1.5 sm:gap-3 pt-1">
               <button
                 type="button"
                 onClick={() => setActiveBannerIdx((prev) => (prev > 0 ? prev - 1 : MLBB_BANNERS.length - 1))}
-                className="text-slate-400 hover:text-cyan-300 text-sm font-black px-1.5 py-0.5 transition-colors cursor-pointer"
+                className="text-slate-400 hover:text-cyan-300 text-xs sm:text-sm font-black px-1 py-0.5 transition-colors cursor-pointer"
                 title="Previous Banner"
               >
                 ‹
               </button>
-              <div className="flex items-center gap-1.5">
+              <div className="flex items-center gap-1 sm:gap-1.5">
                 {MLBB_BANNERS.map((_, idx) => (
                   <button
                     key={idx}
@@ -1518,8 +1522,8 @@ const TopUp = () => {
                     onClick={() => setActiveBannerIdx(idx)}
                     className={`rounded-full transition-all duration-300 cursor-pointer ${
                       activeBannerIdx === idx
-                        ? 'w-5 h-2 bg-gradient-to-r from-cyan-400 to-blue-500 shadow-[0_0_8px_rgba(34,211,238,0.8)]'
-                        : 'w-2 h-2 bg-slate-600/80 hover:bg-slate-400'
+                        ? 'w-3.5 sm:w-5 h-1.5 sm:h-2 bg-gradient-to-r from-cyan-400 to-blue-500 shadow-[0_0_8px_rgba(34,211,238,0.8)]'
+                        : 'w-1.5 sm:w-2 h-1.5 sm:h-2 bg-slate-600/80 hover:bg-slate-400'
                     }`}
                   />
                 ))}
@@ -1527,7 +1531,7 @@ const TopUp = () => {
               <button
                 type="button"
                 onClick={() => setActiveBannerIdx((prev) => (prev < MLBB_BANNERS.length - 1 ? prev + 1 : 0))}
-                className="text-slate-400 hover:text-cyan-300 text-sm font-black px-1.5 py-0.5 transition-colors cursor-pointer"
+                className="text-slate-400 hover:text-cyan-300 text-xs sm:text-sm font-black px-1 py-0.5 transition-colors cursor-pointer"
                 title="Next Banner"
               >
                 ›
@@ -1537,16 +1541,16 @@ const TopUp = () => {
         </div>
 
         {/* ======================================================== */}
-        {/* RIGHT CARD: GAME INFO, 4 FEATURE PILLS & PLAYER INFO HUB */}
+        {/* RIGHT COLUMN: GAME INFO, 4 FEATURE PILLS & PLAYER INFO HUB */}
         {/* ======================================================== */}
-        <div className="rounded-3xl sm:rounded-[28px] border border-sky-500/40 bg-[#060c21]/95 backdrop-blur-2xl p-4 sm:p-6 shadow-[0_0_35px_rgba(14,165,233,0.22)] flex flex-col justify-between space-y-4">
+        <div className="w-[62%] xs:w-[60%] sm:w-[55%] lg:w-1/2 rounded-2xl sm:rounded-3xl lg:rounded-[28px] border border-sky-500/40 bg-[#060c21]/95 backdrop-blur-2xl p-2.5 xs:p-3 sm:p-5 lg:p-6 shadow-[0_0_25px_rgba(14,165,233,0.22)] flex flex-col justify-between space-y-2 sm:space-y-3.5">
           
           <div>
             {/* Row 1: Game Header with Glowing Icon, Title, Subtitle & Popular Badge */}
-            <div className="flex items-center justify-between gap-3">
-              <div className="flex items-center gap-3 min-w-0">
+            <div className="flex items-center justify-between gap-1.5 sm:gap-3">
+              <div className="flex items-center gap-2 sm:gap-3 min-w-0">
                 {/* Glowing Game Icon Frame */}
-                <div className="w-13 h-13 sm:w-15 sm:h-15 rounded-2xl bg-slate-950 border-2 border-sky-500/80 shadow-[0_0_18px_rgba(14,165,233,0.5)] p-1.5 flex items-center justify-center shrink-0">
+                <div className="w-8 h-8 xs:w-9 xs:h-9 sm:w-13 sm:h-13 rounded-xl sm:rounded-2xl bg-slate-950 border border-sky-500/80 shadow-[0_0_12px_rgba(14,165,233,0.5)] p-0.5 sm:p-1.5 flex items-center justify-center shrink-0">
                   <img
                     src="/images/mlbb_square_logo.png"
                     alt={selectedGame.name}
@@ -1554,16 +1558,16 @@ const TopUp = () => {
                       e.target.onerror = null;
                       e.target.src = selectedGame.image || '/mlbb-logo.png';
                     }}
-                    className="w-full h-full object-contain rounded-xl"
+                    className="w-full h-full object-contain rounded-lg sm:rounded-xl"
                   />
                 </div>
                 
                 {/* Title & Subtitle */}
                 <div className="min-w-0">
-                  <h1 className="text-xl sm:text-2xl font-black text-white tracking-wide uppercase leading-tight font-sans truncate">
+                  <h1 className="text-xs xs:text-sm sm:text-xl lg:text-2xl font-black text-white tracking-wide uppercase leading-tight font-sans">
                     {selectedGame.name}
                   </h1>
-                  <span className="text-xs sm:text-[13px] text-slate-400 font-medium block truncate mt-0.5">
+                  <span className="text-[9px] xs:text-[10px] sm:text-[13px] text-slate-400 font-medium block truncate mt-0.5">
                     {selectedGame.publisher || 'Moonton'} • {selectedGame.id.startsWith('mlbb') ? '5v5 Multiplayer' : (selectedGame.currency || 'Official Service')}
                   </span>
                 </div>
@@ -1571,63 +1575,63 @@ const TopUp = () => {
 
               {/* Popular Badge */}
               <div className="shrink-0">
-                <span className="px-3 py-1 rounded-full bg-cyan-500/15 border border-cyan-400/40 text-cyan-300 text-xs font-bold shadow-[0_0_12px_rgba(56,189,248,0.25)] flex items-center gap-1.5">
+                <span className="px-1.5 xs:px-2 sm:px-3 py-0.5 rounded-full bg-cyan-500/15 border border-cyan-400/40 text-cyan-300 text-[8px] xs:text-[9px] sm:text-xs font-bold shadow-sm flex items-center gap-1">
                   <span className="text-cyan-300">★</span>
                   <span>Popular</span>
                 </span>
               </div>
             </div>
 
-            {/* Row 2: Description Text */}
-            <p className="text-xs sm:text-[13px] text-slate-300 leading-relaxed mt-3.5 mb-3.5 font-sans">
+            {/* Row 2: Description Text (Visible on sm and up to save mobile space) */}
+            <p className="hidden sm:block text-xs sm:text-[13px] text-slate-300 leading-relaxed mt-2.5 mb-2.5 font-sans">
               {selectedGame.id.startsWith('mlbb')
                 ? 'Join the ultimate 5v5 battle arena! Team up with your friends, choose your hero, and fight for victory in Mobile Legends: Bang Bang.'
                 : (selectedGame.description || 'Fast, secure, and instant automated direct UID game top-up delivery with official API.')}
             </p>
 
             {/* Row 3: 4 Feature Badges (5v5 Battle, Multiple Heroes, Fast Matchmaking, Stable Server) */}
-            <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 mb-4">
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-1 xs:gap-1.5 sm:gap-2 my-2 sm:my-3">
               {/* Badge 1: 5v5 Battle */}
-              <div className="rounded-xl bg-[#09122b]/90 border border-sky-500/25 px-2.5 py-2 flex items-center gap-2 hover:border-sky-400/50 transition-colors shadow-sm">
-                <div className="w-7 h-7 rounded-full bg-blue-600/30 border border-sky-400/40 flex items-center justify-center text-sky-400 shadow-[0_0_8px_rgba(56,189,248,0.35)] shrink-0 text-xs">
+              <div className="rounded-lg sm:rounded-xl bg-[#09122b]/90 border border-sky-500/25 px-1.5 py-1 sm:px-2.5 sm:py-2 flex items-center gap-1.5 shadow-sm">
+                <div className="w-5 h-5 sm:w-7 sm:h-7 rounded-full bg-blue-600/30 border border-sky-400/40 flex items-center justify-center text-sky-400 shrink-0 text-[9px] sm:text-xs">
                   ⚔️
                 </div>
                 <div className="min-w-0">
-                  <span className="text-[11px] font-bold text-white block truncate leading-none">5v5</span>
-                  <span className="text-[9px] text-slate-400 block truncate leading-tight mt-0.5">Battle</span>
+                  <span className="text-[8px] xs:text-[9.5px] sm:text-[11px] font-bold text-white block truncate leading-none">5v5</span>
+                  <span className="text-[7.5px] xs:text-[8px] sm:text-[9px] text-slate-400 block truncate leading-tight mt-0.5">Battle</span>
                 </div>
               </div>
 
               {/* Badge 2: Multiple Heroes */}
-              <div className="rounded-xl bg-[#09122b]/90 border border-sky-500/25 px-2.5 py-2 flex items-center gap-2 hover:border-sky-400/50 transition-colors shadow-sm">
-                <div className="w-7 h-7 rounded-full bg-blue-600/30 border border-sky-400/40 flex items-center justify-center text-sky-400 shadow-[0_0_8px_rgba(56,189,248,0.35)] shrink-0 text-xs">
+              <div className="rounded-lg sm:rounded-xl bg-[#09122b]/90 border border-sky-500/25 px-1.5 py-1 sm:px-2.5 sm:py-2 flex items-center gap-1.5 shadow-sm">
+                <div className="w-5 h-5 sm:w-7 sm:h-7 rounded-full bg-blue-600/30 border border-sky-400/40 flex items-center justify-center text-sky-400 shrink-0 text-[9px] sm:text-xs">
                   👥
                 </div>
                 <div className="min-w-0">
-                  <span className="text-[11px] font-bold text-white block truncate leading-none">Multiple</span>
-                  <span className="text-[9px] text-slate-400 block truncate leading-tight mt-0.5">Heroes</span>
+                  <span className="text-[8px] xs:text-[9.5px] sm:text-[11px] font-bold text-white block truncate leading-none">Multiple</span>
+                  <span className="text-[7.5px] xs:text-[8px] sm:text-[9px] text-slate-400 block truncate leading-tight mt-0.5">Heroes</span>
                 </div>
               </div>
 
               {/* Badge 3: Fast Matchmaking */}
-              <div className="rounded-xl bg-[#09122b]/90 border border-sky-500/25 px-2.5 py-2 flex items-center gap-2 hover:border-sky-400/50 transition-colors shadow-sm">
-                <div className="w-7 h-7 rounded-full bg-blue-600/30 border border-sky-400/40 flex items-center justify-center text-sky-400 shadow-[0_0_8px_rgba(56,189,248,0.35)] shrink-0 text-xs">
+              <div className="rounded-lg sm:rounded-xl bg-[#09122b]/90 border border-sky-500/25 px-1.5 py-1 sm:px-2.5 sm:py-2 flex items-center gap-1.5 shadow-sm">
+                <div className="w-5 h-5 sm:w-7 sm:h-7 rounded-full bg-blue-600/30 border border-sky-400/40 flex items-center justify-center text-sky-400 shrink-0 text-[9px] sm:text-xs">
                   💎
                 </div>
                 <div className="min-w-0">
-                  <span className="text-[11px] font-bold text-white block truncate leading-none">Fast</span>
-                  <span className="text-[9px] text-slate-400 block truncate leading-tight mt-0.5">Matchmaking</span>
+                  <span className="text-[8px] xs:text-[9.5px] sm:text-[11px] font-bold text-white block truncate leading-none">Fast</span>
+                  <span className="text-[7.5px] xs:text-[8px] sm:text-[9px] text-slate-400 block truncate leading-tight mt-0.5">Match</span>
                 </div>
               </div>
 
               {/* Badge 4: Stable Server */}
-              <div className="rounded-xl bg-[#09122b]/90 border border-sky-500/25 px-2.5 py-2 flex items-center gap-2 hover:border-sky-400/50 transition-colors shadow-sm">
-                <div className="w-7 h-7 rounded-full bg-blue-600/30 border border-sky-400/40 flex items-center justify-center text-sky-400 shadow-[0_0_8px_rgba(56,189,248,0.35)] shrink-0 text-xs">
+              <div className="rounded-lg sm:rounded-xl bg-[#09122b]/90 border border-sky-500/25 px-1.5 py-1 sm:px-2.5 sm:py-2 flex items-center gap-1.5 shadow-sm">
+                <div className="w-5 h-5 sm:w-7 sm:h-7 rounded-full bg-blue-600/30 border border-sky-400/40 flex items-center justify-center text-sky-400 shrink-0 text-[9px] sm:text-xs">
                   🛡️
                 </div>
                 <div className="min-w-0">
-                  <span className="text-[11px] font-bold text-white block truncate leading-none">Stable</span>
-                  <span className="text-[9px] text-slate-400 block truncate leading-tight mt-0.5">Server</span>
+                  <span className="text-[8px] xs:text-[9.5px] sm:text-[11px] font-bold text-white block truncate leading-none">Stable</span>
+                  <span className="text-[7.5px] xs:text-[8px] sm:text-[9px] text-slate-400 block truncate leading-tight mt-0.5">Server</span>
                 </div>
               </div>
             </div>
@@ -1636,29 +1640,29 @@ const TopUp = () => {
           {/* ======================================================== */}
           {/* PLAYER INFORMATION BOX (EXACTLY MATCHING media_1791047969801.png) */}
           {/* ======================================================== */}
-          <div className="space-y-2.5">
+          <div className="space-y-1.5 sm:space-y-2.5">
             <div className="flex items-center justify-between">
-              <span className="text-xs sm:text-sm font-bold text-white flex items-center gap-2 font-sans">
+              <span className="text-[10px] xs:text-[11px] sm:text-sm font-bold text-white flex items-center gap-1.5 font-sans">
                 <span>👤</span>
-                <span>{language === 'km' ? 'ព័ត៌មានគណនីអ្នកលេង (Player Information)' : 'Player Information'}</span>
+                <span>{language === 'km' ? 'ព័ត៌មានអ្នកលេង' : 'Player Information'}</span>
               </span>
               <button
                 type="button"
                 onClick={() => setShowIdGuide(true)}
-                className="text-[11px] text-cyan-400 hover:text-cyan-300 font-bold transition-colors cursor-pointer"
+                className="text-[9px] xs:text-[10px] sm:text-[11px] text-cyan-400 hover:text-cyan-300 font-bold transition-colors cursor-pointer"
               >
                 ❓ Where is ID?
               </button>
             </div>
 
             {/* Main Inner Card */}
-            <div className="p-3 sm:p-4 rounded-2xl bg-[#030a1c]/95 border border-sky-500/30 shadow-inner space-y-3">
+            <div className="p-2 xs:p-2.5 sm:p-4 rounded-xl sm:rounded-2xl bg-[#030a1c]/95 border border-sky-500/30 shadow-inner space-y-2 sm:space-y-3">
               {/* Profile Row: Avatar + Inputs + Rank Crest */}
-              <div className="flex items-center gap-3 sm:gap-4">
+              <div className="flex items-center gap-2 sm:gap-4">
                 
                 {/* Gamer Avatar with Glowing Cyan Ring & Crown Badge */}
-                <div className="relative w-14 h-14 sm:w-16 sm:h-16 shrink-0">
-                  <div className="w-full h-full rounded-full p-0.5 bg-gradient-to-tr from-sky-400 via-blue-500 to-cyan-300 shadow-[0_0_16px_rgba(56,189,248,0.55)]">
+                <div className="relative w-9 h-9 xs:w-11 xs:h-11 sm:w-16 sm:h-16 shrink-0">
+                  <div className="w-full h-full rounded-full p-0.5 bg-gradient-to-tr from-sky-400 via-blue-500 to-cyan-300 shadow-[0_0_12px_rgba(56,189,248,0.55)]">
                     <img
                       src="/images/gamer_avatar_pro.png"
                       alt="Player Avatar"
@@ -1666,25 +1670,25 @@ const TopUp = () => {
                     />
                   </div>
                   {/* Crown Rank Badge at bottom-left */}
-                  <div className="absolute -bottom-1 -left-1 w-5 h-5 rounded-full bg-gradient-to-tr from-amber-400 via-yellow-400 to-amber-600 flex items-center justify-center text-[10px] shadow-[0_0_8px_rgba(245,158,11,0.9)] border border-amber-200">
+                  <div className="absolute -bottom-1 -left-1 w-3.5 h-3.5 xs:w-4 xs:h-4 sm:w-5 sm:h-5 rounded-full bg-gradient-to-tr from-amber-400 via-yellow-400 to-amber-600 flex items-center justify-center text-[7px] xs:text-[8px] sm:text-[10px] shadow-sm border border-amber-200">
                     👑
                   </div>
                 </div>
 
                 {/* Middle Column: Player ID & Server Inputs */}
-                <div className="flex-1 min-w-0 space-y-2">
+                <div className="flex-1 min-w-0 space-y-1.5 sm:space-y-2">
                   
                   {/* Field 1: Player ID (UID) + Copy Button */}
                   <div>
-                    <div className="flex items-center justify-between mb-1">
-                      <label className="text-[11px] font-bold text-slate-300 flex items-center gap-1 leading-none">
+                    <div className="flex items-center justify-between mb-0.5 sm:mb-1">
+                      <label className="text-[9px] xs:text-[10px] sm:text-[11px] font-bold text-slate-300 flex items-center gap-1 leading-none">
                         <span>👤</span>
-                        <span>{isTelegram ? 'Telegram Username (@)' : isSteam ? 'Steam Login Name' : isGiftCard ? 'Email Address' : 'Player ID (UID)'}</span>
+                        <span className="truncate">{isTelegram ? 'Telegram @' : isSteam ? 'Steam Name' : isGiftCard ? 'Email' : 'Player ID (UID)'}</span>
                       </label>
                       <button
                         type="button"
                         onClick={handleCopyPlayerId}
-                        className="text-[10px] text-sky-400 hover:text-white font-bold px-2 py-0.5 rounded bg-sky-500/10 hover:bg-sky-500/20 border border-sky-500/30 flex items-center gap-1 transition-all cursor-pointer leading-none"
+                        className="text-[8.5px] xs:text-[9.5px] sm:text-[10px] text-sky-400 hover:text-white font-bold px-1.5 py-0.5 rounded bg-sky-500/10 hover:bg-sky-500/20 border border-sky-500/30 flex items-center gap-1 transition-all cursor-pointer leading-none"
                         title="Copy Player ID"
                       >
                         <span>📋</span>
@@ -1692,41 +1696,41 @@ const TopUp = () => {
                       </button>
                     </div>
                     <div className="relative flex items-center">
-                      <span className="absolute left-3 text-slate-500 text-xs pointer-events-none">👤</span>
+                      <span className="absolute left-2 sm:left-3 text-slate-500 text-[10px] sm:text-xs pointer-events-none">👤</span>
                       <input
                         id="player_id_input"
                         type="text"
                         value={formData.playerID}
                         onChange={handlePlayerIdChange}
                         placeholder={isTelegram ? '@username' : isSteam ? 'steam_username' : isGiftCard ? 'email@domain.com' : '123456789'}
-                        className="w-full bg-[#050e24] border border-sky-500/35 rounded-xl pl-8 pr-3 py-2 text-xs sm:text-sm font-mono text-white placeholder-slate-600 focus:outline-none focus:border-sky-400 focus:ring-1 focus:ring-sky-400 transition-all shadow-inner"
+                        className="w-full h-7 xs:h-8 sm:h-9 bg-[#050e24] border border-sky-500/35 rounded-lg sm:rounded-xl pl-6 sm:pl-8 pr-2 sm:pr-3 text-[10px] xs:text-xs sm:text-sm font-mono text-white placeholder-slate-600 focus:outline-none focus:border-sky-400 focus:ring-1 focus:ring-sky-400 transition-all shadow-inner"
                       />
                     </div>
                   </div>
 
                   {/* Field 2: Server (Zone ID) */}
                   <div>
-                    <label className="text-[11px] font-bold text-slate-300 flex items-center gap-1 leading-none mb-1">
+                    <label className="text-[9px] xs:text-[10px] sm:text-[11px] font-bold text-slate-300 flex items-center gap-1 leading-none mb-0.5 sm:mb-1">
                       <span>🌐</span>
-                      <span>{isHoyoverse ? 'Server Region' : 'Server (Zone ID)'}</span>
+                      <span>{isHoyoverse ? 'Server' : 'Zone ID'}</span>
                     </label>
                     <div className="relative flex items-center">
-                      <span className="absolute left-3 text-slate-500 text-xs pointer-events-none">🌐</span>
+                      <span className="absolute left-2 sm:left-3 text-slate-500 text-[10px] sm:text-xs pointer-events-none">🌐</span>
                       <input
                         type="text"
                         value={formData.serverID}
                         onChange={(e) => setFormData(prev => ({ ...prev, serverID: e.target.value }))}
                         placeholder="Global (11446)"
-                        className="w-full bg-[#050e24] border border-sky-500/35 rounded-xl pl-8 pr-7 py-2 text-xs sm:text-sm font-mono text-white placeholder-slate-600 focus:outline-none focus:border-sky-400 focus:ring-1 focus:ring-sky-400 transition-all shadow-inner"
+                        className="w-full h-7 xs:h-8 sm:h-9 bg-[#050e24] border border-sky-500/35 rounded-lg sm:rounded-xl pl-6 sm:pl-8 pr-6 sm:pr-7 text-[10px] xs:text-xs sm:text-sm font-mono text-white placeholder-slate-600 focus:outline-none focus:border-sky-400 focus:ring-1 focus:ring-sky-400 transition-all shadow-inner"
                       />
-                      <span className="absolute right-2.5 text-slate-500 text-[10px] pointer-events-none">▾</span>
+                      <span className="absolute right-2 text-slate-500 text-[9px] sm:text-[10px] pointer-events-none">▾</span>
                     </div>
                   </div>
 
                 </div>
 
                 {/* Right Column: Mythic/Glory Rank Crest Emblem */}
-                <div className="w-13 h-13 sm:w-15 sm:h-15 shrink-0 flex items-center justify-center">
+                <div className="w-9 h-9 xs:w-11 xs:h-11 sm:w-15 sm:h-15 shrink-0 flex items-center justify-center">
                   <img
                     src="/images/rank_mythic_crest_clean.png"
                     alt="Rank Crest"
@@ -1734,7 +1738,7 @@ const TopUp = () => {
                       e.target.onerror = null;
                       e.target.src = '/images/rank_mythic_crest.png';
                     }}
-                    className="w-full h-full object-contain drop-shadow-[0_0_12px_rgba(56,189,248,0.5)]"
+                    className="w-full h-full object-contain drop-shadow-[0_0_10px_rgba(56,189,248,0.5)]"
                   />
                 </div>
 
@@ -1742,27 +1746,27 @@ const TopUp = () => {
 
               {/* Auto-detected message notice */}
               {autoDetectedMessage && (
-                <div className="text-[11px] font-bold text-emerald-400 px-1">
+                <div className="text-[10px] sm:text-[11px] font-bold text-emerald-400 px-1">
                   ⚡ {autoDetectedMessage}
                 </div>
               )}
 
               {/* Live Verified Account Notification Card */}
               {verifiedAccount && verifiedAccount.valid && (
-                <div className="p-2.5 rounded-xl bg-gradient-to-r from-emerald-950/80 via-slate-900 to-cyan-950/60 border border-emerald-500/60 text-xs shadow-lg space-y-1 animate-fadeIn">
+                <div className="p-2 sm:p-2.5 rounded-lg sm:rounded-xl bg-gradient-to-r from-emerald-950/80 via-slate-900 to-cyan-950/60 border border-emerald-500/60 text-xs shadow-lg space-y-0.5 sm:space-y-1 animate-fadeIn">
                   <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-1.5">
-                      <span className="text-base">👑</span>
-                      <span className="font-extrabold text-xs sm:text-sm text-white tracking-wide">
+                    <div className="flex items-center gap-1">
+                      <span className="text-xs sm:text-base">👑</span>
+                      <span className="font-extrabold text-[11px] sm:text-sm text-white tracking-wide truncate max-w-[120px] sm:max-w-none">
                         {verifiedAccount.name}
                       </span>
                     </div>
-                    <span className="px-2 py-0.5 rounded-full bg-emerald-500/20 border border-emerald-500/50 text-emerald-300 text-[10px] font-black flex items-center gap-1">
+                    <span className="px-1.5 sm:px-2 py-0.5 rounded-full bg-emerald-500/20 border border-emerald-500/50 text-emerald-300 text-[9px] sm:text-[10px] font-black flex items-center gap-1">
                       <span>✓</span>
                       <span>Verified</span>
                     </span>
                   </div>
-                  <div className="flex items-center justify-between text-[10.5px] text-slate-400 border-t border-slate-800/80 pt-1 font-mono">
+                  <div className="flex items-center justify-between text-[9px] sm:text-[10.5px] text-slate-400 border-t border-slate-800/80 pt-0.5 font-mono">
                     <span>ID: <strong className="text-cyan-300">{verifiedAccount.id} ({verifiedAccount.server})</strong></span>
                     <span className="text-emerald-400 font-semibold">📍 {verifiedAccount.country || 'Cambodia'}</span>
                   </div>
@@ -1771,14 +1775,11 @@ const TopUp = () => {
 
               {/* Error notification if not found */}
               {verifiedAccount && !verifiedAccount.valid && (
-                <div className="p-2.5 rounded-xl bg-rose-950/60 border border-rose-500/40 text-xs shadow-lg space-y-0.5 animate-fadeIn">
-                  <div className="flex items-center gap-1.5 text-rose-300 font-bold text-[11px]">
+                <div className="p-2 rounded-lg bg-rose-950/60 border border-rose-500/40 text-xs shadow-lg space-y-0.5 animate-fadeIn">
+                  <div className="flex items-center gap-1.5 text-rose-300 font-bold text-[10px]">
                     <span>⚠️</span>
-                    <span>{verifiedAccount.error || 'Player account not found.'}</span>
+                    <span className="truncate">{verifiedAccount.error || 'Player account not found.'}</span>
                   </div>
-                  <p className="text-[10.5px] text-slate-400 pl-4 leading-relaxed">
-                    Please verify your <strong>Zone ID</strong> in parentheses (e.g. <code>11446</code>).
-                  </p>
                 </div>
               )}
 
@@ -1787,17 +1788,17 @@ const TopUp = () => {
                 type="button"
                 onClick={handleVerifyAccount}
                 disabled={accountChecking || !formData.playerID.trim()}
-                className="w-full py-2 sm:py-2.5 rounded-full bg-gradient-to-r from-sky-500 to-blue-600 hover:from-sky-400 hover:to-blue-500 text-white font-bold text-xs sm:text-sm flex items-center justify-center gap-2 shadow-[0_0_15px_rgba(14,165,233,0.35)] active:scale-98 transition-all cursor-pointer disabled:opacity-40"
+                className="w-full py-1.5 sm:py-2.5 rounded-full bg-gradient-to-r from-sky-500 to-blue-600 hover:from-sky-400 hover:to-blue-500 text-white font-bold text-[10px] xs:text-[11px] sm:text-sm flex items-center justify-center gap-1.5 shadow-[0_0_12px_rgba(14,165,233,0.35)] active:scale-98 transition-all cursor-pointer disabled:opacity-40"
               >
                 <span>{accountChecking ? '⏳' : '🔍'}</span>
-                <span>{accountChecking ? 'Checking Player Nickname...' : 'Check Player Name'}</span>
+                <span>{accountChecking ? 'Checking...' : 'Check Player Name'}</span>
               </button>
 
               {/* Action Button 2: Start Game (Proceed to Top Up) */}
               <button
                 type="button"
                 onClick={handleStartGameAction}
-                className="w-full py-2.5 sm:py-3 rounded-full bg-gradient-to-r from-blue-600 via-sky-500 to-blue-600 hover:from-blue-500 hover:via-sky-400 hover:to-blue-500 text-white font-black text-sm sm:text-base flex items-center justify-center gap-2 shadow-[0_0_25px_rgba(2,132,199,0.7)] active:scale-98 transition-all cursor-pointer tracking-wide"
+                className="w-full py-2 sm:py-3 rounded-full bg-gradient-to-r from-blue-600 via-sky-500 to-blue-600 hover:from-blue-500 hover:via-sky-400 hover:to-blue-500 text-white font-black text-xs xs:text-sm sm:text-base flex items-center justify-center gap-1.5 sm:gap-2 shadow-[0_0_20px_rgba(2,132,199,0.7)] active:scale-98 transition-all cursor-pointer tracking-wide"
               >
                 <span>▶</span>
                 <span>Start Game</span>
