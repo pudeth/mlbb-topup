@@ -21,13 +21,8 @@ export const DiamondTierGraphic = ({ amount = 50, size = 'md', className = '' })
   if (num < 100) {
     return (
       <div className={`relative flex items-center justify-center ${sizeClasses} ${className}`}>
-        <svg viewBox="0 0 100 100" className="w-full h-full drop-shadow-[0_4px_12px_rgba(6,182,212,0.6)]">
+        <svg viewBox="0 0 100 100" className="w-full h-full">
           <defs>
-            <radialGradient id="gemGlow1" cx="50%" cy="50%" r="50%">
-              <stop offset="0%" stopColor="#22d3ee" stopOpacity="0.8" />
-              <stop offset="60%" stopColor="#0284c7" stopOpacity="0.3" />
-              <stop offset="100%" stopColor="#0f172a" stopOpacity="0" />
-            </radialGradient>
             <linearGradient id="facetTop1" x1="0%" y1="0%" x2="100%" y2="100%">
               <stop offset="0%" stopColor="#e0f2fe" />
               <stop offset="100%" stopColor="#38bdf8" />
@@ -45,9 +40,6 @@ export const DiamondTierGraphic = ({ amount = 50, size = 'md', className = '' })
               <stop offset="100%" stopColor="#0284c7" />
             </linearGradient>
           </defs>
-
-          {/* Ambient Glow */}
-          <circle cx="50" cy="52" r="42" fill="url(#gemGlow1)" />
 
           {/* Main Diamond Facets */}
           <g transform="translate(0, 5)">
@@ -83,13 +75,8 @@ export const DiamondTierGraphic = ({ amount = 50, size = 'md', className = '' })
   if (num < 200) {
     return (
       <div className={`relative flex items-center justify-center ${sizeClasses} ${className}`}>
-        <svg viewBox="0 0 100 100" className="w-full h-full drop-shadow-[0_4px_14px_rgba(56,189,248,0.65)]">
+        <svg viewBox="0 0 100 100" className="w-full h-full">
           <defs>
-            <radialGradient id="gemGlow2" cx="50%" cy="50%" r="50%">
-              <stop offset="0%" stopColor="#38bdf8" stopOpacity="0.85" />
-              <stop offset="70%" stopColor="#1d4ed8" stopOpacity="0.3" />
-              <stop offset="100%" stopColor="#0f172a" stopOpacity="0" />
-            </radialGradient>
             <linearGradient id="gemGrad2A" x1="0%" y1="0%" x2="100%" y2="100%">
               <stop offset="0%" stopColor="#e0f2fe" />
               <stop offset="50%" stopColor="#38bdf8" />
@@ -101,8 +88,6 @@ export const DiamondTierGraphic = ({ amount = 50, size = 'md', className = '' })
               <stop offset="100%" stopColor="#0284c7" />
             </linearGradient>
           </defs>
-
-          <circle cx="50" cy="50" r="45" fill="url(#gemGlow2)" />
 
           {/* Left Background Diamond */}
           <g transform="translate(14, 28) scale(0.65)">
@@ -144,13 +129,8 @@ export const DiamondTierGraphic = ({ amount = 50, size = 'md', className = '' })
   if (num < 300) {
     return (
       <div className={`relative flex items-center justify-center ${sizeClasses} ${className}`}>
-        <svg viewBox="0 0 100 100" className="w-full h-full drop-shadow-[0_4px_16px_rgba(16,185,129,0.55)]">
+        <svg viewBox="0 0 100 100" className="w-full h-full">
           <defs>
-            <radialGradient id="gemGlow3" cx="50%" cy="45%" r="50%">
-              <stop offset="0%" stopColor="#34d399" stopOpacity="0.8" />
-              <stop offset="50%" stopColor="#06b6d4" stopOpacity="0.4" />
-              <stop offset="100%" stopColor="#0f172a" stopOpacity="0" />
-            </radialGradient>
             <linearGradient id="pouchGrad1" x1="0%" y1="0%" x2="100%" y2="100%">
               <stop offset="0%" stopColor="#334155" />
               <stop offset="50%" stopColor="#1e293b" />
@@ -161,8 +141,6 @@ export const DiamondTierGraphic = ({ amount = 50, size = 'md', className = '' })
               <stop offset="100%" stopColor="#d97706" />
             </linearGradient>
           </defs>
-
-          <circle cx="50" cy="50" r="46" fill="url(#gemGlow3)" />
 
           {/* Diamonds spilling out of pouch top */}
           <g transform="translate(28, 12) scale(0.65)">
@@ -208,13 +186,8 @@ export const DiamondTierGraphic = ({ amount = 50, size = 'md', className = '' })
   if (num < 500) {
     return (
       <div className={`relative flex items-center justify-center ${sizeClasses} ${className}`}>
-        <svg viewBox="0 0 100 100" className="w-full h-full drop-shadow-[0_4px_18px_rgba(245,158,11,0.65)]">
+        <svg viewBox="0 0 100 100" className="w-full h-full">
           <defs>
-            <radialGradient id="gemGlow4" cx="50%" cy="40%" r="50%">
-              <stop offset="0%" stopColor="#f59e0b" stopOpacity="0.85" />
-              <stop offset="60%" stopColor="#0284c7" stopOpacity="0.4" />
-              <stop offset="100%" stopColor="#0f172a" stopOpacity="0" />
-            </radialGradient>
             <linearGradient id="sackVelvet" x1="0%" y1="0%" x2="100%" y2="100%">
               <stop offset="0%" stopColor="#831843" />
               <stop offset="50%" stopColor="#500724" />
@@ -226,8 +199,6 @@ export const DiamondTierGraphic = ({ amount = 50, size = 'md', className = '' })
               <stop offset="100%" stopColor="#b45309" />
             </linearGradient>
           </defs>
-
-          <circle cx="50" cy="46" r="46" fill="url(#gemGlow4)" />
 
           {/* Burst of Diamonds at Top */}
           <g transform="translate(18, 8) scale(0.55)">
@@ -282,13 +253,8 @@ export const DiamondTierGraphic = ({ amount = 50, size = 'md', className = '' })
   if (num < 1000) {
     return (
       <div className={`relative flex items-center justify-center ${sizeClasses} ${className}`}>
-        <svg viewBox="0 0 100 100" className="w-full h-full drop-shadow-[0_4px_20px_rgba(249,115,22,0.65)]">
+        <svg viewBox="0 0 100 100" className="w-full h-full">
           <defs>
-            <radialGradient id="gemGlow5" cx="50%" cy="38%" r="52%">
-              <stop offset="0%" stopColor="#fb923c" stopOpacity="0.85" />
-              <stop offset="50%" stopColor="#38bdf8" stopOpacity="0.4" />
-              <stop offset="100%" stopColor="#0f172a" stopOpacity="0" />
-            </radialGradient>
             <linearGradient id="chestWood" x1="0%" y1="0%" x2="0%" y2="100%">
               <stop offset="0%" stopColor="#78350f" />
               <stop offset="50%" stopColor="#451a03" />
@@ -300,8 +266,6 @@ export const DiamondTierGraphic = ({ amount = 50, size = 'md', className = '' })
               <stop offset="100%" stopColor="#b45309" />
             </linearGradient>
           </defs>
-
-          <circle cx="50" cy="46" r="48" fill="url(#gemGlow5)" />
 
           {/* Gleaming Mountain of Diamonds Inside Box */}
           <g transform="translate(18, 14) scale(0.48)">
@@ -361,13 +325,8 @@ export const DiamondTierGraphic = ({ amount = 50, size = 'md', className = '' })
   if (num < 2000) {
     return (
       <div className={`relative flex items-center justify-center ${sizeClasses} ${className}`}>
-        <svg viewBox="0 0 100 100" className="w-full h-full drop-shadow-[0_4px_22px_rgba(168,85,247,0.7)]">
+        <svg viewBox="0 0 100 100" className="w-full h-full">
           <defs>
-            <radialGradient id="gemGlow6" cx="50%" cy="35%" r="55%">
-              <stop offset="0%" stopColor="#c084fc" stopOpacity="0.9" />
-              <stop offset="50%" stopColor="#f59e0b" stopOpacity="0.5" />
-              <stop offset="100%" stopColor="#0f172a" stopOpacity="0" />
-            </radialGradient>
             <linearGradient id="royalGold" x1="0%" y1="0%" x2="100%" y2="100%">
               <stop offset="0%" stopColor="#fef08a" />
               <stop offset="30%" stopColor="#fbbf24" />
@@ -379,8 +338,6 @@ export const DiamondTierGraphic = ({ amount = 50, size = 'md', className = '' })
               <stop offset="100%" stopColor="#1e1b4b" />
             </linearGradient>
           </defs>
-
-          <circle cx="50" cy="45" r="48" fill="url(#gemGlow6)" />
 
           {/* Mountain of Diamonds Overflowing */}
           <g transform="translate(12, 10) scale(0.55)">
@@ -447,14 +404,8 @@ export const DiamondTierGraphic = ({ amount = 50, size = 'md', className = '' })
   if (num < 4000) {
     return (
       <div className={`relative flex items-center justify-center ${sizeClasses} ${className}`}>
-        <svg viewBox="0 0 100 100" className="w-full h-full drop-shadow-[0_4px_24px_rgba(236,72,153,0.75)]">
+        <svg viewBox="0 0 100 100" className="w-full h-full">
           <defs>
-            <radialGradient id="gemGlow7" cx="50%" cy="35%" r="55%">
-              <stop offset="0%" stopColor="#f472b6" stopOpacity="0.9" />
-              <stop offset="45%" stopColor="#a855f7" stopOpacity="0.6" />
-              <stop offset="85%" stopColor="#38bdf8" stopOpacity="0.3" />
-              <stop offset="100%" stopColor="#0f172a" stopOpacity="0" />
-            </radialGradient>
             <linearGradient id="treasuryGold" x1="0%" y1="0%" x2="100%" y2="100%">
               <stop offset="0%" stopColor="#fffbeb" />
               <stop offset="30%" stopColor="#fde047" />
@@ -467,8 +418,6 @@ export const DiamondTierGraphic = ({ amount = 50, size = 'md', className = '' })
               <stop offset="100%" stopColor="#0284c7" />
             </linearGradient>
           </defs>
-
-          <circle cx="50" cy="45" r="48" fill="url(#gemGlow7)" />
 
           {/* Floating Crown Above Treasury */}
           <path
@@ -539,14 +488,8 @@ export const DiamondTierGraphic = ({ amount = 50, size = 'md', className = '' })
   // Tier 8: 5000+ Diamonds - Mythic Celestial Diamond Vault
   return (
     <div className={`relative flex items-center justify-center ${sizeClasses} ${className}`}>
-      <svg viewBox="0 0 100 100" className="w-full h-full drop-shadow-[0_4px_28px_rgba(6,182,212,0.9)] animate-pulse-slow">
+      <svg viewBox="0 0 100 100" className="w-full h-full animate-pulse-slow">
         <defs>
-          <radialGradient id="mythicAura" cx="50%" cy="40%" r="55%">
-            <stop offset="0%" stopColor="#38bdf8" stopOpacity="1" />
-            <stop offset="35%" stopColor="#ec4899" stopOpacity="0.75" />
-            <stop offset="70%" stopColor="#f59e0b" stopOpacity="0.5" />
-            <stop offset="100%" stopColor="#0f172a" stopOpacity="0" />
-          </radialGradient>
           <linearGradient id="mythicGold" x1="0%" y1="0%" x2="100%" y2="100%">
             <stop offset="0%" stopColor="#ffffff" />
             <stop offset="25%" stopColor="#fef08a" />
@@ -560,9 +503,6 @@ export const DiamondTierGraphic = ({ amount = 50, size = 'md', className = '' })
             <stop offset="100%" stopColor="#0284c7" />
           </linearGradient>
         </defs>
-
-        {/* Radiant Celestial Halo */}
-        <circle cx="50" cy="45" r="48" fill="url(#mythicAura)" />
 
         {/* Celestial Angel / Dragon Wings behind Vault */}
         <path

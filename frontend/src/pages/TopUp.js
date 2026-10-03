@@ -1722,8 +1722,8 @@ const TopUp = () => {
                             onClick={() => setSelectedProduct(pkg)}
                             className={`group relative rounded-xl sm:rounded-2xl p-2.5 sm:p-3 cursor-pointer select-none transition-all duration-200 flex flex-col justify-between overflow-hidden ${
                               isSelected
-                                ? 'bg-gradient-to-br from-[#0c142b] via-[#070d1e] to-[#040814] border-2 border-amber-400 shadow-[0_0_20px_rgba(251,191,36,0.35)] scale-[1.01] -translate-y-0.5 z-10'
-                                : 'bg-gradient-to-br from-[#081024] via-[#050b1a] to-[#02050e] border border-sky-500/40 hover:border-sky-400/90 shadow-[0_4px_16px_rgba(0,0,0,0.4)] hover:shadow-[0_0_14px_rgba(56,189,248,0.2)] hover:-translate-y-0.5'
+                                ? 'bg-gradient-to-br from-[#0c142b] via-[#070d1e] to-[#040814] border-2 border-amber-400 shadow-xl shadow-black/60 scale-[1.01] -translate-y-0.5 z-10'
+                                : 'bg-gradient-to-br from-[#081024] via-[#050b1a] to-[#02050e] border border-sky-500/40 hover:border-sky-400/90 shadow-lg shadow-black/40 hover:-translate-y-0.5'
                             }`}
                           >
                             {/* Card Top Row: Badges & Checkmark */}
@@ -1768,23 +1768,12 @@ const TopUp = () => {
 
                             {/* Card Body: 2-Column Horizontal Layout */}
                             <div className="flex items-center gap-2.5 sm:gap-3 flex-1 relative z-10">
-                              {/* Left Column: Original 3D Artwork with Ambient Glow */}
+                              {/* Left Column: Original 3D Artwork */}
                               <div className="relative w-16 h-16 sm:w-20 sm:h-20 lg:w-22 lg:h-22 shrink-0 flex items-center justify-center">
-                                {/* Ambient Spotlight Glow */}
-                                <div
-                                  className={`absolute -inset-1 rounded-full blur-lg pointer-events-none transition-opacity duration-300 ${
-                                    isSelected
-                                      ? 'bg-gradient-to-tr from-amber-500/30 via-orange-500/20 to-yellow-400/30 opacity-90'
-                                      : isPass
-                                      ? 'bg-gradient-to-tr from-purple-500/35 via-fuchsia-500/25 to-pink-500/35 opacity-70 group-hover:opacity-95'
-                                      : 'bg-gradient-to-tr from-cyan-500/35 via-blue-600/25 to-indigo-600/30 opacity-70 group-hover:opacity-95'
-                                  }`}
-                                />
-
                                 <ProductPackageImage
                                   pkg={pkg}
                                   size="lg"
-                                  className="relative z-10 transition-transform duration-300 group-hover:scale-105 drop-shadow-[0_4px_10px_rgba(0,0,0,0.5)]"
+                                  className="relative z-10 transition-transform duration-300 group-hover:scale-105"
                                 />
                               </div>
 
@@ -1858,7 +1847,6 @@ const TopUp = () => {
                     <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-3 lg:grid-cols-4 gap-2 sm:gap-2.5">
                       {filtered.map((pkg) => {
                         const isSelected = selectedProduct.productId === pkg.productId;
-                        const isPass = isPassItem(pkg);
 
                         return (
                           <div
@@ -1866,8 +1854,8 @@ const TopUp = () => {
                             onClick={() => setSelectedProduct(pkg)}
                             className={`group relative rounded-xl sm:rounded-2xl p-2.5 sm:p-3 cursor-pointer select-none transition-all duration-200 flex flex-col items-center text-center justify-between overflow-hidden ${
                               isSelected
-                                ? 'bg-gradient-to-b from-[#1c1233] via-[#140d26] to-[#0d0918] border-2 border-amber-400 shadow-[0_0_18px_rgba(251,191,36,0.3),inset_0_0_12px_rgba(245,158,11,0.06)] scale-[1.01] -translate-y-0.5 z-10'
-                                : 'bg-gradient-to-b from-[#111827] via-[#0d1320] to-[#080d16] border border-slate-700/60 hover:border-amber-400/50 hover:bg-gradient-to-b hover:from-[#152033] hover:via-[#101828] hover:to-[#0a0f1c] hover:-translate-y-0.5 hover:shadow-[0_8px_16px_-4px_rgba(0,0,0,0.5),0_0_12px_rgba(251,191,36,0.12)] shadow-[inset_0_1px_0_rgba(255,255,255,0.05)]'
+                                ? 'bg-gradient-to-b from-[#1c1233] via-[#140d26] to-[#0d0918] border-2 border-amber-400 shadow-xl shadow-black/60 scale-[1.01] -translate-y-0.5 z-10'
+                                : 'bg-gradient-to-b from-[#111827] via-[#0d1320] to-[#080d16] border border-slate-700/60 hover:border-amber-400/50 hover:bg-gradient-to-b hover:from-[#152033] hover:via-[#101828] hover:to-[#0a0f1c] hover:-translate-y-0.5 hover:shadow-lg hover:shadow-black/50 shadow-[inset_0_1px_0_rgba(255,255,255,0.05)]'
                             }`}
                           >
                             {/* Selected Active Checkmark */}
@@ -1886,19 +1874,12 @@ const TopUp = () => {
                               )}
                             </div>
 
-                            {/* Centered Artwork with Ambient Glow */}
-                            <div className="relative my-1.5">
-                              <div
-                                className={`absolute -inset-1.5 rounded-full blur-lg opacity-40 group-hover:opacity-85 transition-opacity duration-300 ${
-                                  isPass
-                                    ? 'bg-gradient-to-tr from-purple-500 to-pink-500'
-                                    : 'bg-gradient-to-tr from-amber-400 to-yellow-300'
-                                }`}
-                              />
+                            {/* Centered Artwork */}
+                            <div className="relative my-1.5 flex items-center justify-center">
                               <ProductPackageImage
                                 pkg={pkg}
                                 size="lg"
-                                className="relative z-10 group-hover:scale-105 transition-transform duration-300 drop-shadow-[0_4px_12px_rgba(0,0,0,0.5)]"
+                                className="relative z-10 group-hover:scale-105 transition-transform duration-300"
                               />
                             </div>
 
@@ -1939,7 +1920,6 @@ const TopUp = () => {
                   <div className="space-y-2">
                     {filtered.map((pkg) => {
                       const isSelected = selectedProduct.productId === pkg.productId;
-                      const isPass = isPassItem(pkg);
 
                       return (
                         <div
@@ -1947,23 +1927,16 @@ const TopUp = () => {
                           onClick={() => setSelectedProduct(pkg)}
                           className={`group relative flex items-center justify-between p-2 sm:p-2.5 rounded-xl cursor-pointer select-none transition-all duration-200 overflow-hidden ${
                             isSelected
-                              ? 'bg-gradient-to-r from-[#1c1233] via-[#140d26] to-[#0d0918] border-2 border-amber-400 shadow-[0_0_18px_rgba(251,191,36,0.3),inset_0_0_12px_rgba(245,158,11,0.06)] scale-[1.01] z-10'
-                              : 'bg-gradient-to-r from-[#111827] via-[#0d1320] to-[#080d16] border border-slate-700/60 hover:border-amber-400/50 hover:bg-gradient-to-r hover:from-[#152033] hover:via-[#101828] hover:to-[#0a0f1c] hover:shadow-[0_6px_14px_-3px_rgba(0,0,0,0.5),0_0_10px_rgba(251,191,36,0.12)] shadow-[inset_0_1px_0_rgba(255,255,255,0.05)]'
+                              ? 'bg-gradient-to-r from-[#1c1233] via-[#140d26] to-[#0d0918] border-2 border-amber-400 shadow-xl shadow-black/60 scale-[1.01] z-10'
+                              : 'bg-gradient-to-r from-[#111827] via-[#0d1320] to-[#080d16] border border-slate-700/60 hover:border-amber-400/50 hover:bg-gradient-to-r hover:from-[#152033] hover:via-[#101828] hover:to-[#0a0f1c] hover:shadow-lg hover:shadow-black/50 shadow-[inset_0_1px_0_rgba(255,255,255,0.05)]'
                           }`}
                         >
                           <div className="flex items-center gap-2.5 sm:gap-3 relative z-10">
-                            <div className="relative">
-                              <div
-                                className={`absolute -inset-1 rounded-full blur-md opacity-40 group-hover:opacity-80 transition-opacity duration-300 ${
-                                  isPass
-                                    ? 'bg-gradient-to-tr from-purple-500 to-pink-500'
-                                    : 'bg-gradient-to-tr from-amber-400 to-yellow-300'
-                                }`}
-                              />
+                            <div className="relative flex items-center justify-center">
                               <ProductPackageImage
                                 pkg={pkg}
                                 size="sm"
-                                className="relative z-10 group-hover:scale-105 transition-transform duration-200 drop-shadow-md ml-0.5"
+                                className="relative z-10 group-hover:scale-105 transition-transform duration-200 ml-0.5"
                               />
                             </div>
                             <div className="flex flex-col justify-center">

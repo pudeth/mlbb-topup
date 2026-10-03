@@ -40,7 +40,7 @@ export const ProductPackageImage = ({
         <DiamondTierGraphic
           amount={pkg.diamondAmount && !pkg.isPass ? pkg.diamondAmount : 50}
           size={size === 'xs' ? 'xs' : size}
-          className="w-full h-full drop-shadow-[0_4px_12px_rgba(6,182,212,0.65)] hover:scale-105 transition-transform duration-300"
+          className="w-full h-full hover:scale-105 transition-transform duration-300"
         />
       </div>
     );
@@ -53,7 +53,7 @@ export const ProductPackageImage = ({
         <img
           src="/images/weekly-pass.png"
           alt={pkg.name || 'Weekly Diamond Pass'}
-          className="w-full h-full object-contain filter drop-shadow-[0_4px_12px_rgba(168,85,247,0.45)] hover:scale-105 transition-transform duration-300"
+          className="w-full h-full object-contain hover:scale-105 transition-transform duration-300"
           onError={(e) => {
             e.target.style.display = 'none';
           }}
@@ -69,7 +69,7 @@ export const ProductPackageImage = ({
         <img
           src="/images/diamond-chest-3d.png"
           alt={pkg.name || 'Diamond Chest'}
-          className="w-full h-full object-contain filter drop-shadow-[0_4px_14px_rgba(6,182,212,0.65)] hover:scale-105 transition-transform duration-300"
+          className="w-full h-full object-contain hover:scale-105 transition-transform duration-300"
           onError={(e) => {
             e.target.style.display = 'none';
           }}
@@ -85,7 +85,7 @@ export const ProductPackageImage = ({
         <img
           src="/images/treasure-chest.png"
           alt={pkg.name || 'Diamond Treasure Chest'}
-          className="w-full h-full object-contain filter drop-shadow-[0_4px_12px_rgba(251,191,36,0.45)] hover:scale-105 transition-transform duration-300"
+          className="w-full h-full object-contain hover:scale-105 transition-transform duration-300"
           onError={(e) => {
             e.target.style.display = 'none';
           }}
@@ -101,11 +101,11 @@ export const ProductPackageImage = ({
   // 4. Custom uploaded image (URL, Data URI, or file path)
   if (custom && (custom.startsWith('http') || custom.startsWith('data:') || custom.startsWith('/'))) {
     return (
-      <div className={`relative inline-flex items-center justify-center shrink-0 drop-shadow-md ${dims} ${className}`}>
+      <div className={`relative inline-flex items-center justify-center shrink-0 ${dims} ${className}`}>
         <img
           src={custom}
           alt={pkg.name || 'Product'}
-          className="w-full h-full object-contain filter drop-shadow-[0_4px_12px_rgba(6,182,212,0.45)] hover:scale-105 transition-transform duration-300"
+          className="w-full h-full object-contain hover:scale-105 transition-transform duration-300"
           onError={(e) => {
             e.target.style.display = 'none';
           }}
@@ -121,7 +121,7 @@ export const ProductPackageImage = ({
         <img
           src="/images/weekly-pass.png"
           alt="Weekly Diamond Pass"
-          className="w-full h-full object-contain filter drop-shadow-[0_4px_12px_rgba(168,85,247,0.45)] hover:scale-105 transition-transform duration-300"
+          className="w-full h-full object-contain hover:scale-105 transition-transform duration-300"
           onError={(e) => {
             e.target.style.display = 'none';
           }}
@@ -135,7 +135,7 @@ export const ProductPackageImage = ({
       <img
         src="/images/diamond-chest-3d.png"
         alt={pkg.name || "Diamond Chest"}
-        className="w-full h-full object-contain filter drop-shadow-[0_4px_14px_rgba(6,182,212,0.65)] hover:scale-105 transition-transform duration-300"
+        className="w-full h-full object-contain hover:scale-105 transition-transform duration-300"
         onError={(e) => {
           if (e.target.src !== 'https://res.cloudinary.com/dpz7vpmf8/image/upload/v1791034826/product_packages/e6nwxlzaubp8k9qnxbzp.png') {
             e.target.src = 'https://res.cloudinary.com/dpz7vpmf8/image/upload/v1791034826/product_packages/e6nwxlzaubp8k9qnxbzp.png';
