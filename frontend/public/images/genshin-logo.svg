@@ -1,0 +1,18 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" width="64" height="64">
+  <defs>
+    <linearGradient id="genshinGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#1e1b4b"/>
+      <stop offset="50%" stop-color="#312e81"/>
+      <stop offset="100%" stop-color="#0f172a"/>
+    </linearGradient>
+    <linearGradient id="goldGenshin" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#FDE047"/>
+      <stop offset="50%" stop-color="#EAB308"/>
+      <stop offset="100%" stop-color="#CA8A04"/>
+    </linearGradient>
+  </defs>
+  <rect width="64" height="64" rx="14" fill="url(#genshinGrad)"/>
+  <circle cx="32" cy="32" r="24" stroke="url(#goldGenshin)" stroke-width="2" fill="none" opacity="0.6"/>
+  <path d="M32 10 C32 24 38 32 54 32 C38 32 32 40 32 54 C32 40 26 32 10 32 C26 32 32 24 32 10 Z" fill="url(#goldGenshin)"/>
+  <circle cx="32" cy="32" r="4" fill="#ffffff"/>
+</svg>

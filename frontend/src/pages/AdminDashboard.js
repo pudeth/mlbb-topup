@@ -128,19 +128,86 @@ const ALL_GAMES_CATALOG_LIST = [
 ];
 
 const PRICING_GAMES = [
-    { id: 'all', name: '🌐 All Products', icon: '🌐' },
-    { id: 'special_passes', name: '⭐ Special Passes & Events', icon: '⭐' },
-    { id: 'mlbb', name: 'Mobile Legends (MLBB)', icon: '💎' },
-    { id: 'pubgm', name: 'PUBG Mobile', icon: '🎯' },
-    { id: 'freefire', name: 'Free Fire', icon: '🔥' },
-    { id: 'genshin', name: 'Genshin Impact', icon: '🌙' },
-    { id: 'star_rail', name: 'Honkai: Star Rail', icon: '🚂' },
-    { id: 'zenless', name: 'Zenless Zone Zero', icon: '⚡' },
-    { id: 'hok', name: 'Honor of Kings', icon: '👑' },
-    { id: 'steam_usd', name: 'Steam Top-Up', icon: '💨' },
-    { id: 'telegram_stars', name: 'Telegram Stars', icon: '✈️' },
-    { id: 'gift_cards', name: 'Gift Cards', icon: '🎁' },
-  ];
+  {
+    id: 'all',
+    name: 'All Products',
+    icon: '🌐',
+    logo: '/images/all-products-icon.svg',
+  },
+  {
+    id: 'special_passes',
+    name: 'Special Passes & Events',
+    icon: '⭐',
+    logo: '/images/weekly-pass.png',
+    fallbackLogo: '/images/diamond-chest-3d.png',
+  },
+  {
+    id: 'mlbb',
+    name: 'Mobile Legends (MLBB)',
+    icon: '💎',
+    logo: '/mlbb-logo.png',
+  },
+  {
+    id: 'pubgm',
+    name: 'PUBG Mobile',
+    icon: '🎯',
+    logo: 'https://res.cloudinary.com/dpz7vpmf8/image/upload/v1790944800/logo-game/ovdfdmru7jnhmwjvy6vy.jpg',
+    fallbackLogo: '/images/pubgm-banner.jpg',
+  },
+  {
+    id: 'freefire',
+    name: 'Free Fire',
+    icon: '🔥',
+    logo: 'https://res.cloudinary.com/dpz7vpmf8/image/upload/v1790944937/logo-game/srnteatj2ns0e2dswfwq.webp',
+    fallbackLogo: '/images/freefire-banner.webp',
+  },
+  {
+    id: 'genshin',
+    name: 'Genshin Impact',
+    icon: '🌙',
+    logo: 'https://upload.wikimedia.org/wikipedia/fr/5/5d/Genshin_Impact_logo.svg',
+    fallbackLogo: '/images/genshin-logo.svg',
+  },
+  {
+    id: 'star_rail',
+    name: 'Honkai: Star Rail',
+    icon: '🚂',
+    logo: 'https://upload.wikimedia.org/wikipedia/vi/9/95/Honkai_Star_Rail_logo.png',
+    fallbackLogo: '/images/star-rail-logo.svg',
+  },
+  {
+    id: 'zenless',
+    name: 'Zenless Zone Zero',
+    icon: '⚡',
+    logo: 'https://upload.wikimedia.org/wikipedia/en/9/92/Zenless_Zone_Zero_logo.png',
+    fallbackLogo: '/images/zenless-logo.svg',
+  },
+  {
+    id: 'hok',
+    name: 'Honor of Kings',
+    icon: '👑',
+    logo: 'https://upload.wikimedia.org/wikipedia/en/7/7d/Honor_of_Kings_logo.png',
+    fallbackLogo: '/images/hok-logo.svg',
+  },
+  {
+    id: 'steam_usd',
+    name: 'Steam Top-Up',
+    icon: '💨',
+    logo: '/images/steam-logo.svg',
+  },
+  {
+    id: 'telegram_stars',
+    name: 'Telegram Stars',
+    icon: '✈️',
+    logo: '/images/telegram-stars-logo.svg',
+  },
+  {
+    id: 'gift_cards',
+    name: 'Gift Cards',
+    icon: '🎁',
+    logo: '/images/treasure-chest.png',
+  },
+];
 
   const { user, logout } = useAuth();
   const { branding, updateBranding, resetBranding } = useStoreBranding();
@@ -3361,13 +3428,38 @@ const PRICING_GAMES = [
                       key={g.id}
                       type="button"
                       onClick={() => setSelectedPricingGame(g.id)}
-                      className={`px-3 py-2 rounded-xl text-xs font-bold transition-all shrink-0 flex items-center gap-1.5 cursor-pointer ${
+                      className={`px-3 py-1.5 sm:py-2 rounded-xl text-xs font-bold transition-all shrink-0 flex items-center gap-2 cursor-pointer shadow-sm select-none ${
                         isSelected
-                          ? 'bg-gradient-to-r from-amber-500 to-yellow-400 text-slate-950 font-black shadow-glow-gold scale-[1.02]'
-                          : 'bg-[#111728] border border-slate-800 text-slate-300 hover:text-white hover:border-slate-700'
+                          ? 'bg-gradient-to-r from-amber-500 to-yellow-400 text-slate-950 font-black shadow-glow-gold scale-[1.02] ring-1 ring-amber-300'
+                          : 'bg-[#111728] border border-slate-800 text-slate-300 hover:text-white hover:border-slate-700 hover:bg-[#161f36]'
                       }`}
                     >
-                      <span className="text-sm">{g.icon}</span>
+                      {g.logo ? (
+                        <div className={`w-5 h-5 sm:w-6 sm:h-6 rounded-lg overflow-hidden shrink-0 flex items-center justify-center p-0.5 transition-transform ${
+                          isSelected ? 'bg-black/25 ring-1 ring-black/40' : 'bg-slate-950/80 border border-slate-700/60'
+                        }`}>
+                          <img
+                            src={g.logo}
+                            alt={g.name}
+                            referrerPolicy="no-referrer"
+                            crossOrigin="anonymous"
+                            onError={(e) => {
+                              if (g.fallbackLogo && e.target.src !== g.fallbackLogo) {
+                                e.target.src = g.fallbackLogo;
+                              } else {
+                                e.target.style.display = 'none';
+                                if (e.target.nextSibling) {
+                                  e.target.nextSibling.style.display = 'inline';
+                                }
+                              }
+                            }}
+                            className="w-full h-full object-cover rounded-md"
+                          />
+                          <span style={{ display: 'none' }} className="text-xs">{g.icon}</span>
+                        </div>
+                      ) : (
+                        <span className="text-sm">{g.icon}</span>
+                      )}
                       <span>{g.name}</span>
                     </button>
                   );
@@ -3455,11 +3547,35 @@ const PRICING_GAMES = [
                         <div className="flex items-center justify-center min-h-[42px] mb-1 group-hover:scale-110 transition-transform">
                           {prod.customImage || prod.game === 'mlbb' || isPass ? (
                             <ProductPackageImage pkg={prod} size="md" />
-                          ) : (
-                            <span className="text-2xl sm:text-3xl">
-                              {prod.game === 'pubgm' ? '🎯' : prod.game === 'freefire' ? '🔥' : prod.game === 'genshin' ? '🌙' : '💎'}
-                            </span>
-                          )}
+                          ) : (() => {
+                            const gameDef = PRICING_GAMES.find(g => g.id === prod.game);
+                            if (gameDef && gameDef.logo) {
+                              return (
+                                <div className="w-8 h-8 rounded-lg overflow-hidden bg-slate-900/80 border border-slate-700/60 p-0.5 shadow-sm flex items-center justify-center">
+                                  <img
+                                    src={gameDef.logo}
+                                    alt={prod.name}
+                                    referrerPolicy="no-referrer"
+                                    onError={(e) => {
+                                      if (gameDef.fallbackLogo && e.target.src !== gameDef.fallbackLogo) {
+                                        e.target.src = gameDef.fallbackLogo;
+                                      } else {
+                                        e.target.style.display = 'none';
+                                        if (e.target.nextSibling) e.target.nextSibling.style.display = 'inline';
+                                      }
+                                    }}
+                                    className="w-full h-full object-cover rounded"
+                                  />
+                                  <span style={{ display: 'none' }} className="text-xl">{gameDef.icon || '💎'}</span>
+                                </div>
+                              );
+                            }
+                            return (
+                              <span className="text-2xl sm:text-3xl">
+                                {gameDef?.icon || '💎'}
+                              </span>
+                            );
+                          })()}
                         </div>
                         <div className="font-black text-xs sm:text-sm text-white group-hover:text-amber-300 transition-colors leading-tight truncate">
                           {prod.name || `${prod.diamondAmount} Diamonds / Units`}

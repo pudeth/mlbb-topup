@@ -1,0 +1,20 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" width="64" height="64">
+  <defs>
+    <linearGradient id="hokGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#451a03"/>
+      <stop offset="50%" stop-color="#78350f"/>
+      <stop offset="100%" stop-color="#1c1917"/>
+    </linearGradient>
+    <linearGradient id="hokGold" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#fef08a"/>
+      <stop offset="50%" stop-color="#eab308"/>
+      <stop offset="100%" stop-color="#ca8a04"/>
+    </linearGradient>
+  </defs>
+  <rect width="64" height="64" rx="14" fill="url(#hokGrad)"/>
+  <path d="M14 44 L18 24 L27 34 L32 18 L37 34 L46 24 L50 44 Z" fill="url(#hokGold)" stroke="#fde047" stroke-width="1.5"/>
+  <rect x="14" y="44" width="36" height="5" rx="2" fill="url(#hokGold)"/>
+  <circle cx="32" cy="18" r="2.5" fill="#f43f5e"/>
+  <circle cx="18" cy="24" r="2" fill="#38bdf8"/>
+  <circle cx="46" cy="24" r="2" fill="#38bdf8"/>
+</svg>

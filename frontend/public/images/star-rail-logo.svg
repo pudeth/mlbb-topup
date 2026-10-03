@@ -1,0 +1,18 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" width="64" height="64">
+  <defs>
+    <linearGradient id="hsrGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#0c0a09"/>
+      <stop offset="50%" stop-color="#1c1917"/>
+      <stop offset="100%" stop-color="#292524"/>
+    </linearGradient>
+    <linearGradient id="goldHsr" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#67e8f9"/>
+      <stop offset="50%" stop-color="#06b6d4"/>
+      <stop offset="100%" stop-color="#0891b2"/>
+    </linearGradient>
+  </defs>
+  <rect width="64" height="64" rx="14" fill="url(#hsrGrad)"/>
+  <circle cx="32" cy="32" r="24" stroke="#f59e0b" stroke-width="2" stroke-dasharray="4 2" fill="none"/>
+  <path d="M32 8 L35 25 L52 28 L37 36 L43 53 L32 42 L21 53 L27 36 L12 28 L29 25 Z" fill="url(#goldHsr)"/>
+  <circle cx="32" cy="32" r="6" fill="#fef08a"/>
+</svg>

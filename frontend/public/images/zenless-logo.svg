@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" width="64" height="64">
+  <defs>
+    <linearGradient id="zzzGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#09090b"/>
+      <stop offset="100%" stop-color="#18181b"/>
+    </linearGradient>
+  </defs>
+  <rect width="64" height="64" rx="14" fill="url(#zzzGrad)"/>
+  <!-- Stylized ZZZ neon insignia -->
+  <path d="M12 16 H52 L42 28 H26 L46 48 H12 L22 36 H38 Z" fill="#22c55e"/>
+  <circle cx="50" cy="18" r="4" fill="#eab308"/>
+</svg>
