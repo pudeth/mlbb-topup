@@ -1410,7 +1410,20 @@ const TopUp = () => {
 
           {/* Bottom Artwork Content: Slogan, 5v5 Emblem & Carousel Dots */}
           <div className="relative z-10 p-2.5 xs:p-3 sm:p-6 mt-auto flex flex-col justify-end space-y-2 sm:space-y-4">
-            {/* Slogan & 5v5 Metallic Emblem Row */}
+            {!selectedGame.id.startsWith('mlbb') && (
+              <div className="flex flex-col select-none min-w-0">
+                <span className="text-[11px] xs:text-sm sm:text-2xl lg:text-3xl font-black uppercase leading-tight text-white drop-shadow-[0_2px_10px_rgba(0,0,0,0.9)] line-clamp-3 break-words">
+                  {selectedGame.name}
+                </span>
+                {selectedGame.currency && (
+                  <span className="mt-1 self-start max-w-full truncate px-1.5 sm:px-2.5 py-0.5 rounded-full bg-sky-500/20 border border-sky-400/40 text-sky-200 text-[8px] xs:text-[9px] sm:text-xs font-bold uppercase tracking-wider">
+                    {selectedGame.currency}
+                  </span>
+                )}
+              </div>
+            )}
+            {/* Slogan & 5v5 Metallic Emblem Row (MLBB only) */}
+            {selectedGame.id.startsWith('mlbb') && (
             <div className="flex items-end justify-between gap-1 sm:gap-3">
               {/* Glowing Slogan: LEGENDS NEVER FADE */}
               <div className="flex flex-col select-none">
@@ -1429,8 +1442,10 @@ const TopUp = () => {
                 </div>
               </div>
             </div>
+            )}
 
             {/* Carousel Pagination Controls: < ● ○ ○ ○ > */}
+            {selectedGame.id.startsWith('mlbb') && (
             <div className="flex items-center justify-center gap-1.5 sm:gap-3 pt-1">
               <button
                 type="button"
@@ -1463,6 +1478,7 @@ const TopUp = () => {
                 ›
               </button>
             </div>
+            )}
           </div>
         </div>
 
@@ -1478,13 +1494,14 @@ const TopUp = () => {
                 {/* Glowing Game Icon Frame */}
                 <div className="w-8 h-8 xs:w-9 xs:h-9 sm:w-13 sm:h-13 rounded-xl sm:rounded-2xl bg-slate-950 border border-sky-500/80 shadow-[0_0_12px_rgba(14,165,233,0.5)] p-0.5 sm:p-1.5 flex items-center justify-center shrink-0">
                   <img
-                    src="/images/mlbb_square_logo.png"
+                    key={selectedGame.id}
+                    src={selectedGame.id.startsWith('mlbb') ? '/images/mlbb_square_logo.png' : (selectedGame.image || selectedGame.localFallbackImage || '/mlbb-logo.png')}
                     alt={selectedGame.name}
                     onError={(e) => {
                       e.target.onerror = null;
-                      e.target.src = selectedGame.image || '/mlbb-logo.png';
+                      e.target.src = selectedGame.localFallbackImage || selectedGame.image || '/mlbb-logo.png';
                     }}
-                    className="w-full h-full object-contain rounded-lg sm:rounded-xl"
+                    className={`w-full h-full rounded-lg sm:rounded-xl ${selectedGame.id.startsWith('mlbb') ? 'object-contain' : 'object-cover'}`}
                   />
                 </div>
                 
