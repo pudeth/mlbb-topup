@@ -3,7 +3,6 @@ import { useSearchParams, useNavigate, Link } from 'react-router-dom';
 import { useLanguage } from '../context/LanguageContext';
 import { ordersAPI, topupAPI, paywayAPI, productsAPI } from '../services/api';
 import { getStoredGames, getMasterTopupStatus, fetchStoredGames, fetchMasterTopupStatus } from '../services/gamesConfig';
-import { CambodiaFlagFrame } from '../components/CambodiaFlagBadge';
 import ProductPackageImage from '../components/ProductPackageImage';
 import { AbaKhqrLogo } from '../components/AbaPaymentLogos';
 import WeAcceptPayments from '../components/WeAcceptPayments';
@@ -236,6 +235,14 @@ const closeAbaCheckoutPopup = () => {
   } catch (e) {}
 };
 
+// MLBB Multi-Hero Showcase Banner Slides
+const MLBB_BANNERS = [
+  '/images/mlbb_hero_banner.png',
+  '/images/banner_mlbb_allstar.jpg',
+  '/images/banner_mlbb_aldous.jpg',
+  '/images/banner_starlight_cosmic.jpg',
+];
+
 const TopUp = () => {
   const { t, language } = useLanguage();
   const [searchParams, setSearchParams] = useSearchParams();
@@ -256,6 +263,8 @@ const TopUp = () => {
   const [error, setError] = useState('');
   const [autoDetectedMessage, setAutoDetectedMessage] = useState('');
   const [showIdGuide, setShowIdGuide] = useState(false);
+  const [copiedPlayerId, setCopiedPlayerId] = useState(false);
+  const [activeBannerIdx, setActiveBannerIdx] = useState(0);
 
   const selectedGameIdRef = useRef(selectedGame.id);
   useEffect(() => {
@@ -440,6 +449,32 @@ const TopUp = () => {
     productId: products[0]?.productId || 100,
     paymentMethod: 'abapayway',
   });
+
+  const handleCopyPlayerId = () => {
+    if (formData.playerID) {
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(formData.playerID).catch(() => {});
+      }
+      setCopiedPlayerId(true);
+      setTimeout(() => setCopiedPlayerId(false), 2000);
+    }
+  };
+
+  const handleStartGameAction = () => {
+    if (!formData.playerID.trim()) {
+      setError(language === 'km' ? 'សូមបញ្ចូល Player ID (UID) របស់អ្នកជាមុនសិន' : 'Please enter your Player ID (UID) first');
+      const el = document.getElementById('player_id_input');
+      if (el) {
+        el.focus();
+        el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      }
+      return;
+    }
+    const el = document.getElementById('packages-section');
+    if (el) {
+      el.scrollIntoView({ behavior: 'smooth' });
+    }
+  };
 
   // Payment states
   const [orderId, setOrderId] = useState(null);
@@ -1381,177 +1416,404 @@ const TopUp = () => {
       )}
 
       {/* ========================================================= */}
-      {/* 2-COLUMN FAZERCARDS-STYLED TOPUP INTERFACE */}
+      {/* 1. NEW LUXURY GAME SHOWCASE & PLAYER INFORMATION HERO     */}
+      {/* Exactly matching reference design media_1791047969801.png */}
       {/* ========================================================= */}
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
-        
-        {/* ========================================== */}
-        {/* LEFT COLUMN: GAME ART, INFO & ACCOUNT FORM */}
-        {/* ========================================== */}
-        <div className="lg:col-span-4 space-y-4">
-          {/* Game Artwork Card with Back, Favorite button & Cambodia Flag Frame */}
-          <div className="bg-slate-900/40 border border-slate-800/80 rounded-[24px] p-4 sm:p-5 backdrop-blur-md space-y-5">
-            <div className="relative aspect-square w-full rounded-[20px] overflow-hidden bg-slate-950 border border-slate-700/60 ring-1 ring-white/10 group">
-              <img
-                src={selectedGame.image}
-                alt={selectedGame.name}
-                onError={(e) => {
-                  e.target.onerror = null;
-                  e.target.src = selectedGame.localFallbackImage || '/mlbb-logo.png';
-                }}
-                className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
-              />
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-5 sm:gap-6 items-stretch mb-8">
 
-              {/* Back Button (‹) - High Contrast Clean Glassmorphic Pill */}
+        {/* ========================================== */}
+        {/* LEFT CARD: GAME ARTWORK SHOWCASE & BANNER */}
+        {/* ========================================== */}
+        <div className="relative rounded-3xl sm:rounded-[28px] overflow-hidden bg-[#040817] border border-sky-500/40 shadow-[0_0_35px_rgba(14,165,233,0.25)] flex flex-col justify-between group min-h-[360px] sm:min-h-[460px]">
+          
+          {/* Background Image / Banner Carousel */}
+          <div className="absolute inset-0 z-0">
+            <img
+              src={
+                selectedGame.id.startsWith('mlbb')
+                  ? (MLBB_BANNERS[activeBannerIdx] || '/images/mlbb_hero_banner.png')
+                  : (selectedGame.image || selectedGame.localFallbackImage || '/mlbb-logo.png')
+              }
+              alt={selectedGame.name}
+              onError={(e) => {
+                e.target.onerror = null;
+                e.target.src = selectedGame.localFallbackImage || '/mlbb-logo.png';
+              }}
+              className="w-full h-full object-cover object-center transition-all duration-700 group-hover:scale-105"
+            />
+            {/* Cinematic Vignette & Ambient Glow Overlays */}
+            <div className="absolute inset-0 bg-gradient-to-t from-[#040817] via-transparent to-black/40 pointer-events-none" />
+            <div className="absolute inset-0 bg-gradient-to-r from-black/40 via-transparent to-black/30 pointer-events-none" />
+          </div>
+
+          {/* Top Bar: Official Game Brand Emblem (Left) & Back Button (Right) */}
+          <div className="relative z-10 p-4 sm:p-5 flex items-center justify-between">
+            {/* Official Game Logo Badge */}
+            <div className="flex items-center gap-2.5 bg-black/60 backdrop-blur-md px-3 py-1.5 rounded-2xl border border-white/10 shadow-lg">
+              {selectedGame.id.startsWith('mlbb') ? (
+                <div className="flex items-center gap-2">
+                  <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-amber-400 to-yellow-600 p-0.5 flex items-center justify-center shadow-md">
+                    <span className="font-black text-slate-950 text-sm tracking-tighter">M</span>
+                  </div>
+                  <div className="flex flex-col">
+                    <span className="text-[11px] font-black text-white tracking-widest leading-none drop-shadow">MOBILE LEGENDS</span>
+                    <span className="text-[9px] font-bold text-amber-400 tracking-wider leading-none mt-0.5">BANG BANG</span>
+                  </div>
+                </div>
+              ) : (
+                <div className="flex items-center gap-2">
+                  <span className="text-xs font-black text-white tracking-wide">{selectedGame.name}</span>
+                </div>
+              )}
+            </div>
+
+            {/* Back Button to Home */}
+            <button
+              type="button"
+              onClick={() => navigate('/')}
+              className="w-9 h-9 rounded-full bg-slate-950/80 hover:bg-slate-900 backdrop-blur-xl text-white hover:text-cyan-300 flex items-center justify-center text-lg font-black border border-white/20 hover:border-cyan-400/80 cursor-pointer transition-all duration-300 hover:scale-110 active:scale-95 shadow-md"
+              title="Back to Home"
+            >
+              ‹
+            </button>
+          </div>
+
+          {/* Bottom Artwork Content: Slogan, 5v5 Emblem & Carousel Dots */}
+          <div className="relative z-10 p-4 sm:p-6 mt-auto flex flex-col justify-end space-y-4">
+            {/* Slogan & 5v5 Metallic Emblem Row */}
+            <div className="flex items-end justify-between gap-3">
+              {/* Glowing Slogan: LEGENDS NEVER FADE */}
+              <div className="flex flex-col select-none">
+                <span className="text-2xl sm:text-3xl lg:text-4xl font-black italic tracking-wider leading-none uppercase text-transparent bg-clip-text bg-gradient-to-r from-sky-200 via-cyan-300 to-blue-400 drop-shadow-[0_0_18px_rgba(34,211,238,0.85)] font-sans">
+                  LEGENDS
+                </span>
+                <span className="text-2xl sm:text-3xl lg:text-4xl font-black italic tracking-wider leading-tight uppercase text-transparent bg-clip-text bg-gradient-to-r from-cyan-300 via-sky-300 to-indigo-300 drop-shadow-[0_0_18px_rgba(56,189,248,0.85)] font-sans">
+                  NEVER FADE
+                </span>
+              </div>
+
+              {/* 3D Golden 5v5 Emblem */}
+              <div className="relative select-none shrink-0">
+                <div className="text-3xl sm:text-4xl lg:text-5xl font-black tracking-tighter text-transparent bg-clip-text bg-gradient-to-b from-[#FFF2B2] via-[#E8B931] to-[#9E6E00] drop-shadow-[0_4px_12px_rgba(0,0,0,0.95)]">
+                  5v5
+                </div>
+              </div>
+            </div>
+
+            {/* Carousel Pagination Controls: < ● ○ ○ ○ > */}
+            <div className="flex items-center justify-center gap-3 pt-2">
               <button
-                onClick={() => navigate('/')}
-                className="absolute top-3 left-3 w-8 h-8 sm:w-9 sm:h-9 rounded-full bg-slate-950/85 hover:bg-slate-900 backdrop-blur-xl text-white hover:text-cyan-300 flex items-center justify-center text-lg font-black border border-white/20 hover:border-cyan-400/80 cursor-pointer transition-all duration-300 hover:scale-110 active:scale-95 z-30"
-                title="Back to Home"
+                type="button"
+                onClick={() => setActiveBannerIdx((prev) => (prev > 0 ? prev - 1 : MLBB_BANNERS.length - 1))}
+                className="text-slate-400 hover:text-cyan-300 text-sm font-black px-1.5 py-0.5 transition-colors cursor-pointer"
+                title="Previous Banner"
               >
                 ‹
               </button>
-
-              {/* Top-Right Server Badge Frame */}
-              <div className="absolute top-2.5 right-2.5 sm:top-3 sm:right-3 z-20">
-                <CambodiaFlagFrame
-                  title={selectedGame.flagTitle || (selectedGame.id?.includes('ph') ? 'PH SERVER' : selectedGame.id?.includes('id') ? 'ID SERVER' : selectedGame.badge || "សេវើខ្មែរ 5v5")}
-                  subtitle={selectedGame.flagSubtitle || (selectedGame.id?.startsWith('mlbb') ? "5V5" : "")}
-                  sub={selectedGame.flagServerText || (selectedGame.id?.includes('ph') ? 'OFFICIAL' : selectedGame.id?.includes('id') ? 'FAST' : 'SERVER')}
-                  flagType={selectedGame.flagType || (selectedGame.id?.includes('ph') || selectedGame.name?.includes('(PH)') ? 'ph' : selectedGame.id?.includes('id') || selectedGame.name?.includes('(ID)') ? 'id' : selectedGame.badge?.includes('ខ្មែរ') ? 'kh' : 'kh')}
-                  flagImage={selectedGame.flagImage || null}
-                  isFullBadgePng={selectedGame.isFullBadgePng || false}
-                  badgeStyle={selectedGame.flagFrameStyle || 'gold_cyber'}
-                />
+              <div className="flex items-center gap-1.5">
+                {MLBB_BANNERS.map((_, idx) => (
+                  <button
+                    key={idx}
+                    type="button"
+                    onClick={() => setActiveBannerIdx(idx)}
+                    className={`rounded-full transition-all duration-300 cursor-pointer ${
+                      activeBannerIdx === idx
+                        ? 'w-5 h-2 bg-gradient-to-r from-cyan-400 to-blue-500 shadow-[0_0_8px_rgba(34,211,238,0.8)]'
+                        : 'w-2 h-2 bg-slate-600/80 hover:bg-slate-400'
+                    }`}
+                  />
+                ))}
               </div>
+              <button
+                type="button"
+                onClick={() => setActiveBannerIdx((prev) => (prev < MLBB_BANNERS.length - 1 ? prev + 1 : 0))}
+                className="text-slate-400 hover:text-cyan-300 text-sm font-black px-1.5 py-0.5 transition-colors cursor-pointer"
+                title="Next Banner"
+              >
+                ›
+              </button>
             </div>
+          </div>
+        </div>
 
-            {/* Game Title & Cambodia Server Badge */}
-            <div className="space-y-1">
-              <div className="flex items-center justify-between gap-2">
-                <h2 className="text-xl sm:text-2xl font-black text-white leading-none tracking-wide uppercase">
-                  {selectedGame.name}
-                </h2>
-                <span className="px-2.5 py-1 rounded-full bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 text-[9px] font-black uppercase tracking-widest shadow-sm">
-                  ● 10s API
-                </span>
-              </div>
-              <span className="text-xs text-slate-400 font-medium block">
-                {selectedGame.publisher || 'Moonton Official'} • សេវើផ្លូវការ
-              </span>
-            </div>
-
-            {/* Account Details Input Form */}
-            <div className="space-y-3 pt-2 border-t border-slate-800">
-              <div className="flex items-center justify-between">
-                <label className="text-xs font-bold text-slate-200">
-                  {isTelegram ? 'Telegram Username (@)' : isSteam ? 'Steam Login Name' : isGiftCard ? 'Email Address' : 'Player ID (UID)'}
-                </label>
-                <button
-                  onClick={() => setShowIdGuide(true)}
-                  className="text-[11px] text-cyan-400 hover:underline font-bold"
-                >
-                  ❓ Where is ID?
-                </button>
-              </div>
-
-              <input
-                type="text"
-                value={formData.playerID}
-                onChange={handlePlayerIdChange}
-                placeholder={isTelegram ? '@username' : isSteam ? 'steam_username' : isGiftCard ? 'email@domain.com' : 'e.g. 1225368571'}
-                className="w-full bg-slate-950/50 border border-slate-700/60 rounded-xl px-4 py-3.5 text-sm font-mono text-white placeholder-slate-600 focus:outline-none focus:border-purple-500/60 focus:ring-1 focus:ring-purple-500/50 transition-all shadow-inner"
-              />
-
-              {isMlbb && (
-                <div>
-                  <label className="block text-xs font-bold text-slate-200 mb-1">
-                    Server (Zone ID)
-                  </label>
-                  <input
-                    type="text"
-                    value={formData.serverID}
-                    onChange={(e) => setFormData(prev => ({ ...prev, serverID: e.target.value }))}
-                    placeholder="e.g. 11446"
-                    className="w-full bg-slate-950/50 border border-slate-700/60 rounded-xl px-4 py-3.5 text-sm font-mono text-white placeholder-slate-600 focus:outline-none focus:border-purple-500/60 focus:ring-1 focus:ring-purple-500/50 transition-all shadow-inner"
+        {/* ======================================================== */}
+        {/* RIGHT CARD: GAME INFO, 4 FEATURE PILLS & PLAYER INFO HUB */}
+        {/* ======================================================== */}
+        <div className="rounded-3xl sm:rounded-[28px] border border-sky-500/40 bg-[#060c21]/95 backdrop-blur-2xl p-4 sm:p-6 shadow-[0_0_35px_rgba(14,165,233,0.22)] flex flex-col justify-between space-y-4">
+          
+          <div>
+            {/* Row 1: Game Header with Glowing Icon, Title, Subtitle & Popular Badge */}
+            <div className="flex items-center justify-between gap-3">
+              <div className="flex items-center gap-3 min-w-0">
+                {/* Glowing Game Icon Frame */}
+                <div className="w-13 h-13 sm:w-15 sm:h-15 rounded-2xl bg-slate-950 border-2 border-sky-500/80 shadow-[0_0_18px_rgba(14,165,233,0.5)] p-1.5 flex items-center justify-center shrink-0">
+                  <img
+                    src="/images/mlbb_square_logo.png"
+                    alt={selectedGame.name}
+                    onError={(e) => {
+                      e.target.onerror = null;
+                      e.target.src = selectedGame.image || '/mlbb-logo.png';
+                    }}
+                    className="w-full h-full object-contain rounded-xl"
                   />
                 </div>
-              )}
-
-              {isHoyoverse && (
-                <div>
-                  <label className="block text-xs font-bold text-slate-200 mb-1">
-                    Server Region
-                  </label>
-                  <select
-                    value={formData.serverID}
-                    onChange={(e) => setFormData(prev => ({ ...prev, serverID: e.target.value }))}
-                    className="w-full bg-[#111728] border border-slate-700 rounded-2xl px-4 py-3 text-sm text-white font-bold focus:outline-none focus:border-amber-400 transition-all"
-                  >
-                    <option value="Asia">Asia</option>
-                    <option value="America">America</option>
-                    <option value="Europe">Europe</option>
-                    <option value="TW/HK/MO">TW/HK/MO</option>
-                  </select>
+                
+                {/* Title & Subtitle */}
+                <div className="min-w-0">
+                  <h1 className="text-xl sm:text-2xl font-black text-white tracking-wide uppercase leading-tight font-sans truncate">
+                    {selectedGame.name}
+                  </h1>
+                  <span className="text-xs sm:text-[13px] text-slate-400 font-medium block truncate mt-0.5">
+                    {selectedGame.publisher || 'Moonton'} • {selectedGame.id.startsWith('mlbb') ? '5v5 Multiplayer' : (selectedGame.currency || 'Official Service')}
+                  </span>
                 </div>
-              )}
+              </div>
 
+              {/* Popular Badge */}
+              <div className="shrink-0">
+                <span className="px-3 py-1 rounded-full bg-cyan-500/15 border border-cyan-400/40 text-cyan-300 text-xs font-bold shadow-[0_0_12px_rgba(56,189,248,0.25)] flex items-center gap-1.5">
+                  <span className="text-cyan-300">★</span>
+                  <span>Popular</span>
+                </span>
+              </div>
+            </div>
+
+            {/* Row 2: Description Text */}
+            <p className="text-xs sm:text-[13px] text-slate-300 leading-relaxed mt-3.5 mb-3.5 font-sans">
+              {selectedGame.id.startsWith('mlbb')
+                ? 'Join the ultimate 5v5 battle arena! Team up with your friends, choose your hero, and fight for victory in Mobile Legends: Bang Bang.'
+                : (selectedGame.description || 'Fast, secure, and instant automated direct UID game top-up delivery with official API.')}
+            </p>
+
+            {/* Row 3: 4 Feature Badges (5v5 Battle, Multiple Heroes, Fast Matchmaking, Stable Server) */}
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 mb-4">
+              {/* Badge 1: 5v5 Battle */}
+              <div className="rounded-xl bg-[#09122b]/90 border border-sky-500/25 px-2.5 py-2 flex items-center gap-2 hover:border-sky-400/50 transition-colors shadow-sm">
+                <div className="w-7 h-7 rounded-full bg-blue-600/30 border border-sky-400/40 flex items-center justify-center text-sky-400 shadow-[0_0_8px_rgba(56,189,248,0.35)] shrink-0 text-xs">
+                  ⚔️
+                </div>
+                <div className="min-w-0">
+                  <span className="text-[11px] font-bold text-white block truncate leading-none">5v5</span>
+                  <span className="text-[9px] text-slate-400 block truncate leading-tight mt-0.5">Battle</span>
+                </div>
+              </div>
+
+              {/* Badge 2: Multiple Heroes */}
+              <div className="rounded-xl bg-[#09122b]/90 border border-sky-500/25 px-2.5 py-2 flex items-center gap-2 hover:border-sky-400/50 transition-colors shadow-sm">
+                <div className="w-7 h-7 rounded-full bg-blue-600/30 border border-sky-400/40 flex items-center justify-center text-sky-400 shadow-[0_0_8px_rgba(56,189,248,0.35)] shrink-0 text-xs">
+                  👥
+                </div>
+                <div className="min-w-0">
+                  <span className="text-[11px] font-bold text-white block truncate leading-none">Multiple</span>
+                  <span className="text-[9px] text-slate-400 block truncate leading-tight mt-0.5">Heroes</span>
+                </div>
+              </div>
+
+              {/* Badge 3: Fast Matchmaking */}
+              <div className="rounded-xl bg-[#09122b]/90 border border-sky-500/25 px-2.5 py-2 flex items-center gap-2 hover:border-sky-400/50 transition-colors shadow-sm">
+                <div className="w-7 h-7 rounded-full bg-blue-600/30 border border-sky-400/40 flex items-center justify-center text-sky-400 shadow-[0_0_8px_rgba(56,189,248,0.35)] shrink-0 text-xs">
+                  💎
+                </div>
+                <div className="min-w-0">
+                  <span className="text-[11px] font-bold text-white block truncate leading-none">Fast</span>
+                  <span className="text-[9px] text-slate-400 block truncate leading-tight mt-0.5">Matchmaking</span>
+                </div>
+              </div>
+
+              {/* Badge 4: Stable Server */}
+              <div className="rounded-xl bg-[#09122b]/90 border border-sky-500/25 px-2.5 py-2 flex items-center gap-2 hover:border-sky-400/50 transition-colors shadow-sm">
+                <div className="w-7 h-7 rounded-full bg-blue-600/30 border border-sky-400/40 flex items-center justify-center text-sky-400 shadow-[0_0_8px_rgba(56,189,248,0.35)] shrink-0 text-xs">
+                  🛡️
+                </div>
+                <div className="min-w-0">
+                  <span className="text-[11px] font-bold text-white block truncate leading-none">Stable</span>
+                  <span className="text-[9px] text-slate-400 block truncate leading-tight mt-0.5">Server</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* ======================================================== */}
+          {/* PLAYER INFORMATION BOX (EXACTLY MATCHING media_1791047969801.png) */}
+          {/* ======================================================== */}
+          <div className="space-y-2.5">
+            <div className="flex items-center justify-between">
+              <span className="text-xs sm:text-sm font-bold text-white flex items-center gap-2 font-sans">
+                <span>👤</span>
+                <span>{language === 'km' ? 'ព័ត៌មានគណនីអ្នកលេង (Player Information)' : 'Player Information'}</span>
+              </span>
+              <button
+                type="button"
+                onClick={() => setShowIdGuide(true)}
+                className="text-[11px] text-cyan-400 hover:text-cyan-300 font-bold transition-colors cursor-pointer"
+              >
+                ❓ Where is ID?
+              </button>
+            </div>
+
+            {/* Main Inner Card */}
+            <div className="p-3 sm:p-4 rounded-2xl bg-[#030a1c]/95 border border-sky-500/30 shadow-inner space-y-3">
+              {/* Profile Row: Avatar + Inputs + Rank Crest */}
+              <div className="flex items-center gap-3 sm:gap-4">
+                
+                {/* Gamer Avatar with Glowing Cyan Ring & Crown Badge */}
+                <div className="relative w-14 h-14 sm:w-16 sm:h-16 shrink-0">
+                  <div className="w-full h-full rounded-full p-0.5 bg-gradient-to-tr from-sky-400 via-blue-500 to-cyan-300 shadow-[0_0_16px_rgba(56,189,248,0.55)]">
+                    <img
+                      src="/images/gamer_avatar_pro.png"
+                      alt="Player Avatar"
+                      className="w-full h-full object-cover rounded-full"
+                    />
+                  </div>
+                  {/* Crown Rank Badge at bottom-left */}
+                  <div className="absolute -bottom-1 -left-1 w-5 h-5 rounded-full bg-gradient-to-tr from-amber-400 via-yellow-400 to-amber-600 flex items-center justify-center text-[10px] shadow-[0_0_8px_rgba(245,158,11,0.9)] border border-amber-200">
+                    👑
+                  </div>
+                </div>
+
+                {/* Middle Column: Player ID & Server Inputs */}
+                <div className="flex-1 min-w-0 space-y-2">
+                  
+                  {/* Field 1: Player ID (UID) + Copy Button */}
+                  <div>
+                    <div className="flex items-center justify-between mb-1">
+                      <label className="text-[11px] font-bold text-slate-300 flex items-center gap-1 leading-none">
+                        <span>👤</span>
+                        <span>{isTelegram ? 'Telegram Username (@)' : isSteam ? 'Steam Login Name' : isGiftCard ? 'Email Address' : 'Player ID (UID)'}</span>
+                      </label>
+                      <button
+                        type="button"
+                        onClick={handleCopyPlayerId}
+                        className="text-[10px] text-sky-400 hover:text-white font-bold px-2 py-0.5 rounded bg-sky-500/10 hover:bg-sky-500/20 border border-sky-500/30 flex items-center gap-1 transition-all cursor-pointer leading-none"
+                        title="Copy Player ID"
+                      >
+                        <span>📋</span>
+                        <span>{copiedPlayerId ? 'Copied!' : 'Copy'}</span>
+                      </button>
+                    </div>
+                    <div className="relative flex items-center">
+                      <span className="absolute left-3 text-slate-500 text-xs pointer-events-none">👤</span>
+                      <input
+                        id="player_id_input"
+                        type="text"
+                        value={formData.playerID}
+                        onChange={handlePlayerIdChange}
+                        placeholder={isTelegram ? '@username' : isSteam ? 'steam_username' : isGiftCard ? 'email@domain.com' : '123456789'}
+                        className="w-full bg-[#050e24] border border-sky-500/35 rounded-xl pl-8 pr-3 py-2 text-xs sm:text-sm font-mono text-white placeholder-slate-600 focus:outline-none focus:border-sky-400 focus:ring-1 focus:ring-sky-400 transition-all shadow-inner"
+                      />
+                    </div>
+                  </div>
+
+                  {/* Field 2: Server (Zone ID) */}
+                  <div>
+                    <label className="text-[11px] font-bold text-slate-300 flex items-center gap-1 leading-none mb-1">
+                      <span>🌐</span>
+                      <span>{isHoyoverse ? 'Server Region' : 'Server (Zone ID)'}</span>
+                    </label>
+                    <div className="relative flex items-center">
+                      <span className="absolute left-3 text-slate-500 text-xs pointer-events-none">🌐</span>
+                      <input
+                        type="text"
+                        value={formData.serverID}
+                        onChange={(e) => setFormData(prev => ({ ...prev, serverID: e.target.value }))}
+                        placeholder="Global (11446)"
+                        className="w-full bg-[#050e24] border border-sky-500/35 rounded-xl pl-8 pr-7 py-2 text-xs sm:text-sm font-mono text-white placeholder-slate-600 focus:outline-none focus:border-sky-400 focus:ring-1 focus:ring-sky-400 transition-all shadow-inner"
+                      />
+                      <span className="absolute right-2.5 text-slate-500 text-[10px] pointer-events-none">▾</span>
+                    </div>
+                  </div>
+
+                </div>
+
+                {/* Right Column: Mythic/Glory Rank Crest Emblem */}
+                <div className="w-13 h-13 sm:w-15 sm:h-15 shrink-0 flex items-center justify-center">
+                  <img
+                    src="/images/rank_mythic_crest_clean.png"
+                    alt="Rank Crest"
+                    onError={(e) => {
+                      e.target.onerror = null;
+                      e.target.src = '/images/rank_mythic_crest.png';
+                    }}
+                    className="w-full h-full object-contain drop-shadow-[0_0_12px_rgba(56,189,248,0.5)]"
+                  />
+                </div>
+
+              </div>
+
+              {/* Auto-detected message notice */}
               {autoDetectedMessage && (
-                <div className="text-[11px] font-bold text-emerald-400">
+                <div className="text-[11px] font-bold text-emerald-400 px-1">
                   ⚡ {autoDetectedMessage}
                 </div>
               )}
 
-              <button
-                type="button"
-                onClick={handleVerifyAccount}
-                disabled={accountChecking || !formData.playerID.trim()}
-                className="w-full py-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 text-xs font-bold flex items-center justify-center gap-1.5 transition-all disabled:opacity-40 cursor-pointer"
-              >
-                <span>{accountChecking ? '⏳' : '🔍'}</span>
-                <span>{accountChecking ? 'Checking...' : 'Check Player Name'}</span>
-              </button>
-
+              {/* Live Verified Account Notification Card */}
               {verifiedAccount && verifiedAccount.valid && (
-                <div className="p-3.5 rounded-2xl bg-gradient-to-r from-emerald-950/80 via-slate-900 to-cyan-950/60 border border-emerald-500/60 text-xs shadow-lg space-y-1.5 animate-fadeIn">
+                <div className="p-2.5 rounded-xl bg-gradient-to-r from-emerald-950/80 via-slate-900 to-cyan-950/60 border border-emerald-500/60 text-xs shadow-lg space-y-1 animate-fadeIn">
                   <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-2">
-                      <span className="text-lg">👑</span>
-                      <span className="font-extrabold text-sm text-white tracking-wide">
+                    <div className="flex items-center gap-1.5">
+                      <span className="text-base">👑</span>
+                      <span className="font-extrabold text-xs sm:text-sm text-white tracking-wide">
                         {verifiedAccount.name}
                       </span>
                     </div>
-                    <span className="px-2.5 py-0.5 rounded-full bg-emerald-500/20 border border-emerald-500/50 text-emerald-300 text-[10px] font-black flex items-center gap-1">
+                    <span className="px-2 py-0.5 rounded-full bg-emerald-500/20 border border-emerald-500/50 text-emerald-300 text-[10px] font-black flex items-center gap-1">
                       <span>✓</span>
                       <span>Verified</span>
                     </span>
                   </div>
-                  
-                  <div className="flex items-center justify-between text-[11px] text-slate-400 pt-1.5 border-t border-slate-800/80 font-mono">
+                  <div className="flex items-center justify-between text-[10.5px] text-slate-400 border-t border-slate-800/80 pt-1 font-mono">
                     <span>ID: <strong className="text-cyan-300">{verifiedAccount.id} ({verifiedAccount.server})</strong></span>
                     <span className="text-emerald-400 font-semibold">📍 {verifiedAccount.country || 'Cambodia'}</span>
                   </div>
                 </div>
               )}
 
+              {/* Error notification if not found */}
               {verifiedAccount && !verifiedAccount.valid && (
-                <div className="p-3.5 rounded-2xl bg-rose-950/60 border border-rose-500/40 text-xs shadow-lg space-y-1 animate-fadeIn">
-                  <div className="flex items-center gap-2 text-rose-300 font-bold text-xs">
+                <div className="p-2.5 rounded-xl bg-rose-950/60 border border-rose-500/40 text-xs shadow-lg space-y-0.5 animate-fadeIn">
+                  <div className="flex items-center gap-1.5 text-rose-300 font-bold text-[11px]">
                     <span>⚠️</span>
                     <span>{verifiedAccount.error || 'Player account not found.'}</span>
                   </div>
-                  <p className="text-[11px] text-slate-400 pl-5 leading-relaxed">
-                    Please make sure your <strong>Zone ID</strong> matches the 4-5 digit number in parentheses in your profile (e.g. <code>11446</code>).
+                  <p className="text-[10.5px] text-slate-400 pl-4 leading-relaxed">
+                    Please verify your <strong>Zone ID</strong> in parentheses (e.g. <code>11446</code>).
                   </p>
                 </div>
               )}
+
+              {/* Action Button 1: Check Player Name */}
+              <button
+                type="button"
+                onClick={handleVerifyAccount}
+                disabled={accountChecking || !formData.playerID.trim()}
+                className="w-full py-2 sm:py-2.5 rounded-full bg-gradient-to-r from-sky-500 to-blue-600 hover:from-sky-400 hover:to-blue-500 text-white font-bold text-xs sm:text-sm flex items-center justify-center gap-2 shadow-[0_0_15px_rgba(14,165,233,0.35)] active:scale-98 transition-all cursor-pointer disabled:opacity-40"
+              >
+                <span>{accountChecking ? '⏳' : '🔍'}</span>
+                <span>{accountChecking ? 'Checking Player Nickname...' : 'Check Player Name'}</span>
+              </button>
+
+              {/* Action Button 2: Start Game (Proceed to Top Up) */}
+              <button
+                type="button"
+                onClick={handleStartGameAction}
+                className="w-full py-2.5 sm:py-3 rounded-full bg-gradient-to-r from-blue-600 via-sky-500 to-blue-600 hover:from-blue-500 hover:via-sky-400 hover:to-blue-500 text-white font-black text-sm sm:text-base flex items-center justify-center gap-2 shadow-[0_0_25px_rgba(2,132,199,0.7)] active:scale-98 transition-all cursor-pointer tracking-wide"
+              >
+                <span>▶</span>
+                <span>Start Game</span>
+              </button>
+
             </div>
           </div>
+
         </div>
 
-        {/* ========================================== */}
-        {/* RIGHT COLUMN: PRODUCTS LIST (2 LAYOUT SYSTEM: WEEKLY PASS & DIAMONDS) */}
-        {/* ========================================== */}
-        <div className="lg:col-span-8 space-y-4">
+      </div>
+
+      {/* ======================================================== */}
+      {/* STEP 2: SELECT RECHARGE PACKAGE (DIAMONDS & PASSES)      */}
+      {/* ======================================================== */}
+      <div id="packages-section" className="space-y-6">
           <div className="bg-slate-900/30 border border-slate-800/50 rounded-[24px] p-3.5 sm:p-5 shadow-2xl backdrop-blur-md space-y-5">
             
             {/* Header: Row 1 - Category Sub-Tabs (All / Weekly Pass / Diamond Package) */}
@@ -2153,8 +2415,6 @@ const TopUp = () => {
             </div>
           </div>
         </div>
-
-      </div>
 
 
 
