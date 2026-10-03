@@ -35,6 +35,26 @@ const Login = () => {
     setError('');
   };
 
+  const fillAdminCredentials = () => {
+    setFormData({
+      email: 'admin@mlbbtopup.com',
+      password: 'Admin@123',
+    });
+    setError('');
+  };
+
+  const handleQuickAdminLogin = async () => {
+    setLoading(true);
+    setError('');
+    const result = await login('admin@mlbbtopup.com', 'Admin@123');
+    if (result.success) {
+      navigate(from, { replace: true });
+    } else {
+      setError(result.error || 'Failed to authenticate admin');
+    }
+    setLoading(false);
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
@@ -159,6 +179,38 @@ const Login = () => {
               <div className="flex-1 font-semibold">{error}</div>
             </div>
           )}
+
+          {/* Quick Admin Access Helper Card */}
+          <div className="p-3 sm:p-3.5 rounded-xl bg-gradient-to-r from-amber-500/10 via-amber-500/5 to-cyan-500/10 border border-amber-500/30 flex flex-col sm:flex-row items-center justify-between gap-2.5">
+            <div className="flex flex-col text-left w-full sm:w-auto">
+              <div className="flex items-center gap-1.5 text-xs font-bold text-amber-400">
+                <span>⚡</span>
+                <span>Default Admin Credentials</span>
+              </div>
+              <div className="text-[11px] text-slate-300 font-mono mt-0.5">
+                admin@mlbbtopup.com &bull; Admin@123
+              </div>
+            </div>
+            <div className="flex items-center gap-2 w-full sm:w-auto shrink-0">
+              <button
+                type="button"
+                onClick={fillAdminCredentials}
+                className="flex-1 sm:flex-none px-2.5 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-semibold border border-slate-700 transition-colors"
+                title="Fill email and password into form"
+              >
+                Autofill
+              </button>
+              <button
+                type="button"
+                onClick={handleQuickAdminLogin}
+                disabled={loading}
+                className="flex-1 sm:flex-none px-3.5 py-1.5 rounded-lg bg-amber-400 hover:bg-amber-300 text-slate-950 font-black text-xs transition-transform hover:scale-[1.02] active:scale-[0.98] shadow flex items-center justify-center gap-1.5"
+              >
+                <span>👑</span>
+                <span>1-Click Sign In</span>
+              </button>
+            </div>
+          </div>
 
           <form className="space-y-3 sm:space-y-4" onSubmit={handleSubmit}>
             {/* Email Field */}

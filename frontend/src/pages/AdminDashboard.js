@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { adminAPI, bakongAPI } from '../services/api';
 import { getStoredGames, saveStoredGames, resetToDefaultGames, getMasterTopupStatus, saveMasterTopupStatus, fetchStoredGames, fetchMasterTopupStatus } from '../services/gamesConfig';
@@ -161,9 +161,30 @@ const PRICING_GAMES = [
     versionText: 'Enterprise Hub v2.5'
   });
   const navigate = useNavigate();
+  const location = useLocation();
 
   // Navigation & View States
-  const [activeTab, setActiveTab] = useState('pending'); // default to fast top-up queue
+  const getInitialTab = () => {
+    const p = window.location.pathname.toLowerCase();
+    if (p.includes('/orders')) return 'orders';
+    if (p.includes('/setup') || p.includes('/provider')) return 'provider';
+    if (p.includes('/pricing')) return 'pricing';
+    if (p.includes('/games')) return 'games';
+    if (p.includes('/financials')) return 'financials';
+    if (p.includes('/bakong')) return 'bakong';
+    return 'pending';
+  };
+  const [activeTab, setActiveTab] = useState(getInitialTab);
+
+  useEffect(() => {
+    const p = location.pathname.toLowerCase();
+    if (p.includes('/orders')) setActiveTab('orders');
+    else if (p.includes('/setup') || p.includes('/provider')) setActiveTab('provider');
+    else if (p.includes('/pricing')) setActiveTab('pricing');
+    else if (p.includes('/games')) setActiveTab('games');
+    else if (p.includes('/financials')) setActiveTab('financials');
+    else if (p.includes('/bakong')) setActiveTab('bakong');
+  }, [location.pathname]);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [navDropdownOpen, setNavDropdownOpen] = useState(false);
   const navDropdownRef = useRef(null);
@@ -957,14 +978,27 @@ const PRICING_GAMES = [
       return;
     }
 
-    showToast('info', 'Uploading package image to Cloudinary CDN...');
-    const res = await uploadToCloudinary(file, 'product_packages');
-    if (res.url) {
-      setProductFormData((prev) => ({
-        ...prev,
-        customImage: res.url,
-      }));
-      showToast('success', res.isFallback ? 'Custom package image loaded!' : 'Package image uploaded to Cloudinary CDN!');
+    showToast('info', 'Uploading package image...');
+    try {
+      let finalUrl = '';
+      const res = await uploadToCloudinary(file, 'product_packages');
+      if (res && res.url) {
+        finalUrl = res.url;
+      } else {
+        finalUrl = await readFileAsDataUrl(file, 1200, 0.9);
+      }
+
+      if (finalUrl) {
+        setProductFormData((prev) => ({
+          ...prev,
+          customImage: finalUrl,
+        }));
+        showToast('success', res?.isCloudinary ? 'Package image uploaded to Cloudinary CDN!' : 'Custom package image loaded!');
+      } else {
+        showToast('error', res?.error || 'Failed to process package image');
+      }
+    } catch (err) {
+      showToast('error', err?.message || 'Package image upload failed');
     }
   };
 

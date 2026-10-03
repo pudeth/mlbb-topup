@@ -7,7 +7,7 @@ import MobileBottomNav from './MobileBottomNav';
 
 const Layout = ({ children }) => {
   const location = useLocation();
-  const isAdminPath = location.pathname.startsWith('/admin');
+  const isAdminPath = location.pathname.startsWith('/admin') || location.pathname.startsWith('/topup/admin') || location.pathname.includes('/admin');
   const isAuthPath = location.pathname.startsWith('/login') || location.pathname.startsWith('/register');
 
   // Automatically scroll to top ONLY on actual page (pathname) navigation, NOT on search params

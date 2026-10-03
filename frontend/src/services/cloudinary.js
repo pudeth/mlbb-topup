@@ -53,36 +53,52 @@ export const compressImage = (file, maxWidth = 1400, quality = 0.85) => {
     if (file.type === 'image/svg+xml' || file.type === 'image/gif') {
       return resolve(file);
     }
+
+    const isPng = file.type === 'image/png' || (file.name && file.name.toLowerCase().endsWith('.png'));
+    const isWebp = file.type === 'image/webp' || (file.name && file.name.toLowerCase().endsWith('.webp'));
+    const preservesAlpha = isPng || isWebp;
+
     const reader = new FileReader();
     reader.onload = (e) => {
       const img = new Image();
       img.onload = () => {
         let width = img.width;
         let height = img.height;
+
+        // PNG / WebP images retain transparency; if width <= maxWidth, keep original file untouched
+        if (preservesAlpha && width <= maxWidth) {
+          return resolve(file);
+        }
+
         if (width > maxWidth) {
           height = Math.round((height * maxWidth) / width);
           width = maxWidth;
         }
+
         const canvas = document.createElement('canvas');
         canvas.width = width;
         canvas.height = height;
         const ctx = canvas.getContext('2d');
+        ctx.clearRect(0, 0, width, height);
         ctx.drawImage(img, 0, 0, width, height);
+
+        const mimeType = isPng ? 'image/png' : isWebp ? 'image/webp' : 'image/jpeg';
+        const fileExt = isPng ? '.png' : isWebp ? '.webp' : '.jpg';
 
         canvas.toBlob(
           (blob) => {
-            if (blob && blob.size < file.size) {
+            if (blob && (blob.size < file.size || width < img.width)) {
               const compressedFile = new File(
                 [blob],
-                (file.name || 'image.jpg').replace(/\.[^.]+$/, '.jpg'),
-                { type: 'image/jpeg', lastModified: Date.now() }
+                (file.name || `image${fileExt}`).replace(/\.[^.]+$/, fileExt),
+                { type: mimeType, lastModified: Date.now() }
               );
               resolve(compressedFile);
             } else {
               resolve(file);
             }
           },
-          'image/jpeg',
+          mimeType,
           quality
         );
       };
@@ -97,22 +113,36 @@ export const compressImage = (file, maxWidth = 1400, quality = 0.85) => {
 export const readFileAsDataUrl = (file, maxWidth = 1200, quality = 0.8) => {
   return new Promise((resolve) => {
     if (!file || typeof window === 'undefined') return resolve('');
+
+    const isPng = file.type === 'image/png' || (file.name && file.name.toLowerCase().endsWith('.png'));
+    const isWebp = file.type === 'image/webp' || (file.name && file.name.toLowerCase().endsWith('.webp'));
+    const preservesAlpha = isPng || isWebp;
+
     const reader = new FileReader();
     reader.onload = (e) => {
       const img = new Image();
       img.onload = () => {
         let width = img.width;
         let height = img.height;
+
+        if (preservesAlpha && width <= maxWidth) {
+          return resolve(e.target.result);
+        }
+
         if (width > maxWidth) {
           height = Math.round((height * maxWidth) / width);
           width = maxWidth;
         }
+
         const canvas = document.createElement('canvas');
         canvas.width = width;
         canvas.height = height;
         const ctx = canvas.getContext('2d');
+        ctx.clearRect(0, 0, width, height);
         ctx.drawImage(img, 0, 0, width, height);
-        resolve(canvas.toDataURL('image/jpeg', quality));
+
+        const mimeType = isPng ? 'image/png' : isWebp ? 'image/webp' : 'image/jpeg';
+        resolve(canvas.toDataURL(mimeType, quality));
       };
       img.onerror = () => resolve(e.target.result);
       img.src = e.target.result;

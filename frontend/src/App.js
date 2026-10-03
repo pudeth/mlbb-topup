@@ -1,5 +1,5 @@
 import React from 'react';
-import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { AuthProvider } from './context/AuthContext';
 import { LanguageProvider } from './context/LanguageContext';
 
@@ -49,6 +49,14 @@ function App() {
                   <AdminDashboard />
                 </AdminRoute>
               } />
+              <Route path="/admin/*" element={
+                <AdminRoute>
+                  <AdminDashboard />
+                </AdminRoute>
+              } />
+              <Route path="/topup/admin" element={<Navigate to="/admin" replace />} />
+              <Route path="/topup/admin/*" element={<Navigate to="/admin" replace />} />
+              <Route path="/dashboard" element={<Navigate to="/admin" replace />} />
             </Routes>
           </Layout>
         </Router>
