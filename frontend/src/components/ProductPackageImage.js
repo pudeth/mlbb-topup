@@ -78,14 +78,26 @@ export const ProductPackageImage = ({
     );
   }
 
-  // 4. Custom uploaded image (URL, Data URI, or file path)
-  if (custom && (custom.startsWith('http') || custom.startsWith('data:') || custom.startsWith('/'))) {
+  const isPass =
+    pkg.isPass ||
+    (pkg.name && (pkg.name.toLowerCase().includes('pass') || pkg.name.toLowerCase().includes('wdp') || pkg.name.toLowerCase().includes('weekly')));
+
+  // Check for legacy black-background overrides (e.g. data URLs, or 86 diamonds / weekly pass test images)
+  const isLegacyBlacklist =
+    custom.startsWith('data:image') ||
+    pkg.productId === 13 ||
+    pkg.productId === 14 ||
+    pkg.diamondAmount === 86 ||
+    (pkg.name && (pkg.name === '86 Diamonds' || pkg.name === 'Weekly Pass'));
+
+  // 4. Custom uploaded image (URL, Data URI, or file path) - only if not blacklisted
+  if (!isLegacyBlacklist && custom && (custom.startsWith('http') || custom.startsWith('data:') || custom.startsWith('/'))) {
     return (
       <div className={`relative inline-flex items-center justify-center shrink-0 drop-shadow-md ${dims} ${className}`}>
         <img
           src={custom}
           alt={pkg.name || 'Product'}
-          className="w-full h-full object-contain filter drop-shadow-[0_4px_8px_rgba(0,0,0,0.4)] hover:scale-105 transition-transform duration-300"
+          className="w-full h-full object-contain filter mix-blend-screen drop-shadow-[0_4px_8px_rgba(0,0,0,0.4)] hover:scale-105 transition-transform duration-300"
           onError={(e) => {
             e.target.style.display = 'none';
           }}
@@ -95,10 +107,6 @@ export const ProductPackageImage = ({
   }
 
   // 5. Default Fallbacks when no customImage is set
-  const isPass =
-    pkg.isPass ||
-    (pkg.name && (pkg.name.toLowerCase().includes('pass') || pkg.name.toLowerCase().includes('wdp') || pkg.name.toLowerCase().includes('weekly')));
-
   if (isPass) {
     return (
       <div className={`relative inline-flex items-center justify-center shrink-0 ${dims} ${className}`}>

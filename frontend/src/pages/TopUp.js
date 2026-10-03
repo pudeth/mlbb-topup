@@ -343,19 +343,45 @@ const TopUp = () => {
     try {
       const saved = localStorage.getItem('admin_custom_products');
       if (saved) {
-        const customProducts = JSON.parse(saved);
+        let customProducts = JSON.parse(saved);
         if (Array.isArray(customProducts)) {
+          let storageChanged = false;
+          // Purge corrupted/black-background custom images stored in localStorage
+          customProducts = customProducts.map(p => {
+            if (p.customImage && (
+              p.customImage.startsWith('data:') ||
+              p.productId === 13 ||
+              p.productId === 14 ||
+              p.diamondAmount === 86 ||
+              p.name === '86 Diamonds' ||
+              p.name === 'Weekly Pass'
+            )) {
+              delete p.customImage;
+              storageChanged = true;
+            }
+            return p;
+          });
+          if (storageChanged) {
+            try {
+              localStorage.setItem('admin_custom_products', JSON.stringify(customProducts));
+            } catch (err) {}
+          }
+
           baseList = baseList.map(item => {
             const match = customProducts.find(p => p.productId === item.productId || (p.game === (gameId.startsWith('mlbb') ? 'mlbb' : gameId) && p.diamondAmount === item.diamondAmount));
             if (match) {
               const cleanedPrice = Number(match.price);
+              // Strip any black-background customImage from 86 diamonds or weekly pass
+              const isBlacklisted = item.productId === 13 || item.productId === 14 || item.diamondAmount === 86 || item.name === '86 Diamonds' || item.name === 'Weekly Pass';
+              const cleanImg = isBlacklisted ? undefined : (match.customImage && !match.customImage.startsWith('data:') ? match.customImage : undefined);
+
               return {
                 ...item,
                 price: (cleanedPrice && cleanedPrice >= 0.5) ? cleanedPrice : item.price,
                 name: match.name || item.name,
                 tag: match.tag !== undefined ? match.tag : item.tag,
                 status: match.status || 'Active',
-                customImage: match.customImage !== undefined ? match.customImage : item.customImage
+                customImage: cleanImg !== undefined ? cleanImg : item.customImage
               };
             }
             return item;

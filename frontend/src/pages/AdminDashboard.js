@@ -586,7 +586,31 @@ const PRICING_GAMES = [
     let customSaved = [];
     try {
       const stored = localStorage.getItem('admin_custom_products');
-      if (stored) customSaved = JSON.parse(stored);
+      if (stored) {
+        customSaved = JSON.parse(stored);
+        if (Array.isArray(customSaved)) {
+          let cleaned = false;
+          customSaved = customSaved.map(p => {
+            if (p.customImage && (
+              p.customImage.startsWith('data:') ||
+              p.productId === 13 ||
+              p.productId === 14 ||
+              p.diamondAmount === 86 ||
+              p.name === '86 Diamonds' ||
+              p.name === 'Weekly Pass'
+            )) {
+              delete p.customImage;
+              cleaned = true;
+            }
+            return p;
+          });
+          if (cleaned) {
+            try {
+              localStorage.setItem('admin_custom_products', JSON.stringify(customSaved));
+            } catch (e) {}
+          }
+        }
+      }
     } catch (e) {}
 
     const list = [...ALL_GAMES_CATALOG_LIST];
@@ -595,7 +619,11 @@ const PRICING_GAMES = [
     products.forEach(p => {
       const idx = list.findIndex(item => (item.game === 'mlbb' && item.diamondAmount === p.diamondAmount) || (item.productId === p.productId));
       if (idx !== -1) {
-        list[idx] = { ...list[idx], ...p, diamondAmount: p.diamondAmount };
+        const cleanProduct = { ...p };
+        if (cleanProduct.productId === 13 || cleanProduct.productId === 14 || cleanProduct.diamondAmount === 86 || cleanProduct.name === '86 Diamonds' || cleanProduct.name === 'Weekly Pass') {
+          delete cleanProduct.customImage;
+        }
+        list[idx] = { ...list[idx], ...cleanProduct, diamondAmount: p.diamondAmount };
       } else {
         list.push(p);
       }
