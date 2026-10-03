@@ -588,28 +588,6 @@ const PRICING_GAMES = [
       const stored = localStorage.getItem('admin_custom_products');
       if (stored) {
         customSaved = JSON.parse(stored);
-        if (Array.isArray(customSaved)) {
-          let cleaned = false;
-          customSaved = customSaved.map(p => {
-            if (p.customImage && (
-              p.customImage.startsWith('data:') ||
-              p.productId === 13 ||
-              p.productId === 14 ||
-              p.diamondAmount === 86 ||
-              p.name === '86 Diamonds' ||
-              p.name === 'Weekly Pass'
-            )) {
-              delete p.customImage;
-              cleaned = true;
-            }
-            return p;
-          });
-          if (cleaned) {
-            try {
-              localStorage.setItem('admin_custom_products', JSON.stringify(customSaved));
-            } catch (e) {}
-          }
-        }
       }
     } catch (e) {}
 
@@ -619,11 +597,7 @@ const PRICING_GAMES = [
     products.forEach(p => {
       const idx = list.findIndex(item => (item.game === 'mlbb' && item.diamondAmount === p.diamondAmount) || (item.productId === p.productId));
       if (idx !== -1) {
-        const cleanProduct = { ...p };
-        if (cleanProduct.productId === 13 || cleanProduct.productId === 14 || cleanProduct.diamondAmount === 86 || cleanProduct.name === '86 Diamonds' || cleanProduct.name === 'Weekly Pass') {
-          delete cleanProduct.customImage;
-        }
-        list[idx] = { ...list[idx], ...cleanProduct, diamondAmount: p.diamondAmount };
+        list[idx] = { ...list[idx], ...p, diamondAmount: p.diamondAmount };
       } else {
         list.push(p);
       }
@@ -1021,12 +995,14 @@ const PRICING_GAMES = [
           ...prev,
           customImage: finalUrl,
         }));
-        showToast('success', res?.isCloudinary ? 'Package image uploaded to Cloudinary CDN!' : 'Custom package image loaded!');
+        showToast('success', res?.isCloudinary ? '✅ Package PNG image uploaded to Cloudinary CDN!' : '✅ Custom package image loaded!');
       } else {
         showToast('error', res?.error || 'Failed to process package image');
       }
     } catch (err) {
       showToast('error', err?.message || 'Package image upload failed');
+    } finally {
+      if (e.target) e.target.value = '';
     }
   };
 
@@ -3476,9 +3452,9 @@ const PRICING_GAMES = [
 
                       {/* Icon & Amount / Name */}
                       <div className="text-center py-1">
-                        <div className="flex items-center justify-center min-h-[36px] mb-1 group-hover:scale-110 transition-transform">
+                        <div className="flex items-center justify-center min-h-[42px] mb-1 group-hover:scale-110 transition-transform">
                           {prod.customImage || prod.game === 'mlbb' || isPass ? (
-                            <ProductPackageImage pkg={prod} size="sm" />
+                            <ProductPackageImage pkg={prod} size="md" />
                           ) : (
                             <span className="text-2xl sm:text-3xl">
                               {prod.game === 'pubgm' ? '🎯' : prod.game === 'freefire' ? '🔥' : prod.game === 'genshin' ? '🌙' : '💎'}
@@ -5488,7 +5464,20 @@ const PRICING_GAMES = [
                   {/* Preset Artwork Buttons */}
                   <div className="flex-1 space-y-1.5">
                     <span className="text-[10px] text-slate-400 block font-semibold">Choose Preset 3D Artwork:</span>
-                    <div className="grid grid-cols-3 gap-1.5">
+                    <div className="grid grid-cols-2 sm:grid-cols-4 gap-1.5">
+                      <button
+                        type="button"
+                        onClick={() => setProductFormData({ ...productFormData, customImage: '/images/diamond-chest-3d.png' })}
+                        className={`p-1.5 rounded-xl border text-[10px] font-black transition-all flex items-center justify-center gap-1 cursor-pointer ${
+                          productFormData.customImage === '/images/diamond-chest-3d.png' || productFormData.customImage === 'diamond_chest' || productFormData.customImage === 'blue_chest'
+                            ? 'bg-cyan-500 text-black border-cyan-300 shadow-md ring-1 ring-cyan-200'
+                            : 'bg-slate-900 text-slate-300 border-slate-800 hover:border-slate-700'
+                        }`}
+                      >
+                        <span>💎</span>
+                        <span>Diamond Chest</span>
+                      </button>
+
                       <button
                         type="button"
                         onClick={() => setProductFormData({ ...productFormData, customImage: '/images/weekly-pass.png' })}
@@ -5524,12 +5513,29 @@ const PRICING_GAMES = [
                             : 'bg-slate-900 text-slate-300 border-slate-800 hover:border-slate-700'
                         }`}
                       >
-                        <span>💎</span>
+                        <span>✨</span>
                         <span>3D Gem</span>
                       </button>
                     </div>
                   </div>
                 </div>
+
+                {/* Custom Upload Active Badge with Reset Option */}
+                {productFormData.customImage && !['/images/diamond-chest-3d.png', '/images/weekly-pass.png', '/images/treasure-chest.png', 'gem', '3d_gem', '3d-gem', '/images/diamond-gem.png', 'diamond', 'weekly_pass', 'pass', 'treasure_chest', 'chest', 'diamond_chest', 'blue_chest'].includes(productFormData.customImage) && (
+                  <div className="flex items-center justify-between px-3 py-1.5 rounded-xl bg-emerald-950/70 border border-emerald-500/50 text-[11px] text-emerald-300 shadow-sm animate-fadeIn">
+                    <span className="flex items-center gap-1.5 font-bold">
+                      <span className="text-emerald-400">✨</span>
+                      <span>Custom PNG Image Active & Ready!</span>
+                    </span>
+                    <button
+                      type="button"
+                      onClick={() => setProductFormData({ ...productFormData, customImage: '' })}
+                      className="px-2 py-0.5 rounded-lg bg-rose-500/20 text-rose-300 hover:bg-rose-500/30 border border-rose-500/40 text-[10px] font-bold transition-colors cursor-pointer"
+                    >
+                      ✕ Reset to Default
+                    </button>
+                  </div>
+                )}
 
                 {/* Upload or URL Controls */}
                 <div className="pt-2 border-t border-slate-800/80 grid grid-cols-1 sm:grid-cols-2 gap-2">
