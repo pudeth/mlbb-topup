@@ -1589,220 +1589,175 @@ const TopUp = () => {
                 : (selectedGame.description || 'Fast, secure, and instant automated direct UID game top-up delivery with official API.')}
             </p>
 
-            {/* Row 3: 4 Feature Badges (5v5 Battle, Multiple Heroes, Fast Matchmaking, Stable Server) */}
-            <div className="grid grid-cols-2 sm:grid-cols-4 gap-1 xs:gap-1.5 sm:gap-2 my-2 sm:my-3">
-              {/* Badge 1: 5v5 Battle */}
-              <div className="rounded-lg sm:rounded-xl bg-[#09122b]/90 border border-sky-500/25 px-1.5 py-1 sm:px-2.5 sm:py-2 flex items-center gap-1.5 shadow-sm">
-                <div className="w-5 h-5 sm:w-7 sm:h-7 rounded-full bg-blue-600/30 border border-sky-400/40 flex items-center justify-center text-sky-400 shrink-0 text-[9px] sm:text-xs">
-                  ⚔️
+            {/* Row 3: 4 Feature Badges (clean SVG icons) */}
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-1.5 sm:gap-2 mt-2.5 sm:mt-3">
+              {[
+                { title: '5v5', sub: 'Battle', path: 'M14.5 17.5L3 6V3h3l11.5 11.5M13 19l6-6M16 16l4 4M19 21l2-2M9.5 6.5L13 3h3v3l-3.5 3.5M5 14l4 4M7 17l-3 3M3 19l2 2' },
+                { title: 'Multiple', sub: 'Heroes', path: 'M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2M9 11a4 4 0 100-8 4 4 0 000 8zM23 21v-2a4 4 0 00-3-3.87M16 3.13a4 4 0 010 7.75' },
+                { title: 'Fast', sub: 'Match', path: 'M13 2L3 14h9l-1 8 10-12h-9l1-8z' },
+                { title: 'Stable', sub: 'Server', path: 'M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10zM9 12l2 2 4-4' },
+              ].map((f) => (
+                <div key={f.title} className="group/f rounded-xl bg-gradient-to-br from-[#0b1633] to-[#070e22] border border-sky-500/20 hover:border-sky-400/60 px-2 py-1.5 sm:px-2.5 sm:py-2 flex items-center gap-2 transition-colors">
+                  <div className="w-6 h-6 sm:w-8 sm:h-8 rounded-lg bg-sky-500/15 ring-1 ring-sky-400/30 flex items-center justify-center text-sky-300 shrink-0 group-hover/f:text-cyan-200 group-hover/f:shadow-[0_0_10px_rgba(56,189,248,0.45)] transition-all">
+                    <svg className="w-3.5 h-3.5 sm:w-4 sm:h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d={f.path} /></svg>
+                  </div>
+                  <div className="min-w-0">
+                    <span className="text-[10px] sm:text-[11px] font-bold text-white block truncate leading-none">{f.title}</span>
+                    <span className="text-[9px] sm:text-[10px] text-slate-400 block truncate leading-tight mt-0.5">{f.sub}</span>
+                  </div>
                 </div>
-                <div className="min-w-0">
-                  <span className="text-[8px] xs:text-[9.5px] sm:text-[11px] font-bold text-white block truncate leading-none">5v5</span>
-                  <span className="text-[7.5px] xs:text-[8px] sm:text-[9px] text-slate-400 block truncate leading-tight mt-0.5">Battle</span>
-                </div>
-              </div>
-
-              {/* Badge 2: Multiple Heroes */}
-              <div className="rounded-lg sm:rounded-xl bg-[#09122b]/90 border border-sky-500/25 px-1.5 py-1 sm:px-2.5 sm:py-2 flex items-center gap-1.5 shadow-sm">
-                <div className="w-5 h-5 sm:w-7 sm:h-7 rounded-full bg-blue-600/30 border border-sky-400/40 flex items-center justify-center text-sky-400 shrink-0 text-[9px] sm:text-xs">
-                  👥
-                </div>
-                <div className="min-w-0">
-                  <span className="text-[8px] xs:text-[9.5px] sm:text-[11px] font-bold text-white block truncate leading-none">Multiple</span>
-                  <span className="text-[7.5px] xs:text-[8px] sm:text-[9px] text-slate-400 block truncate leading-tight mt-0.5">Heroes</span>
-                </div>
-              </div>
-
-              {/* Badge 3: Fast Matchmaking */}
-              <div className="rounded-lg sm:rounded-xl bg-[#09122b]/90 border border-sky-500/25 px-1.5 py-1 sm:px-2.5 sm:py-2 flex items-center gap-1.5 shadow-sm">
-                <div className="w-5 h-5 sm:w-7 sm:h-7 rounded-full bg-blue-600/30 border border-sky-400/40 flex items-center justify-center text-sky-400 shrink-0 text-[9px] sm:text-xs">
-                  💎
-                </div>
-                <div className="min-w-0">
-                  <span className="text-[8px] xs:text-[9.5px] sm:text-[11px] font-bold text-white block truncate leading-none">Fast</span>
-                  <span className="text-[7.5px] xs:text-[8px] sm:text-[9px] text-slate-400 block truncate leading-tight mt-0.5">Match</span>
-                </div>
-              </div>
-
-              {/* Badge 4: Stable Server */}
-              <div className="rounded-lg sm:rounded-xl bg-[#09122b]/90 border border-sky-500/25 px-1.5 py-1 sm:px-2.5 sm:py-2 flex items-center gap-1.5 shadow-sm">
-                <div className="w-5 h-5 sm:w-7 sm:h-7 rounded-full bg-blue-600/30 border border-sky-400/40 flex items-center justify-center text-sky-400 shrink-0 text-[9px] sm:text-xs">
-                  🛡️
-                </div>
-                <div className="min-w-0">
-                  <span className="text-[8px] xs:text-[9.5px] sm:text-[11px] font-bold text-white block truncate leading-none">Stable</span>
-                  <span className="text-[7.5px] xs:text-[8px] sm:text-[9px] text-slate-400 block truncate leading-tight mt-0.5">Server</span>
-                </div>
-              </div>
+              ))}
             </div>
           </div>
 
           {/* ======================================================== */}
-          {/* PLAYER INFORMATION BOX (EXACTLY MATCHING media_1791047969801.png) */}
+          {/* PLAYER INFORMATION BOX — clean, modern, mobile-first      */}
           {/* ======================================================== */}
-          <div className="space-y-1.5 sm:space-y-2.5">
-            <div className="flex items-center justify-between">
-              <span className="text-[10px] xs:text-[11px] sm:text-sm font-bold text-white flex items-center gap-1.5 font-sans">
-                <span>👤</span>
-                <span>{language === 'km' ? 'ព័ត៌មានអ្នកលេង' : 'Player Information'}</span>
+          <div className="space-y-2">
+            <div className="flex items-center justify-between gap-2">
+              <span className="text-[11px] sm:text-sm font-bold text-white flex items-center gap-1.5">
+                <svg className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-sky-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2" /><circle cx="12" cy="7" r="4" /></svg>
+                <span className="truncate">{language === 'km' ? 'ព័ត៌មានអ្នកលេង' : 'Player Information'}</span>
               </span>
               <button
                 type="button"
                 onClick={() => setShowIdGuide(true)}
-                className="text-[9px] xs:text-[10px] sm:text-[11px] text-cyan-400 hover:text-cyan-300 font-bold transition-colors cursor-pointer"
+                className="shrink-0 inline-flex items-center gap-1 text-[9.5px] sm:text-[11px] text-cyan-300 hover:text-white font-semibold px-2 py-0.5 rounded-full bg-cyan-500/10 border border-cyan-400/25 hover:border-cyan-300/60 transition-colors cursor-pointer"
               >
-                ❓ Where is ID?
+                <svg className="w-3 h-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10" /><path d="M9.1 9a3 3 0 015.8 1c0 2-3 3-3 3M12 17h.01" /></svg>
+                <span>{language === 'km' ? 'រក ID?' : 'Where is ID?'}</span>
               </button>
             </div>
 
             {/* Main Inner Card */}
-            <div className="p-2 xs:p-2.5 sm:p-4 rounded-xl sm:rounded-2xl bg-[#030a1c]/95 border border-sky-500/30 shadow-inner space-y-2 sm:space-y-3">
-              {/* Profile Row: Avatar + Inputs + Rank Crest */}
-              <div className="flex items-center gap-2 sm:gap-4">
-                
-                {/* Gamer Avatar with Glowing Cyan Ring & Crown Badge */}
-                <div className="relative w-9 h-9 xs:w-11 xs:h-11 sm:w-16 sm:h-16 shrink-0">
-                  <div className="w-full h-full rounded-full p-0.5 bg-gradient-to-tr from-sky-400 via-blue-500 to-cyan-300 shadow-[0_0_12px_rgba(56,189,248,0.55)]">
-                    <img
-                      src="/images/gamer_avatar_pro.png"
-                      alt="Player Avatar"
-                      className="w-full h-full object-cover rounded-full"
+            <div className="relative p-2.5 sm:p-4 rounded-2xl bg-gradient-to-b from-[#071030] to-[#040a1e] border border-sky-500/25 shadow-[inset_0_1px_0_rgba(255,255,255,0.04)] space-y-2.5 sm:space-y-3">
+
+              {/* Profile Status Row: Avatar + name/status */}
+              <div className="flex items-center gap-2.5">
+                <div className="relative w-9 h-9 sm:w-12 sm:h-12 shrink-0">
+                  <div className={`w-full h-full rounded-full p-[2px] ${verifiedAccount?.valid ? 'bg-gradient-to-tr from-emerald-400 to-cyan-300 shadow-[0_0_12px_rgba(52,211,153,0.55)]' : 'bg-gradient-to-tr from-sky-400 via-blue-500 to-cyan-300 shadow-[0_0_12px_rgba(56,189,248,0.5)]'}`}>
+                    <img src="/images/gamer_avatar_pro.png" alt="Player Avatar" className="w-full h-full object-cover rounded-full bg-slate-900" />
+                  </div>
+                  <span className={`absolute -bottom-0.5 -right-0.5 w-3 h-3 sm:w-3.5 sm:h-3.5 rounded-full border-2 border-[#050b20] ${verifiedAccount?.valid ? 'bg-emerald-400' : 'bg-slate-500'}`} />
+                </div>
+                <div className="min-w-0 flex-1">
+                  <div className="text-[11px] sm:text-sm font-extrabold text-white truncate leading-tight">
+                    {verifiedAccount?.valid ? verifiedAccount.name : (language === 'km' ? 'មិនទាន់ផ្ទៀងផ្ទាត់' : 'Guest Player')}
+                  </div>
+                  <div className={`text-[9px] sm:text-[11px] truncate mt-0.5 font-medium ${verifiedAccount?.valid ? 'text-emerald-400' : verifiedAccount && !verifiedAccount.valid ? 'text-rose-400' : 'text-slate-400'}`}>
+                    {verifiedAccount?.valid
+                      ? `✓ ${verifiedAccount.id} (${verifiedAccount.server}) • ${verifiedAccount.country || 'Cambodia'}`
+                      : verifiedAccount && !verifiedAccount.valid
+                        ? (verifiedAccount.error || 'Player account not found.')
+                        : (language === 'km' ? 'បញ្ចូល UID ដើម្បីផ្ទៀងផ្ទាត់' : 'Enter UID to verify account')}
+                  </div>
+                </div>
+              </div>
+
+              {/* Inputs */}
+              <div className={`grid gap-2 ${isMlbb || isHoyoverse ? 'grid-cols-1 sm:grid-cols-[1fr_0.75fr]' : 'grid-cols-1'}`}>
+                {/* Player ID with inline copy */}
+                <div>
+                  <label htmlFor="player_id_input" className="block text-[9.5px] sm:text-[11px] font-semibold text-slate-400 mb-1 uppercase tracking-wider">
+                    {isTelegram ? 'Telegram @' : isSteam ? 'Steam Name' : isGiftCard ? 'Email' : 'Player ID'}
+                  </label>
+                  <div className="relative">
+                    <input
+                      id="player_id_input"
+                      type="text"
+                      inputMode={isTelegram || isSteam || isGiftCard ? 'text' : 'numeric'}
+                      value={formData.playerID}
+                      onChange={handlePlayerIdChange}
+                      placeholder={isTelegram ? '@username' : isSteam ? 'steam_username' : isGiftCard ? 'email@domain.com' : '123456789'}
+                      className="w-full h-9 sm:h-10 bg-[#030817] border border-slate-700/70 rounded-xl pl-3 pr-9 text-xs sm:text-sm font-mono text-white placeholder-slate-600 focus:outline-none focus:border-sky-400 focus:ring-2 focus:ring-sky-400/25 transition-all"
+                    />
+                    <button
+                      type="button"
+                      onClick={handleCopyPlayerId}
+                      disabled={!formData.playerID}
+                      className="absolute right-1 top-1/2 -translate-y-1/2 w-7 h-7 rounded-lg flex items-center justify-center text-slate-400 hover:text-sky-300 hover:bg-sky-500/10 disabled:opacity-30 transition-colors cursor-pointer"
+                      title={copiedPlayerId ? 'Copied!' : 'Copy Player ID'}
+                    >
+                      {copiedPlayerId ? (
+                        <svg className="w-3.5 h-3.5 text-emerald-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><path d="M20 6L9 17l-5-5" /></svg>
+                      ) : (
+                        <svg className="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" /><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1" /></svg>
+                      )}
+                    </button>
+                  </div>
+                </div>
+
+                {/* Zone / Server */}
+                {isMlbb && (
+                  <div>
+                    <label className="block text-[9.5px] sm:text-[11px] font-semibold text-slate-400 mb-1 uppercase tracking-wider">Zone ID</label>
+                    <input
+                      type="text"
+                      inputMode="numeric"
+                      value={formData.serverID}
+                      onChange={(e) => setFormData(prev => ({ ...prev, serverID: e.target.value }))}
+                      placeholder="11446"
+                      className="w-full h-9 sm:h-10 bg-[#030817] border border-slate-700/70 rounded-xl px-3 text-xs sm:text-sm font-mono text-white placeholder-slate-600 focus:outline-none focus:border-sky-400 focus:ring-2 focus:ring-sky-400/25 transition-all"
                     />
                   </div>
-                  {/* Crown Rank Badge at bottom-left */}
-                  <div className="absolute -bottom-1 -left-1 w-3.5 h-3.5 xs:w-4 xs:h-4 sm:w-5 sm:h-5 rounded-full bg-gradient-to-tr from-amber-400 via-yellow-400 to-amber-600 flex items-center justify-center text-[7px] xs:text-[8px] sm:text-[10px] shadow-sm border border-amber-200">
-                    👑
-                  </div>
-                </div>
-
-                {/* Middle Column: Player ID & Server Inputs */}
-                <div className="flex-1 min-w-0 space-y-1.5 sm:space-y-2">
-                  
-                  {/* Field 1: Player ID (UID) + Copy Button */}
+                )}
+                {isHoyoverse && (
                   <div>
-                    <div className="flex items-center justify-between mb-0.5 sm:mb-1">
-                      <label className="text-[9px] xs:text-[10px] sm:text-[11px] font-bold text-slate-300 flex items-center gap-1 leading-none">
-                        <span>👤</span>
-                        <span className="truncate">{isTelegram ? 'Telegram @' : isSteam ? 'Steam Name' : isGiftCard ? 'Email' : 'Player ID (UID)'}</span>
-                      </label>
-                      <button
-                        type="button"
-                        onClick={handleCopyPlayerId}
-                        className="text-[8.5px] xs:text-[9.5px] sm:text-[10px] text-sky-400 hover:text-white font-bold px-1.5 py-0.5 rounded bg-sky-500/10 hover:bg-sky-500/20 border border-sky-500/30 flex items-center gap-1 transition-all cursor-pointer leading-none"
-                        title="Copy Player ID"
-                      >
-                        <span>📋</span>
-                        <span>{copiedPlayerId ? 'Copied!' : 'Copy'}</span>
-                      </button>
-                    </div>
-                    <div className="relative flex items-center">
-                      <span className="absolute left-2 sm:left-3 text-slate-500 text-[10px] sm:text-xs pointer-events-none">👤</span>
-                      <input
-                        id="player_id_input"
-                        type="text"
-                        value={formData.playerID}
-                        onChange={handlePlayerIdChange}
-                        placeholder={isTelegram ? '@username' : isSteam ? 'steam_username' : isGiftCard ? 'email@domain.com' : '123456789'}
-                        className="w-full h-7 xs:h-8 sm:h-9 bg-[#050e24] border border-sky-500/35 rounded-lg sm:rounded-xl pl-6 sm:pl-8 pr-2 sm:pr-3 text-[10px] xs:text-xs sm:text-sm font-mono text-white placeholder-slate-600 focus:outline-none focus:border-sky-400 focus:ring-1 focus:ring-sky-400 transition-all shadow-inner"
-                      />
-                    </div>
+                    <label className="block text-[9.5px] sm:text-[11px] font-semibold text-slate-400 mb-1 uppercase tracking-wider">Server</label>
+                    <select
+                      value={formData.serverID}
+                      onChange={(e) => setFormData(prev => ({ ...prev, serverID: e.target.value }))}
+                      className="w-full h-9 sm:h-10 bg-[#030817] border border-slate-700/70 rounded-xl px-3 text-xs sm:text-sm text-white focus:outline-none focus:border-sky-400 focus:ring-2 focus:ring-sky-400/25 transition-all"
+                    >
+                      <option value="Asia">Asia</option>
+                      <option value="America">America</option>
+                      <option value="Europe">Europe</option>
+                      <option value="TW/HK/MO">TW/HK/MO</option>
+                    </select>
                   </div>
-
-                  {/* Field 2: Server (Zone ID) */}
-                  <div>
-                    <label className="text-[9px] xs:text-[10px] sm:text-[11px] font-bold text-slate-300 flex items-center gap-1 leading-none mb-0.5 sm:mb-1">
-                      <span>🌐</span>
-                      <span>{isHoyoverse ? 'Server' : 'Zone ID'}</span>
-                    </label>
-                    <div className="relative flex items-center">
-                      <span className="absolute left-2 sm:left-3 text-slate-500 text-[10px] sm:text-xs pointer-events-none">🌐</span>
-                      <input
-                        type="text"
-                        value={formData.serverID}
-                        onChange={(e) => setFormData(prev => ({ ...prev, serverID: e.target.value }))}
-                        placeholder="Global (11446)"
-                        className="w-full h-7 xs:h-8 sm:h-9 bg-[#050e24] border border-sky-500/35 rounded-lg sm:rounded-xl pl-6 sm:pl-8 pr-6 sm:pr-7 text-[10px] xs:text-xs sm:text-sm font-mono text-white placeholder-slate-600 focus:outline-none focus:border-sky-400 focus:ring-1 focus:ring-sky-400 transition-all shadow-inner"
-                      />
-                      <span className="absolute right-2 text-slate-500 text-[9px] sm:text-[10px] pointer-events-none">▾</span>
-                    </div>
-                  </div>
-
-                </div>
-
-                {/* Right Column: Mythic/Glory Rank Crest Emblem */}
-                <div className="w-9 h-9 xs:w-11 xs:h-11 sm:w-15 sm:h-15 shrink-0 flex items-center justify-center">
-                  <img
-                    src="/images/rank_mythic_crest_clean.png"
-                    alt="Rank Crest"
-                    onError={(e) => {
-                      e.target.onerror = null;
-                      e.target.src = '/images/rank_mythic_crest.png';
-                    }}
-                    className="w-full h-full object-contain drop-shadow-[0_0_10px_rgba(56,189,248,0.5)]"
-                  />
-                </div>
-
+                )}
               </div>
 
               {/* Auto-detected message notice */}
               {autoDetectedMessage && (
-                <div className="text-[10px] sm:text-[11px] font-bold text-emerald-400 px-1">
-                  ⚡ {autoDetectedMessage}
+                <div className="text-[10px] sm:text-[11px] font-semibold text-emerald-400 flex items-center gap-1">
+                  <svg className="w-3 h-3 shrink-0" viewBox="0 0 24 24" fill="currentColor"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z" /></svg>
+                  <span className="truncate">{autoDetectedMessage}</span>
                 </div>
               )}
 
-              {/* Live Verified Account Notification Card */}
-              {verifiedAccount && verifiedAccount.valid && (
-                <div className="p-2 sm:p-2.5 rounded-lg sm:rounded-xl bg-gradient-to-r from-emerald-950/80 via-slate-900 to-cyan-950/60 border border-emerald-500/60 text-xs shadow-lg space-y-0.5 sm:space-y-1 animate-fadeIn">
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-1">
-                      <span className="text-xs sm:text-base">👑</span>
-                      <span className="font-extrabold text-[11px] sm:text-sm text-white tracking-wide truncate max-w-[120px] sm:max-w-none">
-                        {verifiedAccount.name}
-                      </span>
-                    </div>
-                    <span className="px-1.5 sm:px-2 py-0.5 rounded-full bg-emerald-500/20 border border-emerald-500/50 text-emerald-300 text-[9px] sm:text-[10px] font-black flex items-center gap-1">
-                      <span>✓</span>
-                      <span>Verified</span>
-                    </span>
-                  </div>
-                  <div className="flex items-center justify-between text-[9px] sm:text-[10.5px] text-slate-400 border-t border-slate-800/80 pt-0.5 font-mono">
-                    <span>ID: <strong className="text-cyan-300">{verifiedAccount.id} ({verifiedAccount.server})</strong></span>
-                    <span className="text-emerald-400 font-semibold">📍 {verifiedAccount.country || 'Cambodia'}</span>
-                  </div>
-                </div>
-              )}
+              {/* Buttons */}
+              <div className="space-y-2 pt-0.5">
+                <button
+                  type="button"
+                  onClick={handleVerifyAccount}
+                  disabled={accountChecking || !formData.playerID.trim()}
+                  className={`w-full h-9 sm:h-10 rounded-xl border font-bold text-[11px] sm:text-sm flex items-center justify-center gap-1.5 transition-all cursor-pointer active:scale-[0.98] disabled:cursor-not-allowed ${
+                    verifiedAccount?.valid
+                      ? 'border-emerald-400/50 bg-emerald-500/10 text-emerald-300'
+                      : 'border-sky-400/40 bg-sky-500/10 text-sky-200 hover:bg-sky-500/20 hover:border-sky-300/70 disabled:opacity-45'
+                  }`}
+                >
+                  {accountChecking ? (
+                    <svg className="w-3.5 h-3.5 animate-spin" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="3" className="opacity-25" /><path d="M4 12a8 8 0 018-8" stroke="currentColor" strokeWidth="3" strokeLinecap="round" /></svg>
+                  ) : verifiedAccount?.valid ? (
+                    <svg className="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><path d="M20 6L9 17l-5-5" /></svg>
+                  ) : (
+                    <svg className="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><circle cx="11" cy="11" r="7" /><path d="M21 21l-4.3-4.3" /></svg>
+                  )}
+                  <span>{accountChecking ? 'Checking...' : verifiedAccount?.valid ? 'Verified' : 'Check Player Name'}</span>
+                </button>
 
-              {/* Error notification if not found */}
-              {verifiedAccount && !verifiedAccount.valid && (
-                <div className="p-2 rounded-lg bg-rose-950/60 border border-rose-500/40 text-xs shadow-lg space-y-0.5 animate-fadeIn">
-                  <div className="flex items-center gap-1.5 text-rose-300 font-bold text-[10px]">
-                    <span>⚠️</span>
-                    <span className="truncate">{verifiedAccount.error || 'Player account not found.'}</span>
-                  </div>
-                </div>
-              )}
-
-              {/* Action Button 1: Check Player Name */}
-              <button
-                type="button"
-                onClick={handleVerifyAccount}
-                disabled={accountChecking || !formData.playerID.trim()}
-                className="w-full py-1.5 sm:py-2.5 rounded-full bg-gradient-to-r from-sky-500 to-blue-600 hover:from-sky-400 hover:to-blue-500 text-white font-bold text-[10px] xs:text-[11px] sm:text-sm flex items-center justify-center gap-1.5 shadow-[0_0_12px_rgba(14,165,233,0.35)] active:scale-98 transition-all cursor-pointer disabled:opacity-40"
-              >
-                <span>{accountChecking ? '⏳' : '🔍'}</span>
-                <span>{accountChecking ? 'Checking...' : 'Check Player Name'}</span>
-              </button>
-
-              {/* Action Button 2: Start Game (Proceed to Top Up) */}
-              <button
-                type="button"
-                onClick={handleStartGameAction}
-                className="w-full py-2 sm:py-3 rounded-full bg-gradient-to-r from-blue-600 via-sky-500 to-blue-600 hover:from-blue-500 hover:via-sky-400 hover:to-blue-500 text-white font-black text-xs xs:text-sm sm:text-base flex items-center justify-center gap-1.5 sm:gap-2 shadow-[0_0_20px_rgba(2,132,199,0.7)] active:scale-98 transition-all cursor-pointer tracking-wide"
-              >
-                <span>▶</span>
-                <span>Start Game</span>
-              </button>
+                <button
+                  type="button"
+                  onClick={handleStartGameAction}
+                  className="group/sg relative w-full h-10 sm:h-12 rounded-xl overflow-hidden bg-gradient-to-r from-blue-600 via-sky-500 to-cyan-400 text-white font-black text-xs sm:text-base flex items-center justify-center gap-2 shadow-[0_8px_24px_-6px_rgba(14,165,233,0.75)] hover:shadow-[0_10px_30px_-4px_rgba(34,211,238,0.85)] active:scale-[0.98] transition-all cursor-pointer tracking-wide"
+                >
+                  <span className="absolute inset-0 -translate-x-full group-hover/sg:translate-x-full transition-transform duration-700 bg-gradient-to-r from-transparent via-white/25 to-transparent" />
+                  <svg className="relative w-3.5 h-3.5 sm:w-4 sm:h-4" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z" /></svg>
+                  <span className="relative">Start Game</span>
+                </button>
+              </div>
 
             </div>
           </div>
