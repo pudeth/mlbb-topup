@@ -13,7 +13,6 @@ const EventBannerSlider = ({ className = '' }) => {
   const [banners, setBanners] = useState(() => getStoredBanners());
   const [currentIndex, setCurrentIndex] = useState(0);
   const [isPaused, setIsPaused] = useState(false);
-  const [isHovered, setIsHovered] = useState(false);
   const touchStartXRef = useRef(0);
   const touchEndXRef = useRef(0);
 
@@ -80,7 +79,6 @@ const EventBannerSlider = ({ className = '' }) => {
   // Touch Swipe Handlers for Mobile
   const handleTouchStart = (e) => {
     touchStartXRef.current = e.targetTouches[0].clientX;
-    setIsHovered((prev) => !prev);
   };
 
   const handleTouchMove = (e) => {
@@ -106,14 +104,8 @@ const EventBannerSlider = ({ className = '' }) => {
   return (
     <div
       className={`relative w-full overflow-hidden rounded-2xl sm:rounded-3xl border border-slate-800/80 bg-slate-950 group select-none transition-all duration-300 cursor-pointer shadow-2xl ${className}`}
-      onMouseEnter={() => {
-        setIsPaused(true);
-        setIsHovered(true);
-      }}
-      onMouseLeave={() => {
-        setIsPaused(false);
-        setIsHovered(false);
-      }}
+      onMouseEnter={() => setIsPaused(true)}
+      onMouseLeave={() => setIsPaused(false)}
       onTouchStart={handleTouchStart}
       onTouchMove={handleTouchMove}
       onTouchEnd={handleTouchEnd}
@@ -145,30 +137,24 @@ const EventBannerSlider = ({ className = '' }) => {
                 />
               </div>
 
-              {/* Clean Cinematic Contrast Gradient - 100% hidden by default so image is clean, smoothly reveals on hover */}
+              {/* Cinematic Contrast Gradient */}
               <div
-                className={`absolute inset-0 bg-gradient-to-r from-slate-950/90 via-slate-950/65 to-transparent transition-opacity duration-400 ease-out pointer-events-none ${
-                  isHovered ? 'opacity-100' : 'opacity-0'
-                } group-hover:opacity-100`}
+                className="absolute inset-0 bg-gradient-to-r from-[#070b18]/90 via-[#070b18]/50 to-transparent pointer-events-none"
               />
               <div
-                className={`absolute inset-0 bg-gradient-to-t from-slate-950/85 via-transparent to-black/30 transition-opacity duration-400 ease-out pointer-events-none ${
-                  isHovered ? 'opacity-100' : 'opacity-0'
-                } group-hover:opacity-100`}
+                className="absolute inset-0 bg-gradient-to-t from-[#060a14]/90 via-transparent to-black/30 pointer-events-none"
               />
             </div>
           );
         })}
 
-        {/* Content Overlay - All text and badges hidden by default, smoothly animated on hover */}
+        {/* Content Overlay */}
         <div className="absolute inset-0 z-20 flex flex-col justify-between p-4 sm:p-6 md:p-8 pointer-events-none">
           
           {/* Top Header / Badges */}
           <div 
             key={`badge-${currentIndex}`}
-            className={`flex items-center justify-between gap-2 pointer-events-auto transition-all duration-300 ease-out ${
-              isHovered ? 'opacity-100 translate-y-0' : 'opacity-0 -translate-y-3'
-            } group-hover:opacity-100 group-hover:translate-y-0`}
+            className="flex items-center justify-between gap-2 pointer-events-auto"
           >
             <div className="flex items-center gap-2">
               <span className={`px-2.5 py-1 rounded-lg text-[10px] sm:text-xs font-black tracking-wider uppercase shadow-md ${currentBanner.badgeColor || 'bg-amber-400 text-slate-950'}`}>
@@ -189,15 +175,13 @@ const EventBannerSlider = ({ className = '' }) => {
           {/* Center / Typography Area */}
           <div 
             key={`text-${currentIndex}`}
-            className={`space-y-1 sm:space-y-2 max-w-xl pointer-events-auto font-khmer transition-all duration-300 ease-out ${
-              isHovered ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'
-            } group-hover:opacity-100 group-hover:translate-y-0`}
+            className="space-y-1 sm:space-y-2 max-w-xl pointer-events-auto font-khmer my-auto"
           >
-            <h3 className="text-base sm:text-2xl md:text-3xl font-black text-white tracking-tight leading-tight line-clamp-1 drop-shadow-xl">
+            <h3 className="text-xl sm:text-3xl md:text-4xl font-black text-white tracking-tight leading-tight line-clamp-2 drop-shadow-[0_2px_12px_rgba(0,0,0,0.8)]">
               {currentBanner.title}
             </h3>
             {currentBanner.subtitle && (
-              <p className="text-xs sm:text-sm text-slate-200 font-medium leading-relaxed line-clamp-2 max-w-lg drop-shadow-md">
+              <p className="text-xs sm:text-sm text-sky-200/90 font-medium leading-relaxed line-clamp-2 max-w-lg drop-shadow-md">
                 {currentBanner.subtitle}
               </p>
             )}
@@ -212,18 +196,17 @@ const EventBannerSlider = ({ className = '' }) => {
                 e.stopPropagation();
                 navigate(currentBanner.link || `/topup?game=${currentBanner.gameId || 'mlbb'}`);
               }}
-              className={`py-2 px-4 sm:py-2.5 sm:px-5 rounded-xl bg-gradient-to-r from-amber-400 to-yellow-300 hover:from-amber-300 hover:to-yellow-200 text-slate-950 text-xs sm:text-sm font-black tracking-wide transition-all duration-300 cursor-pointer flex items-center gap-2 shadow-lg shadow-amber-500/25 active:scale-95 group/btn ${
-                isHovered ? 'opacity-100 translate-y-0 pointer-events-auto' : 'opacity-0 translate-y-3 pointer-events-none'
-              } group-hover:opacity-100 group-hover:translate-y-0 group-hover:pointer-events-auto`}
+              className="py-2 px-4 sm:py-2.5 sm:px-5 rounded-full bg-gradient-to-r from-amber-400 via-amber-300 to-yellow-400 hover:from-amber-300 hover:to-yellow-300 text-slate-950 text-xs sm:text-sm font-black tracking-wide transition-all duration-300 cursor-pointer flex items-center gap-2 shadow-[0_4px_20px_rgba(251,191,36,0.4)] active:scale-95 group/btn"
             >
-              <span>{currentBanner.buttonText || 'Top Up Now'}</span>
+              <span>🎮</span>
+              <span>{currentBanner.buttonText || 'ចូលលេងឥឡូវនេះ'}</span>
               <svg className="w-4 h-4 shrink-0 transition-transform duration-200 group-hover/btn:translate-x-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M9 5l7 7-7 7" />
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M14 5l7 7m0 0l-7 7m7-7H3" />
               </svg>
             </button>
 
-            {/* Indicator Dots - subtle and clean at bottom right */}
-            <div className="flex items-center gap-1.5 sm:gap-2 bg-slate-950/50 backdrop-blur-md px-2.5 py-1.5 rounded-full border border-slate-800/70 shadow-lg ml-auto opacity-75 group-hover:opacity-100 transition-opacity duration-300">
+            {/* Indicator Dots - centered at bottom */}
+            <div className="flex items-center gap-1.5 sm:gap-2 bg-slate-950/60 backdrop-blur-md px-3 py-1.5 rounded-full border border-slate-800/80 shadow-lg mx-auto">
               {banners.map((_, idx) => (
                 <button
                   key={idx}
@@ -249,9 +232,7 @@ const EventBannerSlider = ({ className = '' }) => {
           <button
             type="button"
             onClick={handlePrev}
-            className={`absolute left-2.5 sm:left-4 top-1/2 -translate-y-1/2 z-30 w-8 h-8 sm:w-10 sm:h-10 rounded-full bg-slate-950/75 hover:bg-amber-400 text-white hover:text-slate-950 border border-slate-700/80 hover:border-amber-300 shadow-2xl backdrop-blur-md flex items-center justify-center transition-all duration-300 active:scale-90 cursor-pointer ${
-              isHovered ? 'opacity-100' : 'opacity-0'
-            } group-hover:opacity-100 hover:scale-110`}
+            className="absolute left-2.5 sm:left-4 top-1/2 -translate-y-1/2 z-30 w-8 h-8 sm:w-10 sm:h-10 rounded-full bg-slate-950/75 hover:bg-amber-400 text-white hover:text-slate-950 border border-slate-700/80 hover:border-amber-300 shadow-2xl backdrop-blur-md flex items-center justify-center transition-all duration-300 active:scale-90 cursor-pointer hover:scale-110 opacity-80 hover:opacity-100"
             aria-label="Previous slide"
           >
             <svg className="w-4 h-4 sm:w-5 sm:h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -265,9 +246,7 @@ const EventBannerSlider = ({ className = '' }) => {
           <button
             type="button"
             onClick={handleNext}
-            className={`absolute right-2.5 sm:right-4 top-1/2 -translate-y-1/2 z-30 w-8 h-8 sm:w-10 sm:h-10 rounded-full bg-slate-950/75 hover:bg-amber-400 text-white hover:text-slate-950 border border-slate-700/80 hover:border-amber-300 shadow-2xl backdrop-blur-md flex items-center justify-center transition-all duration-300 active:scale-90 cursor-pointer ${
-              isHovered ? 'opacity-100' : 'opacity-0'
-            } group-hover:opacity-100 hover:scale-110`}
+            className="absolute right-2.5 sm:right-4 top-1/2 -translate-y-1/2 z-30 w-8 h-8 sm:w-10 sm:h-10 rounded-full bg-slate-950/75 hover:bg-amber-400 text-white hover:text-slate-950 border border-slate-700/80 hover:border-amber-300 shadow-2xl backdrop-blur-md flex items-center justify-center transition-all duration-300 active:scale-90 cursor-pointer hover:scale-110 opacity-80 hover:opacity-100"
             aria-label="Next slide"
           >
             <svg className="w-4 h-4 sm:w-5 sm:h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">

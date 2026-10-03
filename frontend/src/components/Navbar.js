@@ -66,121 +66,47 @@ const Navbar = () => {
           <div className="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 relative z-20">
             <div className="flex items-center justify-between h-20">
           
-          {/* Logo */}
-          <div className="flex items-center gap-3">
-            <Link to="/" className="group flex items-center">
-              <BrandLogo branding={branding} size="md" showSubtitle={true} />
-            </Link>
-          </div>
-
-          {/* Desktop Navigation Links - Modern Cyber Gaming Pill */}
-          <nav className="hidden lg:flex items-center gap-1 bg-[#090d18]/90 backdrop-blur-2xl p-1.5 rounded-2xl border border-slate-800/80 shadow-[0_4px_30px_rgba(0,0,0,0.5)] font-khmer select-none">
-            {/* Home */}
-            <Link
-              to="/"
-              className={`px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all duration-200 flex items-center gap-2 whitespace-nowrap ${
-                isActive('/')
-                  ? 'bg-sky-500/15 text-sky-300 border border-sky-400/30 shadow-[0_0_12px_rgba(56,189,248,0.25)]'
-                  : 'text-slate-400 hover:text-white hover:bg-slate-800/60 border border-transparent'
-              }`}
-            >
-              <svg className={`w-3.5 h-3.5 shrink-0 ${isActive('/') ? 'text-sky-400' : 'text-slate-400'}`} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                <path strokeLinecap="round" strokeLinejoin="round" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
-              </svg>
-              <span>{t('nav_home')}</span>
-            </Link>
-
-            {/* Top Up Diamonds */}
-            <Link
-              to="/topup"
-              className={`px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all duration-200 flex items-center gap-2 whitespace-nowrap ${
-                isActive('/topup') && !location.search.includes('pass')
-                  ? 'bg-amber-400/15 text-amber-300 border border-amber-400/30 shadow-[0_0_12px_rgba(251,191,36,0.25)]'
-                  : 'text-slate-400 hover:text-white hover:bg-slate-800/60 border border-transparent'
-              }`}
-            >
-              <svg className={`w-3.5 h-3.5 shrink-0 ${isActive('/topup') && !location.search.includes('pass') ? 'text-amber-400' : 'text-amber-400/80'}`} viewBox="0 0 24 24" fill="currentColor">
-                <path d="M6 3h12l5 7-11 11L1 10l5-7z" />
-              </svg>
-              <span>{t('nav_topup')}</span>
-            </Link>
-
-            {/* Support */}
-            <Link
-              to="/support"
-              className={`px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all duration-200 flex items-center gap-2 whitespace-nowrap ${
-                isActive('/support')
-                  ? 'bg-purple-500/15 text-purple-300 border border-purple-400/30 shadow-[0_0_12px_rgba(168,85,247,0.25)]'
-                  : 'text-slate-400 hover:text-white hover:bg-slate-800/60 border border-transparent'
-              }`}
-            >
-              <svg className={`w-3.5 h-3.5 shrink-0 ${isActive('/support') ? 'text-purple-400' : 'text-slate-400'}`} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                <path strokeLinecap="round" strokeLinejoin="round" d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 100-6 3 3 0 000 6z" />
-              </svg>
-              <span>{t('nav_support')}</span>
-            </Link>
-
-            {/* Policy */}
-            <Link
-              to="/terms"
-              className={`px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all duration-200 flex items-center gap-2 whitespace-nowrap ${
-                isActive('/terms') || isActive('/privacy')
-                  ? 'bg-emerald-500/15 text-emerald-300 border border-emerald-400/30 shadow-[0_0_12px_rgba(16,185,129,0.25)]'
-                  : 'text-slate-400 hover:text-white hover:bg-slate-800/60 border border-transparent'
-              }`}
-            >
-              <svg className={`w-3.5 h-3.5 shrink-0 ${isActive('/terms') || isActive('/privacy') ? 'text-emerald-400' : 'text-slate-400'}`} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                <path strokeLinecap="round" strokeLinejoin="round" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
-              </svg>
-              <span>{t('nav_policy')}</span>
-            </Link>
-
-            {isAdmin() && (
-              <>
-                <div className="w-px h-4 bg-slate-700/60 mx-1" />
-                <Link
-                  to="/admin/setup"
-                  className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all duration-200 flex items-center gap-1.5 whitespace-nowrap ${
-                    isActive('/admin/setup')
-                      ? 'bg-purple-900/40 text-purple-300 border border-purple-500/30'
-                      : 'text-slate-500 hover:text-purple-300 hover:bg-slate-800/50 border border-transparent'
-                  }`}
-                >
-                  <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                  </svg>
-                  <span>{t('nav_admin')}</span>
+              {/* Logo (Visible on mobile & tablet, hidden on desktop since it is in DesktopSidebar) */}
+              <div className="flex items-center gap-3 lg:hidden">
+                <Link to="/" className="group flex items-center">
+                  <BrandLogo branding={branding} size="md" showSubtitle={true} />
                 </Link>
-                <Link
-                  to="/admin/orders"
-                  className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all duration-200 flex items-center gap-1.5 whitespace-nowrap ${
-                    isActive('/admin/orders')
-                      ? 'bg-purple-900/40 text-purple-300 border border-purple-500/30'
-                      : 'text-slate-500 hover:text-purple-300 hover:bg-slate-800/50 border border-transparent'
-                  }`}
-                >
-                  <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
-                  </svg>
-                  <span>{t('nav_orders')}</span>
-                </Link>
-              </>
-            )}
-          </nav>
+              </div>
+
+              {/* Desktop Central Search Bar matching screenshot */}
+              <div className="hidden lg:flex items-center flex-1 max-w-xl mx-4 font-khmer">
+                <div className="relative w-full">
+                  <input
+                    type="text"
+                    placeholder={language === 'km' ? 'ស្វែងរកហ្គេម ឬប្រភេទ...' : 'Search games or categories...'}
+                    className="w-full bg-[#0b101e] border border-slate-700/80 rounded-full pl-10 pr-4 py-2 text-xs text-white placeholder-slate-400 focus:outline-none focus:border-sky-500 focus:ring-1 focus:ring-sky-500 transition-all shadow-inner"
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter') {
+                        const el = document.getElementById('games-section');
+                        if (el) el.scrollIntoView({ behavior: 'smooth' });
+                      }
+                    }}
+                  />
+                  <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 text-xs">
+                    🔍
+                  </span>
+                </div>
+              </div>
 
           {/* Right: Actions */}
           <div className="flex items-center gap-2 select-none">
-            {/* Refresh Button */}
+            {/* Notification Bell with Red Badge 1 */}
             <button
               type="button"
-              onClick={() => window.location.reload()}
-              title="Refresh Page"
-              className="h-10 w-10 rounded-xl bg-slate-900/80 hover:bg-slate-800 border border-slate-800 hover:border-slate-700 text-slate-400 hover:text-sky-300 flex items-center justify-center transition-all duration-300 active:scale-95 group shadow-sm"
+              title="Notifications"
+              className="relative h-10 w-10 rounded-xl bg-slate-900/80 hover:bg-slate-800 border border-slate-800 hover:border-slate-700 text-slate-300 hover:text-white flex items-center justify-center transition-all duration-200 active:scale-95 shadow-sm cursor-pointer"
             >
-              <svg className="w-4 h-4 transition-transform duration-500 group-hover:rotate-180" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                <path strokeLinecap="round" strokeLinejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+              <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
               </svg>
+              <span className="absolute -top-1 -right-1 w-4 h-4 rounded-full bg-rose-500 text-white font-black text-[9px] flex items-center justify-center shadow-md">
+                1
+              </span>
             </button>
 
             {/* Language Selector Dropdown */}
@@ -277,7 +203,6 @@ const Navbar = () => {
                       })}
                     </div>
 
-                    {/* Subtle Footer */}
                     <div className="mt-1.5 pt-1.5 border-t border-slate-800/80 px-2 py-0.5 flex items-center justify-between text-[10px] text-slate-400 font-medium">
                       <span>⚡ Instant Switch</span>
                       <span className="text-emerald-400 flex items-center gap-1 font-semibold">
@@ -291,6 +216,24 @@ const Navbar = () => {
               )}
             </div>
 
+            {/* ABA PayWay Badge matching desktop screenshot */}
+              <div className="hidden sm:inline-flex items-center gap-1.5 h-10 px-3.5 rounded-xl bg-[#0a1426] border border-sky-500/40 text-sky-300 text-xs font-bold shadow-sm select-none">
+                <span className="text-xs">🏛️</span>
+                <span className="font-black text-[11px] tracking-tight">ABA PayWay</span>
+              </div>
+
+              {/* User Profile Avatar with Glowing Cyan/Blue Ring */}
+              <Link
+                to={isAuthenticated() ? (isAdmin() ? '/admin' : '/order-history') : '/login'}
+                className="relative w-10 h-10 rounded-full p-0.5 bg-gradient-to-tr from-cyan-400 via-blue-500 to-indigo-600 shrink-0 shadow-[0_0_12px_rgba(56,189,248,0.35)] hover:scale-105 transition-transform"
+                title={isAuthenticated() ? (user?.name || user?.email) : 'Login'}
+              >
+                <img
+                  src="https://images.unsplash.com/photo-1566492031773-4f4e44671857?w=100&auto=format&fit=crop&q=80"
+                  alt="User Profile"
+                  className="w-full h-full object-cover rounded-full"
+                />
+              </Link>
 
             {/* Logout Button */}
             {isAuthenticated() && (

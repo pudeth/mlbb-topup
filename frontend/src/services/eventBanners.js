@@ -3,6 +3,20 @@
 
 export const DEFAULT_EVENT_BANNERS = [
   {
+    id: 'banner-starlight-hero',
+    tag: '⚡ SPECIAL EVENT',
+    title: 'បម្រឹកទ្រើយជេដ្ឋី ឲ្យត្រែហាត់គង់យ!',
+    subtitle: 'វណ្ណកម្មកម្រិតកំពូលផ្តល់ជូនពិសេសរាល់ថ្ងៃ!',
+    image: '/images/banner_starlight_cosmic.jpg',
+    localFallbackImage: '/images/banner_starlight_cosmic.jpg',
+    gameId: 'mlbb',
+    buttonText: 'ចូលលេងឥឡូវនេះ',
+    link: '/topup',
+    badgeColor: 'bg-amber-400 text-slate-950',
+    status: 'Active',
+    order: 0
+  },
+  {
     id: 'banner-1',
     tag: '🔥 ALLSTAR 2026 EVENT',
     title: 'Mobile Legends 515 ALLSTAR Special',
