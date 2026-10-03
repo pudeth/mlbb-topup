@@ -78,6 +78,8 @@ public class AdminController : BaseController
         return Ok(new { success = true, branding = _storeBranding });
     }
 
+    private static readonly string _gamesFilePath = System.IO.Path.Combine(AppContext.BaseDirectory, "games_config.json");
+    private static readonly string _bannersFilePath = System.IO.Path.Combine(AppContext.BaseDirectory, "banners_config.json");
     private static object? _gamesConfig = null;
     private static object _masterTopupStatus = new
     {
@@ -94,7 +96,26 @@ public class AdminController : BaseController
     [AllowAnonymous]
     public IActionResult GetGames()
     {
-        return Ok(new { success = true, games = _gamesConfig });
+        if (_gamesConfig == null && System.IO.File.Exists(_gamesFilePath))
+        {
+            try
+            {
+                var json = System.IO.File.ReadAllText(_gamesFilePath);
+                _gamesConfig = System.Text.Json.JsonSerializer.Deserialize<object>(json);
+            }
+            catch {}
+        }
+
+        object? result = _gamesConfig;
+        if (result is System.Text.Json.JsonElement element)
+        {
+            if (element.ValueKind == System.Text.Json.JsonValueKind.Object && element.TryGetProperty("games", out var gamesProp))
+            {
+                result = gamesProp;
+            }
+        }
+
+        return Ok(new { success = true, games = result });
     }
 
     /// <summary>
@@ -110,8 +131,13 @@ public class AdminController : BaseController
         if (data != null)
         {
             _gamesConfig = data;
+            try
+            {
+                System.IO.File.WriteAllText(_gamesFilePath, System.Text.Json.JsonSerializer.Serialize(data));
+            }
+            catch {}
         }
-        return Ok(new { success = true, games = _gamesConfig });
+        return GetGames();
     }
 
     private static object? _eventBannersConfig = null;
@@ -124,7 +150,26 @@ public class AdminController : BaseController
     [AllowAnonymous]
     public IActionResult GetBanners()
     {
-        return Ok(new { success = true, banners = _eventBannersConfig });
+        if (_eventBannersConfig == null && System.IO.File.Exists(_bannersFilePath))
+        {
+            try
+            {
+                var json = System.IO.File.ReadAllText(_bannersFilePath);
+                _eventBannersConfig = System.Text.Json.JsonSerializer.Deserialize<object>(json);
+            }
+            catch {}
+        }
+
+        object? result = _eventBannersConfig;
+        if (result is System.Text.Json.JsonElement element)
+        {
+            if (element.ValueKind == System.Text.Json.JsonValueKind.Object && element.TryGetProperty("banners", out var bannersProp))
+            {
+                result = bannersProp;
+            }
+        }
+
+        return Ok(new { success = true, banners = result });
     }
 
     /// <summary>
@@ -140,8 +185,13 @@ public class AdminController : BaseController
         if (data != null)
         {
             _eventBannersConfig = data;
+            try
+            {
+                System.IO.File.WriteAllText(_bannersFilePath, System.Text.Json.JsonSerializer.Serialize(data));
+            }
+            catch {}
         }
-        return Ok(new { success = true, banners = _eventBannersConfig });
+        return GetBanners();
     }
 
     /// <summary>

@@ -10,14 +10,14 @@ export const DEFAULT_GAMES = [
     category: 'Service top-up',
     providerCategory: 'Service top-up',
     currency: 'Diamonds',
-    image: 'https://images.unsplash.com/photo-1542751371-adc38448a05e?w=500&auto=format&fit=crop&q=80',
-    localFallbackImage: '/mlbb-logo.png',
+    image: 'https://res.cloudinary.com/dpz7vpmf8/image/upload/v1790944937/logo-game/srnteatj2ns0e2dswfwq.webp',
+    localFallbackImage: '/images/freefire-banner.webp',
     badge: 'SEVER ខ្មែរ 🇰🇭',
     badgeColor: 'cyan',
     rating: '4.9 ⭐',
     deliveryTime: '10 - 30s',
     route: '/topup?game=freefire',
-    status: 'Active',
+    status: 'Paused',
     isPopular: true,
     description: 'Direct Garena Free Fire Cambodia server UID top-up with automated level-up pass.'
   },
@@ -58,7 +58,7 @@ export const DEFAULT_GAMES = [
     rating: '4.9 ⭐',
     deliveryTime: 'Instant 10s',
     route: '/topup?game=mlbb&tab=pass',
-    status: 'Active',
+    status: 'Paused',
     isPopular: true,
     description: 'MLBB 515 ALLSTAR & Jujutsu Kaisen 29 Tickets Vouchers & Pre-Orders.'
   },
@@ -76,7 +76,7 @@ export const DEFAULT_GAMES = [
     rating: '5.0 ⭐',
     deliveryTime: '10 - 30s',
     route: '/topup?game=mlbb&tab=pass',
-    status: 'Active',
+    status: 'Closed',
     isPopular: true,
     description: 'Level Up Pass and Super Value Diamond Growth Bundles.'
   },
@@ -99,7 +99,7 @@ export const DEFAULT_GAMES = [
     rating: '4.9 ⭐',
     deliveryTime: '10 - 30s',
     route: '/topup?game=mlbb_ph',
-    status: 'Active',
+    status: 'Closed',
     isPopular: true,
     description: 'Mobile Legends Philippines Region Server UID Top-Up.'
   },
@@ -117,7 +117,7 @@ export const DEFAULT_GAMES = [
     rating: '4.8 ⭐',
     deliveryTime: '10 - 30s',
     route: '/topup?game=magic_chess',
-    status: 'Active',
+    status: 'Closed',
     isPopular: true,
     description: 'Magic Chess Go Go Little Commander Skins and Battle Pass.'
   },
@@ -140,7 +140,7 @@ export const DEFAULT_GAMES = [
     rating: '4.9 ⭐',
     deliveryTime: '10 - 30s',
     route: '/topup?game=mlbb_id',
-    status: 'Active',
+    status: 'Closed',
     isPopular: true,
     description: 'Mobile Legends Indonesia Region Server Direct UID Top-Up.'
   },
@@ -151,13 +151,14 @@ export const DEFAULT_GAMES = [
     category: 'Service top-up',
     providerCategory: 'Service top-up',
     currency: 'Unknown Cash (UC)',
-    image: 'https://images.unsplash.com/photo-1511512578047-dfb367046420?w=500&auto=format&fit=crop&q=80',
+    image: 'https://res.cloudinary.com/dpz7vpmf8/image/upload/v1790944800/logo-game/ovdfdmru7jnhmwjvy6vy.jpg',
+    localFallbackImage: '/images/pubgm-banner.jpg',
     badge: 'GLOBAL UC ⚡',
     badgeColor: 'emerald',
     rating: '4.9 ⭐',
     deliveryTime: '10s - 1m',
     route: '/topup?game=pubgm',
-    status: 'Active',
+    status: 'Closed',
     isPopular: true,
     description: 'Automated PUBG Mobile Global Unknown Cash (UC) and Royale Pass vouchers.'
   },
@@ -174,7 +175,7 @@ export const DEFAULT_GAMES = [
     rating: '4.9 ⭐',
     deliveryTime: '10 - 30s',
     route: '/topup?game=blood_strike',
-    status: 'Active',
+    status: 'Closed',
     isPopular: true,
     description: 'NetEase Blood Strike Global Gold recharge and Strike Pass unlock.'
   },
@@ -185,13 +186,14 @@ export const DEFAULT_GAMES = [
     category: 'Service top-up',
     providerCategory: 'Service top-up',
     currency: 'Diamonds',
-    image: 'https://images.unsplash.com/photo-1542751371-adc38448a05e?w=500&auto=format&fit=crop&q=80',
+    image: 'https://res.cloudinary.com/dpz7vpmf8/image/upload/v1790944937/logo-game/srnteatj2ns0e2dswfwq.webp',
+    localFallbackImage: '/images/freefire-banner.webp',
     badge: 'MENA',
     badgeColor: 'cyan',
     rating: '4.8 ⭐',
     deliveryTime: '10 - 30s',
     route: '/topup?game=freefire_mena',
-    status: 'Active',
+    status: 'Closed',
     isPopular: false,
     description: 'Instant Free Fire diamonds for Middle East & North Africa accounts.'
   },
@@ -202,13 +204,14 @@ export const DEFAULT_GAMES = [
     category: 'Service top-up',
     providerCategory: 'Service top-up',
     currency: 'Diamonds',
-    image: 'https://images.unsplash.com/photo-1542751371-adc38448a05e?w=500&auto=format&fit=crop&q=80',
+    image: 'https://res.cloudinary.com/dpz7vpmf8/image/upload/v1790944937/logo-game/srnteatj2ns0e2dswfwq.webp',
+    localFallbackImage: '/images/freefire-banner.webp',
     badge: 'LATAM',
     badgeColor: 'cyan',
     rating: '4.8 ⭐',
     deliveryTime: '10 - 30s',
     route: '/topup?game=freefire_latam',
-    status: 'Active',
+    status: 'Closed',
     isPopular: false,
     description: 'Instant Free Fire diamonds for Latin America region accounts.'
   },
@@ -225,7 +228,7 @@ export const DEFAULT_GAMES = [
     rating: '4.9 ⭐',
     deliveryTime: 'Instant - 1m',
     route: '/topup?game=wuthering_waves',
-    status: 'Active',
+    status: 'Closed',
     isPopular: true,
     description: 'Direct Kuro Games UID recharge for Lunite and Lunite Subscription pass.'
   },
@@ -464,7 +467,8 @@ export const DEFAULT_GAMES = [
   }
 ];
 
-const STORAGE_KEY = 'mlbb_topup_custom_games_v5';
+const STORAGE_KEY = 'mlbb_topup_custom_games_v6';
+const LEGACY_STORAGE_KEY = 'mlbb_topup_custom_games_v5';
 
 const getApiUrls = () => {
   const isLocal = typeof window !== 'undefined' && (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1');
@@ -529,22 +533,54 @@ export const normalizeGameFlags = (game) => {
     clone.flagFrameStyle = 'gold_cyber';
   }
 
+  // 4. Automatic upgrade for game artwork from legacy Unsplash to official game logos across all mobile & desktop clients
+  const isFreeFire = (clone.id && clone.id.toLowerCase().includes('freefire')) || (clone.name && clone.name.toLowerCase().includes('free fire'));
+  const isPubg = (clone.id && clone.id.toLowerCase().includes('pubg')) || (clone.name && clone.name.toLowerCase().includes('pubg'));
+
+  if (isFreeFire) {
+    if (!clone.image || clone.image.includes('1542751371-adc38448a05e') || clone.image.includes('unsplash.com')) {
+      clone.image = 'https://res.cloudinary.com/dpz7vpmf8/image/upload/v1790944937/logo-game/srnteatj2ns0e2dswfwq.webp';
+    }
+    if (!clone.localFallbackImage || clone.localFallbackImage === '/mlbb-logo.png') {
+      clone.localFallbackImage = '/images/freefire-banner.webp';
+    }
+  } else if (isPubg) {
+    if (!clone.image || clone.image.includes('1511512578047-dfb367046420') || clone.image.includes('unsplash.com')) {
+      clone.image = 'https://res.cloudinary.com/dpz7vpmf8/image/upload/v1790944800/logo-game/ovdfdmru7jnhmwjvy6vy.jpg';
+    }
+    if (!clone.localFallbackImage || clone.localFallbackImage === '/mlbb-logo.png') {
+      clone.localFallbackImage = '/images/pubgm-banner.jpg';
+    }
+  }
+
   return clone;
 };
 
 export const getStoredGames = () => {
   try {
-    const cached = localStorage.getItem(STORAGE_KEY);
+    let cached = localStorage.getItem(STORAGE_KEY);
+    if (!cached) {
+      cached = localStorage.getItem(LEGACY_STORAGE_KEY);
+    }
     if (cached) {
       const parsed = JSON.parse(cached);
       if (Array.isArray(parsed) && parsed.length > 0) {
-        return parsed.map(g => normalizeGameFlags(g));
+        const normalized = parsed.map(g => normalizeGameFlags(g));
+        // Keep storage key synchronized with clean assets
+        try {
+          localStorage.setItem(STORAGE_KEY, JSON.stringify(normalized));
+        } catch (e) {}
+        return normalized;
       }
     }
   } catch (err) {
     console.warn('Error reading stored games:', err);
   }
-  return DEFAULT_GAMES.map(g => normalizeGameFlags(g));
+  const defaultNormalized = DEFAULT_GAMES.map(g => normalizeGameFlags(g));
+  try {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(defaultNormalized));
+  } catch (e) {}
+  return defaultNormalized;
 };
 
 export const fetchStoredGames = async () => {
@@ -554,8 +590,12 @@ export const fetchStoredGames = async () => {
       const res = await fetch(`${base}/games?_t=${Date.now()}`);
       if (res.ok) {
         const data = await res.json();
-        if (data?.success && Array.isArray(data.games) && data.games.length > 0) {
-          const normalized = data.games.map(g => normalizeGameFlags(g));
+        const rawGames = Array.isArray(data?.games)
+          ? data.games
+          : (Array.isArray(data?.games?.games) ? data.games.games : null);
+
+        if (rawGames && rawGames.length > 0) {
+          const normalized = rawGames.map(g => normalizeGameFlags(g));
           localStorage.setItem(STORAGE_KEY, JSON.stringify(normalized));
           if (typeof window !== 'undefined') {
             window.dispatchEvent(new Event('gamesConfigUpdated'));
@@ -570,15 +610,19 @@ export const fetchStoredGames = async () => {
 
 export const saveStoredGames = async (games) => {
   try {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(games));
-    // Immediately broadcast to all MongoDB Atlas API backends
+    const normalized = games.map(g => normalizeGameFlags(g));
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(normalized));
+    if (typeof window !== 'undefined') {
+      window.dispatchEvent(new Event('gamesConfigUpdated'));
+    }
+    // Broadcast to backend APIs
     const urls = getApiUrls();
     await Promise.allSettled(
       urls.map((base) =>
         fetch(`${base}/games`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ games }),
+          body: JSON.stringify({ games: normalized, list: normalized }),
         })
       )
     );
