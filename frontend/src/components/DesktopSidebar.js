@@ -1,6 +1,7 @@
 import React from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { useLanguage } from '../context/LanguageContext';
+import { BrandLogo } from './BrandLogo';
 
 const DesktopSidebar = () => {
   const location = useLocation();
@@ -99,36 +100,8 @@ const DesktopSidebar = () => {
     <aside className="hidden lg:flex fixed left-0 top-0 bottom-0 w-60 xl:w-64 bg-[#080d1a]/95 backdrop-blur-2xl border-r border-slate-800/80 z-40 flex-col justify-between p-3.5 select-none overflow-y-auto scrollbar-none font-khmer">
       {/* Top Brand Logo Section */}
       <div className="space-y-4">
-        <Link to="/" className="flex items-center gap-3 px-2 py-1.5 rounded-2xl hover:bg-slate-800/40 transition-all group">
-          <div className="relative w-11 h-11 rounded-2xl p-0.5 bg-gradient-to-tr from-cyan-400 via-blue-500 to-amber-400 shadow-[0_0_15px_rgba(56,189,248,0.4)] shrink-0 group-hover:scale-105 transition-transform">
-            <img
-              src="https://res.cloudinary.com/dpz7vpmf8/image/upload/v1790944800/logo-game/ovdfdmru7jnhmwjvy6vy.jpg"
-              alt="Tin-Topup PRO"
-              className="w-full h-full object-cover rounded-[14px]"
-              onError={(e) => {
-                e.target.src = '/mlbb-logo.png';
-              }}
-            />
-            <span className="absolute -bottom-1 -right-1 text-[8px] bg-amber-400 text-slate-950 font-black px-1.5 py-0.2 rounded-full shadow-sm">
-              PRO
-            </span>
-          </div>
-
-          <div className="min-w-0">
-            <div className="flex items-center gap-1.5">
-              <span className="font-black text-sm tracking-tight text-white group-hover:text-amber-300 transition-colors">
-                Tin-Topup
-              </span>
-              <span className="text-[9px] font-black px-1.5 py-0.5 rounded bg-sky-500/20 text-sky-400 border border-sky-500/30">
-                + PRO
-              </span>
-            </div>
-            <div className="mt-0.5">
-              <span className="inline-block text-[8px] font-black uppercase text-amber-300 bg-amber-500/10 border border-amber-500/25 px-1.5 py-0.5 rounded tracking-wider">
-                ENTERPRISE HUB v2.5
-              </span>
-            </div>
-          </div>
+        <Link to="/" className="flex items-center px-1 py-1 rounded-2xl hover:bg-slate-800/40 transition-all group">
+          <BrandLogo size="md" />
         </Link>
 
         {/* Navigation Menu List */}

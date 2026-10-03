@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { useLanguage } from '../context/LanguageContext';
+import { BrandLogo } from './BrandLogo';
 const Navbar = () => {
   const { user, logout, isAuthenticated, isAdmin } = useAuth();
   const { language, setLanguage, t } = useLanguage();
@@ -63,34 +64,9 @@ const Navbar = () => {
             <div className="flex items-center justify-between h-16 lg:h-20">
           
               {/* Logo (Visible on mobile & tablet, hidden on desktop since it is in DesktopSidebar) */}
-              <div className="flex items-center gap-2 lg:hidden select-none">
-                <Link to="/" className="flex items-center gap-2 group">
-                  <div className="relative w-8 h-8 sm:w-9 sm:h-9 rounded-xl p-0.5 bg-gradient-to-tr from-amber-400 via-sky-400 to-indigo-500 shadow-[0_0_12px_rgba(56,189,248,0.4)] shrink-0">
-                    <img
-                      src="/images/logo-real.png"
-                      alt="Tin-Topup"
-                      onError={(e) => {
-                        e.target.onerror = null;
-                        e.target.src = '/mlbb-logo.png';
-                      }}
-                      className="w-full h-full object-cover rounded-[10px]"
-                    />
-                  </div>
-                  <div className="flex flex-col leading-none">
-                    <div className="flex items-center gap-1">
-                      <span className="font-black text-xs sm:text-sm tracking-tight text-white">
-                        <span className="text-amber-400">Tin</span>-Topup
-                      </span>
-                      <span className="text-[7.5px] sm:text-[8px] font-black px-1.5 py-0.5 rounded bg-sky-500/20 text-sky-400 border border-sky-500/30">
-                        + PRO
-                      </span>
-                    </div>
-                    <div className="mt-0.5">
-                      <span className="inline-block text-[7px] sm:text-[7.5px] font-black uppercase text-amber-300 bg-amber-500/10 border border-amber-500/25 px-1.5 py-0.5 rounded tracking-wider">
-                        ENTERPRISE HUB v2.5
-                      </span>
-                    </div>
-                  </div>
+              <div className="flex items-center lg:hidden select-none">
+                <Link to="/" className="group flex items-center">
+                  <BrandLogo size="sm" />
                 </Link>
               </div>
 
