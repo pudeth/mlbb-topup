@@ -245,8 +245,16 @@ const GameSelection = () => {
       label: 'Telegram Stars',
       sub: '',
       renderIcon: (isActive) => (
-        <svg className={`w-5 h-5 sm:w-6 sm:h-6 ${isActive ? 'text-slate-950' : 'text-[#24A1DE]'} fill-current drop-shadow-[0_0_8px_rgba(36,161,222,0.6)] transition-transform group-hover:scale-110 -translate-x-[0.5px] translate-y-[0.5px]`} viewBox="0 0 24 24">
-          <path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z" />
+        <svg
+          className="w-6 h-6 transition-transform duration-200 group-hover:scale-110 drop-shadow-[0_0_8px_rgba(36,161,222,0.6)]"
+          viewBox="0 0 24 24"
+          fill="none"
+        >
+          <circle cx="12" cy="12" r="12" fill={isActive ? '#0f172a' : '#24A1DE'} />
+          <path
+            fill={isActive ? '#fbbf24' : '#ffffff'}
+            d="M5.4 12.06c3.42-1.49 5.7-2.47 6.84-2.95 3.26-1.36 3.94-1.6 4.38-1.6.1 0 .31.02.45.14.12.1.15.23.16.32 0 .07.02.28 0 .44-.22 2.32-1.17 7.9-1.65 10.49-.2 1.1-.61 1.47-1 1.5-.86.08-1.51-.57-2.34-1.12-1.3-.85-2.03-1.38-3.29-2.21-1.46-.96-.51-1.49.32-2.35.22-.23 3.98-3.65 4.05-3.96.01-.04.02-.19-.07-.27s-.22-.05-.32-.03c-.14.03-2.37 1.51-6.7 4.43-.63.44-1.21.65-1.72.64-.56-.01-1.65-.32-2.45-.58-1-.32-1.78-.49-1.71-1.04.04-.28.43-.57 1.17-.86z"
+          />
         </svg>
       )
     },
@@ -255,8 +263,18 @@ const GameSelection = () => {
       label: 'Steam',
       sub: '',
       renderIcon: (isActive) => (
-        <svg className={`w-5 h-5 sm:w-6 sm:h-6 ${isActive ? 'text-slate-950' : 'text-white'} fill-current drop-shadow-[0_0_6px_rgba(255,255,255,0.4)] transition-transform group-hover:scale-110`} viewBox="0 0 24 24">
-          <path fillRule="evenodd" d="M12 2a10 10 0 0 0-9.94 8.91l5.47 2.26a3.5 3.5 0 0 1 2.37-.92c.32 0 .63.05.93.13l2.84-4.13A4.75 4.75 0 0 1 18.25 13a4.75 4.75 0 0 1-4.75 4.75c-2.4 0-4.38-1.78-4.7-4.1l-4.1-1.69A10 10 0 1 0 12 2zm1.5 8.75a2.5 2.5 0 1 0 0 5 2.5 2.5 0 0 0 0-5zm-5.06 4.77a2 2 0 1 0 1.95.8l-1.95-.8z" clipRule="evenodd"/>
+        <svg
+          className="w-6 h-6 transition-transform duration-200 group-hover:scale-110 drop-shadow-[0_0_6px_rgba(255,255,255,0.3)]"
+          viewBox="0 0 24 24"
+          fill="none"
+        >
+          <circle cx="12" cy="12" r="12" fill={isActive ? '#0f172a' : '#171a21'} />
+          <path
+            fill={isActive ? '#fbbf24' : '#ffffff'}
+            fillRule="evenodd"
+            d="M12 2a10 10 0 0 0-9.94 8.91l5.47 2.26a3.5 3.5 0 0 1 2.37-.92c.32 0 .63.05.93.13l2.84-4.13A4.75 4.75 0 0 1 18.25 13a4.75 4.75 0 0 1-4.75 4.75c-2.4 0-4.38-1.78-4.7-4.1l-4.1-1.69A10 10 0 1 0 12 2zm1.5 8.75a2.5 2.5 0 1 0 0 5 2.5 2.5 0 0 0 0-5zm-5.06 4.77a2 2 0 1 0 1.95.8l-1.95-.8z"
+            clipRule="evenodd"
+          />
         </svg>
       )
     },
