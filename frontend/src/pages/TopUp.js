@@ -722,6 +722,7 @@ const TopUp = () => {
   const carouselContainerRef = useRef(null);
 
   // Unified smooth game selection (preserves window vertical scroll position)
+  // eslint-disable-next-line no-unused-vars
   const handleSelectGame = useCallback((game, e = null) => {
     if (!game || game.id === selectedGame.id) return;
 
@@ -1254,81 +1255,6 @@ const TopUp = () => {
 
   return (
     <div className="max-w-6xl mx-auto px-3 sm:px-6 py-6 animate-fadeIn pb-28">
-      {/* Top Game Switcher Carousel */}
-      <div className="mb-6 space-y-3">
-          <div className="flex items-center justify-between">
-            <span className="text-xs font-black uppercase tracking-widest text-slate-400 flex items-center gap-2 font-khmer">
-              <svg className="w-4 h-4 text-purple-400 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
-                <rect x="2" y="6" width="20" height="12" rx="4" />
-                <path d="M6 12h4m-2-2v4m7-2h.01m3-2h.01" />
-              </svg>
-              <span>{language === 'km' ? 'ជ្រើសរើសហ្គេម ឬសេវាកម្ម៖' : 'SELECT GAME OR SERVICE:'}</span>
-            </span>
-            <span className="text-[10px] text-amber-500/80 font-black uppercase tracking-wider bg-amber-500/10 px-2.5 py-1 rounded-full border border-amber-500/20 font-khmer">
-              {allGames.length} {language === 'km' ? 'ហ្គេម & សេវាកម្ម' : 'Upstream Titles Available'}
-            </span>
-          </div>
-  
-          {/* Smooth Touch Carousel with Momentum & Auto-Centering */}
-          <div
-            ref={carouselContainerRef}
-            className="flex items-center gap-2.5 sm:gap-3 overflow-x-auto pb-2.5 pt-1 px-1 scroll-smooth overscroll-x-contain touch-pan-x scrollbar-none select-none"
-            style={{ WebkitOverflowScrolling: 'touch' }}
-          >
-            {allGames.map((game) => {
-              const isSelected = selectedGame.id === game.id;
-              return (
-                <button
-                  key={game.id}
-                  type="button"
-                  onClick={(e) => handleSelectGame(game, e)}
-                  className={`flex items-center gap-2.5 p-1.5 pr-4 rounded-full border transition-all duration-200 shrink-0 cursor-pointer active:scale-95 ${
-                    isSelected
-                      ? 'bg-gradient-to-r from-[#291b52] via-[#1d143c] to-[#130d29] border-purple-400/90 text-white shadow-[0_0_22px_rgba(168,85,247,0.35),inset_0_1px_0_rgba(255,255,255,0.2)] scale-[1.02]'
-                      : 'bg-[#0f1424]/80 border-slate-800/80 text-slate-300 hover:bg-[#161d33] hover:border-slate-700/90 hover:text-white'
-                  }`}
-                >
-                  <div className={`relative w-9 h-9 rounded-full overflow-hidden shrink-0 transition-transform duration-200 ${
-                    isSelected
-                      ? 'ring-2 ring-purple-400 shadow-[0_0_12px_rgba(168,85,247,0.6)] scale-105'
-                      : 'border border-slate-700/60'
-                  }`}>
-                    <img
-                      src={game.image}
-                      alt={game.name}
-                      onError={(e) => {
-                        e.target.onerror = null;
-                        e.target.src = game.localFallbackImage || '/mlbb-logo.png';
-                      }}
-                      className="w-full h-full object-cover"
-                    />
-                    {isSelected && (
-                      <div className="absolute inset-0 bg-gradient-to-tr from-purple-500/25 via-transparent to-white/20 pointer-events-none" />
-                    )}
-                  </div>
-                  <div className="text-left">
-                    <div className="flex items-center gap-1.5">
-                      <span className={`text-[11px] font-black block truncate max-w-[125px] sm:max-w-[155px] uppercase tracking-wide transition-colors ${
-                        isSelected ? 'text-white drop-shadow-sm' : 'text-slate-200'
-                      }`}>
-                        {game.name}
-                      </span>
-                      {isSelected && (
-                        <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 shadow-[0_0_8px_rgba(52,211,153,0.9)] animate-pulse shrink-0" />
-                      )}
-                    </div>
-                    <span className={`text-[9px] block uppercase font-bold tracking-widest ${
-                      isSelected ? 'text-purple-300' : 'text-slate-400'
-                    }`}>
-                      {game.currency}
-                    </span>
-                  </div>
-                </button>
-              );
-            })}
-          </div>
-        </div>
-
       {/* Top-Up Paused / Closed Maintenance Notice Banner (Classic Fintech & Multilingual) */}
       {isTopupDisabled && (
         <div className={`relative overflow-hidden rounded-[22px] p-4 sm:p-5 mb-6 border backdrop-blur-xl shadow-2xl transition-all duration-300 select-none ${
