@@ -231,10 +231,10 @@ const Navbar = () => {
               </button>
             )}
 
-            {/* Mobile Hamburger / Close Button */}
+            {/* Mobile Hamburger / Close Button - Hidden to match clean mockup where bottom dock handles navigation */}
             <button
               type="button"
-              className={`lg:hidden h-10 w-10 flex items-center justify-center rounded-xl border transition-all duration-300 ${
+              className={`hidden h-10 w-10 items-center justify-center rounded-xl border transition-all duration-300 ${
                 mobileMenuOpen
                   ? 'bg-rose-950/40 border-rose-500/40 text-rose-300 rotate-90 shadow-sm'
                   : 'bg-slate-900/80 hover:bg-slate-800 border-slate-800 text-slate-300 hover:text-white'

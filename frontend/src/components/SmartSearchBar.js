@@ -332,121 +332,129 @@ export const SmartSearchBar = ({ isMobile = false, onFilterClick }) => {
       {/* SMART SEARCH RESULTS DROPDOWN OVERLAY                     */}
       {/* ========================================================= */}
       {isOpen && query.trim().length > 0 && (
-        <div className="absolute top-full left-0 right-0 mt-2 z-[250] bg-[#0b101c]/98 backdrop-blur-2xl border border-sky-500/50 rounded-2xl shadow-[0_20px_60px_rgba(0,0,0,0.95),0_0_30px_rgba(14,165,233,0.2)] ring-1 ring-white/10 overflow-hidden animate-fadeIn font-khmer select-none">
-          
-          {/* Dropdown Header */}
-          <div className="flex items-center justify-between px-3.5 py-2.5 border-b border-slate-800/90 bg-[#070c17]/80">
-            <div className="flex items-center gap-2">
-              <span className="text-xs">⚡</span>
-              <span className="text-[11px] font-black text-slate-300 uppercase tracking-wide">
-                {language === 'km' ? 'លទ្ធផលស្វែងរកហ្គេម' : 'Smart Game Results'}
+        <>
+          {/* Backdrop overlay to completely dim and block the background */}
+          <div
+            className="fixed inset-0 bg-black/80 backdrop-blur-xs z-[9998]"
+            onClick={() => setIsOpen(false)}
+          />
+
+          <div className="absolute top-full left-0 right-0 mt-2 z-[9999] bg-[#070c17] border border-sky-500/70 rounded-2xl shadow-[0_30px_90px_rgba(0,0,0,1)] ring-1 ring-white/10 overflow-hidden animate-fadeIn font-khmer select-none">
+            
+            {/* Dropdown Header */}
+            <div className="flex items-center justify-between px-3.5 py-2.5 border-b border-slate-800 bg-[#040810]">
+              <div className="flex items-center gap-2">
+                <span className="text-xs">⚡</span>
+                <span className="text-[11px] font-black text-slate-300 uppercase tracking-wide">
+                  {language === 'km' ? 'លទ្ធផលស្វែងរកហ្គេម' : 'Smart Game Results'}
+                </span>
+              </div>
+              <span className="text-[9.5px] font-bold px-2 py-0.5 rounded-full bg-sky-950 border border-sky-500/40 text-sky-300">
+                {matchedGames.length} {language === 'km' ? 'ហ្គេម' : 'Games'}
               </span>
             </div>
-            <span className="text-[9.5px] font-bold px-2 py-0.5 rounded-full bg-sky-950/80 border border-sky-500/40 text-sky-300">
-              {matchedGames.length} {language === 'km' ? 'ហ្គេម' : 'Games'}
-            </span>
-          </div>
 
-          {/* Results List */}
-          <div className="max-h-80 overflow-y-auto divide-y divide-slate-800/60 scrollbar-thin scrollbar-thumb-slate-700">
-            {matchedGames.length > 0 ? (
-              matchedGames.map((game) => {
-                return (
-                  <div
-                    key={game.id}
-                    onClick={() => handleSelectGame(game)}
-                    className="flex items-center justify-between p-2.5 sm:p-3 hover:bg-[#121c33] transition-all cursor-pointer group active:bg-sky-950/40"
-                  >
-                    {/* Game Cover Artwork */}
-                    <div className="flex items-center gap-3 min-w-0">
-                      <div className="relative w-11 h-11 sm:w-12 sm:h-12 rounded-xl overflow-hidden bg-slate-950 border border-slate-700/80 group-hover:border-sky-400 shrink-0 shadow-md transition-colors">
-                        <img
-                          src={game.image}
-                          alt={game.name}
-                          onError={(e) => {
-                            e.target.onerror = null;
-                            e.target.src = '/mlbb-logo.png';
-                          }}
-                          className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300"
-                        />
-                      </div>
+            {/* Results List */}
+            <div className="max-h-56 sm:max-h-80 overflow-y-auto divide-y divide-slate-800/80 bg-[#070c17] scrollbar-thin scrollbar-thumb-slate-700">
+              {matchedGames.length > 0 ? (
+                matchedGames.map((game) => {
+                  return (
+                    <div
+                      key={game.id}
+                      onClick={() => handleSelectGame(game)}
+                      className="flex items-center justify-between p-2.5 sm:p-3 bg-[#070c17] hover:bg-[#121c33] transition-all cursor-pointer group active:bg-sky-950/60"
+                    >
+                      {/* Game Cover Artwork */}
+                      <div className="flex items-center gap-3 min-w-0">
+                        <div className="relative w-11 h-11 sm:w-12 sm:h-12 rounded-xl overflow-hidden bg-slate-950 border border-slate-700/80 group-hover:border-sky-400 shrink-0 shadow-md transition-colors">
+                          <img
+                            src={game.image}
+                            alt={game.name}
+                            onError={(e) => {
+                              e.target.onerror = null;
+                              e.target.src = '/mlbb-logo.png';
+                            }}
+                            className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300"
+                          />
+                        </div>
 
-                      {/* Game Title & Category */}
-                      <div className="flex flex-col min-w-0 text-left">
-                        <h4 className="font-black text-xs sm:text-sm text-white group-hover:text-amber-300 transition-colors truncate leading-snug">
-                          {renderHighlightedText(game.name, trimmed)}
-                        </h4>
-                        <div className="flex items-center gap-1.5 mt-0.5">
-                          <span className="text-[10px] text-sky-400 font-bold truncate">
-                            {game.genre}
-                          </span>
-                          <span className="text-slate-600 text-[9px]">•</span>
-                          <span className="text-[9.5px] text-slate-400 truncate">
-                            {game.category}
-                          </span>
+                        {/* Game Title & Category */}
+                        <div className="flex flex-col min-w-0 text-left">
+                          <h4 className="font-black text-xs sm:text-sm text-white group-hover:text-amber-300 transition-colors truncate leading-snug">
+                            {renderHighlightedText(game.name, trimmed)}
+                          </h4>
+                          <div className="flex items-center gap-1.5 mt-0.5">
+                            <span className="text-[10px] text-sky-400 font-bold truncate">
+                              {game.genre}
+                            </span>
+                            <span className="text-slate-600 text-[9px]">•</span>
+                            <span className="text-[9.5px] text-slate-400 truncate">
+                              {game.category}
+                            </span>
+                          </div>
                         </div>
                       </div>
-                    </div>
 
-                    {/* Right Action Button & Badge */}
-                    <div className="flex items-center gap-2 shrink-0 ml-2">
-                      {game.badge && (
-                        <span className={`hidden sm:inline-flex px-1.5 py-0.5 rounded text-[8px] font-black uppercase ${
-                          game.badgeColor === 'red' ? 'bg-red-500/20 text-red-300 border border-red-500/40' :
-                          game.badgeColor === 'amber' ? 'bg-amber-500/20 text-amber-300 border border-amber-500/40' :
-                          game.badgeColor === 'rose' ? 'bg-rose-500/20 text-rose-300 border border-rose-500/40' :
-                          'bg-emerald-500/20 text-emerald-300 border border-emerald-500/40'
-                        }`}>
-                          {game.badge}
-                        </span>
-                      )}
+                      {/* Right Action Button & Badge */}
+                      <div className="flex items-center gap-2 shrink-0 ml-2">
+                        {game.badge && (
+                          <span className={`hidden sm:inline-flex px-1.5 py-0.5 rounded text-[8px] font-black uppercase ${
+                            game.badgeColor === 'red' ? 'bg-red-500/20 text-red-300 border border-red-500/40' :
+                            game.badgeColor === 'amber' ? 'bg-amber-500/20 text-amber-300 border border-amber-500/40' :
+                            game.badgeColor === 'rose' ? 'bg-rose-500/20 text-rose-300 border border-rose-500/40' :
+                            'bg-emerald-500/20 text-emerald-300 border border-emerald-500/40'
+                          }`}>
+                            {game.badge}
+                          </span>
+                        )}
 
-                      <button
-                        type="button"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          handleSelectGame(game);
-                        }}
-                        className="py-1 px-2.5 sm:px-3 rounded-xl bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white font-bold text-[10px] sm:text-xs flex items-center gap-1 shadow-md shadow-blue-600/30 group-hover:scale-105 active:scale-95 transition-all cursor-pointer"
-                      >
-                        <span>{language === 'km' ? 'ចូលលេង' : 'Play'}</span>
-                        <span className="text-[11px] font-mono">›</span>
-                      </button>
+                        <button
+                          type="button"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleSelectGame(game);
+                          }}
+                          className="py-1 px-2.5 sm:px-3 rounded-xl bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white font-bold text-[10px] sm:text-xs flex items-center gap-1 shadow-md shadow-blue-600/30 group-hover:scale-105 active:scale-95 transition-all cursor-pointer"
+                        >
+                          <span>{language === 'km' ? 'ចូលលេង' : 'Play'}</span>
+                          <span className="text-[11px] font-mono">›</span>
+                        </button>
+                      </div>
                     </div>
+                  );
+                })
+              ) : (
+                /* Empty State */
+                <div className="p-6 text-center text-slate-400 space-y-2 bg-[#070c17]">
+                  <div className="text-2xl">🔍</div>
+                  <div className="text-xs font-bold text-white">
+                    {language === 'km' ? `រកមិនឃើញហ្គេម "${query}" ទេ` : `No games found matching "${query}"`}
                   </div>
-                );
-              })
-            ) : (
-              /* Empty State */
-              <div className="p-6 text-center text-slate-400 space-y-2">
-                <div className="text-2xl">🔍</div>
-                <div className="text-xs font-bold text-white">
-                  {language === 'km' ? `រកមិនឃើញហ្គេម "${query}" ទេ` : `No games found matching "${query}"`}
+                  <p className="text-[10px] text-slate-400">
+                    {language === 'km' ? 'សូមសាកល្បងស្វែងរក: MLBB, PUBG, Free Fire, Steam, Pass...' : 'Try searching: MLBB, PUBG, Free Fire, Steam, Pass...'}
+                  </p>
+                  <button
+                    type="button"
+                    onClick={handleClear}
+                    className="mt-2 text-xs text-sky-400 hover:text-sky-300 font-bold underline"
+                  >
+                    {language === 'km' ? 'សម្អាតការស្វែងរក' : 'Clear search'}
+                  </button>
                 </div>
-                <p className="text-[10px] text-slate-400">
-                  {language === 'km' ? 'សូមសាកល្បងស្វែងរក: MLBB, PUBG, Free Fire, Steam, Pass...' : 'Try searching: MLBB, PUBG, Free Fire, Steam, Pass...'}
-                </p>
-                <button
-                  type="button"
-                  onClick={handleClear}
-                  className="mt-2 text-xs text-sky-400 hover:text-sky-300 font-bold underline"
-                >
-                  {language === 'km' ? 'សម្អាតការស្វែងរក' : 'Clear search'}
-                </button>
-              </div>
-            )}
-          </div>
+              )}
+            </div>
 
-          {/* Footer note */}
-          <div className="px-3 py-1.5 bg-[#060a14] border-t border-slate-800/80 flex items-center justify-between text-[9px] text-slate-500">
-            <span>⚡ Instant Smart Search</span>
-            <span className="text-sky-400 flex items-center gap-1 font-semibold">
-              <span className="w-1.5 h-1.5 rounded-full bg-sky-400 animate-pulse" />
-              Live
-            </span>
-          </div>
+            {/* Footer note */}
+            <div className="px-3 py-1.5 bg-[#040810] border-t border-slate-800 flex items-center justify-between text-[9px] text-slate-500">
+              <span>⚡ Instant Smart Search</span>
+              <span className="text-sky-400 flex items-center gap-1 font-semibold">
+                <span className="w-1.5 h-1.5 rounded-full bg-sky-400 animate-pulse" />
+                Live
+              </span>
+            </div>
 
-        </div>
+          </div>
+        </>
       )}
     </div>
   );

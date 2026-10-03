@@ -230,25 +230,91 @@ const GameSelection = () => {
   }, []);
 
   const categories = [
-    { id: 'ALL', label: language === 'km' ? 'ហ្គេមទាំងអស់' : 'All Games', sub: 'All Games', icon: '⚡' },
-    { id: 'Telegram Stars', label: 'Telegram Stars', sub: '', icon: '✈️' },
-    { id: 'Steam', label: 'Steam', sub: '', icon: '💨' },
-    { id: 'Mobile Legends', label: 'Mobile Legends', sub: '', icon: '🛡️' },
-    { id: 'PUBG Mobile', label: 'PUBG Mobile', sub: '', icon: '🪖' },
-    { id: 'Free Fire', label: 'Free Fire', sub: '', icon: '🔥' }
+    {
+      id: 'ALL',
+      label: language === 'km' ? 'ហ្គេមទាំងអស់' : 'All Games',
+      sub: language === 'km' ? 'All Games' : '',
+      renderIcon: (isActive) => (
+        <svg className={`w-5 h-5 ${isActive ? 'text-slate-950' : 'text-amber-400'} fill-current`} viewBox="0 0 24 24">
+          <path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z" />
+        </svg>
+      )
+    },
+    {
+      id: 'Telegram Stars',
+      label: 'Telegram Stars',
+      sub: '',
+      renderIcon: () => (
+        <div className="w-5 h-5 rounded-full bg-[#24A1DE] flex items-center justify-center shadow-xs">
+          <svg className="w-3 h-3 text-white fill-current -translate-x-[0.5px] translate-y-[0.5px]" viewBox="0 0 24 24">
+            <path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z" />
+          </svg>
+        </div>
+      )
+    },
+    {
+      id: 'Steam',
+      label: 'Steam',
+      sub: '',
+      renderIcon: () => (
+        <img src="/images/steam-logo.svg" alt="Steam" className="w-5 h-5 object-contain" />
+      )
+    },
+    {
+      id: 'Mobile Legends',
+      label: 'Mobile Legends',
+      sub: '',
+      renderIcon: () => (
+        <div className="w-5 h-5 rounded border border-amber-400/80 bg-slate-950 flex items-center justify-center shadow-xs">
+          <span className="text-[9px] font-black text-amber-300 leading-none tracking-tight">ML</span>
+        </div>
+      )
+    },
+    {
+      id: 'PUBG Mobile',
+      label: 'PUBG Mobile',
+      sub: '',
+      renderIcon: () => (
+        <div className="px-1 py-0.5 rounded border border-amber-400/80 bg-slate-950 flex items-center justify-center shadow-xs">
+          <span className="text-[7.5px] font-black text-amber-400 leading-none tracking-tight">PUBG</span>
+        </div>
+      )
+    },
+    {
+      id: 'Free Fire',
+      label: 'Free Fire',
+      sub: '',
+      renderIcon: () => (
+        <svg className="w-5 h-5 text-amber-500 fill-current drop-shadow-[0_0_6px_rgba(245,158,11,0.6)]" viewBox="0 0 24 24">
+          <path d="M12 23c-4.97 0-9-3.58-9-8 0-3.5 2.5-6.5 5-9 0 0 1 3 3 3 0-3 1.5-6 3.5-8 1.5 2.5 4 6.5 4 10 0 1.5-.5 3-1.5 4 2 0 4-1.5 4-4 0 6.63-4.03 12-9 12z" />
+        </svg>
+      )
+    }
   ];
 
   const filteredGames = games.filter((game) => {
+    const activeLower = activeCategory.toLowerCase();
+    const gameId = (game.id || '').toLowerCase();
+    const gameName = (game.name || '').toLowerCase();
+    const gameCat = (game.category || '').toLowerCase();
+    const gameGenre = (game.genre || '').toLowerCase();
+
     const matchesCategory =
       activeCategory === 'ALL' ||
-      game.category?.toLowerCase() === activeCategory.toLowerCase() ||
-      game.name?.toLowerCase().includes(activeCategory.toLowerCase());
+      (activeLower === 'telegram stars' && (gameId.includes('telegram') || gameName.includes('telegram'))) ||
+      (activeLower === 'steam' && (gameId.includes('steam') || gameName.includes('steam'))) ||
+      (activeLower === 'mobile legends' && (gameId.includes('mlbb') || gameName.includes('mobile legend') || gameName.includes('mlbb'))) ||
+      (activeLower === 'pubg mobile' && (gameId.includes('pubg') || gameName.includes('pubg'))) ||
+      (activeLower === 'free fire' && (gameId.includes('freefire') || gameName.includes('free fire'))) ||
+      gameCat === activeLower ||
+      gameName.includes(activeLower);
 
+    const q = searchQuery.toLowerCase().trim();
     const matchesSearch =
-      !searchQuery.trim() ||
-      game.name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      game.genre?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      game.category?.toLowerCase().includes(searchQuery.toLowerCase());
+      !q ||
+      gameName.includes(q) ||
+      gameGenre.includes(q) ||
+      gameCat.includes(q);
 
     return matchesCategory && matchesSearch;
   });
@@ -316,11 +382,13 @@ const GameSelection = () => {
                   : 'bg-[#0f172a]/90 hover:bg-[#1e293b] text-slate-300 border border-slate-800 hover:border-slate-700 shadow-md'
               }`}
             >
-              <span className="text-base sm:text-lg mb-0.5">{cat.icon}</span>
+              <div className="h-5 sm:h-6 flex items-center justify-center mb-1">
+                {cat.renderIcon ? cat.renderIcon(isActive) : <span className="text-base sm:text-lg">{cat.icon}</span>}
+              </div>
               <span className="text-[9.5px] sm:text-[11px] font-black leading-tight line-clamp-1">
                 {cat.label}
               </span>
-              {cat.sub ? (
+              {cat.sub && cat.sub.toLowerCase() !== cat.label.toLowerCase() ? (
                 <span className={`text-[7.5px] sm:text-[8.5px] mt-0.5 leading-none ${isActive ? 'text-amber-950 font-bold' : 'text-slate-500'}`}>
                   {cat.sub}
                 </span>
