@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { useLanguage } from '../context/LanguageContext';
@@ -8,6 +8,34 @@ const DesktopSidebar = () => {
   const location = useLocation();
   const { language } = useLanguage();
   const { user, logout, isAuthenticated } = useAuth();
+
+  const [playerAccount, setPlayerAccount] = useState(() => {
+    try {
+      return JSON.parse(localStorage.getItem('player_account') || 'null');
+    } catch {
+      return null;
+    }
+  });
+
+  useEffect(() => {
+    const handleStorageChange = () => {
+      try {
+        setPlayerAccount(JSON.parse(localStorage.getItem('player_account') || 'null'));
+      } catch {
+        setPlayerAccount(null);
+      }
+    };
+    window.addEventListener('storage', handleStorageChange);
+    return () => window.removeEventListener('storage', handleStorageChange);
+  }, []);
+
+  const handleLogout = () => {
+    localStorage.removeItem('player_account');
+    setPlayerAccount(null);
+    logout();
+  };
+
+  const isUserLoggedIn = isAuthenticated() || !!playerAccount;
 
   const isActive = (path) => {
     if (path === '/') return location.pathname === '/' && !location.hash;
@@ -151,10 +179,11 @@ const DesktopSidebar = () => {
 
       {/* Bottom Sidebar User Login / Auth Section */}
       <div className="pt-3 border-t border-slate-800/80">
-        {!isAuthenticated() ? (
+        {!isUserLoggedIn ? (
           <Link
-            to="/login"
+            to="/order-history"
             className="group relative flex items-center gap-3 p-2.5 rounded-xl bg-gradient-to-r from-blue-600/20 via-sky-600/15 to-indigo-600/20 hover:from-blue-600 hover:via-sky-600 hover:to-indigo-600 border border-sky-500/30 hover:border-sky-400 text-white shadow-lg shadow-sky-950/40 transition-all duration-200 active:scale-[0.98] overflow-hidden"
+            title={language === 'km' ? 'ចូលគណនីជាមួយលេខសម្គាល់ Player ID & Server ID' : 'Login with Player ID and Server ID'}
           >
             {/* Subtle light shimmer effect on hover */}
             <div className="absolute inset-0 -translate-x-full group-hover:translate-x-full transition-transform duration-700 bg-gradient-to-r from-transparent via-white/10 to-transparent pointer-events-none" />
@@ -169,8 +198,8 @@ const DesktopSidebar = () => {
               <span className="text-[12px] font-black text-white group-hover:text-white tracking-wide">
                 {language === 'km' ? 'ចូលគណនី' : 'Login'}
               </span>
-              <span className="text-[9.5px] text-sky-300/90 group-hover:text-sky-100 font-medium truncate mt-0.5">
-                {language === 'km' ? 'ចូលប្រើប្រាស់គណនី' : 'Sign in to account'}
+              <span className="text-[9.5px] text-sky-300/90 group-hover:text-sky-100 font-bold truncate mt-0.5">
+                ID Player & ID Server
               </span>
             </div>
 
@@ -180,23 +209,27 @@ const DesktopSidebar = () => {
           </Link>
         ) : (
           <div className="rounded-xl p-2.5 bg-slate-900/90 border border-slate-800 shadow-md">
-            <div className="flex items-center gap-2.5 mb-2">
-              <div className="w-9 h-9 rounded-lg bg-gradient-to-tr from-sky-500 to-indigo-600 border border-sky-400/40 flex items-center justify-center shrink-0 text-white font-black text-sm shadow-md">
-                {(user?.name || user?.email || 'U').charAt(0).toUpperCase()}
+            <Link
+              to="/order-history"
+              className="flex items-center gap-2.5 mb-2 group/profile cursor-pointer"
+              title="View Player Orders & History"
+            >
+              <div className="w-9 h-9 rounded-lg bg-gradient-to-tr from-sky-500 to-indigo-600 border border-sky-400/40 flex items-center justify-center shrink-0 text-white font-black text-sm shadow-md group-hover/profile:scale-105 transition-transform">
+                {((playerAccount?.realName || user?.name || playerAccount?.playerId || user?.email || 'P')).charAt(0).toUpperCase()}
               </div>
               <div className="flex flex-col min-w-0 flex-1 leading-tight">
-                <span className="text-[12px] font-bold text-white truncate">
-                  {user?.name || user?.email?.split('@')[0] || 'User'}
+                <span className="text-[12px] font-bold text-white truncate group-hover/profile:text-sky-300 transition-colors">
+                  {playerAccount?.realName || user?.name || (playerAccount?.playerId ? `ID: ${playerAccount.playerId}` : user?.email?.split('@')[0] || 'Player')}
                 </span>
                 <span className="text-[9.5px] text-emerald-400 font-semibold truncate flex items-center gap-1 mt-0.5">
                   <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
-                  {user?.role ? user.role.toUpperCase() : (language === 'km' ? 'សកម្ម' : 'Active')}
+                  {playerAccount?.serverId ? `Zone ${playerAccount.serverId}` : (user?.role ? user.role.toUpperCase() : (language === 'km' ? 'សកម្ម' : 'Active'))}
                 </span>
               </div>
-            </div>
+            </Link>
 
             <button
-              onClick={logout}
+              onClick={handleLogout}
               className="w-full py-1.5 px-2 rounded-lg bg-slate-800/80 hover:bg-rose-950/50 border border-slate-700/60 hover:border-rose-500/40 text-slate-300 hover:text-rose-200 text-[11px] font-semibold flex items-center justify-center gap-1.5 transition-all cursor-pointer"
             >
               <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>

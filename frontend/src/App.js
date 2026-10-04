@@ -34,8 +34,9 @@ function App() {
               <Route path="/terms-and-conditions" element={<PrivacyPolicy />} />
               <Route path="/privacy-policy" element={<PrivacyPolicy />} />
               
-              {/* Player Order History */}
+              {/* Player Order History & Player Login */}
               <Route path="/order-history" element={<OrderHistory />} />
+              <Route path="/player-login" element={<OrderHistory />} />
               
               {/* Admin routes */}
               <Route path="/admin" element={

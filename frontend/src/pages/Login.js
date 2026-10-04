@@ -152,6 +152,29 @@ const Login = () => {
             </p>
           </div>
 
+          {/* Quick link to Player ID & Server ID Login */}
+          <Link
+            to="/order-history"
+            className="p-3 rounded-2xl bg-gradient-to-r from-blue-950/70 via-sky-950/60 to-indigo-950/70 border border-sky-500/40 hover:border-sky-400 text-sky-200 hover:text-white flex items-center justify-between transition-all group shadow-lg"
+          >
+            <div className="flex items-center gap-3">
+              <div className="w-9 h-9 rounded-xl bg-sky-500/20 border border-sky-400/30 flex items-center justify-center text-lg shrink-0 group-hover:scale-105 transition-transform">
+                🎮
+              </div>
+              <div className="text-left">
+                <div className="text-xs font-black text-white group-hover:text-cyan-300">
+                  Player Login (ID Player & ID Server)
+                </div>
+                <div className="text-[10px] text-sky-300 font-medium">
+                  ចូលគណនីអ្នកលេងជាមួយលេខ Player ID និង Server ID →
+                </div>
+              </div>
+            </div>
+            <span className="text-[11px] font-black bg-sky-500/20 px-2.5 py-1 rounded-lg border border-sky-400/40 text-sky-200 group-hover:bg-sky-500 group-hover:text-slate-950 transition-all shrink-0">
+              ចូលលេង →
+            </span>
+          </Link>
+
           {/* Error Message */}
           {error && (
             <div className="p-3 rounded-xl bg-rose-950/80 border border-rose-500/50 text-rose-200 text-xs flex items-center gap-2.5 animate-fadeIn">
