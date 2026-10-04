@@ -1879,141 +1879,72 @@ const TopUp = () => {
                 // ==================== MODE 1: 100% POLISHED 2-COLUMN CYBER CARDS ====================
                 if (layoutMode === 'tiles') {
                   return (
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 sm:gap-3 lg:gap-3.5">
+                    <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-2 sm:gap-2.5">
                       {filtered.map((pkg) => {
                         const isSelected = selectedProduct.productId === pkg.productId;
                         const isPass = isPassItem(pkg);
-
-                        // Tag logic matching screenshot exactly
-                        const isPopular =
-                          pkg.productId === 12 ||
-                          pkg.diamondAmount === 55 ||
-                          (pkg.tag && (pkg.tag.toLowerCase().includes('popular') || pkg.tag.toLowerCase().includes('starter')));
-
-                        const isRecommend =
-                          pkg.productId === 13 ||
-                          pkg.diamondAmount === 86 ||
-                          (pkg.tag && (pkg.tag.toLowerCase().includes('bonus') || pkg.tag.toLowerCase().includes('recommend') || pkg.tag.toLowerCase().includes('best')));
+                        const tagLower = (pkg.tag || '').toLowerCase();
+                        const isPopular = pkg.productId === 12 || pkg.diamondAmount === 55 || tagLower.includes('popular') || tagLower.includes('starter');
+                        const isRecommend = !isPopular && (pkg.productId === 13 || pkg.diamondAmount === 86 || tagLower.includes('bonus') || tagLower.includes('recommend') || tagLower.includes('best'));
+                        const ribbon = isPopular
+                          ? { text: 'Popular', cls: 'from-orange-500 to-amber-500 text-white' }
+                          : isRecommend
+                            ? { text: 'Recommend', cls: 'from-amber-300 to-yellow-500 text-slate-950' }
+                            : pkg.tag
+                              ? { text: formatTagText(pkg.tag), cls: 'from-sky-600 to-indigo-600 text-white' }
+                              : null;
 
                         return (
-                          <div
+                          <button
+                            type="button"
                             key={pkg.productId}
                             onClick={() => setSelectedProduct(pkg)}
-                            className={`group relative rounded-xl sm:rounded-2xl p-2.5 sm:p-3 cursor-pointer select-none transition-all duration-200 flex flex-col justify-between overflow-hidden ${
+                            className={`group relative rounded-xl p-2 pt-3 flex flex-col items-center text-center select-none transition-all duration-200 cursor-pointer overflow-hidden active:scale-[0.97] ${
                               isSelected
-                                ? 'bg-gradient-to-br from-[#0c142b] via-[#070d1e] to-[#040814] border-2 border-amber-400 shadow-xl shadow-black/60 scale-[1.01] -translate-y-0.5 z-10'
-                                : 'bg-gradient-to-br from-[#081024] via-[#050b1a] to-[#02050e] border border-sky-500/40 hover:border-sky-400/90 shadow-lg shadow-black/40 hover:-translate-y-0.5'
+                                ? 'bg-gradient-to-b from-[#1a1530] to-[#0a0a1a] border border-amber-400 shadow-[0_0_0_1px_rgba(251,191,36,0.6),0_6px_18px_-6px_rgba(251,191,36,0.55)]'
+                                : 'bg-gradient-to-b from-[#0b1430] to-[#050a1a] border border-sky-500/20 hover:border-sky-400/60 hover:-translate-y-0.5'
                             }`}
                           >
-                            {/* Card Top Row: Badges & Checkmark */}
-                            <div className="flex items-center justify-between mb-1.5 min-h-[26px] relative z-10">
-                              {/* Left Badge: Popular / Custom Tag */}
-                              <div className="min-w-0 pr-1">
-                                {isPopular ? (
-                                  <div className="inline-flex items-center gap-1.5 px-2.5 sm:px-3 py-1 rounded-lg border-[1.5px] border-[#FFE169] bg-gradient-to-b from-[#ff8c00] via-[#e65100] to-[#b32600] shadow-[0_0_12px_rgba(255,140,0,0.5),inset_0_1px_1px_rgba(255,255,255,0.45)]">
-                                    <svg className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-[#FFE279] fill-current drop-shadow-[0_1px_2px_rgba(0,0,0,0.5)] shrink-0" viewBox="0 0 24 24">
-                                      <path d="M5 16L3 5l5.5 5L12 4l3.5 6L21 5l-2 11H5zm14 3c0 .55-.45 1-1 1H6c-.55 0-1-.45-1-1v-1h14v1z"/>
-                                    </svg>
-                                    <span className="text-white font-extrabold text-[11px] sm:text-xs tracking-normal drop-shadow-[0_1px_2px_rgba(0,0,0,0.6)] leading-none">
-                                      Popular
-                                    </span>
-                                  </div>
-                                ) : pkg.tag && !isRecommend ? (
-                                  <span className={`inline-flex items-center gap-1 px-2.5 py-0.5 rounded-lg text-[9.5px] sm:text-[10px] font-bold tracking-wide truncate max-w-[140px] ${getTagStyle(pkg.tag)}`}>
-                                    {formatTagText(pkg.tag)}
-                                  </span>
-                                ) : null}
-                              </div>
+                            {/* Glow behind artwork */}
+                            <span className={`pointer-events-none absolute top-3 left-1/2 -translate-x-1/2 w-16 h-16 rounded-full blur-2xl transition-opacity ${isSelected ? 'bg-amber-400/25' : 'bg-sky-500/15 group-hover:bg-sky-400/25'}`} />
 
-                              {/* Right Badge: Recommend OR Selected Checkmark */}
-                              <div className="flex items-center gap-1.5 shrink-0 ml-auto">
-                                {isRecommend && !isSelected && (
-                                  <div className="inline-flex items-center gap-1.5 px-2.5 sm:px-3 py-1 rounded-lg border-[1.5px] border-[#FFE169] bg-gradient-to-b from-[#1a1306] via-[#100c04] to-[#080602] shadow-[0_0_10px_rgba(251,191,36,0.3),inset_0_1px_1px_rgba(255,255,255,0.15)]">
-                                    <svg className="w-3.5 h-3.5 text-[#FFE279] fill-current drop-shadow-[0_1px_2px_rgba(0,0,0,0.5)] shrink-0" viewBox="0 0 24 24">
-                                      <path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z"/>
-                                    </svg>
-                                    <span className="text-amber-300 font-extrabold text-[11px] sm:text-xs tracking-normal drop-shadow-sm leading-none">
-                                      Recommend
-                                    </span>
-                                  </div>
-                                )}
-                                {isSelected && (
-                                  <div className="w-5 h-5 rounded-full bg-amber-400 text-slate-950 flex items-center justify-center font-black text-xs shadow-md shadow-amber-400/40">
-                                    ✓
-                                  </div>
-                                )}
-                              </div>
+                            {/* Ribbon tag */}
+                            {ribbon && (
+                              <span className={`absolute top-0 left-0 max-w-[80%] truncate px-1.5 py-[2px] rounded-br-lg bg-gradient-to-r ${ribbon.cls} text-[8px] sm:text-[9px] font-extrabold uppercase tracking-wide shadow`}>
+                                {ribbon.text}
+                              </span>
+                            )}
+
+                            {/* Selected check */}
+                            {isSelected && (
+                              <span className="absolute top-1 right-1 w-4 h-4 rounded-full bg-amber-400 text-slate-950 flex items-center justify-center shadow-[0_0_8px_rgba(251,191,36,0.8)]">
+                                <svg className="w-2.5 h-2.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="4" strokeLinecap="round" strokeLinejoin="round"><path d="M20 6L9 17l-5-5" /></svg>
+                              </span>
+                            )}
+
+                            {/* Artwork */}
+                            <div className="relative h-12 sm:h-14 flex items-center justify-center mt-1">
+                              <ProductPackageImage pkg={pkg} size="sm" className="relative z-10 transition-transform duration-300 group-hover:scale-110" />
                             </div>
 
-                            {/* Card Body: 2-Column Horizontal Layout */}
-                            <div className="flex items-center gap-2.5 sm:gap-3 flex-1 relative z-10">
-                              {/* Left Column: Original 3D Artwork */}
-                              <div className="relative w-16 h-16 sm:w-20 sm:h-20 lg:w-22 lg:h-22 shrink-0 flex items-center justify-center">
-                                <ProductPackageImage
-                                  pkg={pkg}
-                                  size="lg"
-                                  className="relative z-10 transition-transform duration-300 group-hover:scale-105"
-                                />
-                              </div>
+                            {/* Name + sub */}
+                            <h3 className={`relative mt-1 w-full text-[11px] sm:text-xs font-extrabold leading-tight line-clamp-1 transition-colors ${isSelected ? 'text-amber-300' : 'text-white group-hover:text-sky-200'}`}>
+                              {pkg.name}
+                            </h3>
+                            <span className="relative text-[9px] sm:text-[10px] font-semibold text-slate-400 leading-tight mt-0.5 truncate w-full">
+                              {isPass ? '⚡ Daily Pass' : `💎 ${pkg.diamondAmount}`}
+                            </span>
 
-                              {/* Right Column: Title, Subtitle, Price & Buy Button */}
-                              <div className="flex-1 flex flex-col justify-center min-w-0">
-                                <h3 className="font-black text-xs sm:text-sm lg:text-[15px] text-white tracking-tight leading-snug group-hover:text-amber-300 transition-colors line-clamp-2">
-                                  {pkg.name}
-                                </h3>
-
-                                {/* Subtitle */}
-                                <div className="flex items-center gap-1 text-[10px] sm:text-[11px] font-bold text-sky-300 mt-0.5 mb-1.5 truncate">
-                                  {isPass ? (
-                                    <>
-                                      <span className="text-amber-400">⚡</span>
-                                      <span>Daily Pass</span>
-                                    </>
-                                  ) : (
-                                    <>
-                                      <span className="text-cyan-400">💎</span>
-                                      <span>{pkg.diamondAmount} ពេជ្រ</span>
-                                    </>
-                                  )}
-                                </div>
-
-                                {/* Price & Buy Button Combined Capsule (Matching Reference Image) */}
-                                <div
-                                  className={`mt-auto pt-1 flex items-center justify-between rounded-full pl-3 sm:pl-3.5 pr-0.5 sm:pr-1 py-0.5 sm:py-1 transition-all duration-200 ${
-                                    isSelected
-                                      ? 'bg-slate-950/90 border border-amber-400/40 shadow-inner'
-                                      : 'bg-slate-950/75 border border-slate-800/90 shadow-inner'
-                                  }`}
-                                >
-                                  {/* Price on Left */}
-                                  <span
-                                    className={`font-black text-sm sm:text-base lg:text-lg font-mono tracking-tight leading-none ${
-                                      isSelected
-                                        ? 'text-amber-400 drop-shadow-[0_0_8px_rgba(251,191,36,0.5)]'
-                                        : 'text-[#00F5B8] drop-shadow-[0_0_8px_rgba(0,245,184,0.4)]'
-                                    }`}
-                                  >
-                                    ${pkg.price.toFixed(2)}
-                                  </span>
-
-                                  {/* Buy Button Pill on Right: 🛒 ទិញឥឡូវ > */}
-                                  <div
-                                    className={`px-3 sm:px-3.5 py-1 sm:py-1.5 rounded-full font-black text-[11px] sm:text-xs flex items-center gap-1 shrink-0 transition-transform hover:scale-[1.02] active:scale-95 shadow-sm cursor-pointer ${
-                                      isSelected
-                                        ? 'bg-amber-400 hover:bg-amber-300 text-slate-950 shadow-amber-400/30'
-                                        : 'bg-[#00E599] hover:bg-[#00F5B8] text-slate-950 shadow-emerald-400/25'
-                                    }`}
-                                  >
-                                    <svg className="w-3.5 h-3.5 shrink-0 fill-current" viewBox="0 0 24 24">
-                                      <path d="M7 18c-1.1 0-1.99.9-1.99 2S5.9 22 7 22s2-.9 2-2-.9-2-2-2zM1 2v2h2l3.6 7.59-1.35 2.45c-.16.28-.25.61-.25.96 0 1.1.9 2 2 2h12v-2H7.42c-.14 0-.25-.11-.25-.25l.03-.12.9-1.63h7.45c.75 0 1.41-.41 1.75-1.03l3.58-6.49c.08-.14.12-.31.12-.48 0-.55-.45-1-1-1H5.21l-.94-2H1zm16 16c-1.1 0-1.99.9-1.99 2s.89 2 1.99 2 2-.9 2-2-.9-2-2-2z"/>
-                                    </svg>
-                                    <span>ទិញឥឡូវ</span>
-                                    <span className="font-extrabold text-[10px]">&gt;</span>
-                                  </div>
-                                </div>
-                              </div>
+                            {/* Price bar */}
+                            <div className={`relative mt-2 w-full flex items-center justify-between rounded-lg pl-2 pr-0.5 py-0.5 border ${isSelected ? 'bg-amber-400/10 border-amber-400/40' : 'bg-slate-950/70 border-slate-800'}`}>
+                              <span className={`font-black font-mono text-xs sm:text-[13px] tracking-tight ${isSelected ? 'text-amber-300' : 'text-[#00F5B8]'}`}>
+                                ${pkg.price.toFixed(2)}
+                              </span>
+                              <span className={`w-6 h-6 rounded-md flex items-center justify-center transition-colors ${isSelected ? 'bg-amber-400 text-slate-950' : 'bg-[#00E599] text-slate-950 group-hover:bg-[#00F5B8]'}`}>
+                                <svg className="w-3.5 h-3.5 fill-current" viewBox="0 0 24 24"><path d="M7 18c-1.1 0-1.99.9-1.99 2S5.9 22 7 22s2-.9 2-2-.9-2-2-2zM1 2v2h2l3.6 7.59-1.35 2.45c-.16.28-.25.61-.25.96 0 1.1.9 2 2 2h12v-2H7.42c-.14 0-.25-.11-.25-.25l.03-.12.9-1.63h7.45c.75 0 1.41-.41 1.75-1.03l3.58-6.49c.08-.14.12-.31.12-.48 0-.55-.45-1-1-1H5.21l-.94-2H1zm16 16c-1.1 0-1.99.9-1.99 2s.89 2 1.99 2 2-.9 2-2-.9-2-2-2z" /></svg>
+                              </span>
                             </div>
-                          </div>
+                          </button>
                         );
                       })}
                     </div>
