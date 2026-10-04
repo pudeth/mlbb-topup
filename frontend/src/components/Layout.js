@@ -62,10 +62,12 @@ const Layout = ({ children }) => {
         <main className={`flex-grow relative z-10 ${isAuthPath ? 'pb-0 flex flex-col' : 'pb-6 lg:pb-12'}`}>
           {children}
         </main>
-        {!isAuthPath && <AiAssistant />}
         {!isAuthPath && <MobileBottomNav />}
         {!hideFooter && <Footer />}
       </div>
+
+      {/* AI Assistant mounted at layout root for top-level layering */}
+      {!isAuthPath && <AiAssistant />}
     </div>
   );
 };

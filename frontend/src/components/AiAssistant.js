@@ -439,6 +439,18 @@ export const AiLogoIcon = ({ className = "w-6 h-6", glowing = true }) => (
   </svg>
 );
 
+// Calculate dynamic header height + margin so button never blocks/collides with the top header
+const getMinAllowedY = () => {
+  if (typeof document === 'undefined') return 90;
+  const header = document.querySelector('header');
+  if (header) {
+    const rect = header.getBoundingClientRect();
+    const bottom = rect.bottom > 0 ? rect.bottom : header.offsetHeight;
+    return Math.max(bottom, header.offsetHeight, 80) + 10;
+  }
+  return 90;
+};
+
 const AiAssistant = () => {
   const { language, setLanguage, t } = useLanguage();
   const [isOpen, setIsOpen] = useState(false);
@@ -464,10 +476,13 @@ const AiAssistant = () => {
           typeof parsed.y === 'number' &&
           parsed.x >= 0 &&
           parsed.x < (typeof window !== 'undefined' ? window.innerWidth : 1000) &&
-          parsed.y >= 90 &&
           parsed.y < (typeof window !== 'undefined' ? window.innerHeight : 1000)
         ) {
-          return parsed;
+          const minY = typeof document !== 'undefined' ? getMinAllowedY() : 90;
+          return {
+            x: parsed.x,
+            y: Math.max(parsed.y, minY),
+          };
         }
       }
     } catch (e) {}
@@ -483,6 +498,18 @@ const AiAssistant = () => {
     hasMoved: false,
   });
 
+  // Clamp any saved position on initial mount so it never sits behind/over the header
+  useEffect(() => {
+    setPos(prev => {
+      if (!prev) return prev;
+      const minY = getMinAllowedY();
+      if (prev.y < minY) {
+        return { ...prev, y: minY };
+      }
+      return prev;
+    });
+  }, []);
+
   // Keep button within screen bounds on window resize / orientation change
   useEffect(() => {
     const handleResize = () => {
@@ -490,11 +517,12 @@ const AiAssistant = () => {
         if (!prev || !btnRef.current) return prev;
         const btnW = btnRef.current.offsetWidth || 56;
         const btnH = btnRef.current.offsetHeight || 56;
+        const minY = getMinAllowedY();
         const maxX = Math.max(10, window.innerWidth - btnW - 8);
-        const maxY = Math.max(90, window.innerHeight - btnH - 12);
+        const maxY = Math.max(minY, window.innerHeight - btnH - 12);
         return {
           x: Math.min(Math.max(prev.x, 8), maxX),
-          y: Math.min(Math.max(prev.y, 85), maxY),
+          y: Math.min(Math.max(prev.y, minY), maxY),
         };
       });
     };
@@ -517,8 +545,8 @@ const AiAssistant = () => {
       const btnH = btnRef.current ? btnRef.current.offsetHeight : 56;
       const minX = 6;
       const maxX = window.innerWidth - btnW - 6;
-      const minY = 85;
-      const maxY = window.innerHeight - btnH - 12;
+      const minY = getMinAllowedY();
+      const maxY = Math.max(minY, window.innerHeight - btnH - 12);
 
       setPos({
         x: Math.min(Math.max(data.elemX + dx, minX), maxX),
@@ -552,8 +580,8 @@ const AiAssistant = () => {
       const btnH = btnRef.current ? btnRef.current.offsetHeight : 56;
       const minX = 6;
       const maxX = window.innerWidth - btnW - 6;
-      const minY = 85;
-      const maxY = window.innerHeight - btnH - 12;
+      const minY = getMinAllowedY();
+      const maxY = Math.max(minY, window.innerHeight - btnH - 12);
 
       setPos({
         x: Math.min(Math.max(data.elemX + dx, minX), maxX),
@@ -656,7 +684,7 @@ const AiAssistant = () => {
       {/* Mobile Backdrop Overlay when chat is open */}
       {isOpen && (
         <div
-          className="fixed inset-0 bg-black/50 backdrop-blur-[2px] z-[9995] sm:hidden animate-fadeIn"
+          className="fixed inset-0 bg-black/50 backdrop-blur-[2px] z-[999998] sm:hidden animate-fadeIn"
           onClick={() => setIsOpen(false)}
         />
       )}
@@ -688,12 +716,14 @@ const AiAssistant = () => {
                 right: 'auto',
                 bottom: 'auto',
                 touchAction: 'none',
+                zIndex: 999999,
               }
             : {
                 touchAction: 'none',
+                zIndex: 999999,
               }
         }
-        className={`ai-assistant-widget fixed z-[9990] w-14 h-14 sm:w-16 sm:h-16 md:w-20 md:h-20 select-none cursor-grab active:cursor-grabbing bg-transparent border-0 outline-none p-0 transition-transform ${
+        className={`ai-assistant-widget fixed z-[99999] w-14 h-14 sm:w-16 sm:h-16 md:w-20 md:h-20 select-none cursor-grab active:cursor-grabbing bg-transparent border-0 outline-none p-0 transition-transform ${
           pos ? '' : 'bottom-20 right-3.5 sm:bottom-6 sm:right-6'
         } ${isDragging ? 'scale-115 opacity-90' : 'hover:scale-110 active:scale-95'}`}
         aria-label="Open AI Assistant"
@@ -711,7 +741,7 @@ const AiAssistant = () => {
 
       {/* AI Assistant Chat Modal Drawer */}
       {isOpen && (
-        <div className="fixed bottom-20 sm:bottom-24 left-1/2 -translate-x-1/2 sm:left-auto sm:translate-x-0 sm:right-6 w-[94vw] max-w-[400px] max-h-[620px] h-[78vh] sm:h-[80vh] z-[9999] flex flex-col rounded-[24px] overflow-hidden shadow-[0_20px_60px_rgba(0,0,0,0.75)] animate-fadeIn border border-slate-800/80">
+        <div className="fixed bottom-20 sm:bottom-24 left-1/2 -translate-x-1/2 sm:left-auto sm:translate-x-0 sm:right-6 w-[94vw] max-w-[400px] max-h-[620px] h-[78vh] sm:h-[80vh] z-[1000000] flex flex-col rounded-[24px] overflow-hidden shadow-[0_20px_60px_rgba(0,0,0,0.75)] animate-fadeIn border border-slate-800/80">
 
           {/* ── HEADER (Messenger style) ── */}
           <div className="bg-[#0f1724] px-4 py-3 flex items-center gap-3 border-b border-slate-800/60 shrink-0">

@@ -245,17 +245,11 @@ const GameSelection = () => {
       label: 'Telegram Stars',
       sub: '',
       renderIcon: (isActive) => (
-        <svg
-          className="w-6 h-6 transition-transform duration-200 group-hover:scale-110 drop-shadow-[0_0_8px_rgba(36,161,222,0.6)]"
-          viewBox="0 0 24 24"
-          fill="none"
-        >
-          <circle cx="12" cy="12" r="12" fill={isActive ? '#0f172a' : '#24A1DE'} />
-          <path
-            fill={isActive ? '#fbbf24' : '#ffffff'}
-            d="M5.4 12.06c3.42-1.49 5.7-2.47 6.84-2.95 3.26-1.36 3.94-1.6 4.38-1.6.1 0 .31.02.45.14.12.1.15.23.16.32 0 .07.02.28 0 .44-.22 2.32-1.17 7.9-1.65 10.49-.2 1.1-.61 1.47-1 1.5-.86.08-1.51-.57-2.34-1.12-1.3-.85-2.03-1.38-3.29-2.21-1.46-.96-.51-1.49.32-2.35.22-.23 3.98-3.65 4.05-3.96.01-.04.02-.19-.07-.27s-.22-.05-.32-.03c-.14.03-2.37 1.51-6.7 4.43-.63.44-1.21.65-1.72.64-.56-.01-1.65-.32-2.45-.58-1-.32-1.78-.49-1.71-1.04.04-.28.43-.57 1.17-.86z"
-          />
-        </svg>
+        <img
+          src="/images/telegram-logo.webp"
+          alt="Telegram Stars"
+          className="w-6 h-6 object-contain rounded-full transition-transform duration-200 group-hover:scale-110 drop-shadow-[0_0_8px_rgba(36,161,222,0.6)]"
+        />
       )
     },
     {
@@ -283,13 +277,15 @@ const GameSelection = () => {
       label: 'Mobile Legends',
       sub: '',
       renderIcon: (isActive) => (
-        <div className={`px-1.5 py-0.5 rounded border ${
-          isActive
-            ? 'border-slate-950 text-slate-950 font-black'
-            : 'border-amber-400/90 text-amber-300 drop-shadow-[0_0_6px_rgba(251,191,36,0.4)]'
-        } text-[10px] font-black tracking-wider leading-none transition-transform group-hover:scale-110`}>
-          ML
-        </div>
+        <img
+          src="/mlbb-logo.png"
+          alt="Mobile Legends"
+          onError={(e) => {
+            e.target.onerror = null;
+            e.target.src = '/images/mlbb_square_logo.png';
+          }}
+          className="w-6 h-6 object-cover rounded-md transition-transform duration-200 group-hover:scale-110 drop-shadow-[0_0_8px_rgba(251,191,36,0.6)] shadow-xs"
+        />
       )
     },
     {
@@ -297,13 +293,15 @@ const GameSelection = () => {
       label: 'PUBG Mobile',
       sub: '',
       renderIcon: (isActive) => (
-        <div className={`px-1.5 py-0.5 rounded border ${
-          isActive
-            ? 'border-slate-950 text-slate-950 font-black'
-            : 'border-amber-400 text-amber-400 drop-shadow-[0_0_6px_rgba(251,191,36,0.4)]'
-        } text-[8.5px] font-black tracking-tight leading-none transition-transform group-hover:scale-110`}>
-          PUBG
-        </div>
+        <img
+          src="/images/pubgm-logo.jpg"
+          alt="PUBG Mobile"
+          onError={(e) => {
+            e.target.onerror = null;
+            e.target.src = '/images/banner_pubg.jpg';
+          }}
+          className="w-6 h-6 object-cover rounded-md transition-transform duration-200 group-hover:scale-110 drop-shadow-[0_0_8px_rgba(245,158,11,0.5)] shadow-xs"
+        />
       )
     },
     {
@@ -311,9 +309,15 @@ const GameSelection = () => {
       label: 'Free Fire',
       sub: '',
       renderIcon: (isActive) => (
-        <svg className={`w-5 h-5 sm:w-6 sm:h-6 ${isActive ? 'text-amber-950' : 'text-amber-500'} fill-current drop-shadow-[0_0_8px_rgba(245,158,11,0.7)] transition-transform group-hover:scale-110`} viewBox="0 0 24 24">
-          <path d="M12 23c-4.97 0-9-3.58-9-8 0-3.5 2.5-6.5 5-9 0 0 1 3 3 3 0-3 1.5-6 3.5-8 1.5 2.5 4 6.5 4 10 0 1.5-.5 3-1.5 4 2 0 4-1.5 4-4 0 6.63-4.03 12-9 12z" />
-        </svg>
+        <img
+          src={isActive ? '/images/freefire-logo.png' : '/images/freefire-logo-white.png'}
+          alt="Free Fire"
+          onError={(e) => {
+            e.target.onerror = null;
+            e.target.src = '/images/freefire-logo.png';
+          }}
+          className="h-4 sm:h-4.5 max-w-[58px] object-contain transition-transform duration-200 group-hover:scale-110 drop-shadow-[0_0_8px_rgba(255,180,0,0.6)]"
+        />
       )
     }
   ];
