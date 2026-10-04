@@ -51,9 +51,9 @@ const MobileBottomNav = () => {
 
   return (
     <>
-      {/* Centered Floating Capsule Dock - Modern Glassmorphism + Scroll Hiding */}
+      {/* Centered Floating Capsule Dock - Hidden on PC & Laptop (lg+), Visible on Mobile/Tablet */}
       <div
-        className={`fixed bottom-2.5 sm:bottom-4 left-1/2 -translate-x-1/2 z-50 transition-all duration-300 ease-[cubic-bezier(0.16,1,0.3,1)] select-none font-khmer w-[94%] max-w-md ${
+        className={`lg:hidden fixed bottom-2.5 sm:bottom-4 left-1/2 -translate-x-1/2 z-50 transition-all duration-300 ease-[cubic-bezier(0.16,1,0.3,1)] select-none font-khmer w-[94%] max-w-md ${
           isVisible ? 'translate-y-0 opacity-100 pointer-events-auto' : 'translate-y-28 opacity-0 pointer-events-none'
         }`}
       >
