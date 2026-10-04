@@ -4,6 +4,7 @@ import { ordersAPI, authAPI, topupAPI } from '../services/api';
 import { useAuth } from '../context/AuthContext';
 import { useLanguage } from '../context/LanguageContext';
 import LoadingSpinner from '../components/LoadingSpinner';
+import { formatDateTime } from '../utils/dateTime';
 
 // Bulletproof resolver for active player account
 export const getStoredPlayerAccount = () => {
@@ -820,7 +821,7 @@ const OrderHistory = () => {
 
                             {/* Date & Game */}
                             <div className="text-[10px] sm:text-[11px] text-slate-400 mt-0.5 flex items-center gap-2 font-mono">
-                              <span>{order.createdAt ? new Date(order.createdAt).toLocaleString() : 'Recent'}</span>
+                              <span>{order.createdAt ? formatDateTime(order.createdAt, { seconds: true }) : 'Recent'}</span>
                               <span className="text-slate-600">•</span>
                               <span className="text-sky-300 font-semibold">{order.gameName || 'Mobile Legends'}</span>
                             </div>

@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { ordersAPI } from '../services/api';
 import LoadingSpinner from '../components/LoadingSpinner';
+import { formatDateTime } from '../utils/dateTime';
 
 const OrderStatus = () => {
   const { orderId } = useParams();
@@ -177,7 +178,7 @@ const OrderStatus = () => {
               ប័ណ្ណទូទាត់ RECEIPT
             </h3>
             <p className="text-xs text-slate-500 font-mono mt-1">
-              កាលបរិច្ឆេទ / Date: {new Date(order?.createdAt || Date.now()).toLocaleDateString('en-GB')}, {new Date(order?.createdAt || Date.now()).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' })}
+              កាលបរិច្ឆេទ / Date: {formatDateTime(order?.createdAt || Date.now(), { seconds: true })}
             </p>
             <p className="text-xs font-bold text-slate-800 font-mono mt-0.5">
               Order ID: #{order?.orderId}
