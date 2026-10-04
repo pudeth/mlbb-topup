@@ -1958,69 +1958,134 @@ const TopUp = () => {
                 // ==================== MODE 2: LARGE ICONS / GRID VIEW ====================
                 if (layoutMode === 'grid') {
                   return (
-                    <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-3 lg:grid-cols-4 gap-2 sm:gap-2.5">
+                    <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-3 lg:grid-cols-4 gap-2.5 sm:gap-3">
                       {filtered.map((pkg) => {
                         const isSelected = selectedProduct.productId === pkg.productId;
+                        const isPass = isPassItem(pkg);
+                        const tagLower = (pkg.tag || '').toLowerCase();
+                        const isPopular = pkg.productId === 12 || pkg.diamondAmount === 55 || tagLower.includes('popular') || tagLower.includes('starter');
+                        const isRecommend = !isPopular && (pkg.productId === 13 || pkg.diamondAmount === 86 || tagLower.includes('bonus') || tagLower.includes('recommend') || tagLower.includes('best'));
+                        const ribbon = isPopular
+                          ? { text: 'Popular', cls: 'from-orange-500 to-amber-500 text-white' }
+                          : isRecommend
+                            ? { text: 'Recommend', cls: 'from-amber-300 to-yellow-500 text-slate-950' }
+                            : pkg.tag
+                              ? { text: formatTagText(pkg.tag), cls: 'from-sky-600 to-indigo-600 text-white' }
+                              : null;
 
                         return (
                           <div
                             key={pkg.productId}
                             onClick={() => setSelectedProduct(pkg)}
-                            className={`group relative rounded-xl sm:rounded-2xl p-2.5 sm:p-3 cursor-pointer select-none transition-all duration-200 flex flex-col items-center text-center justify-between overflow-hidden ${
+                            className={`group relative rounded-2xl p-3 sm:p-4 cursor-pointer select-none transition-all duration-300 flex flex-col items-center text-center justify-between overflow-hidden ${
                               isSelected
-                                ? 'bg-gradient-to-b from-[#1c1233] via-[#140d26] to-[#0d0918] border-2 border-amber-400 shadow-xl shadow-black/60 scale-[1.01] -translate-y-0.5 z-10'
-                                : 'bg-gradient-to-b from-[#111827] via-[#0d1320] to-[#080d16] border border-slate-700/60 hover:border-amber-400/50 hover:bg-gradient-to-b hover:from-[#152033] hover:via-[#101828] hover:to-[#0a0f1c] hover:-translate-y-0.5 hover:shadow-lg hover:shadow-black/50 shadow-[inset_0_1px_0_rgba(255,255,255,0.05)]'
+                                ? 'bg-gradient-to-b from-[#24173d] via-[#170f28] to-[#0b0816] border-2 border-amber-400 shadow-[0_0_24px_rgba(251,191,36,0.4),inset_0_1px_2px_rgba(255,255,255,0.2)] scale-[1.02] -translate-y-1 z-10'
+                                : 'bg-gradient-to-b from-[#0f172a]/95 via-[#0b1220]/95 to-[#070b14]/98 border border-slate-700/70 hover:border-sky-400/60 hover:shadow-[0_10px_24px_-6px_rgba(0,0,0,0.7),0_0_16px_rgba(56,189,248,0.2)] hover:-translate-y-1'
                             }`}
                           >
+                            {/* Ambient card background glow on hover / active */}
+                            <div
+                              className={`pointer-events-none absolute inset-0 transition-opacity duration-300 ${
+                                isSelected
+                                  ? 'bg-gradient-to-t from-amber-400/10 via-amber-400/5 to-transparent'
+                                  : 'bg-gradient-to-t from-sky-500/5 to-transparent group-hover:opacity-100 opacity-0'
+                              }`}
+                            />
+
+                            {/* Top Ribbon Tag */}
+                            {ribbon && (
+                              <span
+                                className={`absolute top-0 left-0 max-w-[85%] truncate px-2.5 py-0.5 rounded-br-xl bg-gradient-to-r ${ribbon.cls} text-[8.5px] sm:text-[9.5px] font-black uppercase tracking-wider shadow-md z-20`}
+                              >
+                                {ribbon.text}
+                              </span>
+                            )}
+
                             {/* Selected Active Checkmark */}
                             {isSelected && (
-                              <div className="absolute top-1.5 right-1.5 z-20 w-4 h-4 rounded-full bg-gradient-to-tr from-amber-400 to-yellow-300 text-slate-950 flex items-center justify-center font-black text-[9px] shadow-[0_0_8px_rgba(245,158,11,0.8)]">
-                                ✓
+                              <div className="absolute top-2 right-2 z-20 w-5 h-5 rounded-full bg-gradient-to-tr from-amber-400 to-yellow-300 text-slate-950 flex items-center justify-center font-black shadow-[0_0_10px_rgba(251,191,36,0.9)]">
+                                <svg className="w-3 h-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="4" strokeLinecap="round" strokeLinejoin="round"><path d="M20 6L9 17l-5-5" /></svg>
                               </div>
                             )}
 
-                            {/* Top Badge */}
-                            <div className="h-5 mb-0.5 w-full flex justify-center items-center relative z-10">
-                              {pkg.tag && !isSelected && (
-                                <span className={`inline-flex items-center px-1.5 py-0.5 rounded-full text-[8px] sm:text-[8.5px] font-bold tracking-wide shadow-sm truncate max-w-[85%] ${getTagStyle(pkg.tag)}`}>
-                                  {formatTagText(pkg.tag)}
+                            {/* Truly Large 3D Artwork Centerpiece */}
+                            <div className="relative w-full h-24 sm:h-28 flex items-center justify-center my-2">
+                              {/* Ambient radial backlight aura */}
+                              <div
+                                className={`absolute w-20 h-20 sm:w-24 sm:h-24 rounded-full blur-xl pointer-events-none transition-all duration-300 ${
+                                  isSelected
+                                    ? 'bg-amber-400/30 scale-110'
+                                    : 'bg-cyan-500/25 group-hover:bg-cyan-400/40'
+                                }`}
+                              />
+                              <ProductPackageImage
+                                pkg={pkg}
+                                size="xl"
+                                className="relative z-10 group-hover:scale-110 transition-transform duration-300 drop-shadow-[0_10px_22px_rgba(0,180,255,0.45)]"
+                              />
+                            </div>
+
+                            {/* Title */}
+                            <h3
+                              className={`font-black text-xs sm:text-sm lg:text-[15px] leading-tight line-clamp-1 w-full transition-colors drop-shadow-sm relative z-10 ${
+                                isSelected ? 'text-amber-300 drop-shadow-[0_0_8px_rgba(251,191,36,0.5)]' : 'text-white group-hover:text-sky-200'
+                              }`}
+                            >
+                              {pkg.name}
+                            </h3>
+
+                            {/* Subtitle Pill (Diamond count or Pass) */}
+                            <div className="flex items-center justify-center gap-1.5 mt-1 mb-2 text-[10px] sm:text-[11px] font-bold relative z-10">
+                              {isPass ? (
+                                <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-amber-400/10 text-amber-300 border border-amber-400/20">
+                                  <span>⚡</span>
+                                  <span>Daily Pass</span>
+                                </span>
+                              ) : (
+                                <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-cyan-400/10 text-cyan-300 border border-cyan-400/20">
+                                  <span>💎</span>
+                                  <span>{pkg.diamondAmount} ពេជ្រ</span>
                                 </span>
                               )}
                             </div>
 
-                            {/* Centered Artwork */}
-                            <div className="relative my-1.5 flex items-center justify-center">
-                              <ProductPackageImage
-                                pkg={pkg}
-                                size="lg"
-                                className="relative z-10 group-hover:scale-105 transition-transform duration-300"
-                              />
-                            </div>
-
-                            <span className="font-black text-xs sm:text-[13px] leading-snug mb-2 text-white group-hover:text-amber-300 transition-colors drop-shadow-sm relative z-10 line-clamp-1">
-                              {pkg.name}
-                            </span>
-
-                            {/* Price Block */}
+                            {/* Price & Buy Action Capsule */}
                             <div
-                              className={`mt-auto w-full flex flex-col items-center justify-center py-1.5 px-2 rounded-lg transition-all duration-200 relative z-10 ${
+                              className={`mt-auto w-full rounded-xl p-2 transition-all duration-200 flex items-center justify-between border relative z-10 ${
                                 isSelected
-                                  ? 'bg-slate-950/80 border border-amber-400/40 shadow-inner'
-                                  : 'bg-slate-950/65 border border-slate-800/80 group-hover:border-slate-700/80 shadow-inner'
+                                  ? 'bg-slate-950/90 border-amber-400/50 shadow-inner'
+                                  : 'bg-slate-950/75 border-slate-800/90 group-hover:border-slate-700 shadow-inner'
                               }`}
                             >
-                              <span
-                                className={`font-black text-xs sm:text-sm font-mono leading-none mb-0.5 ${
+                              {/* Price in USD and Riel */}
+                              <div className="flex flex-col items-start min-w-0 pl-1 text-left">
+                                <span
+                                  className={`font-black font-mono text-sm sm:text-base leading-none tracking-tight ${
+                                    isSelected
+                                      ? 'text-amber-300 drop-shadow-[0_0_8px_rgba(251,191,36,0.6)]'
+                                      : 'text-[#00F5B8] drop-shadow-[0_0_8px_rgba(0,245,184,0.4)]'
+                                  }`}
+                                >
+                                  ${pkg.price.toFixed(2)}
+                                </span>
+                                <span className="text-[8.5px] sm:text-[9.5px] font-mono font-medium text-slate-400 mt-0.5 truncate">
+                                  ~{Math.round(pkg.price * 4100).toLocaleString()} ៛
+                                </span>
+                              </div>
+
+                              {/* Buy Button */}
+                              <div
+                                className={`h-7 px-2.5 sm:px-3 rounded-lg flex items-center justify-center gap-1 text-[10px] sm:text-[11px] font-black transition-all shrink-0 shadow-sm ${
                                   isSelected
-                                    ? 'text-amber-300 drop-shadow-[0_0_6px_rgba(251,191,36,0.5)]'
-                                    : 'text-emerald-400 group-hover:text-emerald-300 drop-shadow-[0_0_5px_rgba(52,211,153,0.3)]'
+                                    ? 'bg-gradient-to-r from-amber-400 to-yellow-400 text-slate-950 shadow-amber-400/40'
+                                    : 'bg-gradient-to-r from-[#00E599] to-[#00F5B8] text-slate-950 group-hover:scale-105'
                                 }`}
                               >
-                                ${pkg.price.toFixed(2)}
-                              </span>
-                              <span className="text-[8.5px] sm:text-[9px] font-mono font-medium text-slate-400 group-hover:text-slate-300">
-                                ~{Math.round(pkg.price * 4100).toLocaleString()} ៛
-                              </span>
+                                <svg className="w-3.5 h-3.5 fill-current" viewBox="0 0 24 24">
+                                  <path d="M7 18c-1.1 0-1.99.9-1.99 2S5.9 22 7 22s2-.9 2-2-.9-2-2-2zM1 2v2h2l3.6 7.59-1.35 2.45c-.16.28-.25.61-.25.96 0 1.1.9 2 2 2h12v-2H7.42c-.14 0-.25-.11-.25-.25l.03-.12.9-1.63h7.45c.75 0 1.41-.41 1.75-1.03l3.58-6.49c.08-.14.12-.31.12-.48 0-.55-.45-1-1-1H5.21l-.94-2H1zm16 16c-1.1 0-1.99.9-1.99 2s.89 2 1.99 2 2-.9 2-2-.9-2-2-2z" />
+                                </svg>
+                                <span className="hidden xs:inline">ទិញ</span>
+                              </div>
                             </div>
                           </div>
                         );
