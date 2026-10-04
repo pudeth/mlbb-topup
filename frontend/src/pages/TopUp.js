@@ -262,7 +262,7 @@ const TopUp = () => {
   const [error, setError] = useState('');
   const [autoDetectedMessage, setAutoDetectedMessage] = useState('');
   const [showIdGuide, setShowIdGuide] = useState(false);
-  const [copiedPlayerId, setCopiedPlayerId] = useState(false);
+  const [pastedPlayerId, setPastedPlayerId] = useState(false);
   const [activeBannerIdx, setActiveBannerIdx] = useState(0);
 
   const selectedGameIdRef = useRef(selectedGame.id);
@@ -491,13 +491,42 @@ const TopUp = () => {
     paymentMethod: 'abapayway',
   });
 
-  const handleCopyPlayerId = () => {
-    if (formData.playerID) {
-      if (navigator.clipboard && navigator.clipboard.writeText) {
-        navigator.clipboard.writeText(formData.playerID).catch(() => {});
+  const handlePastePlayerId = async () => {
+    try {
+      let clipboardText = '';
+      if (navigator.clipboard && navigator.clipboard.readText) {
+        clipboardText = await navigator.clipboard.readText();
       }
-      setCopiedPlayerId(true);
-      setTimeout(() => setCopiedPlayerId(false), 2000);
+
+      if (clipboardText && clipboardText.trim()) {
+        const rawVal = clipboardText.trim();
+        if (selectedGame?.id?.startsWith('mlbb')) {
+          const parsed = parseMlbbId(rawVal);
+          if (parsed.detected) {
+            setFormData(prev => ({ ...prev, playerID: parsed.playerID, serverID: parsed.serverID }));
+            setAutoDetectedMessage(`Auto-detected: Player ID ${parsed.playerID} | Zone ${parsed.serverID}`);
+          } else {
+            setFormData(prev => ({ ...prev, playerID: rawVal }));
+            setAutoDetectedMessage('');
+          }
+        } else {
+          setFormData(prev => ({ ...prev, playerID: rawVal }));
+        }
+        setVerifiedAccount(null);
+        setPastedPlayerId(true);
+        setTimeout(() => setPastedPlayerId(false), 2000);
+      } else {
+        const el = document.getElementById('player_id_input');
+        if (el) {
+          el.focus();
+        }
+      }
+    } catch (err) {
+      console.warn('Clipboard read notice:', err?.message);
+      const el = document.getElementById('player_id_input');
+      if (el) {
+        el.focus();
+      }
     }
   };
 
@@ -1690,12 +1719,12 @@ const TopUp = () => {
 
               {/* Inputs */}
               <div className={`grid gap-2 ${isMlbb || isHoyoverse ? 'grid-cols-1 sm:grid-cols-[1fr_0.75fr]' : 'grid-cols-1'}`}>
-                {/* Player ID with inline copy */}
+                {/* Player ID with inline paste & clear */}
                 <div>
                   <label htmlFor="player_id_input" className="block text-[9.5px] sm:text-[11px] font-semibold text-slate-400 mb-1 uppercase tracking-wider">
                     {isTelegram ? 'Telegram @' : isSteam ? 'Steam Name' : isGiftCard ? 'Email' : 'Player ID'}
                   </label>
-                  <div className="relative">
+                  <div className="relative flex items-center">
                     <input
                       id="player_id_input"
                       type="text"
@@ -1703,21 +1732,47 @@ const TopUp = () => {
                       value={formData.playerID}
                       onChange={handlePlayerIdChange}
                       placeholder={isTelegram ? '@username' : isSteam ? 'steam_username' : isGiftCard ? 'email@domain.com' : '123456789'}
-                      className="w-full h-9 sm:h-10 bg-[#030817] border border-slate-700/70 rounded-xl pl-3 pr-9 text-xs sm:text-sm font-mono text-white placeholder-slate-600 focus:outline-none focus:border-sky-400 focus:ring-2 focus:ring-sky-400/25 transition-all"
+                      className="w-full h-9 sm:h-10 bg-[#030817] border border-slate-700/70 rounded-xl pl-3 pr-24 text-xs sm:text-sm font-mono text-white placeholder-slate-600 focus:outline-none focus:border-sky-400 focus:ring-2 focus:ring-sky-400/25 transition-all"
                     />
-                    <button
-                      type="button"
-                      onClick={handleCopyPlayerId}
-                      disabled={!formData.playerID}
-                      className="absolute right-1 top-1/2 -translate-y-1/2 w-7 h-7 rounded-lg flex items-center justify-center text-slate-400 hover:text-sky-300 hover:bg-sky-500/10 disabled:opacity-30 transition-colors cursor-pointer"
-                      title={copiedPlayerId ? 'Copied!' : 'Copy Player ID'}
-                    >
-                      {copiedPlayerId ? (
-                        <svg className="w-3.5 h-3.5 text-emerald-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><path d="M20 6L9 17l-5-5" /></svg>
-                      ) : (
-                        <svg className="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" /><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1" /></svg>
+                    <div className="absolute right-1.5 top-1/2 -translate-y-1/2 flex items-center gap-1">
+                      {formData.playerID && (
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setFormData(prev => ({ ...prev, playerID: '' }));
+                            setAutoDetectedMessage('');
+                            setVerifiedAccount(null);
+                          }}
+                          className="w-5 h-5 rounded-full bg-slate-800 hover:bg-slate-700 text-slate-400 hover:text-white flex items-center justify-center text-xs transition-colors cursor-pointer"
+                          title="Clear"
+                        >
+                          ×
+                        </button>
                       )}
-                    </button>
+                      <button
+                        type="button"
+                        onClick={handlePastePlayerId}
+                        className="h-7 px-2.5 rounded-lg bg-sky-500/15 hover:bg-sky-500/30 border border-sky-400/30 hover:border-sky-400/60 text-sky-300 hover:text-white text-[11px] font-bold flex items-center gap-1.5 transition-all cursor-pointer active:scale-95 shadow-sm"
+                        title={language === 'km' ? 'បិទភ្ជាប់ (Paste ID)' : 'Paste Player ID from clipboard'}
+                      >
+                        {pastedPlayerId ? (
+                          <>
+                            <svg className="w-3.5 h-3.5 text-emerald-400 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
+                              <path d="M20 6L9 17l-5-5" />
+                            </svg>
+                            <span className="text-emerald-400 font-extrabold text-[10.5px]">{language === 'km' ? 'បានបិទ' : 'Pasted'}</span>
+                          </>
+                        ) : (
+                          <>
+                            <svg className="w-3.5 h-3.5 text-sky-400 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+                              <path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2" />
+                              <rect x="8" y="2" width="8" height="4" rx="1" ry="1" />
+                            </svg>
+                            <span className="font-extrabold text-[10.5px] tracking-tight">{language === 'km' ? 'បិទភ្ជាប់' : 'Paste'}</span>
+                          </>
+                        )}
+                      </button>
+                    </div>
                   </div>
                 </div>
 
