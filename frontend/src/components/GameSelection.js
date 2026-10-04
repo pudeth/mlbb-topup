@@ -523,18 +523,20 @@ const GameSelection = () => {
       </div>
 
       {/* ========================================================= */}
-      {/* SECTION: ពិសេសសម្រាប់អ្នក / Special for You (Exact 3 Cards) */}
+      {/* SECTION: ពិសេសសម្រាប់អ្នក / Special for You (Exact 3 Cards matching mockup) */}
       {/* ========================================================= */}
       <div id="promotions" className="pt-6 sm:pt-8 space-y-4">
         <div className="flex items-center justify-between">
-          <div className="flex items-center gap-2.5">
-            <span className="text-xl">🎁</span>
+          <div className="flex items-center gap-2 sm:gap-2.5">
+            <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-sky-500/20 to-blue-500/10 border border-sky-500/30 flex items-center justify-center shadow-[0_0_12px_rgba(56,189,248,0.25)] text-base">
+              🎁
+            </div>
             <div>
               <h2 className="text-lg sm:text-xl font-black text-white leading-tight">
                 {language === 'km' ? 'ពិសេសសម្រាប់អ្នក' : 'Special for You'}
               </h2>
               <p className="text-[10px] sm:text-xs text-slate-400 font-medium">
-                Special for You
+                {language === 'km' ? 'ការផ្ដល់ជូនពិសេស និងបញ្ចុះតម្លៃផ្តាច់មុខ' : 'Special for You'}
               </p>
             </div>
           </div>
@@ -548,90 +550,97 @@ const GameSelection = () => {
           </Link>
         </div>
 
-        {/* 3 Wide Promo Cards matching screenshot */}
-        <div className="grid grid-cols-3 gap-1.5 sm:gap-3 lg:gap-4">
+        {/* 3 Wide Promo Cards matching reference mockup */}
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5 sm:gap-3 lg:gap-4">
           
-          {/* Card 1: Special Discount (Golden Chest) */}
-          <div className="relative rounded-xl sm:rounded-2xl p-1.5 sm:p-3 bg-gradient-to-r from-[#1c1407] via-[#140e04] to-[#0d0902] border border-amber-500/40 shadow-xl flex flex-col justify-between group hover:border-amber-400 transition-all select-none">
-            <div className="flex items-center gap-1.5 sm:gap-2.5">
-              <div className="w-8 h-8 sm:w-12 sm:h-12 md:w-14 md:h-14 rounded-xl overflow-hidden shrink-0 flex items-center justify-center bg-amber-500/10 border border-amber-500/30 p-0.5 group-hover:scale-105 transition-transform">
-                <img
-                  src="/images/treasure-chest.png"
-                  alt="Discount Offer"
-                  className="w-full h-full object-contain"
-                  onError={(e) => {
-                    e.target.src = '/mlbb-logo.png';
-                  }}
-                />
-              </div>
-              <div className="flex-1 min-w-0">
-                <h3 className="font-black text-[7.5px] sm:text-xs md:text-sm text-white group-hover:text-amber-300 transition-colors truncate">
-                  {language === 'km' ? 'បញ្ចុះតម្លៃពិសេស' : 'Special Discount'}
-                </h3>
-                <p className="text-[6.5px] sm:text-[9.5px] md:text-[10px] text-amber-200/80 font-medium truncate mt-0.5">
-                  {language === 'km' ? 'ជួបស្ងាត់ៗជាមួយតម្លៃល្អ' : 'Best Deals & Discounts'}
-                </p>
-              </div>
+          {/* Card 1: Special Discount (3D Red Gift Box with Gold Coins) */}
+          <div className="relative rounded-2xl p-2.5 sm:p-3 md:p-3.5 bg-gradient-to-r from-[#1c1204] via-[#140c02] to-[#0a0601] border border-amber-500/50 shadow-[0_4px_20px_rgba(245,158,11,0.15)] flex items-center justify-between group hover:border-amber-400/90 hover:shadow-[0_6px_25px_rgba(245,158,11,0.25)] transition-all select-none overflow-hidden">
+            <div className="absolute -left-6 -top-6 w-24 h-24 bg-amber-500/20 rounded-full blur-xl pointer-events-none" />
+            <div className="w-16 h-16 sm:w-18 sm:h-18 md:w-20 md:h-20 shrink-0 flex items-center justify-center relative z-10">
+              <img
+                src="/images/special_gift_box_3d.jpg"
+                alt="Special Discount"
+                className="w-full h-full object-contain rounded-xl drop-shadow-[0_0_12px_rgba(251,191,36,0.4)] group-hover:scale-105 transition-transform"
+                onError={(e) => {
+                  e.target.src = '/images/special_art_gift.png';
+                }}
+              />
             </div>
-            <Link
-              to="/topup"
-              className="mt-2 w-full py-1 sm:py-1.5 px-1 rounded-lg sm:rounded-full bg-gradient-to-r from-amber-400 to-yellow-400 hover:from-amber-300 hover:to-yellow-300 text-slate-950 font-black text-[7px] sm:text-[10px] md:text-[11px] shadow-md transition-transform active:scale-95 text-center flex items-center justify-center gap-0.5"
-            >
-              <span>{language === 'km' ? 'ទិញឥឡូវនេះ' : 'Buy Now'}</span>
-              <span>➔</span>
-            </Link>
+            <div className="flex-1 min-w-0 pl-2 sm:pl-3 flex flex-col justify-center items-start relative z-10">
+              <h3 className="font-black text-xs sm:text-sm md:text-base text-amber-200 group-hover:text-amber-100 transition-colors leading-tight truncate w-full">
+                {language === 'km' ? 'បញ្ចុះតម្លៃពិសេស' : 'Special Discount'}
+              </h3>
+              <p className="text-[9px] sm:text-[10px] md:text-xs text-amber-300/80 font-medium leading-tight mt-0.5 sm:mt-1 truncate w-full">
+                {language === 'km' ? 'ពុះកញ្ជ្រោលជាមួយការផ្តល់ជូនពិសេស' : 'Best Deals & Discounts'}
+              </p>
+              <Link
+                to="/topup"
+                className="mt-2 sm:mt-2.5 px-3 sm:px-4 py-1 sm:py-1.5 rounded-full bg-gradient-to-r from-amber-400 via-amber-500 to-yellow-500 hover:from-amber-300 hover:to-yellow-400 text-slate-950 font-black text-[10px] sm:text-xs shadow-[0_2px_10px_rgba(245,158,11,0.4)] transition-transform active:scale-95 inline-flex items-center gap-1"
+              >
+                <span>{language === 'km' ? 'ទិញពេលឥឡូវ' : 'Buy Now'}</span>
+                <span>➔</span>
+              </Link>
+            </div>
           </div>
 
-          {/* Card 2: Telegram Stars */}
-          <div className="relative rounded-xl sm:rounded-2xl p-1.5 sm:p-3 bg-gradient-to-r from-[#071729] via-[#05111e] to-[#030b15] border border-sky-500/40 shadow-xl flex flex-col justify-between group hover:border-sky-400 transition-all select-none">
-            <div className="flex items-center gap-1.5 sm:gap-2.5">
-              <div className="w-8 h-8 sm:w-12 sm:h-12 md:w-14 md:h-14 rounded-xl overflow-hidden shrink-0 flex items-center justify-center bg-sky-500/10 border border-sky-500/30 p-1 group-hover:scale-105 transition-transform">
-                <svg className="w-5 h-5 sm:w-7 sm:h-7 md:w-8 md:h-8 text-sky-400 drop-shadow-[0_0_8px_rgba(56,189,248,0.5)]" viewBox="0 0 24 24" fill="currentColor">
-                  <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm4.64 6.8c-.15 1.58-.8 5.42-1.13 7.19-.14.75-.42 1-.68 1.03-.58.05-1.02-.38-1.58-.75-.88-.58-1.38-.94-2.23-1.5-.99-.65-.35-1.01.22-1.59.15-.15 2.71-2.48 2.76-2.69a.2.2 0 00-.05-.18c-.06-.05-.14-.03-.21-.02-.09.02-1.49.95-4.22 2.79-.4.27-.76.41-1.08.4-.36-.01-1.04-.2-1.55-.37-.63-.2-1.12-.31-1.08-.66.02-.18.27-.36.74-.55 2.92-1.27 4.86-2.11 5.83-2.51 2.78-1.16 3.35-1.36 3.73-1.36.08 0 .27.02.39.12.1.08.13.19.14.27-.01.06.01.24 0 .37z"/>
-                </svg>
-              </div>
-              <div className="flex-1 min-w-0">
-                <h3 className="font-black text-[7.5px] sm:text-xs md:text-sm text-white group-hover:text-sky-300 transition-colors truncate">
-                  Telegram Stars
-                </h3>
-                <p className="text-[6.5px] sm:text-[9.5px] md:text-[10px] text-sky-200/80 font-medium truncate mt-0.5">
-                  {language === 'km' ? 'ឱកាសពិសេសល្អ' : 'Instant Stars'}
-                </p>
-              </div>
+          {/* Card 2: Telegram Stars (3D Telegram Badge with Floating Stars) */}
+          <div className="relative rounded-2xl p-2.5 sm:p-3 md:p-3.5 bg-gradient-to-r from-[#031d3d] via-[#02142d] to-[#010a17] border border-sky-500/50 shadow-[0_4px_20px_rgba(56,189,248,0.15)] flex items-center justify-between group hover:border-sky-400/90 hover:shadow-[0_6px_25px_rgba(56,189,248,0.25)] transition-all select-none overflow-hidden">
+            <div className="absolute -left-6 -top-6 w-24 h-24 bg-sky-500/20 rounded-full blur-xl pointer-events-none" />
+            <div className="w-16 h-16 sm:w-18 sm:h-18 md:w-20 md:h-20 shrink-0 flex items-center justify-center relative z-10">
+              <img
+                src="/images/special_telegram_stars_3d.jpg"
+                alt="Telegram Stars"
+                className="w-full h-full object-contain rounded-xl drop-shadow-[0_0_12px_rgba(56,189,248,0.4)] group-hover:scale-105 transition-transform"
+                onError={(e) => {
+                  e.target.src = '/images/special_art_telegram.png';
+                }}
+              />
             </div>
-            <Link
-              to="/topup?service=telegram_stars"
-              className="mt-2 w-full py-1 sm:py-1.5 px-1 rounded-lg sm:rounded-full bg-gradient-to-r from-blue-600 to-sky-600 hover:from-blue-500 hover:to-sky-500 text-white font-black text-[7px] sm:text-[10px] md:text-[11px] shadow-md transition-transform active:scale-95 text-center flex items-center justify-center gap-0.5"
-            >
-              <span>{language === 'km' ? 'មើលបន្ថែម' : 'View Deals'}</span>
-              <span>➔</span>
-            </Link>
+            <div className="flex-1 min-w-0 pl-2 sm:pl-3 flex flex-col justify-center items-start relative z-10">
+              <h3 className="font-black text-xs sm:text-sm md:text-base text-white group-hover:text-sky-200 transition-colors leading-tight truncate w-full">
+                Telegram Stars
+              </h3>
+              <p className="text-[9px] sm:text-[10px] md:text-xs text-sky-200/80 font-medium leading-tight mt-0.5 sm:mt-1 truncate w-full">
+                {language === 'km' ? 'ទូទាត់ឆាប់រហ័ស' : 'Instant Stars'}
+              </p>
+              <Link
+                to="/topup?service=telegram_stars"
+                className="mt-2 sm:mt-2.5 px-3 sm:px-4 py-1 sm:py-1.5 rounded-full bg-gradient-to-r from-sky-400 via-sky-500 to-blue-600 hover:from-sky-300 hover:to-blue-500 text-white font-black text-[10px] sm:text-xs shadow-[0_2px_10px_rgba(56,189,248,0.4)] transition-transform active:scale-95 inline-flex items-center gap-1"
+              >
+                <span>{language === 'km' ? 'ចូលមើល' : 'View Deals'}</span>
+                <span>➔</span>
+              </Link>
+            </div>
           </div>
 
-          {/* Card 3: Steam Wallet */}
-          <div className="relative rounded-xl sm:rounded-2xl p-1.5 sm:p-3 bg-gradient-to-r from-[#0b1228] via-[#080d1e] to-[#040814] border border-indigo-500/40 shadow-xl flex flex-col justify-between group hover:border-indigo-400 transition-all select-none">
-            <div className="flex items-center gap-1.5 sm:gap-2.5">
-              <div className="w-8 h-8 sm:w-12 sm:h-12 md:w-14 md:h-14 rounded-xl overflow-hidden shrink-0 flex items-center justify-center bg-indigo-500/10 border border-indigo-500/30 p-1 group-hover:scale-105 transition-transform">
-                <svg className="w-5 h-5 sm:w-7 sm:h-7 md:w-8 md:h-8 text-slate-300 drop-shadow-[0_0_8px_rgba(99,102,241,0.5)]" viewBox="0 0 24 24" fill="currentColor">
-                  <path d="M11.979 0C5.642 0 .467 4.908.024 11.144l6.741 2.783c.567-.384 1.25-.615 1.986-.615.158 0 .313.013.465.034l3.414-4.947c-.01-.064-.02-.13-.02-.196 0-2.43 1.975-4.405 4.405-4.405s4.405 1.975 4.405 4.405-1.975 4.405-4.405 4.405c-.066 0-.131-.01-.195-.02l-4.947 3.414c.021.152.034.307.034.465 0 1.942-1.574 3.516-3.516 3.516-1.637 0-3.008-1.12-3.398-2.637L.341 14.88C1.724 20.088 6.471 24 12.021 24c6.627 0 12-5.373 12-12s-5.373-12-12.042-12zM8.751 16.59c-.93 0-1.684.754-1.684 1.684 0 .93.754 1.684 1.684 1.684.93 0 1.684-.754 1.684-1.684 0-.93-.754-1.684-1.684-1.684zm8.264-10.457c-1.332 0-2.412 1.08-2.412 2.412s1.08 2.412 2.412 2.412 2.412-1.08 2.412-2.412-1.08-2.412-2.412-2.412z"/>
-                </svg>
-              </div>
-              <div className="flex-1 min-w-0">
-                <h3 className="font-black text-[7.5px] sm:text-xs md:text-sm text-white group-hover:text-indigo-300 transition-colors truncate">
-                  Steam Wallet
-                </h3>
-                <p className="text-[6.5px] sm:text-[9.5px] md:text-[10px] text-indigo-200/80 font-medium truncate mt-0.5">
-                  {language === 'km' ? 'បញ្ចូលប្រាក់' : 'Steam CIS Balance'}
-                </p>
-              </div>
+          {/* Card 3: Steam Wallet (3D Steam Emblem with Floating Crystals) */}
+          <div className="relative rounded-2xl p-2.5 sm:p-3 md:p-3.5 bg-gradient-to-r from-[#02132e] via-[#010d1e] to-[#000611] border border-blue-500/50 shadow-[0_4px_20px_rgba(59,130,246,0.15)] flex items-center justify-between group hover:border-blue-400/90 hover:shadow-[0_6px_25px_rgba(59,130,246,0.25)] transition-all select-none overflow-hidden">
+            <div className="absolute -left-6 -top-6 w-24 h-24 bg-blue-500/20 rounded-full blur-xl pointer-events-none" />
+            <div className="w-16 h-16 sm:w-18 sm:h-18 md:w-20 md:h-20 shrink-0 flex items-center justify-center relative z-10">
+              <img
+                src="/images/special_steam_wallet_3d.jpg"
+                alt="Steam Wallet"
+                className="w-full h-full object-contain rounded-xl drop-shadow-[0_0_12px_rgba(59,130,246,0.4)] group-hover:scale-105 transition-transform"
+                onError={(e) => {
+                  e.target.src = '/images/special_art_steam.png';
+                }}
+              />
             </div>
-            <Link
-              to="/topup?service=steam"
-              className="mt-2 w-full py-1 sm:py-1.5 px-1 rounded-lg sm:rounded-full bg-gradient-to-r from-indigo-600 to-blue-600 hover:from-indigo-500 hover:to-blue-500 text-white font-black text-[7px] sm:text-[10px] md:text-[11px] shadow-md transition-transform active:scale-95 text-center flex items-center justify-center gap-0.5"
-            >
-              <span>{language === 'km' ? 'ទិញឥឡូវនេះ' : 'Buy Now'}</span>
-              <span>➔</span>
-            </Link>
+            <div className="flex-1 min-w-0 pl-2 sm:pl-3 flex flex-col justify-center items-start relative z-10">
+              <h3 className="font-black text-xs sm:text-sm md:text-base text-white group-hover:text-blue-200 transition-colors leading-tight truncate w-full">
+                Steam Wallet
+              </h3>
+              <p className="text-[9px] sm:text-[10px] md:text-xs text-blue-200/80 font-medium leading-tight mt-0.5 sm:mt-1 truncate w-full">
+                {language === 'km' ? 'បញ្ចូលលឿន' : 'Steam CIS Balance'}
+              </p>
+              <Link
+                to="/topup?service=steam"
+                className="mt-2 sm:mt-2.5 px-3 sm:px-4 py-1 sm:py-1.5 rounded-full bg-gradient-to-r from-blue-500 via-blue-600 to-sky-600 hover:from-blue-400 hover:to-sky-500 text-white font-black text-[10px] sm:text-xs shadow-[0_2px_10px_rgba(59,130,246,0.4)] transition-transform active:scale-95 inline-flex items-center gap-1"
+              >
+                <span>{language === 'km' ? 'ចូលមើល' : 'Buy Now'}</span>
+                <span>➔</span>
+              </Link>
+            </div>
           </div>
 
         </div>
