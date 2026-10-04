@@ -734,7 +734,7 @@ const AiAssistant = () => {
           <img
             src="/ai-bot-icon.png"
             alt="AI Assistant"
-            className="w-full h-full object-contain filter drop-shadow-[0_6px_20px_rgba(56,189,248,0.5)] transition-all duration-300"
+            className="w-full h-full object-contain transition-all duration-300"
           />
         </div>
       </button>

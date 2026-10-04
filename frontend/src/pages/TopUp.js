@@ -3,6 +3,7 @@ import { useSearchParams, useNavigate, Link } from 'react-router-dom';
 import { useLanguage } from '../context/LanguageContext';
 import { ordersAPI, topupAPI, paywayAPI, productsAPI, authAPI } from '../services/api';
 import { getStoredGames, getMasterTopupStatus, fetchStoredGames, fetchMasterTopupStatus } from '../services/gamesConfig';
+import { CambodiaFlagFrame } from '../components/CambodiaFlagBadge';
 import ProductPackageImage from '../components/ProductPackageImage';
 import { AbaKhqrLogo } from '../components/AbaPaymentLogos';
 import WeAcceptPayments from '../components/WeAcceptPayments';
@@ -337,7 +338,7 @@ const TopUp = () => {
     // Determine active packages merged with Admin Customer Retail Prices
   const getPackagesForGame = useCallback((gameId) => {
     let baseList = [];
-    if (gameId.startsWith('mlbb') || gameId === 'mlbb') baseList = [...GAME_PACKAGES_MAP.mlbb];
+    if (gameId.startsWith('mlbb') || gameId === 'mlbb' || gameId === 'level_up_pass' || gameId === 'magic_chess') baseList = [...GAME_PACKAGES_MAP.mlbb];
     else if (gameId.startsWith('pubgm')) baseList = [...GAME_PACKAGES_MAP.pubgm];
     else if (gameId.startsWith('freefire')) baseList = [...GAME_PACKAGES_MAP.freefire];
     else if (gameId === 'hok') baseList = [...GAME_PACKAGES_MAP.hok];
@@ -1379,7 +1380,7 @@ const TopUp = () => {
   };
 
 
-  const isMlbb = selectedGame.id.startsWith('mlbb');
+  const isMlbb = selectedGame.id.startsWith('mlbb') || selectedGame.category === 'Mobile Legends' || selectedGame.id === 'level_up_pass' || selectedGame.id === 'magic_chess';
   const isHoyoverse = ['genshin', 'star_rail', 'zzz', 'wuthering_waves'].includes(selectedGame.id);
   const isTelegram = selectedGame.id === 'telegram_stars';
   const isSteam = selectedGame.id.startsWith('steam');
@@ -1508,8 +1509,8 @@ const TopUp = () => {
             <div className="absolute inset-0 bg-gradient-to-r from-black/40 via-transparent to-black/30 pointer-events-none" />
           </div>
 
-          {/* Top Bar: Official Game Brand Emblem (Left) & Back Button (Right) */}
-          <div className="relative z-10 p-2.5 xs:p-3 sm:p-5 flex items-center justify-between">
+          {/* Top Bar: Official Game Brand Emblem (Left), Server Badge Frame & Back Button (Right) */}
+          <div className="relative z-10 p-2.5 xs:p-3 sm:p-5 flex items-center justify-between gap-2">
             {/* Official Game Logo Badge */}
             <div className="flex items-center gap-1.5 xs:gap-2 sm:gap-2.5 bg-black/60 backdrop-blur-md px-2 py-1 xs:px-2.5 sm:px-3 sm:py-1.5 rounded-xl sm:rounded-2xl border border-white/10 shadow-lg">
               {selectedGame.id.startsWith('mlbb') ? (
@@ -1529,15 +1530,32 @@ const TopUp = () => {
               )}
             </div>
 
-            {/* Back Button to Home */}
-            <button
-              type="button"
-              onClick={() => navigate('/')}
-              className="w-7 h-7 sm:w-9 sm:h-9 rounded-full bg-slate-950/80 hover:bg-slate-900 backdrop-blur-xl text-white hover:text-cyan-300 flex items-center justify-center text-sm sm:text-lg font-black border border-white/20 hover:border-cyan-400/80 cursor-pointer transition-all duration-300 hover:scale-110 active:scale-95 shadow-md shrink-0 ml-1"
-              title="Back to Home"
-            >
-              ‹
-            </button>
+            {/* Right: 3D Server Badge Frame & Back Button */}
+            <div className="flex items-center gap-1.5 sm:gap-2.5">
+              {(selectedGame.id.startsWith('mlbb') || selectedGame.flagTitle || (selectedGame.flagType && selectedGame.flagType !== 'none') || selectedGame.badge?.includes('ខ្មែរ')) && (
+                <div className="pointer-events-none drop-shadow-[0_4px_12px_rgba(0,0,0,0.85)] scale-[0.62] xs:scale-[0.72] sm:scale-[0.88] md:scale-100 origin-right">
+                  <CambodiaFlagFrame
+                    title={selectedGame.flagTitle || (selectedGame.id?.includes('ph') ? 'PH SERVER' : selectedGame.id?.includes('id') ? 'ID SERVER' : selectedGame.badge || "សេវើខ្មែរ 5v5")}
+                    subtitle={selectedGame.flagSubtitle || (selectedGame.id?.startsWith('mlbb') ? "5V5" : "")}
+                    sub={selectedGame.flagServerText || (selectedGame.id?.includes('ph') ? 'OFFICIAL' : selectedGame.id?.includes('id') ? 'FAST' : 'SERVER')}
+                    flagType={selectedGame.flagType || (selectedGame.id?.includes('ph') || selectedGame.name?.includes('(PH)') ? 'ph' : selectedGame.id?.includes('id') || selectedGame.name?.includes('(ID)') ? 'id' : selectedGame.badge?.includes('ខ្មែរ') ? 'kh' : 'kh')}
+                    flagImage={selectedGame.flagImage || null}
+                    isFullBadgePng={selectedGame.isFullBadgePng || false}
+                    badgeStyle={selectedGame.flagFrameStyle || 'gold_cyber'}
+                  />
+                </div>
+              )}
+
+              {/* Back Button to Home */}
+              <button
+                type="button"
+                onClick={() => navigate('/')}
+                className="w-7 h-7 sm:w-9 sm:h-9 rounded-full bg-slate-950/80 hover:bg-slate-900 backdrop-blur-xl text-white hover:text-cyan-300 flex items-center justify-center text-sm sm:text-lg font-black border border-white/20 hover:border-cyan-400/80 cursor-pointer transition-all duration-300 hover:scale-110 active:scale-95 shadow-md shrink-0 ml-0.5"
+                title="Back to Home"
+              >
+                ‹
+              </button>
+            </div>
           </div>
 
           {/* Bottom Artwork Content: Slogan, 5v5 Emblem & Carousel Dots */}
@@ -1553,27 +1571,6 @@ const TopUp = () => {
                   </span>
                 )}
               </div>
-            )}
-            {/* Slogan & 5v5 Metallic Emblem Row (MLBB only) */}
-            {selectedGame.id.startsWith('mlbb') && (
-            <div className="flex items-end justify-between gap-1 sm:gap-3">
-              {/* Glowing Slogan: LEGENDS NEVER FADE */}
-              <div className="flex flex-col select-none">
-                <span className="text-xs xs:text-sm sm:text-2xl lg:text-3xl font-black italic tracking-wide sm:tracking-wider leading-none uppercase text-transparent bg-clip-text bg-gradient-to-r from-sky-200 via-cyan-300 to-blue-400 drop-shadow-[0_0_12px_rgba(34,211,238,0.85)] font-sans">
-                  LEGENDS
-                </span>
-                <span className="text-xs xs:text-sm sm:text-2xl lg:text-3xl font-black italic tracking-wide sm:tracking-wider leading-tight uppercase text-transparent bg-clip-text bg-gradient-to-r from-cyan-300 via-sky-300 to-indigo-300 drop-shadow-[0_0_12px_rgba(56,189,248,0.85)] font-sans">
-                  NEVER FADE
-                </span>
-              </div>
-
-              {/* 3D Golden 5v5 Emblem */}
-              <div className="relative select-none shrink-0">
-                <div className="text-lg xs:text-2xl sm:text-4xl lg:text-5xl font-black tracking-tighter text-transparent bg-clip-text bg-gradient-to-b from-[#FFF2B2] via-[#E8B931] to-[#9E6E00] drop-shadow-[0_2px_8px_rgba(0,0,0,0.95)]">
-                  5v5
-                </div>
-              </div>
-            </div>
             )}
 
             {/* Carousel Pagination Controls: < ● ○ ○ ○ > */}
@@ -1879,18 +1876,18 @@ const TopUp = () => {
             {/* Header: Row 2 - Controls & Layout Switcher */}
             <div className="flex items-center justify-between gap-2 pt-2 pb-0.5 border-t border-slate-800/80">
               <div className="flex items-center gap-1.5 text-xs font-black text-slate-300 shrink-0">
-                <span className="w-1 h-3 rounded-full bg-gradient-to-b from-sky-400 to-cyan-400 shadow-[0_0_6px_rgba(56,189,248,0.8)]" />
+                <span className="w-1 h-3 rounded-full bg-gradient-to-b from-sky-400 to-cyan-400" />
                 <span className="tracking-tight uppercase text-[11px] text-slate-400">{language === 'km' ? 'ទម្រង់' : 'Layout'}:</span>
               </div>
 
               {/* View Layout Switcher (Tiles vs Large Icons vs List) */}
-              <div className="inline-flex items-center p-1 bg-gradient-to-b from-[#0a0f1d] to-[#060a14] rounded-2xl border border-slate-800/90 shadow-[inset_0_1px_3px_rgba(0,0,0,0.7),0_2px_8px_rgba(0,0,0,0.3)] backdrop-blur-sm gap-0.5">
+              <div className="inline-flex items-center p-1 bg-gradient-to-b from-[#0a0f1d] to-[#060a14] rounded-2xl border border-slate-800/90 shadow-sm backdrop-blur-sm gap-0.5">
                 <button
                   type="button"
                   onClick={() => setLayoutMode('tiles')}
                   className={`py-1.5 px-2.5 sm:px-3 rounded-xl text-xs font-black flex items-center gap-1.5 transition-all duration-200 cursor-pointer select-none whitespace-nowrap ${
                     layoutMode === 'tiles'
-                      ? 'bg-gradient-to-r from-sky-500/25 via-cyan-500/20 to-sky-500/15 text-cyan-300 border border-cyan-400/50 shadow-[0_0_12px_rgba(34,211,238,0.3)] scale-[1.02]'
+                      ? 'bg-sky-500/20 text-cyan-300 border border-cyan-400/50 scale-[1.02]'
                       : 'text-slate-400 hover:text-slate-200 hover:bg-slate-800/50 border border-transparent'
                   }`}
                   title="Tiles View"
@@ -1904,7 +1901,7 @@ const TopUp = () => {
                   onClick={() => setLayoutMode('grid')}
                   className={`py-1.5 px-2.5 sm:px-3 rounded-xl text-xs font-black flex items-center gap-1.5 transition-all duration-200 cursor-pointer select-none whitespace-nowrap ${
                     layoutMode === 'grid'
-                      ? 'bg-gradient-to-r from-sky-500/25 via-cyan-500/20 to-sky-500/15 text-cyan-300 border border-cyan-400/50 shadow-[0_0_12px_rgba(34,211,238,0.3)] scale-[1.02]'
+                      ? 'bg-sky-500/20 text-cyan-300 border border-cyan-400/50 scale-[1.02]'
                       : 'text-slate-400 hover:text-slate-200 hover:bg-slate-800/50 border border-transparent'
                   }`}
                   title="Large Icons View"
@@ -1920,7 +1917,7 @@ const TopUp = () => {
                   onClick={() => setLayoutMode('list')}
                   className={`py-1.5 px-2.5 sm:px-3 rounded-xl text-xs font-black flex items-center gap-1.5 transition-all duration-200 cursor-pointer select-none whitespace-nowrap ${
                     layoutMode === 'list'
-                      ? 'bg-gradient-to-r from-sky-500/25 via-cyan-500/20 to-sky-500/15 text-cyan-300 border border-cyan-400/50 shadow-[0_0_12px_rgba(34,211,238,0.3)] scale-[1.02]'
+                      ? 'bg-sky-500/20 text-cyan-300 border border-cyan-400/50 scale-[1.02]'
                       : 'text-slate-400 hover:text-slate-200 hover:bg-slate-800/50 border border-transparent'
                   }`}
                   title="List Rows View"
@@ -1932,9 +1929,9 @@ const TopUp = () => {
             </div>
   
             {/* ===== Scrollable Product Frame ===== */}
-            <div className="relative rounded-2xl border border-sky-500/30 bg-gradient-to-b from-[#060d24] to-[#030817] shadow-[inset_0_1px_0_rgba(255,255,255,0.05),0_0_24px_rgba(14,165,233,0.12)] overflow-hidden">
+            <div className="relative rounded-2xl border border-slate-800 bg-[#060d24] overflow-hidden">
               {/* Frame header */}
-              <div className="flex items-center justify-between gap-2 px-3 py-2 border-b border-sky-500/20 bg-[#071232]/80 backdrop-blur">
+              <div className="flex items-center justify-between gap-2 px-3 py-2 border-b border-slate-800 bg-[#071232]/80 backdrop-blur">
                 <span className="flex items-center gap-1.5 text-[11px] sm:text-xs font-bold text-sky-200">
                   <svg className="w-3.5 h-3.5 text-cyan-300" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><path d="M6 3h12l4 6-10 12L2 9z" /><path d="M2 9h20M12 21L8 9l4-6 4 6-4 12" /></svg>
                   <span>{language === 'km' ? 'កញ្ចប់' : 'Packages'}</span>
@@ -1947,7 +1944,7 @@ const TopUp = () => {
               </div>
               {/* Scroll progress bar */}
               <div className="h-[2px] bg-slate-800/60">
-                <div className="h-full bg-gradient-to-r from-sky-500 to-cyan-300 shadow-[0_0_6px_rgba(34,211,238,0.8)] transition-[width] duration-150" style={{ width: `${Math.round(listScroll.progress * 100)}%` }} />
+                <div className="h-full bg-cyan-400 transition-[width] duration-150" style={{ width: `${Math.round(listScroll.progress * 100)}%` }} />
               </div>
               {/* Top fade */}
               <div className={`pointer-events-none absolute left-0 right-0 top-[38px] h-6 z-10 bg-gradient-to-b from-[#060d24] to-transparent transition-opacity duration-200 ${listScroll.atTop ? 'opacity-0' : 'opacity-100'}`} />
@@ -1964,21 +1961,6 @@ const TopUp = () => {
                   if (rawTag.includes('220') && rawTag.includes('70')) return '+70 Aurora ⭐';
                   if (rawTag.includes('440') && rawTag.includes('140')) return '+140 Aurora ⭐';
                   return rawTag;
-                };
-
-                const getTagStyle = (tag) => {
-                  if (!tag) return '';
-                  const lower = tag.toLowerCase();
-                  if (lower.includes('hot') || lower.includes('bonus') || lower.includes('best') || lower.includes('popular') || lower.includes('arura')) {
-                    return 'border-[1.5px] border-[#FFE169] bg-gradient-to-b from-[#ff8c00] via-[#e65100] to-[#b32600] text-white shadow-[0_0_10px_rgba(255,140,0,0.4),inset_0_1px_1px_rgba(255,255,255,0.4)]';
-                  }
-                  if (lower.includes('starter') || lower.includes('ticket')) {
-                    return 'border-[1.5px] border-cyan-400 bg-gradient-to-b from-[#0284c7] via-[#0369a1] to-[#075985] text-white shadow-[0_0_10px_rgba(6,182,212,0.4),inset_0_1px_1px_rgba(255,255,255,0.3)]';
-                  }
-                  if (lower.includes('wdp') || lower.includes('pass') || lower.includes('starlight') || lower.includes('vip')) {
-                    return 'border-[1.5px] border-purple-400 bg-gradient-to-b from-[#9333ea] via-[#7e22ce] to-[#581c87] text-white shadow-[0_0_10px_rgba(168,85,247,0.4),inset_0_1px_1px_rgba(255,255,255,0.3)]';
-                  }
-                  return 'border-[1.5px] border-emerald-400 bg-gradient-to-b from-[#059669] via-[#047857] to-[#065f46] text-white shadow-[0_0_10px_rgba(16,185,129,0.4),inset_0_1px_1px_rgba(255,255,255,0.3)]';
                 };
 
                 const filtered = products.filter(pkg => {
@@ -2021,23 +2003,20 @@ const TopUp = () => {
                             onClick={() => setSelectedProduct(pkg)}
                             className={`group relative rounded-2xl p-2.5 pt-3 sm:p-3 sm:pt-3.5 flex flex-col items-center text-center select-none transition-all duration-200 cursor-pointer overflow-hidden active:scale-[0.97] ${
                               isSelected
-                                ? 'bg-gradient-to-b from-[#1a1530] to-[#0a0a1a] border border-amber-400 shadow-[0_0_0_1px_rgba(251,191,36,0.6),0_6px_18px_-6px_rgba(251,191,36,0.55)]'
+                                ? 'bg-gradient-to-b from-[#1a1530] to-[#0a0a1a] border-2 border-amber-400'
                                 : 'bg-gradient-to-b from-[#0b1430] to-[#050a1a] border border-sky-500/20 hover:border-sky-400/60 hover:-translate-y-0.5'
                             }`}
                           >
-                            {/* Glow behind artwork */}
-                            <span className={`pointer-events-none absolute top-3 left-1/2 -translate-x-1/2 w-20 h-20 rounded-full blur-2xl transition-opacity ${isSelected ? 'bg-amber-400/30' : 'bg-sky-500/25 group-hover:bg-sky-400/40'}`} />
-
                             {/* Ribbon tag */}
                             {ribbon && (
-                              <span className={`absolute top-0 left-0 max-w-[80%] truncate px-2 py-0.5 rounded-br-xl bg-gradient-to-r ${ribbon.cls} text-[8.5px] sm:text-[9.5px] font-extrabold uppercase tracking-wide shadow-md z-20`}>
+                              <span className={`absolute top-0 left-0 max-w-[80%] truncate px-2 py-0.5 rounded-br-xl bg-gradient-to-r ${ribbon.cls} text-[8.5px] sm:text-[9.5px] font-extrabold uppercase tracking-wide z-20`}>
                                 {ribbon.text}
                               </span>
                             )}
 
                             {/* Selected check */}
                             {isSelected && (
-                              <span className="absolute top-1 right-1 w-4 h-4 rounded-full bg-amber-400 text-slate-950 flex items-center justify-center shadow-[0_0_8px_rgba(251,191,36,0.8)] z-20">
+                              <span className="absolute top-1 right-1 w-4 h-4 rounded-full bg-amber-400 text-slate-950 flex items-center justify-center z-20">
                                 <svg className="w-2.5 h-2.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="4" strokeLinecap="round" strokeLinejoin="round"><path d="M20 6L9 17l-5-5" /></svg>
                               </span>
                             )}
@@ -2047,7 +2026,7 @@ const TopUp = () => {
                               <ProductPackageImage
                                 pkg={pkg}
                                 size="lg"
-                                className="relative z-10 transition-transform duration-300 group-hover:scale-110 drop-shadow-[0_6px_14px_rgba(0,180,255,0.45)]"
+                                className="relative z-10 transition-transform duration-300 group-hover:scale-110"
                               />
                             </div>
 
@@ -2099,23 +2078,14 @@ const TopUp = () => {
                             onClick={() => setSelectedProduct(pkg)}
                             className={`group relative rounded-2xl p-3 sm:p-4 cursor-pointer select-none transition-all duration-300 flex flex-col items-center text-center justify-between overflow-hidden ${
                               isSelected
-                                ? 'bg-gradient-to-b from-[#24173d] via-[#170f28] to-[#0b0816] border-2 border-amber-400 shadow-[0_0_24px_rgba(251,191,36,0.4),inset_0_1px_2px_rgba(255,255,255,0.2)] scale-[1.02] -translate-y-1 z-10'
-                                : 'bg-gradient-to-b from-[#0f172a]/95 via-[#0b1220]/95 to-[#070b14]/98 border border-slate-700/70 hover:border-sky-400/60 hover:shadow-[0_10px_24px_-6px_rgba(0,0,0,0.7),0_0_16px_rgba(56,189,248,0.2)] hover:-translate-y-1'
+                                ? 'bg-gradient-to-b from-[#24173d] via-[#170f28] to-[#0b0816] border-2 border-amber-400 scale-[1.02] -translate-y-1 z-10'
+                                : 'bg-gradient-to-b from-[#0f172a]/95 via-[#0b1220]/95 to-[#070b14]/98 border border-slate-700/70 hover:border-sky-400/60 hover:-translate-y-1'
                             }`}
                           >
-                            {/* Ambient card background glow on hover / active */}
-                            <div
-                              className={`pointer-events-none absolute inset-0 transition-opacity duration-300 ${
-                                isSelected
-                                  ? 'bg-gradient-to-t from-amber-400/10 via-amber-400/5 to-transparent'
-                                  : 'bg-gradient-to-t from-sky-500/5 to-transparent group-hover:opacity-100 opacity-0'
-                              }`}
-                            />
-
                             {/* Top Ribbon Tag */}
                             {ribbon && (
                               <span
-                                className={`absolute top-0 left-0 max-w-[85%] truncate px-2.5 py-0.5 rounded-br-xl bg-gradient-to-r ${ribbon.cls} text-[8.5px] sm:text-[9.5px] font-black uppercase tracking-wider shadow-md z-20`}
+                                className={`absolute top-0 left-0 max-w-[85%] truncate px-2.5 py-0.5 rounded-br-xl bg-gradient-to-r ${ribbon.cls} text-[8.5px] sm:text-[9.5px] font-black uppercase tracking-wider z-20`}
                               >
                                 {ribbon.text}
                               </span>
@@ -2123,32 +2093,24 @@ const TopUp = () => {
 
                             {/* Selected Active Checkmark */}
                             {isSelected && (
-                              <div className="absolute top-2 right-2 z-20 w-5 h-5 rounded-full bg-gradient-to-tr from-amber-400 to-yellow-300 text-slate-950 flex items-center justify-center font-black shadow-[0_0_10px_rgba(251,191,36,0.9)]">
+                              <div className="absolute top-2 right-2 z-20 w-5 h-5 rounded-full bg-gradient-to-tr from-amber-400 to-yellow-300 text-slate-950 flex items-center justify-center font-black">
                                 <svg className="w-3 h-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="4" strokeLinecap="round" strokeLinejoin="round"><path d="M20 6L9 17l-5-5" /></svg>
                               </div>
                             )}
 
                             {/* Truly Large 3D Artwork Centerpiece */}
                             <div className="relative w-full h-24 sm:h-28 flex items-center justify-center my-2">
-                              {/* Ambient radial backlight aura */}
-                              <div
-                                className={`absolute w-20 h-20 sm:w-24 sm:h-24 rounded-full blur-xl pointer-events-none transition-all duration-300 ${
-                                  isSelected
-                                    ? 'bg-amber-400/30 scale-110'
-                                    : 'bg-cyan-500/25 group-hover:bg-cyan-400/40'
-                                }`}
-                              />
                               <ProductPackageImage
                                 pkg={pkg}
                                 size="xl"
-                                className="relative z-10 group-hover:scale-110 transition-transform duration-300 drop-shadow-[0_10px_22px_rgba(0,180,255,0.45)]"
+                                className="relative z-10 group-hover:scale-110 transition-transform duration-300"
                               />
                             </div>
 
                             {/* Title */}
                             <h3
-                              className={`font-black text-xs sm:text-sm lg:text-[15px] leading-tight line-clamp-1 w-full transition-colors drop-shadow-sm relative z-10 ${
-                                isSelected ? 'text-amber-300 drop-shadow-[0_0_8px_rgba(251,191,36,0.5)]' : 'text-white group-hover:text-sky-200'
+                              className={`font-black text-xs sm:text-sm lg:text-[15px] leading-tight line-clamp-1 w-full transition-colors relative z-10 ${
+                                isSelected ? 'text-amber-300' : 'text-white group-hover:text-sky-200'
                               }`}
                             >
                               {pkg.name}
@@ -2173,8 +2135,8 @@ const TopUp = () => {
                             <div
                               className={`mt-auto w-full rounded-xl p-2 transition-all duration-200 flex items-center justify-between border relative z-10 ${
                                 isSelected
-                                  ? 'bg-slate-950/90 border-amber-400/50 shadow-inner'
-                                  : 'bg-slate-950/75 border-slate-800/90 group-hover:border-slate-700 shadow-inner'
+                                  ? 'bg-slate-950/90 border-amber-400/50'
+                                  : 'bg-slate-950/75 border-slate-800/90 group-hover:border-slate-700'
                               }`}
                             >
                               {/* Price in USD and Riel */}
@@ -2182,8 +2144,8 @@ const TopUp = () => {
                                 <span
                                   className={`font-black font-mono text-sm sm:text-base leading-none tracking-tight ${
                                     isSelected
-                                      ? 'text-amber-300 drop-shadow-[0_0_8px_rgba(251,191,36,0.6)]'
-                                      : 'text-[#00F5B8] drop-shadow-[0_0_8px_rgba(0,245,184,0.4)]'
+                                      ? 'text-amber-300'
+                                      : 'text-[#00F5B8]'
                                   }`}
                                 >
                                   ${pkg.price.toFixed(2)}
@@ -2195,9 +2157,9 @@ const TopUp = () => {
 
                               {/* Buy Button */}
                               <div
-                                className={`h-7 px-2.5 sm:px-3 rounded-lg flex items-center justify-center gap-1 text-[10px] sm:text-[11px] font-black transition-all shrink-0 shadow-sm ${
+                                className={`h-7 px-2.5 sm:px-3 rounded-lg flex items-center justify-center gap-1 text-[10px] sm:text-[11px] font-black transition-all shrink-0 ${
                                   isSelected
-                                    ? 'bg-gradient-to-r from-amber-400 to-yellow-400 text-slate-950 shadow-amber-400/40'
+                                    ? 'bg-gradient-to-r from-amber-400 to-yellow-400 text-slate-950'
                                     : 'bg-gradient-to-r from-[#00E599] to-[#00F5B8] text-slate-950 group-hover:scale-105'
                                 }`}
                               >
@@ -2224,11 +2186,11 @@ const TopUp = () => {
                       const isPopular = pkg.productId === 2 || pkg.diamondAmount === 55 || tagLower.includes('popular') || tagLower.includes('starter');
                       const isRecommend = !isPopular && (pkg.productId === 3 || pkg.diamondAmount === 86 || tagLower.includes('bonus') || tagLower.includes('recommend') || tagLower.includes('best'));
                       const ribbon = isPopular
-                        ? { text: 'Popular', cls: 'from-orange-500 to-amber-500 text-white shadow-orange-500/30' }
+                        ? { text: 'Popular', cls: 'from-orange-500 to-amber-500 text-white' }
                         : isRecommend
-                          ? { text: 'Recommend', cls: 'from-amber-300 to-yellow-500 text-slate-950 shadow-amber-400/30' }
+                          ? { text: 'Recommend', cls: 'from-amber-300 to-yellow-500 text-slate-950' }
                           : pkg.tag
-                            ? { text: formatTagText(pkg.tag), cls: 'from-sky-600 to-indigo-600 text-white shadow-sky-500/30' }
+                            ? { text: formatTagText(pkg.tag), cls: 'from-sky-600 to-indigo-600 text-white' }
                             : null;
 
                       return (
@@ -2237,28 +2199,22 @@ const TopUp = () => {
                           onClick={() => setSelectedProduct(pkg)}
                           className={`group relative flex items-center justify-between p-2.5 sm:p-3 rounded-2xl cursor-pointer select-none transition-all duration-200 overflow-hidden ${
                             isSelected
-                              ? 'bg-gradient-to-r from-[#24173d] via-[#170f28] to-[#0c0817] border-2 border-amber-400 shadow-[0_0_20px_rgba(251,191,36,0.35),inset_0_1px_2px_rgba(255,255,255,0.2)] scale-[1.01] z-10'
-                              : 'bg-gradient-to-r from-[#0f172a]/95 via-[#0b1220]/95 to-[#070b14]/98 border border-slate-800/90 hover:border-sky-400/60 hover:bg-[#131d33]/90 hover:shadow-lg hover:shadow-black/50 hover:translate-x-0.5'
+                              ? 'bg-gradient-to-r from-[#24173d] via-[#170f28] to-[#0c0817] border-2 border-amber-400 scale-[1.01] z-10'
+                              : 'bg-gradient-to-r from-[#0f172a]/95 via-[#0b1220]/95 to-[#070b14]/98 border border-slate-800/90 hover:border-sky-400/60 hover:bg-[#131d33]/90 hover:translate-x-0.5'
                           }`}
                         >
                           {/* Left Accent indicator for Selected */}
                           {isSelected && (
-                            <div className="absolute left-0 top-0 bottom-0 w-1.5 bg-gradient-to-b from-amber-300 via-amber-400 to-yellow-500 shadow-[0_0_10px_rgba(251,191,36,0.9)]" />
+                            <div className="absolute left-0 top-0 bottom-0 w-1.5 bg-gradient-to-b from-amber-300 via-amber-400 to-yellow-500" />
                           )}
 
-                          {/* Left Section: 3D Artwork with backlight glow */}
+                          {/* Left Section: 3D Artwork */}
                           <div className="flex items-center gap-3 sm:gap-3.5 relative z-10 min-w-0">
                             <div className="relative w-12 h-12 sm:w-14 sm:h-14 shrink-0 flex items-center justify-center rounded-xl bg-slate-950/70 border border-slate-800/80 p-1 group-hover:border-slate-700 transition-colors">
-                              {/* Ambient radial glow */}
-                              <div
-                                className={`absolute inset-0 rounded-xl blur-md pointer-events-none transition-opacity duration-300 ${
-                                  isSelected ? 'bg-amber-400/25 opacity-100' : 'bg-cyan-500/20 group-hover:opacity-100 opacity-60'
-                                }`}
-                              />
                               <ProductPackageImage
                                 pkg={pkg}
                                 size="md"
-                                className="relative z-10 transition-transform duration-300 group-hover:scale-110 drop-shadow-[0_4px_10px_rgba(0,180,255,0.4)]"
+                                className="relative z-10 transition-transform duration-300 group-hover:scale-110"
                               />
                             </div>
 
@@ -2267,21 +2223,21 @@ const TopUp = () => {
                               <div className="flex items-center gap-1.5 flex-wrap">
                                 <span
                                   className={`font-black text-xs sm:text-sm leading-tight transition-colors line-clamp-1 ${
-                                    isSelected ? 'text-amber-300 drop-shadow-[0_0_6px_rgba(251,191,36,0.5)]' : 'text-white group-hover:text-sky-200'
+                                    isSelected ? 'text-amber-300' : 'text-white group-hover:text-sky-200'
                                   }`}
                                 >
                                   {pkg.name}
                                 </span>
                                 {ribbon && (
                                   <span
-                                    className={`inline-flex items-center px-1.5 sm:px-2 py-0.5 rounded-full text-[8px] sm:text-[9px] font-black uppercase tracking-wider shadow-sm bg-gradient-to-r ${ribbon.cls}`}
+                                    className={`inline-flex items-center px-1.5 sm:px-2 py-0.5 rounded-full text-[8px] sm:text-[9px] font-black uppercase tracking-wider bg-gradient-to-r ${ribbon.cls}`}
                                   >
                                     {ribbon.text}
                                   </span>
                                 )}
                               </div>
 
-                              {/* Subtitle details: Diamond count / Daily Pass + Riel price */}
+                              {/* Subtitle details */}
                               <div className="flex items-center gap-2 mt-1 text-[9.5px] sm:text-[10.5px] text-slate-400 font-semibold truncate">
                                 {isPass ? (
                                   <span className="inline-flex items-center gap-0.5 text-amber-300 font-bold">
@@ -2308,8 +2264,8 @@ const TopUp = () => {
                               <span
                                 className={`font-black font-mono text-sm sm:text-base tracking-tight leading-none ${
                                   isSelected
-                                    ? 'text-amber-300 drop-shadow-[0_0_8px_rgba(251,191,36,0.6)]'
-                                    : 'text-[#00F5B8] drop-shadow-[0_0_8px_rgba(0,245,184,0.4)]'
+                                    ? 'text-amber-300'
+                                    : 'text-[#00F5B8]'
                                 }`}
                               >
                                 ${pkg.price.toFixed(2)}
@@ -2318,9 +2274,9 @@ const TopUp = () => {
 
                             {/* Buy Button Pill */}
                             <div
-                              className={`h-8 sm:h-8.5 px-2.5 sm:px-3 rounded-xl flex items-center justify-center gap-1.5 text-[11px] sm:text-xs font-black transition-all shadow-sm ${
+                              className={`h-8 sm:h-8.5 px-2.5 sm:px-3 rounded-xl flex items-center justify-center gap-1.5 text-[11px] sm:text-xs font-black transition-all ${
                                 isSelected
-                                  ? 'bg-gradient-to-r from-amber-400 to-yellow-400 text-slate-950 shadow-amber-400/40'
+                                  ? 'bg-gradient-to-r from-amber-400 to-yellow-400 text-slate-950'
                                   : 'bg-gradient-to-r from-[#00E599] to-[#00F5B8] text-slate-950 group-hover:scale-105 active:scale-95'
                               }`}
                             >
