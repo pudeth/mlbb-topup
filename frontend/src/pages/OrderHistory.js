@@ -238,12 +238,6 @@ const OrderHistory = () => {
 
   // Calculate quick stats
   const totalCompleted = orders.filter(o => o.topupStatus === 'Completed').length;
-  const totalDiamonds = orders
-    .filter(o => o.topupStatus === 'Completed')
-    .reduce((sum, o) => sum + (parseInt(o.diamondAmount, 10) || 0), 0);
-  const totalSpent = orders
-    .filter(o => o.paymentStatus === 'Paid')
-    .reduce((sum, o) => sum + (parseFloat(o.amount) || 0), 0);
 
   return (
     <div className="min-h-screen bg-[#070b16] text-white pt-4 pb-24 px-3 sm:px-6 lg:px-8 font-khmer select-none">
@@ -429,109 +423,45 @@ const OrderHistory = () => {
           /* ======================================================== */
           <div className="space-y-4 sm:space-y-6">
 
-            {/* Player Info Banner Card */}
-            <div className="relative rounded-3xl p-4 sm:p-6 bg-gradient-to-b from-[#0e1730] via-[#091024] to-[#060a16] border border-sky-500/40 shadow-[0_15px_40px_rgba(0,0,0,0.8),0_0_24px_rgba(14,165,233,0.15)] overflow-hidden">
-              {/* Ambient radial aura */}
-              <div className="absolute top-0 right-0 w-64 h-64 bg-cyan-500/10 rounded-full blur-3xl pointer-events-none" />
+            {/* Clean Action Controls Bar */}
+            <div className="flex items-center justify-between gap-3 pt-1 pb-2">
+              <Link
+                to="/topup"
+                className="inline-flex items-center gap-2 px-3 py-1.5 rounded-xl bg-slate-900/80 border border-slate-800 text-xs font-bold text-slate-300 hover:text-cyan-400 hover:border-cyan-500/40 transition-all cursor-pointer"
+              >
+                <span>←</span>
+                <span>{language === 'km' ? 'ទៅកាន់ទំព័រទិញ' : 'Back to Top-Up'}</span>
+              </Link>
 
-              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 relative z-10">
-                {/* Left: Avatar & Real-Name Player */}
-                <div className="flex items-center gap-3.5">
-                  <div className="relative w-14 h-14 sm:w-16 sm:h-16 rounded-2xl p-0.5 bg-gradient-to-tr from-amber-400 via-yellow-300 to-amber-500 shrink-0 shadow-[0_0_16px_rgba(251,191,36,0.4)]">
-                    <div className="w-full h-full rounded-[14px] bg-[#070d1e] flex items-center justify-center text-2xl font-black text-amber-300">
-                      👑
-                    </div>
-                    <span className="absolute -bottom-1 -right-1 w-4 h-4 rounded-full bg-emerald-400 border-2 border-[#070d1e] shadow-[0_0_6px_rgba(52,211,153,0.9)]" />
-                  </div>
+              <div className="flex items-center gap-2">
+                <button
+                  type="button"
+                  onClick={() => loadOrdersForPlayer(playerAccount.playerId, playerAccount.serverId)}
+                  disabled={loadingOrders}
+                  className="px-3 py-1.5 rounded-xl bg-slate-900 border border-slate-800 hover:border-cyan-400/60 text-xs font-bold text-slate-300 hover:text-white flex items-center gap-1.5 transition-all cursor-pointer disabled:opacity-50"
+                  title="Refresh Orders"
+                >
+                  <span className={loadingOrders ? 'animate-spin' : ''}>🔄</span>
+                  <span>{language === 'km' ? 'ផ្ទុកឡើងវិញ' : 'Refresh'}</span>
+                </button>
 
-                  <div className="min-w-0">
-                    <div className="flex items-center gap-2 flex-wrap">
-                      <h1 className="text-base sm:text-xl font-black text-white truncate drop-shadow-sm">
-                        {playerAccount.realName}
-                      </h1>
-                      <span className="px-2 py-0.5 rounded-full bg-amber-400/15 border border-amber-400/40 text-[9px] sm:text-[10px] font-black text-amber-300 uppercase tracking-wider">
-                        Active Player
-                      </span>
-                    </div>
+                <button
+                  type="button"
+                  onClick={handleSwitchPlayer}
+                  className="px-3 py-1.5 rounded-xl bg-rose-950/40 border border-rose-500/40 hover:bg-rose-900/50 text-xs font-bold text-rose-300 flex items-center gap-1.5 transition-all cursor-pointer"
+                  title="Switch Player Account"
+                >
+                  <span>🚪</span>
+                  <span>{language === 'km' ? 'ប្តូរ Player' : 'Switch'}</span>
+                </button>
 
-                    <div className="flex items-center gap-2 mt-1 text-xs text-slate-400 font-mono font-semibold">
-                      <span>ID: {playerAccount.playerId}</span>
-                      <span className="text-slate-600">•</span>
-                      <span>Zone: {playerAccount.serverId}</span>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Right: Quick Action Controls */}
-                <div className="flex items-center gap-2 self-start sm:self-center shrink-0">
-                  <button
-                    type="button"
-                    onClick={() => loadOrdersForPlayer(playerAccount.playerId, playerAccount.serverId)}
-                    disabled={loadingOrders}
-                    className="px-3 py-1.5 rounded-xl bg-slate-900 border border-slate-700/80 hover:border-cyan-400/60 text-xs font-bold text-slate-300 hover:text-white flex items-center gap-1.5 transition-all cursor-pointer disabled:opacity-50"
-                    title="Refresh Orders"
-                  >
-                    <span className={loadingOrders ? 'animate-spin' : ''}>🔄</span>
-                    <span className="hidden sm:inline">{language === 'km' ? 'ផ្ទុកឡើងវិញ' : 'Refresh'}</span>
-                  </button>
-
-                  <button
-                    type="button"
-                    onClick={handleSwitchPlayer}
-                    className="px-3 py-1.5 rounded-xl bg-rose-950/40 border border-rose-500/40 hover:bg-rose-900/50 text-xs font-bold text-rose-300 flex items-center gap-1.5 transition-all cursor-pointer"
-                    title="Switch Player Account"
-                  >
-                    <span>🚪</span>
-                    <span className="hidden sm:inline">{language === 'km' ? 'ប្តូរ Player' : 'Switch'}</span>
-                  </button>
-
-                  <Link
-                    to="/topup"
-                    className="px-3.5 py-1.5 rounded-xl bg-gradient-to-r from-[#00E599] to-[#00F5B8] text-slate-950 font-black text-xs flex items-center gap-1.5 shadow-sm hover:scale-105 active:scale-95 transition-all"
-                  >
-                    <span>💎</span>
-                    <span>{language === 'km' ? 'ទិញបន្ថែម' : 'New Top-Up'}</span>
-                  </Link>
-                </div>
-              </div>
-
-              {/* Player Stats Bar */}
-              <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 sm:gap-3 mt-4 pt-4 border-t border-slate-800/80">
-                <div className="rounded-xl p-2 sm:p-2.5 bg-[#070c1b]/80 border border-slate-800 text-center">
-                  <div className="text-[10px] text-slate-400 font-bold uppercase tracking-wider">
-                    {language === 'km' ? 'បញ្ជាទិញសរុប' : 'Total Orders'}
-                  </div>
-                  <div className="text-sm sm:text-base font-black text-white mt-0.5 font-mono">
-                    {orders.length}
-                  </div>
-                </div>
-
-                <div className="rounded-xl p-2 sm:p-2.5 bg-[#070c1b]/80 border border-slate-800 text-center">
-                  <div className="text-[10px] text-slate-400 font-bold uppercase tracking-wider">
-                    {language === 'km' ? 'ជោគជ័យ' : 'Completed'}
-                  </div>
-                  <div className="text-sm sm:text-base font-black text-emerald-400 mt-0.5 font-mono">
-                    {totalCompleted}
-                  </div>
-                </div>
-
-                <div className="rounded-xl p-2 sm:p-2.5 bg-[#070c1b]/80 border border-slate-800 text-center">
-                  <div className="text-[10px] text-slate-400 font-bold uppercase tracking-wider">
-                    {language === 'km' ? 'ពេជ្រទទួលបាន' : 'Diamonds Delivered'}
-                  </div>
-                  <div className="text-sm sm:text-base font-black text-cyan-300 mt-0.5 font-mono">
-                    {totalDiamonds.toLocaleString()} 💎
-                  </div>
-                </div>
-
-                <div className="rounded-xl p-2 sm:p-2.5 bg-[#070c1b]/80 border border-slate-800 text-center">
-                  <div className="text-[10px] text-slate-400 font-bold uppercase tracking-wider">
-                    {language === 'km' ? 'ទឹកប្រាក់ចំណាយ' : 'Total Spent'}
-                  </div>
-                  <div className="text-sm sm:text-base font-black text-[#00F5B8] mt-0.5 font-mono">
-                    ${totalSpent.toFixed(2)}
-                  </div>
-                </div>
+                <Link
+                  to="/topup"
+                  className="px-3.5 py-1.5 rounded-xl bg-gradient-to-r from-[#00E599] to-[#00F5B8] text-slate-950 font-black text-xs flex items-center gap-1.5 shadow-sm hover:scale-105 active:scale-95 transition-all"
+                >
+                  <span>💎</span>
+                  <span>{language === 'km' ? 'ទិញបន្ថែម' : 'New Top-Up'}</span>
+                </Link>
               </div>
             </div>
 
