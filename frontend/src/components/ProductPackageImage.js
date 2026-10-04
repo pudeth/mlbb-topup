@@ -15,15 +15,17 @@ export const ProductPackageImage = ({
       ? 'w-24 h-24 sm:w-28 sm:h-28'
       : size === 'xl'
       ? 'w-20 h-20 sm:w-24 sm:h-24'
-      : size === 'xs'
-      ? 'w-7 h-7 sm:w-8 sm:h-8'
-      : size === 'sm'
-      ? 'w-6 h-6 sm:w-7 sm:h-7'
       : size === 'lg'
+      ? 'w-16 h-16 sm:w-20 sm:h-20'
+      : size === 'md'
       ? 'w-12 h-12 sm:w-14 sm:h-14'
+      : size === 'sm'
+      ? 'w-8 h-8 sm:w-10 sm:h-10'
+      : size === 'xs'
+      ? 'w-6 h-6 sm:w-7 sm:h-7'
       : size === 'full'
       ? 'w-full h-full'
-      : 'w-8 h-8 sm:w-10 sm:h-10';
+      : 'w-12 h-12 sm:w-14 sm:h-14';
 
   const custom = (pkg.customImage || pkg.image || '').trim();
 

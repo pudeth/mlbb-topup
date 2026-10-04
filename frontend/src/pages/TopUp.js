@@ -1899,32 +1899,36 @@ const TopUp = () => {
                             type="button"
                             key={pkg.productId}
                             onClick={() => setSelectedProduct(pkg)}
-                            className={`group relative rounded-xl p-2 pt-3 flex flex-col items-center text-center select-none transition-all duration-200 cursor-pointer overflow-hidden active:scale-[0.97] ${
+                            className={`group relative rounded-2xl p-2.5 pt-3 sm:p-3 sm:pt-3.5 flex flex-col items-center text-center select-none transition-all duration-200 cursor-pointer overflow-hidden active:scale-[0.97] ${
                               isSelected
                                 ? 'bg-gradient-to-b from-[#1a1530] to-[#0a0a1a] border border-amber-400 shadow-[0_0_0_1px_rgba(251,191,36,0.6),0_6px_18px_-6px_rgba(251,191,36,0.55)]'
                                 : 'bg-gradient-to-b from-[#0b1430] to-[#050a1a] border border-sky-500/20 hover:border-sky-400/60 hover:-translate-y-0.5'
                             }`}
                           >
                             {/* Glow behind artwork */}
-                            <span className={`pointer-events-none absolute top-3 left-1/2 -translate-x-1/2 w-16 h-16 rounded-full blur-2xl transition-opacity ${isSelected ? 'bg-amber-400/25' : 'bg-sky-500/15 group-hover:bg-sky-400/25'}`} />
+                            <span className={`pointer-events-none absolute top-3 left-1/2 -translate-x-1/2 w-20 h-20 rounded-full blur-2xl transition-opacity ${isSelected ? 'bg-amber-400/30' : 'bg-sky-500/25 group-hover:bg-sky-400/40'}`} />
 
                             {/* Ribbon tag */}
                             {ribbon && (
-                              <span className={`absolute top-0 left-0 max-w-[80%] truncate px-1.5 py-[2px] rounded-br-lg bg-gradient-to-r ${ribbon.cls} text-[8px] sm:text-[9px] font-extrabold uppercase tracking-wide shadow`}>
+                              <span className={`absolute top-0 left-0 max-w-[80%] truncate px-2 py-0.5 rounded-br-xl bg-gradient-to-r ${ribbon.cls} text-[8.5px] sm:text-[9.5px] font-extrabold uppercase tracking-wide shadow-md z-20`}>
                                 {ribbon.text}
                               </span>
                             )}
 
                             {/* Selected check */}
                             {isSelected && (
-                              <span className="absolute top-1 right-1 w-4 h-4 rounded-full bg-amber-400 text-slate-950 flex items-center justify-center shadow-[0_0_8px_rgba(251,191,36,0.8)]">
+                              <span className="absolute top-1 right-1 w-4 h-4 rounded-full bg-amber-400 text-slate-950 flex items-center justify-center shadow-[0_0_8px_rgba(251,191,36,0.8)] z-20">
                                 <svg className="w-2.5 h-2.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="4" strokeLinecap="round" strokeLinejoin="round"><path d="M20 6L9 17l-5-5" /></svg>
                               </span>
                             )}
 
-                            {/* Artwork */}
-                            <div className="relative h-12 sm:h-14 flex items-center justify-center mt-1">
-                              <ProductPackageImage pkg={pkg} size="sm" className="relative z-10 transition-transform duration-300 group-hover:scale-110" />
+                            {/* Artwork: Big prominent 3D Diamond / Pass Image */}
+                            <div className="relative w-full h-16 sm:h-20 flex items-center justify-center my-1">
+                              <ProductPackageImage
+                                pkg={pkg}
+                                size="lg"
+                                className="relative z-10 transition-transform duration-300 group-hover:scale-110 drop-shadow-[0_6px_14px_rgba(0,180,255,0.45)]"
+                              />
                             </div>
 
                             {/* Name + sub */}
