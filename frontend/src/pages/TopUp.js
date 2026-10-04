@@ -1509,26 +1509,8 @@ const TopUp = () => {
             <div className="absolute inset-0 bg-gradient-to-r from-black/40 via-transparent to-black/30 pointer-events-none" />
           </div>
 
-          {/* Top Bar: Official Game Brand Emblem (Left), Server Badge Frame & Back Button (Right) */}
-          <div className="relative z-10 p-2.5 xs:p-3 sm:p-5 flex items-center justify-between gap-2">
-            {/* Official Game Logo Badge */}
-            <div className="flex items-center gap-1.5 xs:gap-2 sm:gap-2.5 bg-black/60 backdrop-blur-md px-2 py-1 xs:px-2.5 sm:px-3 sm:py-1.5 rounded-xl sm:rounded-2xl border border-white/10 shadow-lg">
-              {selectedGame.id.startsWith('mlbb') ? (
-                <div className="flex items-center gap-1.5 sm:gap-2">
-                  <div className="w-5 h-5 xs:w-6 xs:h-6 sm:w-8 sm:h-8 rounded-lg bg-gradient-to-br from-amber-400 to-yellow-600 p-0.5 flex items-center justify-center shadow-md shrink-0">
-                    <span className="font-black text-slate-950 text-[10px] xs:text-xs sm:text-sm tracking-tighter">M</span>
-                  </div>
-                  <div className="flex flex-col">
-                    <span className="text-[8px] xs:text-[9px] sm:text-[11px] font-black text-white tracking-wider sm:tracking-widest leading-none drop-shadow">MOBILE LEGENDS</span>
-                    <span className="text-[7px] xs:text-[8px] sm:text-[9px] font-bold text-amber-400 tracking-wider leading-none mt-0.5 hidden xs:block">BANG BANG</span>
-                  </div>
-                </div>
-              ) : (
-                <div className="flex items-center gap-1.5">
-                  <span className="text-[9px] sm:text-xs font-black text-white tracking-wide truncate max-w-[80px] xs:max-w-none">{selectedGame.name}</span>
-                </div>
-              )}
-            </div>
+          {/* Top Bar: Server Badge Frame & Back Button */}
+          <div className="relative z-10 p-2.5 xs:p-3 sm:p-5 flex items-center justify-end gap-2">
 
             {/* Right: 3D Server Badge Frame & Back Button */}
             <div className="flex items-center gap-1.5 sm:gap-2.5">
