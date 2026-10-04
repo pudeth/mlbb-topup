@@ -180,10 +180,11 @@ const DesktopSidebar = () => {
       {/* Bottom Sidebar User Login / Auth Section */}
       <div className="pt-3 border-t border-slate-800/80">
         {!isUserLoggedIn ? (
-          <Link
-            to="/order-history"
-            className="group relative flex items-center gap-3 p-2.5 rounded-xl bg-gradient-to-r from-blue-600/20 via-sky-600/15 to-indigo-600/20 hover:from-blue-600 hover:via-sky-600 hover:to-indigo-600 border border-sky-500/30 hover:border-sky-400 text-white shadow-lg shadow-sky-950/40 transition-all duration-200 active:scale-[0.98] overflow-hidden"
-            title={language === 'km' ? 'ចូលគណនីជាមួយលេខសម្គាល់ Player ID & Server ID' : 'Login with Player ID and Server ID'}
+          <button
+            type="button"
+            onClick={() => window.dispatchEvent(new CustomEvent('open-player-login'))}
+            className="w-full text-left group relative flex items-center gap-3 p-2.5 rounded-xl bg-gradient-to-r from-blue-600/20 via-sky-600/15 to-indigo-600/20 hover:from-blue-600 hover:via-sky-600 hover:to-indigo-600 border border-sky-500/30 hover:border-sky-400 text-white shadow-lg shadow-sky-950/40 transition-all duration-200 active:scale-[0.98] overflow-hidden cursor-pointer"
+            title={language === 'km' ? 'ចុចដើម្បីបើកផ្ទាំងចូលគណនី (Player ID & Server ID)' : 'Click to open Player Login popup'}
           >
             {/* Subtle light shimmer effect on hover */}
             <div className="absolute inset-0 -translate-x-full group-hover:translate-x-full transition-transform duration-700 bg-gradient-to-r from-transparent via-white/10 to-transparent pointer-events-none" />
@@ -206,7 +207,7 @@ const DesktopSidebar = () => {
             <div className="w-6 h-6 rounded-lg bg-white/10 group-hover:bg-white/20 flex items-center justify-center text-white text-xs shrink-0 transition-transform group-hover:translate-x-0.5">
               →
             </div>
-          </Link>
+          </button>
         ) : (
           <div className="rounded-xl p-2.5 bg-slate-900/90 border border-slate-800 shadow-md">
             <Link

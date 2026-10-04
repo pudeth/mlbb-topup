@@ -1,13 +1,22 @@
-import React, { useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useLocation } from 'react-router-dom';
 import Navbar from './Navbar';
 import Footer from './Footer';
 import AiAssistant from './AiAssistant';
 import MobileBottomNav from './MobileBottomNav';
 import DesktopSidebar from './DesktopSidebar';
+import { PlayerLoginModal } from './PlayerLoginModal';
 
 const Layout = ({ children }) => {
   const location = useLocation();
+  const [isPlayerLoginOpen, setIsPlayerLoginOpen] = useState(false);
+
+  useEffect(() => {
+    const handleOpen = () => setIsPlayerLoginOpen(true);
+    window.addEventListener('open-player-login', handleOpen);
+    return () => window.removeEventListener('open-player-login', handleOpen);
+  }, []);
+
   const isAdminPath = location.pathname.startsWith('/admin') || location.pathname.startsWith('/topup/admin') || location.pathname.includes('/admin');
   const isAuthPath = location.pathname.startsWith('/login') || location.pathname.startsWith('/register');
 
@@ -68,6 +77,12 @@ const Layout = ({ children }) => {
 
       {/* AI Assistant mounted at layout root for top-level layering */}
       {!isAuthPath && <AiAssistant />}
+
+      {/* Global Player Login Modal Popup */}
+      <PlayerLoginModal
+        isOpen={isPlayerLoginOpen}
+        onClose={() => setIsPlayerLoginOpen(false)}
+      />
     </div>
   );
 };
