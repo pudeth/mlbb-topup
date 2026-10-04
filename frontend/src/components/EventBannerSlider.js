@@ -12,18 +12,11 @@ const EventBannerSlider = ({ className = '' }) => {
   const navigate = useNavigate();
   const [banners, setBanners] = useState(() => getStoredBanners());
   const [currentIndex, setCurrentIndex] = useState(0);
-  const [prevIndex, setPrevIndex] = useState(null);
   const [isPaused, setIsPaused] = useState(false);
   const [isHovered, setIsHovered] = useState(false);
-  const touchStartXRef = useRef(0);
-  const touchEndXRef = useRef(0);
 
   const goToSlide = useCallback((nextIndex) => {
-    setCurrentIndex((prev) => {
-      if (nextIndex === prev) return prev;
-      setPrevIndex(prev);
-      return nextIndex;
-    });
+    setCurrentIndex((prev) => (nextIndex === prev ? prev : nextIndex));
   }, []);
 
   // Sync banners with cloud MongoDB & admin updates across all devices in real-time
@@ -86,26 +79,50 @@ const EventBannerSlider = ({ className = '' }) => {
     goToSlide((currentIndex - 1 + banners.length) % banners.length);
   };
 
-  // Touch Swipe Handlers for Mobile
-  const handleTouchStart = (e) => {
-    touchStartXRef.current = e.targetTouches[0].clientX;
+  // Real Touch & Drag Handlers for Mobile & Desktop Swipe
+  const [touchDeltaX, setTouchDeltaX] = useState(0);
+  const [isDragging, setIsDragging] = useState(false);
+  const startXRef = useRef(0);
+  const dragDistanceRef = useRef(0);
+
+  const startDrag = (clientX) => {
+    startXRef.current = clientX;
+    dragDistanceRef.current = 0;
+    setIsDragging(true);
+    setIsPaused(true);
   };
 
-  const handleTouchMove = (e) => {
-    touchEndXRef.current = e.targetTouches[0].clientX;
+  const moveDrag = (clientX) => {
+    if (!isDragging) return;
+    const delta = clientX - startXRef.current;
+    dragDistanceRef.current = Math.abs(delta);
+    setTouchDeltaX(delta);
   };
 
-  const handleTouchEnd = () => {
-    if (!touchStartXRef.current || !touchEndXRef.current) return;
-    const distance = touchStartXRef.current - touchEndXRef.current;
-    if (distance > 50) {
-      handleNext();
-    } else if (distance < -50) {
-      handlePrev();
+  const endDrag = () => {
+    if (!isDragging) return;
+    setIsDragging(false);
+    setIsPaused(false);
+    if (touchDeltaX < -45) {
+      goToSlide((currentIndex + 1) % banners.length);
+    } else if (touchDeltaX > 45) {
+      goToSlide((currentIndex - 1 + banners.length) % banners.length);
     }
-    touchStartXRef.current = 0;
-    touchEndXRef.current = 0;
+    setTouchDeltaX(0);
   };
+
+  const handleTouchStart = (e) => startDrag(e.targetTouches[0].clientX);
+  const handleTouchMove = (e) => moveDrag(e.targetTouches[0].clientX);
+  const handleTouchEnd = endDrag;
+
+  const handleMouseDown = (e) => {
+    if (e.target.closest('button')) return;
+    startDrag(e.clientX);
+  };
+  const handleMouseMove = (e) => {
+    if (isDragging) moveDrag(e.clientX);
+  };
+  const handleMouseUp = endDrag;
 
   if (!banners || banners.length === 0) return null;
 
@@ -119,59 +136,68 @@ const EventBannerSlider = ({ className = '' }) => {
         setIsHovered(true);
       }}
       onMouseLeave={() => {
-        setIsPaused(false);
-        setIsHovered(false);
+        if (!isDragging) {
+          setIsPaused(false);
+          setIsHovered(false);
+        }
       }}
       onTouchStart={handleTouchStart}
       onTouchMove={handleTouchMove}
       onTouchEnd={handleTouchEnd}
+      onMouseDown={handleMouseDown}
+      onMouseMove={handleMouseMove}
+      onMouseUp={handleMouseUp}
       onClick={(e) => {
         if (e.target.closest('button')) return;
+        if (dragDistanceRef.current > 10) return;
         navigate(currentBanner.link || `/topup?game=${currentBanner.gameId || 'mlbb'}`);
       }}
     >
-      {/* Banner Canvas Area with Cinematic Zoom Out Transition */}
+      {/* Banner Canvas Area with Real Horizontal Swipe & Zoom Out Transition */}
       <div className="relative aspect-[16/10] sm:aspect-[21/9] md:aspect-[24/9] min-h-[190px] sm:min-h-[230px] md:min-h-[270px] w-full overflow-hidden">
-        {banners.map((banner, index) => {
-          const isActive = index === currentIndex;
-          const isExiting = index === prevIndex && prevIndex !== null;
-
-          if (!isActive && !isExiting) {
+        <div
+          className="flex w-full h-full"
+          style={{
+            transform: `translateX(calc(-${currentIndex * 100}% + ${touchDeltaX}px))`,
+            transition: isDragging ? 'none' : 'transform 0.6s cubic-bezier(0.16, 1, 0.3, 1)'
+          }}
+        >
+          {banners.map((banner, index) => {
+            const isActive = index === currentIndex;
             return (
               <div
                 key={banner.id || index}
-                className="absolute inset-0 opacity-0 pointer-events-none z-0"
-              />
-            );
-          }
-
-          return (
-            <div
-              key={`${banner.id || index}-${isActive ? `active-${currentIndex}` : 'exit'}`}
-              className={`absolute inset-0 overflow-hidden ${
-                isActive
-                  ? 'opacity-100 z-10 pointer-events-auto animate-zoom-out'
-                  : 'z-0 pointer-events-none animate-zoom-out-exit'
-              }`}
-            >
-              <div className="w-full h-full">
-                <img
-                  src={banner.image}
-                  alt={banner.title}
-                  onError={(e) => {
-                    e.target.onerror = null;
-                    e.target.src = banner.localFallbackImage || '/mlbb-logo.png';
+                className="w-full h-full shrink-0 relative overflow-hidden"
+                style={{ width: '100%' }}
+              >
+                <div
+                  className="w-full h-full origin-center"
+                  style={{
+                    transform: isActive ? 'scale(1)' : 'scale(0.84)',
+                    opacity: isActive ? 1 : 0.35,
+                    filter: isActive ? 'brightness(1.02)' : 'brightness(0.7)',
+                    transition: isDragging ? 'none' : 'transform 0.6s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.6s ease, filter 0.6s ease'
                   }}
-                  className="w-full h-full object-cover object-center filter brightness-[1.02] contrast-[1.02]"
-                />
-              </div>
+                >
+                  <img
+                    src={banner.image}
+                    alt={banner.title}
+                    onError={(e) => {
+                      e.target.onerror = null;
+                      e.target.src = banner.localFallbackImage || '/mlbb-logo.png';
+                    }}
+                    className="w-full h-full object-cover object-center pointer-events-none select-none"
+                    draggable={false}
+                  />
 
-              {/* Clean Cinematic Edge Vignettes - leaving center 100% vibrant & unblocked */}
-              <div className="absolute top-0 inset-x-0 h-16 sm:h-20 bg-gradient-to-b from-slate-950/80 via-slate-950/20 to-transparent pointer-events-none" />
-              <div className="absolute bottom-0 inset-x-0 h-28 sm:h-36 bg-gradient-to-t from-slate-950/95 via-slate-950/35 to-transparent pointer-events-none" />
-            </div>
-          );
-        })}
+                  {/* Clean Cinematic Edge Vignettes */}
+                  <div className="absolute top-0 inset-x-0 h-16 sm:h-20 bg-gradient-to-b from-slate-950/80 via-slate-950/20 to-transparent pointer-events-none" />
+                  <div className="absolute bottom-0 inset-x-0 h-28 sm:h-36 bg-gradient-to-t from-slate-950/95 via-slate-950/35 to-transparent pointer-events-none" />
+                </div>
+              </div>
+            );
+          })}
+        </div>
 
         {/* Content Overlay */}
         <div className="absolute inset-0 z-20 flex flex-col justify-between p-3.5 sm:p-5 md:p-6 pointer-events-none">
