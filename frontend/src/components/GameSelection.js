@@ -235,15 +235,9 @@ const GameSelection = () => {
       label: language === 'km' ? 'ហ្គេមទាំងអស់' : 'All Games',
       sub: '',
       renderIcon: (isActive) => (
-        <div className={`w-7 h-7 sm:w-8 sm:h-8 rounded-xl flex items-center justify-center transition-all ${
-          isActive
-            ? 'bg-amber-400/20 text-amber-300 ring-1 ring-amber-400/60 shadow-[0_0_12px_rgba(251,191,36,0.35)]'
-            : 'bg-slate-800/80 text-amber-400 ring-1 ring-white/10 group-hover:scale-105'
-        }`}>
-          <svg className="w-4 h-4 fill-current drop-shadow-[0_0_6px_rgba(251,191,36,0.5)]" viewBox="0 0 24 24">
-            <path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z" />
-          </svg>
-        </div>
+        <svg className={`w-5 h-5 ${isActive ? 'text-slate-950' : 'text-amber-400'} fill-current drop-shadow-[0_0_8px_rgba(251,191,36,0.6)] transition-transform group-hover:scale-110`} viewBox="0 0 24 24">
+          <path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z" />
+        </svg>
       )
     },
     {
@@ -251,13 +245,11 @@ const GameSelection = () => {
       label: 'Telegram Stars',
       sub: '',
       renderIcon: (isActive) => (
-        <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-xl overflow-hidden ring-1 ring-white/10 flex items-center justify-center bg-[#229ED9]/15 group-hover:scale-105 transition-transform shadow-xs">
-          <img
-            src="/images/telegram-logo.webp"
-            alt="Telegram Stars"
-            className="w-full h-full object-contain p-0.5"
-          />
-        </div>
+        <img
+          src="/images/telegram-logo.webp"
+          alt="Telegram Stars"
+          className="w-5 h-5 sm:w-6 sm:h-6 object-contain drop-shadow-sm transition-transform group-hover:scale-110"
+        />
       )
     },
     {
@@ -265,13 +257,11 @@ const GameSelection = () => {
       label: 'Steam',
       sub: '',
       renderIcon: (isActive) => (
-        <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-xl overflow-hidden ring-1 ring-white/10 flex items-center justify-center bg-[#171a21] group-hover:scale-105 transition-transform shadow-xs">
-          <img
-            src="/images/steam-logo.png"
-            alt="Steam"
-            className="w-full h-full object-contain"
-          />
-        </div>
+        <img
+          src="/images/steam-logo.png"
+          alt="Steam"
+          className="w-5 h-5 sm:w-6 sm:h-6 object-contain drop-shadow-sm transition-transform group-hover:scale-110"
+        />
       )
     },
     {
@@ -279,17 +269,15 @@ const GameSelection = () => {
       label: 'Mobile Legends',
       sub: '',
       renderIcon: (isActive) => (
-        <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-xl overflow-hidden ring-1 ring-white/10 flex items-center justify-center group-hover:scale-105 transition-transform shadow-xs">
-          <img
-            src="/mlbb-logo.png"
-            alt="Mobile Legends"
-            onError={(e) => {
-              e.target.onerror = null;
-              e.target.src = '/images/mlbb_square_logo.png';
-            }}
-            className="w-full h-full object-cover"
-          />
-        </div>
+        <img
+          src="/mlbb-logo.png"
+          alt="Mobile Legends"
+          onError={(e) => {
+            e.target.onerror = null;
+            e.target.src = '/images/mlbb_square_logo.png';
+          }}
+          className="w-5 h-5 sm:w-6 sm:h-6 object-cover rounded-md shadow-xs transition-transform group-hover:scale-110"
+        />
       )
     },
     {
@@ -297,17 +285,15 @@ const GameSelection = () => {
       label: 'PUBG Mobile',
       sub: '',
       renderIcon: (isActive) => (
-        <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-xl overflow-hidden ring-1 ring-white/10 flex items-center justify-center group-hover:scale-105 transition-transform shadow-xs">
-          <img
-            src="/images/pubgm-logo.jpg"
-            alt="PUBG Mobile"
-            onError={(e) => {
-              e.target.onerror = null;
-              e.target.src = '/images/banner_pubg.jpg';
-            }}
-            className="w-full h-full object-cover"
-          />
-        </div>
+        <img
+          src="/images/pubgm-logo.jpg"
+          alt="PUBG Mobile"
+          onError={(e) => {
+            e.target.onerror = null;
+            e.target.src = '/images/banner_pubg.jpg';
+          }}
+          className="w-5 h-5 sm:w-6 sm:h-6 object-cover rounded-md shadow-xs transition-transform group-hover:scale-110"
+        />
       )
     },
     {
@@ -315,17 +301,15 @@ const GameSelection = () => {
       label: 'Free Fire',
       sub: '',
       renderIcon: (isActive) => (
-        <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-xl overflow-hidden ring-1 ring-white/10 flex items-center justify-center group-hover:scale-105 transition-transform shadow-xs bg-[#ff5500]/10">
-          <img
-            src="/images/freefire-banner.webp"
-            alt="Free Fire"
-            onError={(e) => {
-              e.target.onerror = null;
-              e.target.src = '/images/freefire-logo.png';
-            }}
-            className="w-full h-full object-cover"
-          />
-        </div>
+        <img
+          src="/images/freefire-app-icon.png"
+          alt="Free Fire"
+          onError={(e) => {
+            e.target.onerror = null;
+            e.target.src = '/images/freefire-logo.png';
+          }}
+          className="w-5 h-5 sm:w-6 sm:h-6 object-cover rounded-md shadow-xs transition-transform group-hover:scale-110"
+        />
       )
     }
   ];
@@ -405,39 +389,32 @@ const GameSelection = () => {
   return (
     <section id="games-section" className="py-4 sm:py-6 max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 font-khmer space-y-6">
       
-      {/* Category Pills Horizontal Bar (Modern Glass Console Dock) */}
-      <div className="p-1.5 sm:p-2 rounded-2xl sm:rounded-3xl bg-slate-900/40 border border-slate-800/80 backdrop-blur-xl shadow-lg">
-        <div className="flex items-center gap-2 sm:gap-2.5 overflow-x-auto pb-0.5 scrollbar-none select-none">
-          {categories.map((cat) => {
-            const isActive = activeCategory === cat.id;
+      {/* Category Filter Pills (Fluid Auto-Width - No Crop Box!) */}
+      <div className="flex items-center gap-2 sm:gap-2.5 overflow-x-auto py-1 scrollbar-none select-none">
+        {categories.map((cat) => {
+          const isActive = activeCategory === cat.id;
 
-            return (
-              <button
-                key={cat.id}
-                onClick={() => setActiveCategory(cat.id)}
-                className={`flex flex-col items-center justify-center p-2 min-w-[76px] sm:min-w-[88px] md:min-w-[96px] h-[66px] sm:h-[72px] rounded-xl sm:rounded-2xl text-center transition-all duration-300 cursor-pointer shrink-0 select-none group relative ${
-                  isActive
-                    ? 'bg-gradient-to-b from-amber-500/25 via-amber-500/10 to-slate-950/90 text-white border border-amber-400/90 shadow-[0_0_20px_rgba(245,158,11,0.25)] ring-1 ring-amber-400/30 scale-[1.02]'
-                    : 'bg-[#0b1120]/70 hover:bg-[#131d33] text-slate-300 border border-slate-800/80 hover:border-slate-700/80 hover:text-white shadow-sm'
-                }`}
-              >
-                <div className="flex items-center justify-center mb-1">
-                  {cat.renderIcon(isActive)}
-                </div>
-                <span className={`text-[10px] sm:text-[11px] font-bold leading-tight line-clamp-1 transition-colors ${
-                  isActive ? 'text-amber-300 font-extrabold drop-shadow-[0_0_8px_rgba(251,191,36,0.3)]' : 'text-slate-300 group-hover:text-white'
-                }`}>
-                  {cat.label}
-                </span>
-                {isActive ? (
-                  <div className="w-5 h-0.5 rounded-full bg-gradient-to-r from-amber-400 to-yellow-300 shadow-[0_0_8px_rgba(245,158,11,0.8)] mt-1 animate-pulse" />
-                ) : (
-                  <div className="w-5 h-0.5 mt-1 opacity-0" />
-                )}
-              </button>
-            );
-          })}
-        </div>
+          return (
+            <button
+              key={cat.id}
+              onClick={() => setActiveCategory(cat.id)}
+              className={`flex items-center gap-2.5 px-3.5 sm:px-5 py-2 sm:py-2.5 rounded-xl sm:rounded-2xl whitespace-nowrap transition-all duration-300 cursor-pointer shrink-0 select-none group font-bold text-xs sm:text-sm ${
+                isActive
+                  ? 'bg-gradient-to-r from-amber-500 via-amber-400 to-yellow-500 text-slate-950 font-black shadow-[0_4px_16px_rgba(251,191,36,0.35)] scale-[1.02] border border-amber-300'
+                  : 'bg-[#0f172a]/90 hover:bg-[#1e293b] text-slate-200 border border-slate-800 hover:border-slate-700 shadow-sm hover:text-white'
+              }`}
+            >
+              <div className="w-5 h-5 sm:w-6 sm:h-6 flex items-center justify-center shrink-0">
+                {cat.renderIcon(isActive)}
+              </div>
+              <span className={`tracking-wide ${
+                isActive ? 'text-slate-950 font-black' : 'text-slate-200 group-hover:text-white'
+              }`}>
+                {cat.label}
+              </span>
+            </button>
+          );
+        })}
       </div>
 
       {/* Section Header: Popular Games */}
