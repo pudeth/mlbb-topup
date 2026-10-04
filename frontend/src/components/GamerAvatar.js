@@ -3,36 +3,7 @@ import React from 'react';
 // Gaming Avatar Presets
 export const GAMING_AVATAR_PRESETS = [
   {
-    id: 'gamer_pro',
-    label: 'Pro Esports',
-    title: 'PRO GAMER',
-    category: 'roles',
-    image: '/images/gamer_avatar_pro.png',
-    fallbackIcon: '🎧',
-    badge: 'ESPORTS',
-    borderGradient: 'from-cyan-400 via-sky-500 to-blue-600',
-    glowColor: 'rgba(34,211,238,0.5)',
-    bg: 'from-[#071a38] via-[#041126] to-[#020712]',
-    badgeColor: 'bg-cyan-400 text-slate-950',
-    tag: 'Legendary',
-  },
-  {
-    id: 'mythic',
-    label: 'Mythic Glory',
-    title: 'MYTHIC GLORY',
-    category: 'ranks',
-    image: '/images/rank_mythic_crest_clean.png',
-    fallbackIcon: '👑',
-    badge: 'MYTHIC',
-    borderGradient: 'from-amber-300 via-yellow-500 to-orange-600',
-    glowColor: 'rgba(245,158,11,0.55)',
-    bg: 'from-[#2e1a05] via-[#1a0e02] to-[#0a0501]',
-    badgeColor: 'bg-amber-400 text-slate-950',
-    tag: 'Rank #1',
-  },
-  {
     id: 'crown',
-    aliasOf: 'mythic',
     label: 'Mythic King',
     title: 'MYTHIC KING',
     category: 'ranks',
@@ -257,7 +228,7 @@ export const getGamerAvatarPreset = (id) => {
 
 // Reusable GamerAvatar Component
 export const GamerAvatar = ({
-  avatarId = 'gamer_pro',
+  avatarId = 'crown',
   name = 'Player',
   size = 'md', // 'xs', 'sm', 'md', 'lg', 'xl'
   showGlow = true,
