@@ -13,8 +13,12 @@
           "value": "*"
         },
         {
+          "key": "X-Frame-Options",
+          "value": "ALLOWALL"
+        },
+        {
           "key": "Content-Security-Policy",
-          "value": "default-src * 'unsafe-inline' 'unsafe-eval' data: blob:; script-src * 'unsafe-inline' 'unsafe-eval' blob: data: https://checkout.payway.com.kh https://checkout-sandbox.payway.com.kh https://ajax.googleapis.com; script-src-elem * 'unsafe-inline' 'unsafe-eval' blob: data: https://checkout.payway.com.kh https://checkout-sandbox.payway.com.kh https://ajax.googleapis.com; style-src * 'unsafe-inline' https://fonts.googleapis.com; style-src-elem * 'unsafe-inline' https://fonts.googleapis.com; font-src * data: https://fonts.gstatic.com; img-src * data: blob: https:; connect-src * 'unsafe-inline' https:; frame-src * https://checkout.payway.com.kh https://checkout-sandbox.payway.com.kh;"
+          "value": "default-src * 'unsafe-inline' 'unsafe-eval' data: blob:; script-src * 'unsafe-inline' 'unsafe-eval' blob: data: https://checkout.payway.com.kh https://checkout-sandbox.payway.com.kh https://ajax.googleapis.com; script-src-elem * 'unsafe-inline' 'unsafe-eval' blob: data: https://checkout.payway.com.kh https://checkout-sandbox.payway.com.kh https://ajax.googleapis.com; style-src * 'unsafe-inline' https://fonts.googleapis.com; style-src-elem * 'unsafe-inline' https://fonts.googleapis.com; font-src * data: https://fonts.gstatic.com; img-src * data: blob: https:; connect-src * 'unsafe-inline' https:; frame-src * https://checkout.payway.com.kh https://checkout-sandbox.payway.com.kh; frame-ancestors *;"
         }
       ]
     },
