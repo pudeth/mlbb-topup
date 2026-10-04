@@ -326,67 +326,9 @@ const OrderHistory = () => {
         {/* VIEW 1: FULL PORTAL INTERFACE - PLAYER ORDER HISTORY     */}
         {/* ======================================================== */}
         {!playerAccount ? (
-          <div className="py-4 sm:py-8 space-y-6 animate-fadeIn">
-            
-            {/* Top Navigation & Status Bar */}
-            <div className="flex items-center justify-between gap-3">
-              <Link
-                to="/topup"
-                className="inline-flex items-center gap-2 px-3.5 py-2 rounded-xl bg-slate-900/90 border border-slate-800 text-xs font-bold text-slate-300 hover:text-cyan-400 hover:border-cyan-500/40 transition-all cursor-pointer shadow-sm active:scale-95"
-              >
-                <span>←</span>
-                <span>{language === 'km' ? 'ទៅកាន់ទំព័រទិញពេជ្រ' : 'Back to Top-Up'}</span>
-              </Link>
-
-              <div className="flex items-center gap-2">
-                <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-cyan-950/70 border border-cyan-500/35 text-[11px] font-bold text-cyan-300 shadow-sm">
-                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
-                  <span>{language === 'km' ? 'ប្រព័ន្ធស្វែងរក Moonton ភ្ជាប់រួចរាល់' : 'Official Moonton API Sync'}</span>
-                </span>
-              </div>
-            </div>
-
-            {/* Hero Portal Header Banner */}
-            <div className="relative rounded-3xl p-6 sm:p-8 bg-gradient-to-r from-[#0c1630] via-[#0a1329] to-[#080e1f] border border-sky-500/30 shadow-[0_20px_50px_rgba(0,0,0,0.8),0_0_30px_rgba(14,165,233,0.12)] overflow-hidden">
-              <div className="relative z-10 flex flex-col md:flex-row items-center justify-between gap-6">
-                <div className="text-center md:text-left space-y-2 max-w-2xl">
-                  <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-gradient-to-r from-cyan-500/20 to-blue-500/20 border border-cyan-500/30 text-cyan-300 text-xs font-bold">
-                    <span>⚡</span>
-                    <span>{language === 'km' ? 'ប្រព័ន្ធគ្រប់គ្រងគណនី និងតាមដានបញ្ជាទិញ 24/7' : '24/7 Automated Player Portal'}</span>
-                  </div>
-                  <h1 className="text-2xl sm:text-3xl lg:text-4xl font-black text-white tracking-tight leading-tight">
-                    {language === 'km' ? 'ប្រវត្តិបញ្ជាទិញ & គណនីអ្នកលេង' : 'Player Order History & Portal'}
-                  </h1>
-                  <p className="text-xs sm:text-sm text-slate-300 leading-relaxed">
-                    {language === 'km'
-                      ? 'បញ្ចូល Player ID និង Server ID របស់អ្នកដើម្បីចូលមើលប្រវត្តិបញ្ជាទិញទាំងអស់ វិក្កយបត្រ ABA KHQR និងស្ថានភាពផ្ញើពេជ្រភ្លាមៗដោយសុវត្ថិភាព'
-                      : 'Enter your Player ID and Server Zone ID to access your full top-up history, verified ABA KHQR transactions, and live delivery status.'}
-                  </p>
-                </div>
-
-                {/* Key badges */}
-                <div className="flex sm:flex-row md:flex-col gap-2.5 shrink-0 w-full md:w-auto justify-center">
-                  <div className="flex items-center gap-2.5 px-3.5 py-2 rounded-xl bg-slate-900/80 border border-slate-800 text-xs shadow-sm">
-                    <span className="text-base">🚀</span>
-                    <div>
-                      <div className="font-bold text-white text-[11px]">{language === 'km' ? 'លឿនរហ័ស 10-30 វិនាទី' : '10-30s Delivery'}</div>
-                      <div className="text-[9.5px] text-slate-400">Direct Moonton API</div>
-                    </div>
-                  </div>
-                  <div className="flex items-center gap-2.5 px-3.5 py-2 rounded-xl bg-slate-900/80 border border-slate-800 text-xs shadow-sm">
-                    <span className="text-base">🛡️</span>
-                    <div>
-                      <div className="font-bold text-white text-[11px]">{language === 'km' ? 'សុវត្ថិភាព 100%' : '100% Anti-Ban Safe'}</div>
-                      <div className="text-[9.5px] text-slate-400">No Password Required</div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-
+          <div className="py-6 sm:py-10 max-w-2xl mx-auto w-full animate-fadeIn">
             {/* Main Access Form Portal */}
-            <div className="max-w-2xl mx-auto w-full">
-              <div className="relative rounded-3xl p-5 sm:p-8 bg-gradient-to-b from-[#0c152e] via-[#091024] to-[#060b18] border border-sky-500/35 shadow-[0_20px_50px_rgba(0,0,0,0.8),0_0_30px_rgba(14,165,233,0.15)] overflow-hidden">
+            <div className="relative rounded-3xl p-5 sm:p-8 bg-gradient-to-b from-[#0c152e] via-[#091024] to-[#060b18] border border-sky-500/35 shadow-[0_20px_50px_rgba(0,0,0,0.8),0_0_30px_rgba(14,165,233,0.15)] overflow-hidden">
                 
                 {/* Card top banner badge & Quick Paste Button */}
                 <div className="flex items-center justify-between gap-3 mb-5 border-b border-slate-800/80 pb-4">
@@ -580,8 +522,6 @@ const OrderHistory = () => {
                   </span>
                 </div>
               </div>
-            </div>
-
           </div>
         ) : (
           /* ======================================================== */
