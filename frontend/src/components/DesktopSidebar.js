@@ -1,11 +1,13 @@
 import React from 'react';
 import { Link, useLocation } from 'react-router-dom';
+import { useAuth } from '../context/AuthContext';
 import { useLanguage } from '../context/LanguageContext';
 import { BrandLogo } from './BrandLogo';
 
 const DesktopSidebar = () => {
   const location = useLocation();
   const { language } = useLanguage();
+  const { user, logout, isAuthenticated } = useAuth();
 
   const isActive = (path) => {
     if (path === '/') return location.pathname === '/' && !location.hash;
@@ -147,35 +149,63 @@ const DesktopSidebar = () => {
         </nav>
       </div>
 
-      {/* Bottom Sidebar Promo Card (Anime Girl Artwork + Golden Button) */}
-      <div className="pt-4">
-        <div className="relative rounded-2xl p-3 bg-gradient-to-b from-[#131d36] to-[#0a1020] border border-sky-500/30 overflow-hidden shadow-xl group">
-          <div className="flex items-center gap-2.5 mb-2.5">
-            <div className="w-11 h-11 rounded-xl overflow-hidden shrink-0 border border-sky-400/40 bg-slate-900 shadow-md">
-              <img
-                src="https://images.unsplash.com/photo-1578632767115-351597cf2477?w=150&auto=format&fit=crop&q=80"
-                alt="Special Reward"
-                className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300"
-              />
-            </div>
-            <div className="min-w-0">
-              <h4 className="text-[11.5px] font-black text-white leading-tight truncate">
-                {language === 'km' ? 'ទទួលបានបន្ថែម' : 'Get More Bonuses'}
-              </h4>
-              <p className="text-[9px] text-sky-300 font-medium truncate mt-0.5">
-                {language === 'km' ? 'ពង្រឹងការលេងហ្គេមរបស់អ្នក' : 'Power up your gameplay'}
-              </p>
-            </div>
-          </div>
-
+      {/* Bottom Sidebar User Login / Auth Section */}
+      <div className="pt-3 border-t border-slate-800/80">
+        {!isAuthenticated() ? (
           <Link
-            to="/topup"
-            className="w-full py-1.5 px-3 rounded-xl bg-gradient-to-r from-amber-400 via-amber-300 to-yellow-400 hover:from-amber-300 hover:to-yellow-300 text-slate-950 font-black text-[11px] flex items-center justify-center gap-1.5 shadow-[0_2px_10px_rgba(251,191,36,0.3)] transition-all hover:scale-[1.02]"
+            to="/login"
+            className="group relative flex items-center gap-3 p-2.5 rounded-xl bg-gradient-to-r from-blue-600/20 via-sky-600/15 to-indigo-600/20 hover:from-blue-600 hover:via-sky-600 hover:to-indigo-600 border border-sky-500/30 hover:border-sky-400 text-white shadow-lg shadow-sky-950/40 transition-all duration-200 active:scale-[0.98] overflow-hidden"
           >
-            <span>{language === 'km' ? 'ចូលលេងឥឡូវនេះ' : 'Play Now'}</span>
-            <span className="text-xs">→</span>
+            {/* Subtle light shimmer effect on hover */}
+            <div className="absolute inset-0 -translate-x-full group-hover:translate-x-full transition-transform duration-700 bg-gradient-to-r from-transparent via-white/10 to-transparent pointer-events-none" />
+
+            <div className="w-9 h-9 rounded-lg bg-sky-500/20 group-hover:bg-white/20 border border-sky-400/40 group-hover:border-white/40 flex items-center justify-center shrink-0 text-sky-300 group-hover:text-white transition-all shadow-inner">
+              <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+              </svg>
+            </div>
+
+            <div className="flex flex-col min-w-0 flex-1 leading-tight">
+              <span className="text-[12px] font-black text-white group-hover:text-white tracking-wide">
+                {language === 'km' ? 'ចូលគណនី' : 'Login'}
+              </span>
+              <span className="text-[9.5px] text-sky-300/90 group-hover:text-sky-100 font-medium truncate mt-0.5">
+                {language === 'km' ? 'ចូលប្រើប្រាស់គណនី' : 'Sign in to account'}
+              </span>
+            </div>
+
+            <div className="w-6 h-6 rounded-lg bg-white/10 group-hover:bg-white/20 flex items-center justify-center text-white text-xs shrink-0 transition-transform group-hover:translate-x-0.5">
+              →
+            </div>
           </Link>
-        </div>
+        ) : (
+          <div className="rounded-xl p-2.5 bg-slate-900/90 border border-slate-800 shadow-md">
+            <div className="flex items-center gap-2.5 mb-2">
+              <div className="w-9 h-9 rounded-lg bg-gradient-to-tr from-sky-500 to-indigo-600 border border-sky-400/40 flex items-center justify-center shrink-0 text-white font-black text-sm shadow-md">
+                {(user?.name || user?.email || 'U').charAt(0).toUpperCase()}
+              </div>
+              <div className="flex flex-col min-w-0 flex-1 leading-tight">
+                <span className="text-[12px] font-bold text-white truncate">
+                  {user?.name || user?.email?.split('@')[0] || 'User'}
+                </span>
+                <span className="text-[9.5px] text-emerald-400 font-semibold truncate flex items-center gap-1 mt-0.5">
+                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
+                  {user?.role ? user.role.toUpperCase() : (language === 'km' ? 'សកម្ម' : 'Active')}
+                </span>
+              </div>
+            </div>
+
+            <button
+              onClick={logout}
+              className="w-full py-1.5 px-2 rounded-lg bg-slate-800/80 hover:bg-rose-950/50 border border-slate-700/60 hover:border-rose-500/40 text-slate-300 hover:text-rose-200 text-[11px] font-semibold flex items-center justify-center gap-1.5 transition-all cursor-pointer"
+            >
+              <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+              </svg>
+              <span>{language === 'km' ? 'ចាកចេញ' : 'Logout'}</span>
+            </button>
+          </div>
+        )}
       </div>
     </aside>
   );
