@@ -104,7 +104,7 @@ const EventBannerSlider = ({ className = '' }) => {
 
   return (
     <div
-      className={`relative w-full overflow-hidden rounded-2xl sm:rounded-3xl border border-slate-800/80 bg-slate-950 group select-none transition-all duration-300 cursor-pointer shadow-2xl ${className}`}
+      className={`relative w-full overflow-hidden rounded-2xl sm:rounded-3xl border border-slate-800/80 hover:border-amber-400/40 bg-slate-950 group select-none transition-all duration-300 cursor-pointer shadow-[0_12px_40px_-10px_rgba(0,0,0,0.85)] hover:shadow-[0_16px_50px_rgba(245,158,11,0.2)] ${className}`}
       onMouseEnter={() => {
         setIsPaused(true);
         setIsHovered(true);
@@ -113,10 +113,7 @@ const EventBannerSlider = ({ className = '' }) => {
         setIsPaused(false);
         setIsHovered(false);
       }}
-      onTouchStart={(e) => {
-        setIsHovered((prev) => !prev);
-        handleTouchStart(e);
-      }}
+      onTouchStart={handleTouchStart}
       onTouchMove={handleTouchMove}
       onTouchEnd={handleTouchEnd}
       onClick={(e) => {
@@ -143,56 +140,53 @@ const EventBannerSlider = ({ className = '' }) => {
                     e.target.onerror = null;
                     e.target.src = banner.localFallbackImage || '/mlbb-logo.png';
                   }}
-                  className="w-full h-full object-cover object-center filter brightness-[0.98] group-hover:brightness-[0.92] transition-all duration-500"
+                  className="w-full h-full object-cover object-center filter brightness-[1.02] contrast-[1.02] transition-transform duration-700 ease-out group-hover:scale-[1.02]"
                 />
               </div>
 
-              {/* Subtle Cinematic Contrast Gradient */}
-              <div
-                className="absolute inset-0 bg-gradient-to-r from-[#070b18]/60 via-transparent to-transparent pointer-events-none"
-              />
-              <div
-                className="absolute inset-0 bg-gradient-to-t from-[#060a14]/85 via-transparent to-black/20 pointer-events-none"
-              />
+              {/* Clean Cinematic Edge Vignettes - leaving center 100% vibrant & unblocked */}
+              <div className="absolute top-0 inset-x-0 h-16 sm:h-20 bg-gradient-to-b from-slate-950/80 via-slate-950/20 to-transparent pointer-events-none" />
+              <div className="absolute bottom-0 inset-x-0 h-28 sm:h-36 bg-gradient-to-t from-slate-950/95 via-slate-950/35 to-transparent pointer-events-none" />
             </div>
           );
         })}
 
         {/* Content Overlay */}
-        <div className="absolute inset-0 z-20 flex flex-col justify-between p-3.5 sm:p-6 md:p-8 pointer-events-none">
+        <div className="absolute inset-0 z-20 flex flex-col justify-between p-3.5 sm:p-5 md:p-6 pointer-events-none">
           
-          {/* Top Header / Badges (Hidden by default, reveals on hover) */}
+          {/* Top Header / Badges */}
           <div 
             key={`badge-${currentIndex}`}
-            className={`flex items-center justify-between gap-2 pointer-events-auto transition-all duration-300 ${
-              isHovered ? 'opacity-100 translate-y-0' : 'opacity-0 -translate-y-2 group-hover:opacity-100 group-hover:translate-y-0'
-            }`}
+            className="flex items-center justify-between gap-2 pointer-events-auto transition-all duration-300"
           >
             <div className="flex items-center gap-2">
-              <span className={`px-2 py-0.5 sm:px-2.5 sm:py-1 rounded-lg text-[9px] sm:text-xs font-black tracking-wider uppercase shadow-md ${currentBanner.badgeColor || 'bg-amber-400 text-slate-950'}`}>
-                {currentBanner.tag || 'SPECIAL EVENT'}
+              <span className={`px-2.5 py-1 rounded-lg text-[9px] sm:text-xs font-black tracking-wider uppercase shadow-md flex items-center gap-1.5 ${currentBanner.badgeColor || 'bg-gradient-to-r from-amber-400 to-yellow-400 text-slate-950'}`}>
+                <span>⚡</span>
+                <span>{currentBanner.tag || 'SPECIAL EVENT'}</span>
               </span>
-              <span className="hidden sm:inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-slate-950/80 border border-slate-700/60 text-[10px] sm:text-xs text-slate-300 font-bold backdrop-blur-md shadow-sm">
+              <span className="hidden sm:inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-slate-950/75 border border-white/10 text-[10px] sm:text-xs text-slate-300 font-bold backdrop-blur-md shadow-sm">
                 <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
                 <span>Live Event</span>
               </span>
             </div>
 
             {/* Slide Index Counter */}
-            <div className="px-2 py-0.5 sm:px-2.5 sm:py-1 rounded-lg bg-slate-950/80 border border-slate-700/60 text-[9px] sm:text-xs font-mono text-slate-300 font-bold backdrop-blur-md shadow-sm">
-              <span className="text-amber-400 font-black">{currentIndex + 1}</span> / {banners.length}
+            <div className="px-2.5 py-1 rounded-lg bg-slate-950/75 border border-white/10 text-[10px] sm:text-xs font-mono text-slate-300 font-bold backdrop-blur-md shadow-sm">
+              <span className="text-amber-400 font-black">{currentIndex + 1}</span>
+              <span className="text-slate-500 mx-1">/</span>
+              <span>{banners.length}</span>
             </div>
           </div>
 
-          {/* Center / Typography Area (Hidden by default, reveals on hover) */}
+          {/* Center / Typography Area (Subtle reveal on desktop hover to avoid blocking banner artwork) */}
           <div 
             key={`text-${currentIndex}`}
             className={`space-y-1 sm:space-y-2 max-w-xl pointer-events-auto font-khmer my-auto transition-all duration-300 ${
-              isHovered ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-3 group-hover:opacity-100 group-hover:translate-y-0'
+              isHovered ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-3 pointer-events-none'
             }`}
           >
-            <div className="bg-slate-950/75 backdrop-blur-md p-3 sm:p-4 rounded-2xl border border-white/10 shadow-2xl inline-block max-w-lg">
-              <h3 className="text-base sm:text-2xl md:text-3xl lg:text-4xl font-black text-white tracking-tight leading-tight line-clamp-2 drop-shadow-[0_2px_12px_rgba(0,0,0,0.9)]">
+            <div className="bg-slate-950/80 backdrop-blur-md p-3 sm:p-4 rounded-2xl border border-white/10 shadow-2xl inline-block max-w-lg">
+              <h3 className="text-base sm:text-2xl md:text-3xl font-black text-white tracking-tight leading-tight line-clamp-2 drop-shadow-[0_2px_12px_rgba(0,0,0,0.9)]">
                 {currentBanner.title}
               </h3>
               {currentBanner.subtitle && (
@@ -203,9 +197,9 @@ const EventBannerSlider = ({ className = '' }) => {
             </div>
           </div>
 
-          {/* Bottom Row: CTA Button (KEPT VISIBLE AT ALL TIMES) & Pagination Dots */}
+          {/* Bottom Row: CTA Button & Pagination Dots */}
           <div className="flex items-center justify-between pt-1 pointer-events-auto z-30">
-            {/* Action CTA Button - KEPT VISIBLE AT ALL TIMES as requested */}
+            {/* Action CTA Button */}
             <button
               key={`btn-${currentIndex}`}
               type="button"
@@ -213,9 +207,9 @@ const EventBannerSlider = ({ className = '' }) => {
                 e.stopPropagation();
                 navigate(currentBanner.link || `/topup?game=${currentBanner.gameId || 'mlbb'}`);
               }}
-              className="py-1.5 px-3.5 sm:py-2.5 sm:px-5 rounded-full bg-gradient-to-r from-amber-400 via-amber-300 to-yellow-400 hover:from-amber-300 hover:to-yellow-300 text-slate-950 text-[10.5px] sm:text-xs md:text-sm font-black tracking-wide transition-all duration-300 cursor-pointer inline-flex items-center gap-1.5 shadow-[0_4px_20px_rgba(251,191,36,0.5)] active:scale-95 group/btn hover:scale-105"
+              className="btn-gold h-8 sm:h-9.5 px-3.5 sm:px-5 rounded-full text-slate-950 text-[11px] sm:text-xs md:text-sm font-black tracking-wide inline-flex items-center gap-2 shadow-[0_4px_18px_rgba(245,158,11,0.5)] active:scale-95 group/btn cursor-pointer transition-all hover:scale-105"
             >
-              <span>🎮</span>
+              <span className="text-xs sm:text-sm">🎮</span>
               <span>{currentBanner.buttonText || 'ចាប់លេងឥឡូវនេះ'}</span>
               <svg className="w-3.5 h-3.5 sm:w-4 sm:h-4 shrink-0 transition-transform duration-200 group-hover/btn:translate-x-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M14 5l7 7m0 0l-7 7m7-7H3" />
@@ -223,7 +217,7 @@ const EventBannerSlider = ({ className = '' }) => {
             </button>
 
             {/* Bottom Pagination Dots */}
-            <div className="flex items-center gap-1.5 sm:gap-2 bg-slate-950/60 backdrop-blur-md px-2.5 py-1 rounded-full border border-slate-800/80 shadow-lg">
+            <div className="flex items-center gap-1.5 sm:gap-2 bg-slate-950/75 backdrop-blur-md px-2.5 py-1.5 rounded-full border border-white/10 shadow-lg">
               {banners.map((_, idx) => (
                 <button
                   key={idx}
@@ -232,10 +226,10 @@ const EventBannerSlider = ({ className = '' }) => {
                     e.stopPropagation();
                     setCurrentIndex(idx);
                   }}
-                  className={`h-1.5 sm:h-2 rounded-full transition-all duration-500 cursor-pointer ${
+                  className={`rounded-full transition-all duration-300 cursor-pointer ${
                     idx === currentIndex
-                      ? 'w-5 sm:w-7 bg-gradient-to-r from-cyan-400 to-sky-300 shadow-[0_0_10px_rgba(56,189,248,0.7)]'
-                      : 'w-1.5 sm:w-2 bg-slate-700 hover:bg-slate-500'
+                      ? 'w-5 sm:w-7 h-1.5 sm:h-2 bg-gradient-to-r from-amber-400 to-yellow-300 shadow-[0_0_8px_rgba(251,191,36,0.8)]'
+                      : 'w-1.5 sm:w-2 h-1.5 sm:h-2 bg-white/30 hover:bg-white/60'
                   }`}
                   aria-label={`Go to slide ${idx + 1}`}
                 />
@@ -244,32 +238,44 @@ const EventBannerSlider = ({ className = '' }) => {
           </div>
         </div>
 
-        {/* Left Arrow Button */}
+        {/* Desktop Left Arrow Button (Hidden on mobile to keep artwork clean & unblocked) */}
         {banners.length > 1 && (
           <button
             type="button"
             onClick={handlePrev}
-            className="absolute left-2.5 sm:left-4 top-1/2 -translate-y-1/2 z-30 w-8 h-8 sm:w-10 sm:h-10 rounded-full bg-slate-950/75 hover:bg-amber-400 text-white hover:text-slate-950 border border-slate-700/80 hover:border-amber-300 shadow-2xl backdrop-blur-md flex items-center justify-center transition-all duration-300 active:scale-90 cursor-pointer hover:scale-110 opacity-80 hover:opacity-100"
+            className="hidden sm:flex absolute left-3 md:left-4 top-1/2 -translate-y-1/2 z-30 w-10 h-10 rounded-full bg-slate-950/65 hover:bg-amber-400 text-white hover:text-slate-950 border border-white/15 hover:border-amber-300 shadow-2xl backdrop-blur-md items-center justify-center transition-all duration-300 opacity-0 group-hover:opacity-100 hover:scale-110 active:scale-90 cursor-pointer -translate-x-2 group-hover:translate-x-0"
             aria-label="Previous slide"
           >
-            <svg className="w-4 h-4 sm:w-5 sm:h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <svg className="w-5 h-5 -ml-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M15 19l-7-7 7-7" />
             </svg>
           </button>
         )}
 
-        {/* Right Arrow Button */}
+        {/* Desktop Right Arrow Button (Hidden on mobile to keep artwork clean & unblocked) */}
         {banners.length > 1 && (
           <button
             type="button"
             onClick={handleNext}
-            className="absolute right-2.5 sm:right-4 top-1/2 -translate-y-1/2 z-30 w-8 h-8 sm:w-10 sm:h-10 rounded-full bg-slate-950/75 hover:bg-amber-400 text-white hover:text-slate-950 border border-slate-700/80 hover:border-amber-300 shadow-2xl backdrop-blur-md flex items-center justify-center transition-all duration-300 active:scale-90 cursor-pointer hover:scale-110 opacity-80 hover:opacity-100"
+            className="hidden sm:flex absolute right-3 md:right-4 top-1/2 -translate-y-1/2 z-30 w-10 h-10 rounded-full bg-slate-950/65 hover:bg-amber-400 text-white hover:text-slate-950 border border-white/15 hover:border-amber-300 shadow-2xl backdrop-blur-md items-center justify-center transition-all duration-300 opacity-0 group-hover:opacity-100 hover:scale-110 active:scale-90 cursor-pointer translate-x-2 group-hover:translate-x-0"
             aria-label="Next slide"
           >
-            <svg className="w-4 h-4 sm:w-5 sm:h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <svg className="w-5 h-5 -mr-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M9 5l7 7-7 7" />
             </svg>
           </button>
+        )}
+
+        {/* Bottom Animated Auto-Advance Progress Bar */}
+        {banners.length > 1 && (
+          <div className="absolute bottom-0 inset-x-0 h-[2.5px] bg-slate-900/60 z-30 overflow-hidden pointer-events-none">
+            <div
+              key={`progress-${currentIndex}-${isPaused}`}
+              className={`h-full bg-gradient-to-r from-amber-400 via-yellow-300 to-amber-500 origin-left ${
+                isPaused ? 'w-full opacity-40' : 'animate-banner-progress'
+              }`}
+            />
+          </div>
         )}
       </div>
     </div>
