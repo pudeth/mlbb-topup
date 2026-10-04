@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
   DEFAULT_EVENT_BANNERS,
@@ -12,10 +12,19 @@ const EventBannerSlider = ({ className = '' }) => {
   const navigate = useNavigate();
   const [banners, setBanners] = useState(() => getStoredBanners());
   const [currentIndex, setCurrentIndex] = useState(0);
+  const [prevIndex, setPrevIndex] = useState(null);
   const [isPaused, setIsPaused] = useState(false);
   const [isHovered, setIsHovered] = useState(false);
   const touchStartXRef = useRef(0);
   const touchEndXRef = useRef(0);
+
+  const goToSlide = useCallback((nextIndex) => {
+    setCurrentIndex((prev) => {
+      if (nextIndex === prev) return prev;
+      setPrevIndex(prev);
+      return nextIndex;
+    });
+  }, []);
 
   // Sync banners with cloud MongoDB & admin updates across all devices in real-time
   useEffect(() => {
@@ -56,25 +65,25 @@ const EventBannerSlider = ({ className = '' }) => {
     };
   }, []);
 
-  // Auto-advance timer
+  // Auto-advance timer with zoom out transition
   useEffect(() => {
     if (banners.length <= 1 || isPaused) return;
 
     const interval = setInterval(() => {
-      setCurrentIndex((prev) => (prev + 1) % banners.length);
+      goToSlide((currentIndex + 1) % banners.length);
     }, 4500);
 
     return () => clearInterval(interval);
-  }, [banners.length, isPaused]);
+  }, [banners.length, isPaused, currentIndex, goToSlide]);
 
   const handleNext = (e) => {
     if (e) e.stopPropagation();
-    setCurrentIndex((prev) => (prev + 1) % banners.length);
+    goToSlide((currentIndex + 1) % banners.length);
   };
 
   const handlePrev = (e) => {
     if (e) e.stopPropagation();
-    setCurrentIndex((prev) => (prev - 1 + banners.length) % banners.length);
+    goToSlide((currentIndex - 1 + banners.length) % banners.length);
   };
 
   // Touch Swipe Handlers for Mobile
@@ -121,18 +130,31 @@ const EventBannerSlider = ({ className = '' }) => {
         navigate(currentBanner.link || `/topup?game=${currentBanner.gameId || 'mlbb'}`);
       }}
     >
-      {/* Banner Canvas Area */}
+      {/* Banner Canvas Area with Cinematic Zoom Out Transition */}
       <div className="relative aspect-[16/10] sm:aspect-[21/9] md:aspect-[24/9] min-h-[190px] sm:min-h-[230px] md:min-h-[270px] w-full overflow-hidden">
         {banners.map((banner, index) => {
           const isActive = index === currentIndex;
+          const isExiting = index === prevIndex && prevIndex !== null;
+
+          if (!isActive && !isExiting) {
+            return (
+              <div
+                key={banner.id || index}
+                className="absolute inset-0 opacity-0 pointer-events-none z-0"
+              />
+            );
+          }
+
           return (
             <div
-              key={banner.id || index}
-              className={`absolute inset-0 transition-opacity duration-700 ease-in-out ${
-                isActive ? 'opacity-100 z-10 pointer-events-auto' : 'opacity-0 z-0 pointer-events-none'
+              key={`${banner.id || index}-${isActive ? `active-${currentIndex}` : 'exit'}`}
+              className={`absolute inset-0 overflow-hidden ${
+                isActive
+                  ? 'opacity-100 z-10 pointer-events-auto animate-zoom-out'
+                  : 'z-0 pointer-events-none animate-zoom-out-exit'
               }`}
             >
-              <div className={`w-full h-full ${isActive ? 'animate-zoom-out' : ''}`}>
+              <div className="w-full h-full">
                 <img
                   src={banner.image}
                   alt={banner.title}
@@ -140,7 +162,7 @@ const EventBannerSlider = ({ className = '' }) => {
                     e.target.onerror = null;
                     e.target.src = banner.localFallbackImage || '/mlbb-logo.png';
                   }}
-                  className="w-full h-full object-cover object-center filter brightness-[1.02] contrast-[1.02] transition-transform duration-700 ease-out group-hover:scale-[1.02]"
+                  className="w-full h-full object-cover object-center filter brightness-[1.02] contrast-[1.02]"
                 />
               </div>
 
@@ -224,7 +246,7 @@ const EventBannerSlider = ({ className = '' }) => {
                   type="button"
                   onClick={(e) => {
                     e.stopPropagation();
-                    setCurrentIndex(idx);
+                    goToSlide(idx);
                   }}
                   className={`rounded-full transition-all duration-300 cursor-pointer ${
                     idx === currentIndex
