@@ -1760,56 +1760,59 @@ const TopUp = () => {
             </div>
 
             {/* Header: Row 2 - Controls & Layout Switcher */}
-            <div className="flex items-center justify-between pt-1 border-t border-slate-800/80">
-              <span className="text-xs font-bold text-slate-400">
-                Display Layout:
-              </span>
+            <div className="flex items-center justify-between gap-2 pt-2 pb-0.5 border-t border-slate-800/80">
+              <div className="flex items-center gap-1.5 text-xs font-black text-slate-300 shrink-0">
+                <span className="w-1 h-3 rounded-full bg-gradient-to-b from-sky-400 to-cyan-400 shadow-[0_0_6px_rgba(56,189,248,0.8)]" />
+                <span className="tracking-tight uppercase text-[11px] text-slate-400">{language === 'km' ? 'ទម្រង់' : 'Layout'}:</span>
+              </div>
 
               {/* View Layout Switcher (Tiles vs Large Icons vs List) */}
-                <div className="flex items-center gap-1 p-1 bg-[#0b0f19] rounded-xl border border-slate-800 shadow-inner">
-                  <button
-                    type="button"
-                    onClick={() => setLayoutMode('tiles')}
-                    className={`py-1.5 px-3 rounded-lg text-xs font-bold flex items-center gap-1.5 transition-all cursor-pointer ${
-                      layoutMode === 'tiles'
-                        ? 'bg-[#1a2538] text-[#38bdf8] border border-[#38bdf8]/40 shadow-sm'
-                        : 'text-slate-400 hover:text-white border border-transparent'
-                    }`}
-                    title="Tiles View"
-                  >
-                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/></svg>
-                      <span className="text-[11px] font-semibold">{t('layout_tiles')}</span>
-                  </button>
-  
-                  <button
-                    type="button"
-                    onClick={() => setLayoutMode('grid')}
-                    className={`py-1.5 px-3 rounded-lg text-xs font-bold flex items-center gap-1.5 transition-all cursor-pointer ${
-                      layoutMode === 'grid'
-                        ? 'bg-[#1a2538] text-[#38bdf8] border border-[#38bdf8]/40 shadow-sm'
-                        : 'text-slate-400 hover:text-white border border-transparent'
-                    }`}
-                    title="Large Icons View"
-                  >
-                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><path d="M3 9h18"/><path d="M9 21V9"/></svg>
-                      <span className="text-[11px] font-semibold">{t('layout_large_icons')}</span>
-                  </button>
-  
-                  <button
-                    type="button"
-                    onClick={() => setLayoutMode('list')}
-                    className={`py-1.5 px-3 rounded-lg text-xs font-bold flex items-center gap-1.5 transition-all cursor-pointer ${
-                      layoutMode === 'list'
-                        ? 'bg-[#1a2538] text-[#38bdf8] border border-[#38bdf8]/40 shadow-sm'
-                        : 'text-slate-400 hover:text-white border border-transparent'
-                    }`}
-                    title="List Rows View"
-                  >
-                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg>
-                      <span className="text-[11px] font-semibold">{t('layout_list')}</span>
-                  </button>
-                </div>
+              <div className="inline-flex items-center p-1 bg-gradient-to-b from-[#0a0f1d] to-[#060a14] rounded-2xl border border-slate-800/90 shadow-[inset_0_1px_3px_rgba(0,0,0,0.7),0_2px_8px_rgba(0,0,0,0.3)] backdrop-blur-sm gap-0.5">
+                <button
+                  type="button"
+                  onClick={() => setLayoutMode('tiles')}
+                  className={`py-1.5 px-2.5 sm:px-3 rounded-xl text-xs font-black flex items-center gap-1.5 transition-all duration-200 cursor-pointer select-none whitespace-nowrap ${
+                    layoutMode === 'tiles'
+                      ? 'bg-gradient-to-r from-sky-500/25 via-cyan-500/20 to-sky-500/15 text-cyan-300 border border-cyan-400/50 shadow-[0_0_12px_rgba(34,211,238,0.3)] scale-[1.02]'
+                      : 'text-slate-400 hover:text-slate-200 hover:bg-slate-800/50 border border-transparent'
+                  }`}
+                  title="Tiles View"
+                >
+                  <svg className="w-3.5 h-3.5 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/></svg>
+                  <span className="text-[11px] font-extrabold">{t('layout_tiles')}</span>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => setLayoutMode('grid')}
+                  className={`py-1.5 px-2.5 sm:px-3 rounded-xl text-xs font-black flex items-center gap-1.5 transition-all duration-200 cursor-pointer select-none whitespace-nowrap ${
+                    layoutMode === 'grid'
+                      ? 'bg-gradient-to-r from-sky-500/25 via-cyan-500/20 to-sky-500/15 text-cyan-300 border border-cyan-400/50 shadow-[0_0_12px_rgba(34,211,238,0.3)] scale-[1.02]'
+                      : 'text-slate-400 hover:text-slate-200 hover:bg-slate-800/50 border border-transparent'
+                  }`}
+                  title="Large Icons View"
+                >
+                  <svg className="w-3.5 h-3.5 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><path d="M3 9h18"/><path d="M9 21V9"/></svg>
+                  <span className="text-[11px] font-extrabold whitespace-nowrap">
+                    {language === 'km' ? 'រូបធំ' : 'Large'}<span className="hidden sm:inline"> icons</span>
+                  </span>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => setLayoutMode('list')}
+                  className={`py-1.5 px-2.5 sm:px-3 rounded-xl text-xs font-black flex items-center gap-1.5 transition-all duration-200 cursor-pointer select-none whitespace-nowrap ${
+                    layoutMode === 'list'
+                      ? 'bg-gradient-to-r from-sky-500/25 via-cyan-500/20 to-sky-500/15 text-cyan-300 border border-cyan-400/50 shadow-[0_0_12px_rgba(34,211,238,0.3)] scale-[1.02]'
+                      : 'text-slate-400 hover:text-slate-200 hover:bg-slate-800/50 border border-transparent'
+                  }`}
+                  title="List Rows View"
+                >
+                  <svg className="w-3.5 h-3.5 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg>
+                  <span className="text-[11px] font-extrabold">{t('layout_list')}</span>
+                </button>
               </div>
+            </div>
   
             {/* ===== Scrollable Product Frame ===== */}
             <div className="relative rounded-2xl border border-sky-500/30 bg-gradient-to-b from-[#060d24] to-[#030817] shadow-[inset_0_1px_0_rgba(255,255,255,0.05),0_0_24px_rgba(14,165,233,0.12)] overflow-hidden">
