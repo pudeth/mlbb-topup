@@ -193,7 +193,7 @@ const PRICING_GAMES = [
     id: 'steam_usd',
     name: 'Steam Top-Up',
     icon: '💨',
-    logo: '/images/steam-logo.svg',
+    logo: '/images/steam-logo.png',
   },
   {
     id: 'telegram_stars',

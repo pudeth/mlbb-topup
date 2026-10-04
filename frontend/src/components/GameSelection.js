@@ -96,8 +96,8 @@ const POPULAR_GAMES_PRESET = [
     category: 'Steam',
     badge: 'NEW',
     badgeType: 'new',
-    image: '/images/steam-logo.svg',
-    fallbackImage: '/images/steam-logo.svg',
+    image: '/images/steam-logo.png',
+    fallbackImage: '/images/steam-logo.png',
     status: 'Active',
     route: '/topup?service=steam'
   },
@@ -257,19 +257,11 @@ const GameSelection = () => {
       label: 'Steam',
       sub: '',
       renderIcon: (isActive) => (
-        <svg
-          className="w-6 h-6 transition-transform duration-200 group-hover:scale-110 drop-shadow-[0_0_6px_rgba(255,255,255,0.3)]"
-          viewBox="0 0 24 24"
-          fill="none"
-        >
-          <circle cx="12" cy="12" r="12" fill={isActive ? '#0f172a' : '#171a21'} />
-          <path
-            fill={isActive ? '#fbbf24' : '#ffffff'}
-            fillRule="evenodd"
-            d="M12 2a10 10 0 0 0-9.94 8.91l5.47 2.26a3.5 3.5 0 0 1 2.37-.92c.32 0 .63.05.93.13l2.84-4.13A4.75 4.75 0 0 1 18.25 13a4.75 4.75 0 0 1-4.75 4.75c-2.4 0-4.38-1.78-4.7-4.1l-4.1-1.69A10 10 0 1 0 12 2zm1.5 8.75a2.5 2.5 0 1 0 0 5 2.5 2.5 0 0 0 0-5zm-5.06 4.77a2 2 0 1 0 1.95.8l-1.95-.8z"
-            clipRule="evenodd"
-          />
-        </svg>
+        <img
+          src="/images/steam-logo.png"
+          alt="Steam"
+          className="w-6 h-6 object-contain rounded-full transition-transform duration-200 group-hover:scale-110 drop-shadow-[0_0_8px_rgba(20,80,140,0.6)]"
+        />
       )
     },
     {

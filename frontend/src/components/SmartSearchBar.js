@@ -78,7 +78,7 @@ const BASE_GAMES_CATALOG = [
     category: 'Steam',
     badge: 'NEW',
     badgeColor: 'emerald',
-    image: '/images/steam-logo.svg',
+    image: '/images/steam-logo.png',
     route: '/topup?service=steam'
   },
   {
