@@ -591,164 +591,172 @@ const GameSelection = () => {
       </div>
 
       {/* ========================================================= */}
-      {/* SECTION: ពិសេសសម្រាប់អ្នក / Special for You             */}
+      {/* SECTION: ពិសេសសម្រាប់អ្នក / Special for You (Exact 3 Cards matching mockup) */}
       {/* ========================================================= */}
       <div id="promotions" className="pt-6 sm:pt-8 space-y-4">
-        <div className="flex items-center justify-between gap-3">
-          <div className="flex items-center gap-2.5 sm:gap-3">
-            <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-2xl bg-gradient-to-br from-amber-500/20 via-sky-500/15 to-blue-500/10 border border-sky-500/30 flex items-center justify-center shadow-[0_0_16px_rgba(56,189,248,0.25)] text-lg">
-              🎁
+        {/* Section Header */}
+        <div className="flex items-end justify-between gap-3">
+          <div className="flex items-center gap-3">
+            <div className="relative w-10 h-10 rounded-2xl bg-gradient-to-br from-amber-400 via-orange-500 to-rose-500 p-[1.5px] shadow-[0_0_18px_rgba(251,146,60,0.45)]">
+              <div className="w-full h-full rounded-[14px] bg-[#0a0f1f] flex items-center justify-center text-lg">
+                🎁
+              </div>
+              <span className="absolute -top-1 -right-1 w-3 h-3 rounded-full bg-rose-500 border-2 border-[#050a18] animate-pulse" />
             </div>
             <div>
-              <div className="flex items-center gap-2">
-                <h2 className="text-lg sm:text-xl font-black text-white tracking-tight leading-tight">
-                  {language === 'km' ? 'ពិសេសសម្រាប់អ្នក' : 'Special for You'}
-                </h2>
-                <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[9.5px] font-black uppercase tracking-wider bg-rose-500/20 text-rose-300 border border-rose-500/30 animate-pulse">
-                  HOT
-                </span>
-              </div>
+              <h2 className="text-lg sm:text-xl font-black leading-tight bg-gradient-to-r from-white via-sky-100 to-sky-300 bg-clip-text text-transparent">
+                {language === 'km' ? 'ពិសេសសម្រាប់អ្នក' : 'Special for You'}
+              </h2>
               <p className="text-[10px] sm:text-xs text-slate-400 font-medium">
-                {language === 'km' ? 'ការផ្ដល់ជូនពិសេស និងបញ្ចុះតម្លៃផ្តាច់មុខសម្រាប់អ្នក' : 'Exclusive promotions, instant top-ups & special gamer deals'}
+                {language === 'km' ? 'ការផ្ដល់ជូនពិសេស និងបញ្ចុះតម្លៃផ្តាច់មុខ' : 'Exclusive deals picked just for you'}
               </p>
             </div>
           </div>
 
           <Link
             to="/topup"
-            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-slate-900/90 hover:bg-sky-950/70 border border-slate-800 hover:border-sky-500/40 text-xs font-bold text-sky-400 hover:text-white transition-all shadow-sm group shrink-0 active:scale-95"
+            className="shrink-0 px-3 py-1.5 rounded-full bg-sky-500/10 hover:bg-sky-500/20 border border-sky-500/30 hover:border-sky-400/60 text-[11px] sm:text-xs font-bold text-sky-300 hover:text-white flex items-center gap-1.5 transition-all group"
           >
             <span>{language === 'km' ? 'មើលទាំងអស់' : 'View all'}</span>
-            <span className="transition-transform group-hover:translate-x-1">➔</span>
+            <span className="transition-transform group-hover:translate-x-0.5">→</span>
           </Link>
         </div>
 
-        {/* 3 Premium Wide Promo Cards */}
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-3.5 lg:gap-4">
-          
-          {/* Card 1: Special Discount (3D Red Gift Box with Gold Coins) */}
-          <Link
-            to="/topup"
-            className="group relative rounded-3xl p-3.5 sm:p-4 bg-gradient-to-br from-[#1a1205] via-[#100a02] to-[#080501] border border-amber-500/40 hover:border-amber-400/90 shadow-[0_10px_30px_rgba(0,0,0,0.6),0_0_20px_rgba(245,158,11,0.12)] hover:shadow-[0_16px_40px_rgba(0,0,0,0.8),0_0_30px_rgba(245,158,11,0.28)] flex items-center justify-between transition-all duration-300 select-none overflow-hidden active:scale-[0.99]"
-          >
-            {/* Ambient glows & glossy sheen */}
-            <div className="absolute inset-x-0 top-0 h-[1px] bg-gradient-to-r from-transparent via-amber-400/50 to-transparent" />
-            <div className="absolute -left-6 -bottom-6 w-32 h-32 bg-amber-500/15 rounded-full blur-2xl pointer-events-none group-hover:scale-125 transition-transform duration-500" />
-            
-            <div className="w-18 h-18 sm:w-20 sm:h-20 shrink-0 flex items-center justify-center relative z-10">
-              <img
-                src="/images/special_gift_box_3d.png"
-                alt="Special Discount"
-                className="w-full h-full object-contain drop-shadow-[0_8px_16px_rgba(251,191,36,0.35)] group-hover:scale-110 group-hover:-translate-y-0.5 transition-all duration-300"
-                onError={(e) => {
-                  e.target.src = '/images/special_art_gift.png';
-                }}
+        {/* Promo Cards */}
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 lg:gap-4">
+          {[
+            {
+              key: 'discount',
+              to: '/topup',
+              img: '/images/special_gift_box_3d.png',
+              fallback: '/images/special_art_gift.png',
+              title: language === 'km' ? 'បញ្ចុះតម្លៃពិសេស' : 'Special Discount',
+              subtitle: language === 'km' ? 'ការផ្តល់ជូនល្អបំផុតប្រចាំថ្ងៃ' : 'Best daily deals & bonuses',
+              badge: language === 'km' ? '🔥 ពេញនិយម' : '🔥 HOT',
+              chip: language === 'km' ? 'រហូតដល់ -20%' : 'Up to -20%',
+              cta: language === 'km' ? 'ទិញឥឡូវ' : 'Buy Now',
+              theme: {
+                card: 'from-[#2a1804] via-[#160c02] to-[#0a0601]',
+                border: 'border-amber-500/40 hover:border-amber-400/90',
+                glow: 'bg-amber-500/25',
+                shadow: 'hover:shadow-[0_10px_35px_-5px_rgba(245,158,11,0.35)]',
+                title: 'text-amber-100',
+                sub: 'text-amber-200/70',
+                badge: 'bg-gradient-to-r from-rose-500 to-orange-500 text-white',
+                chip: 'bg-amber-400/10 border-amber-400/30 text-amber-300',
+                btn: 'bg-gradient-to-r from-amber-300 via-amber-400 to-yellow-500 text-slate-950 shadow-[0_4px_14px_rgba(245,158,11,0.45)]',
+                line: 'from-transparent via-amber-400/70 to-transparent',
+                drop: 'drop-shadow-[0_6px_18px_rgba(251,191,36,0.5)]',
+              },
+            },
+            {
+              key: 'telegram',
+              to: '/topup?service=telegram_stars',
+              img: '/images/special_telegram_stars_3d.png',
+              fallback: '/images/special_art_telegram.png',
+              title: 'Telegram Stars',
+              subtitle: language === 'km' ? 'ទទួលបានភ្លាមៗ គ្មានការរង់ចាំ' : 'Delivered instantly to your account',
+              badge: language === 'km' ? '⚡ លឿន' : '⚡ INSTANT',
+              chip: language === 'km' ? 'ពី 50 ⭐' : 'From 50 ⭐',
+              cta: language === 'km' ? 'មើលកញ្ចប់' : 'View Deals',
+              theme: {
+                card: 'from-[#04274f] via-[#021733] to-[#010a17]',
+                border: 'border-sky-500/40 hover:border-sky-400/90',
+                glow: 'bg-sky-500/25',
+                shadow: 'hover:shadow-[0_10px_35px_-5px_rgba(56,189,248,0.35)]',
+                title: 'text-white',
+                sub: 'text-sky-200/70',
+                badge: 'bg-gradient-to-r from-sky-400 to-cyan-400 text-slate-950',
+                chip: 'bg-sky-400/10 border-sky-400/30 text-sky-300',
+                btn: 'bg-gradient-to-r from-sky-400 via-sky-500 to-blue-600 text-white shadow-[0_4px_14px_rgba(56,189,248,0.45)]',
+                line: 'from-transparent via-sky-400/70 to-transparent',
+                drop: 'drop-shadow-[0_6px_18px_rgba(56,189,248,0.5)]',
+              },
+            },
+            {
+              key: 'steam',
+              to: '/topup?service=steam',
+              img: '/images/special_steam_wallet_3d.png',
+              fallback: '/images/special_art_steam.png',
+              title: 'Steam Wallet',
+              subtitle: language === 'km' ? 'បញ្ចូលសមតុល្យ Steam CIS' : 'Steam CIS balance top-up',
+              badge: language === 'km' ? '✨ ថ្មី' : '✨ NEW',
+              chip: language === 'km' ? 'សុវត្ថិភាព 100%' : '100% Safe',
+              cta: language === 'km' ? 'ទិញឥឡូវ' : 'Buy Now',
+              theme: {
+                card: 'from-[#0d1a48] via-[#071030] to-[#020617]',
+                border: 'border-indigo-500/40 hover:border-indigo-400/90',
+                glow: 'bg-indigo-500/25',
+                shadow: 'hover:shadow-[0_10px_35px_-5px_rgba(99,102,241,0.35)]',
+                title: 'text-white',
+                sub: 'text-indigo-200/70',
+                badge: 'bg-gradient-to-r from-violet-500 to-indigo-500 text-white',
+                chip: 'bg-indigo-400/10 border-indigo-400/30 text-indigo-300',
+                btn: 'bg-gradient-to-r from-indigo-500 via-blue-600 to-sky-600 text-white shadow-[0_4px_14px_rgba(99,102,241,0.45)]',
+                line: 'from-transparent via-indigo-400/70 to-transparent',
+                drop: 'drop-shadow-[0_6px_18px_rgba(99,102,241,0.5)]',
+              },
+            },
+          ].map((promo) => (
+            <Link
+              key={promo.key}
+              to={promo.to}
+              className={`relative group block rounded-2xl p-[1px] border ${promo.theme.border} ${promo.theme.shadow} bg-gradient-to-br ${promo.theme.card} transition-all duration-300 hover:-translate-y-0.5 overflow-hidden select-none`}
+            >
+              {/* Top accent line */}
+              <div className={`absolute top-0 inset-x-6 h-px bg-gradient-to-r ${promo.theme.line}`} />
+              {/* Ambient glow behind art */}
+              <div className={`absolute -right-8 -top-8 w-32 h-32 ${promo.theme.glow} rounded-full blur-2xl pointer-events-none opacity-70 group-hover:opacity-100 transition-opacity`} />
+              {/* Subtle dot pattern */}
+              <div
+                className="absolute inset-0 opacity-[0.06] pointer-events-none"
+                style={{ backgroundImage: 'radial-gradient(circle, #fff 1px, transparent 1px)', backgroundSize: '14px 14px' }}
               />
-            </div>
+              {/* Shine sweep on hover */}
+              <div className="absolute inset-0 -translate-x-full group-hover:translate-x-full transition-transform duration-1000 bg-gradient-to-r from-transparent via-white/[0.07] to-transparent pointer-events-none" />
 
-            <div className="flex-1 min-w-0 pl-3 sm:pl-3.5 flex flex-col justify-center items-start relative z-10">
-              <div className="flex items-center justify-between w-full gap-1 mb-1">
-                <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[9px] font-black uppercase tracking-wider bg-amber-500/20 text-amber-300 border border-amber-500/35">
-                  <span>🔥</span>
-                  <span>{language === 'km' ? 'បញ្ចុះតម្លៃ 30%' : 'Save 30%'}</span>
-                </span>
-              </div>
-              <h3 className="font-black text-sm sm:text-base text-amber-100 group-hover:text-amber-200 transition-colors leading-tight truncate w-full">
-                {language === 'km' ? 'បញ្ចុះតម្លៃពិសេស' : 'Special Discount'}
-              </h3>
-              <p className="text-[10px] sm:text-[11px] text-amber-200/70 font-medium leading-tight mt-0.5 truncate w-full">
-                {language === 'km' ? 'ការផ្ដល់ជូនពេជ្រ និងកញ្ចប់ប្រូម៉ូសិន' : 'Best Deals & Discounts'}
-              </p>
-              
-              <div className="mt-2.5 inline-flex items-center gap-1.5 px-3 py-1 rounded-xl bg-gradient-to-r from-amber-400 via-amber-500 to-yellow-500 text-slate-950 font-black text-[11px] shadow-[0_2px_12px_rgba(245,158,11,0.4)] group-hover:brightness-110 transition-all">
-                <span>{language === 'km' ? 'ទិញពេលឥឡូវ' : 'Buy Now'}</span>
-                <span className="transition-transform group-hover:translate-x-1">➔</span>
-              </div>
-            </div>
-          </Link>
+              <div className="relative z-10 flex items-center gap-3 p-3 sm:p-3.5">
+                {/* Text content */}
+                <div className="flex-1 min-w-0 flex flex-col items-start">
+                  <span className={`px-2 py-0.5 rounded-md text-[9px] font-black tracking-wider uppercase shadow-sm ${promo.theme.badge}`}>
+                    {promo.badge}
+                  </span>
+                  <h3 className={`mt-1.5 font-black text-sm sm:text-base leading-tight truncate w-full ${promo.theme.title}`}>
+                    {promo.title}
+                  </h3>
+                  <p className={`text-[10px] sm:text-[11px] font-medium leading-snug mt-0.5 line-clamp-1 w-full ${promo.theme.sub}`}>
+                    {promo.subtitle}
+                  </p>
 
-          {/* Card 2: Telegram Stars (3D Telegram Badge with Floating Stars) */}
-          <Link
-            to="/topup?service=telegram_stars"
-            className="group relative rounded-3xl p-3.5 sm:p-4 bg-gradient-to-br from-[#031d3d] via-[#021226] to-[#010814] border border-sky-500/40 hover:border-sky-400/90 shadow-[0_10px_30px_rgba(0,0,0,0.6),0_0_20px_rgba(56,189,248,0.12)] hover:shadow-[0_16px_40px_rgba(0,0,0,0.8),0_0_30px_rgba(56,189,248,0.28)] flex items-center justify-between transition-all duration-300 select-none overflow-hidden active:scale-[0.99]"
-          >
-            {/* Ambient glows & glossy sheen */}
-            <div className="absolute inset-x-0 top-0 h-[1px] bg-gradient-to-r from-transparent via-sky-400/50 to-transparent" />
-            <div className="absolute -left-6 -bottom-6 w-32 h-32 bg-sky-500/15 rounded-full blur-2xl pointer-events-none group-hover:scale-125 transition-transform duration-500" />
-            
-            <div className="w-18 h-18 sm:w-20 sm:h-20 shrink-0 flex items-center justify-center relative z-10">
-              <img
-                src="/images/special_telegram_stars_3d.png"
-                alt="Telegram Stars"
-                className="w-full h-full object-contain drop-shadow-[0_8px_16px_rgba(56,189,248,0.35)] group-hover:scale-110 group-hover:-translate-y-0.5 transition-all duration-300"
-                onError={(e) => {
-                  e.target.src = '/images/special_art_telegram.png';
-                }}
-              />
-            </div>
+                  <div className="mt-2.5 flex items-center gap-2">
+                    <span className={`inline-flex items-center gap-1 pl-3 pr-1 py-1 rounded-full font-black text-[10.5px] sm:text-xs transition-transform group-hover:scale-[1.03] active:scale-95 ${promo.theme.btn}`}>
+                      <span>{promo.cta}</span>
+                      <span className="w-5 h-5 rounded-full bg-black/20 flex items-center justify-center text-[10px] transition-transform group-hover:translate-x-0.5">
+                        →
+                      </span>
+                    </span>
+                    <span className={`px-2 py-1 rounded-full border text-[9.5px] font-bold whitespace-nowrap ${promo.theme.chip}`}>
+                      {promo.chip}
+                    </span>
+                  </div>
+                </div>
 
-            <div className="flex-1 min-w-0 pl-3 sm:pl-3.5 flex flex-col justify-center items-start relative z-10">
-              <div className="flex items-center justify-between w-full gap-1 mb-1">
-                <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[9px] font-black uppercase tracking-wider bg-sky-500/20 text-sky-300 border border-sky-500/35">
-                  <span>⭐</span>
-                  <span>{language === 'km' ? 'ពេញនិយម' : 'Popular'}</span>
-                </span>
+                {/* 3D Art */}
+                <div className="relative w-20 h-20 sm:w-[84px] sm:h-[84px] shrink-0">
+                  <div className="absolute inset-2 rounded-full bg-white/5 blur-md" />
+                  <img
+                    src={promo.img}
+                    alt={promo.title}
+                    loading="lazy"
+                    className={`relative w-full h-full object-contain ${promo.theme.drop} group-hover:scale-110 group-hover:-rotate-3 transition-transform duration-300`}
+                    onError={(e) => {
+                      if (e.target.src.indexOf(promo.fallback) === -1) e.target.src = promo.fallback;
+                    }}
+                  />
+                </div>
               </div>
-              <h3 className="font-black text-sm sm:text-base text-white group-hover:text-sky-200 transition-colors leading-tight truncate w-full">
-                Telegram Stars
-              </h3>
-              <p className="text-[10px] sm:text-[11px] text-sky-200/70 font-medium leading-tight mt-0.5 truncate w-full">
-                {language === 'km' ? 'ផ្ញើចូលគណនីក្នុង 10 វិនាទី' : 'Instant Stars Delivery'}
-              </p>
-              
-              <div className="mt-2.5 inline-flex items-center gap-1.5 px-3 py-1 rounded-xl bg-gradient-to-r from-sky-400 via-sky-500 to-blue-600 text-white font-black text-[11px] shadow-[0_2px_12px_rgba(56,189,248,0.4)] group-hover:brightness-110 transition-all">
-                <span>{language === 'km' ? 'ចូលមើល' : 'View Deals'}</span>
-                <span className="transition-transform group-hover:translate-x-1">➔</span>
-              </div>
-            </div>
-          </Link>
-
-          {/* Card 3: Steam Wallet (3D Steam Emblem with Floating Crystals) */}
-          <Link
-            to="/topup?service=steam"
-            className="group relative rounded-3xl p-3.5 sm:p-4 bg-gradient-to-br from-[#051636] via-[#030d22] to-[#010612] border border-blue-500/40 hover:border-blue-400/90 shadow-[0_10px_30px_rgba(0,0,0,0.6),0_0_20px_rgba(59,130,246,0.12)] hover:shadow-[0_16px_40px_rgba(0,0,0,0.8),0_0_30px_rgba(59,130,246,0.28)] flex items-center justify-between transition-all duration-300 select-none overflow-hidden active:scale-[0.99]"
-          >
-            {/* Ambient glows & glossy sheen */}
-            <div className="absolute inset-x-0 top-0 h-[1px] bg-gradient-to-r from-transparent via-blue-400/50 to-transparent" />
-            <div className="absolute -left-6 -bottom-6 w-32 h-32 bg-blue-500/15 rounded-full blur-2xl pointer-events-none group-hover:scale-125 transition-transform duration-500" />
-            
-            <div className="w-18 h-18 sm:w-20 sm:h-20 shrink-0 flex items-center justify-center relative z-10">
-              <img
-                src="/images/special_steam_wallet_3d.png"
-                alt="Steam Wallet"
-                className="w-full h-full object-contain drop-shadow-[0_8px_16px_rgba(59,130,246,0.35)] group-hover:scale-110 group-hover:-translate-y-0.5 transition-all duration-300"
-                onError={(e) => {
-                  e.target.src = '/images/special_art_steam.png';
-                }}
-              />
-            </div>
-
-            <div className="flex-1 min-w-0 pl-3 sm:pl-3.5 flex flex-col justify-center items-start relative z-10">
-              <div className="flex items-center justify-between w-full gap-1 mb-1">
-                <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[9px] font-black uppercase tracking-wider bg-blue-500/20 text-blue-300 border border-blue-500/35">
-                  <span>⚡</span>
-                  <span>{language === 'km' ? 'សុវត្ថិភាព 100%' : 'Direct USD'}</span>
-                </span>
-              </div>
-              <h3 className="font-black text-sm sm:text-base text-white group-hover:text-blue-200 transition-colors leading-tight truncate w-full">
-                Steam Wallet
-              </h3>
-              <p className="text-[10px] sm:text-[11px] text-blue-200/70 font-medium leading-tight mt-0.5 truncate w-full">
-                {language === 'km' ? 'បញ្ចូលកូដលឿនរហ័ស' : 'Steam CIS & Global'}
-              </p>
-              
-              <div className="mt-2.5 inline-flex items-center gap-1.5 px-3 py-1 rounded-xl bg-gradient-to-r from-blue-500 via-indigo-500 to-cyan-500 text-white font-black text-[11px] shadow-[0_2px_12px_rgba(59,130,246,0.4)] group-hover:brightness-110 transition-all">
-                <span>{language === 'km' ? 'ទិញពេលឥឡូវ' : 'Buy Now'}</span>
-                <span className="transition-transform group-hover:translate-x-1">➔</span>
-              </div>
-            </div>
-          </Link>
-
+            </Link>
+          ))}
         </div>
       </div>
 
