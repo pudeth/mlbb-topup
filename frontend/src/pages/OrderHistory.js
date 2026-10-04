@@ -74,6 +74,8 @@ const OrderHistory = () => {
   const [verifiedName, setVerifiedName] = useState('');
   const [formError, setFormError] = useState('');
   const [submitting, setSubmitting] = useState(false);
+  const [pastedPlayerId, setPastedPlayerId] = useState(false);
+  const [pastedServerId, setPastedServerId] = useState(false);
 
   // Orders state
   const [orders, setOrders] = useState([]);
@@ -100,6 +102,67 @@ const OrderHistory = () => {
       setRecentLookups(updated);
       localStorage.setItem('recent_player_lookups', JSON.stringify(updated));
     } catch {}
+  };
+
+  // Dedicated Paste for Player ID (intelligently detects combined Player ID + Server ID too)
+  const handlePastePlayerId = async () => {
+    try {
+      let text = '';
+      if (navigator.clipboard && navigator.clipboard.readText) {
+        text = await navigator.clipboard.readText();
+      }
+      if (!text || !text.trim()) return;
+      const clean = text.trim();
+
+      const bracketMatch = clean.match(/(?:id\s*:\s*)?(\d{5,12})\s*[[({]\s*(\d{3,7})\s*[)\]}]/i) ||
+                           clean.match(/(\d+)\s*[[({]\s*(\d+)\s*[)\]}]/);
+      const sepMatch = clean.match(/^(\d{5,12})\s*[-/_|\s,]\s*(\d{3,7})$/);
+
+      if (bracketMatch) {
+        setFormData({ playerId: bracketMatch[1], serverId: bracketMatch[2] });
+        setFormError('');
+        setVerifiedName('');
+      } else if (sepMatch) {
+        setFormData({ playerId: sepMatch[1], serverId: sepMatch[2] });
+        setFormError('');
+        setVerifiedName('');
+      } else {
+        const digitsOnly = clean.replace(/\D/g, '');
+        setFormData(prev => ({ ...prev, playerId: digitsOnly || clean }));
+        setFormError('');
+        setVerifiedName('');
+      }
+      setPastedPlayerId(true);
+      setTimeout(() => setPastedPlayerId(false), 2000);
+    } catch (err) {
+      console.warn('Clipboard read error:', err);
+    }
+  };
+
+  // Dedicated Paste for Server ID
+  const handlePasteServerId = async () => {
+    try {
+      let text = '';
+      if (navigator.clipboard && navigator.clipboard.readText) {
+        text = await navigator.clipboard.readText();
+      }
+      if (!text || !text.trim()) return;
+      const clean = text.trim();
+      const bracketMatch = clean.match(/[[({](\d+)[)\]}]/);
+      let val = '';
+      if (bracketMatch) {
+        val = bracketMatch[1];
+      } else {
+        val = clean.replace(/\D/g, '');
+      }
+      setFormData(prev => ({ ...prev, serverId: val || clean }));
+      setFormError('');
+      setVerifiedName('');
+      setPastedServerId(true);
+      setTimeout(() => setPastedServerId(false), 2000);
+    } catch (err) {
+      console.warn('Clipboard read error:', err);
+    }
   };
 
   // Quick Paste Combined ID & Server
@@ -417,11 +480,46 @@ const OrderHistory = () => {
                             setVerifiedName('');
                             setFormError('');
                           }}
-                          className="w-full px-3.5 py-3 rounded-xl bg-[#070c1b] border border-slate-700/80 focus:border-cyan-400 focus:ring-2 focus:ring-cyan-400/20 text-white font-mono text-sm placeholder-slate-600 transition-all outline-none"
+                          className="w-full pl-3.5 pr-24 py-3 rounded-xl bg-[#070c1b] border border-slate-700/80 focus:border-cyan-400 focus:ring-2 focus:ring-cyan-400/20 text-white font-mono text-sm placeholder-slate-600 transition-all outline-none"
                         />
-                        <span className="absolute right-3.5 top-1/2 -translate-y-1/2 text-slate-500 text-xs">
-                          🆔
-                        </span>
+                        <div className="absolute right-2 top-1/2 -translate-y-1/2 flex items-center gap-1.5">
+                          {formData.playerId && (
+                            <button
+                              type="button"
+                              onClick={() => {
+                                setFormData(prev => ({ ...prev, playerId: '' }));
+                                setVerifiedName('');
+                              }}
+                              className="w-5 h-5 rounded-full bg-slate-800 hover:bg-slate-700 text-slate-400 hover:text-white flex items-center justify-center text-xs transition-colors cursor-pointer"
+                              title="Clear"
+                            >
+                              ×
+                            </button>
+                          )}
+                          <button
+                            type="button"
+                            onClick={handlePastePlayerId}
+                            className="h-7 px-2.5 rounded-lg bg-sky-500/15 hover:bg-sky-500/30 border border-sky-400/30 hover:border-sky-400/60 text-sky-300 hover:text-white text-[11px] font-bold flex items-center gap-1.5 transition-all cursor-pointer active:scale-95 shadow-sm"
+                            title={language === 'km' ? 'បិទភ្ជាប់ (Paste Player ID)' : 'Paste Player ID'}
+                          >
+                            {pastedPlayerId ? (
+                              <>
+                                <svg className="w-3.5 h-3.5 text-emerald-400 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
+                                  <path d="M20 6L9 17l-5-5" />
+                                </svg>
+                                <span className="text-emerald-400 font-extrabold text-[10px]">{language === 'km' ? 'បានបិទ' : 'Pasted'}</span>
+                              </>
+                            ) : (
+                              <>
+                                <svg className="w-3.5 h-3.5 text-sky-400 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+                                  <path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2" />
+                                  <rect x="8" y="2" width="8" height="4" rx="1" ry="1" />
+                                </svg>
+                                <span className="font-extrabold text-[10.5px]">{language === 'km' ? 'បិទភ្ជាប់' : 'Paste'}</span>
+                              </>
+                            )}
+                          </button>
+                        </div>
                       </div>
                     </div>
 
@@ -442,11 +540,46 @@ const OrderHistory = () => {
                             setVerifiedName('');
                             setFormError('');
                           }}
-                          className="w-full px-3.5 py-3 rounded-xl bg-[#070c1b] border border-slate-700/80 focus:border-cyan-400 focus:ring-2 focus:ring-cyan-400/20 text-white font-mono text-sm placeholder-slate-600 transition-all outline-none"
+                          className="w-full pl-3.5 pr-24 py-3 rounded-xl bg-[#070c1b] border border-slate-700/80 focus:border-cyan-400 focus:ring-2 focus:ring-cyan-400/20 text-white font-mono text-sm placeholder-slate-600 transition-all outline-none"
                         />
-                        <span className="absolute right-3.5 top-1/2 -translate-y-1/2 text-slate-500 text-xs">
-                          🌐
-                        </span>
+                        <div className="absolute right-2 top-1/2 -translate-y-1/2 flex items-center gap-1.5">
+                          {formData.serverId && (
+                            <button
+                              type="button"
+                              onClick={() => {
+                                setFormData(prev => ({ ...prev, serverId: '' }));
+                                setVerifiedName('');
+                              }}
+                              className="w-5 h-5 rounded-full bg-slate-800 hover:bg-slate-700 text-slate-400 hover:text-white flex items-center justify-center text-xs transition-colors cursor-pointer"
+                              title="Clear"
+                            >
+                              ×
+                            </button>
+                          )}
+                          <button
+                            type="button"
+                            onClick={handlePasteServerId}
+                            className="h-7 px-2.5 rounded-lg bg-sky-500/15 hover:bg-sky-500/30 border border-sky-400/30 hover:border-sky-400/60 text-sky-300 hover:text-white text-[11px] font-bold flex items-center gap-1.5 transition-all cursor-pointer active:scale-95 shadow-sm"
+                            title={language === 'km' ? 'បិទភ្ជាប់ (Paste Server ID)' : 'Paste Server ID'}
+                          >
+                            {pastedServerId ? (
+                              <>
+                                <svg className="w-3.5 h-3.5 text-emerald-400 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
+                                  <path d="M20 6L9 17l-5-5" />
+                                </svg>
+                                <span className="text-emerald-400 font-extrabold text-[10px]">{language === 'km' ? 'បានបិទ' : 'Pasted'}</span>
+                              </>
+                            ) : (
+                              <>
+                                <svg className="w-3.5 h-3.5 text-sky-400 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+                                  <path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2" />
+                                  <rect x="8" y="2" width="8" height="4" rx="1" ry="1" />
+                                </svg>
+                                <span className="font-extrabold text-[10.5px]">{language === 'km' ? 'បិទភ្ជាប់' : 'Paste'}</span>
+                              </>
+                            )}
+                          </button>
+                        </div>
                       </div>
                     </div>
 
