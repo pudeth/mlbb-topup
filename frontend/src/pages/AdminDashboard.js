@@ -19,42 +19,42 @@ const AdminDashboard = () => {
 // Comprehensive Catalog of Official Packages for All Games & Special Events with Dual Provider Wholesale Costs
 const ALL_GAMES_CATALOG_LIST = [
   // Mobile Legends (MLBB)
-  { productId: 12, game: 'mlbb', diamondAmount: 55, name: '55 Diamonds', price: 0.95, resellerPrice: 0.95, costPriceFazerCards: 0.74, costPriceKhmerTopUp: 0.78, tag: 'Starter', status: 'Active', customImage: '/images/diamond-chest-3d.png' },
-  { productId: 13, game: 'mlbb', diamondAmount: 86, name: '86 Diamonds', price: 1.35, resellerPrice: 1.35, costPriceFazerCards: 1.17, costPriceKhmerTopUp: 1.20, tag: 'Bonus', status: 'Active', customImage: '/images/diamond-chest-3d.png' },
-  { productId: 14, game: 'mlbb', diamondAmount: 210, name: 'Weekly Pass', price: 1.55, resellerPrice: 1.55, costPriceFazerCards: 1.45, costPriceKhmerTopUp: 1.50, tag: 'ទទួលបាន 220 💎 + 70 arura ⭐', isPass: true, status: 'Active', customImage: '/images/weekly-pass.png' },
-  { productId: 201, game: 'mlbb', diamondAmount: 440, name: '2 Weekly Pass', price: 3.10, resellerPrice: 3.10, costPriceFazerCards: 2.90, costPriceKhmerTopUp: 3.00, tag: 'ទទួលបាន 440 💎 + 140 arura ⭐', isPass: true, status: 'Active', customImage: '/images/weekly-pass.png' },
-  { productId: 202, game: 'mlbb', diamondAmount: 660, name: '3 Weekly Pass', price: 4.65, resellerPrice: 4.65, costPriceFazerCards: 4.35, costPriceKhmerTopUp: 4.50, tag: '29 tickets 🎫', isPass: true, status: 'Active', customImage: '/images/weekly-pass.png' },
-  { productId: 203, game: 'mlbb', diamondAmount: 880, name: '4 Weekly Pass', price: 6.20, resellerPrice: 6.20, costPriceFazerCards: 5.80, costPriceKhmerTopUp: 6.00, tag: '4x WDP', isPass: true, status: 'Active', customImage: '/images/weekly-pass.png' },
-  { productId: 204, game: 'mlbb', diamondAmount: 1100, name: '5 Weekly Pass', price: 7.75, resellerPrice: 7.75, costPriceFazerCards: 7.25, costPriceKhmerTopUp: 7.50, tag: '5x WDP', isPass: true, status: 'Active', customImage: '/images/weekly-pass.png' },
-  { productId: 205, game: 'mlbb', diamondAmount: 1320, name: '6 Weekly Pass', price: 9.30, resellerPrice: 9.30, costPriceFazerCards: 8.70, costPriceKhmerTopUp: 9.00, tag: '6x WDP', isPass: true, status: 'Active', customImage: '/images/weekly-pass.png' },
-  { productId: 206, game: 'mlbb', diamondAmount: 605, name: '165 + 2Weekly', price: 5.50, resellerPrice: 5.50, costPriceFazerCards: 5.12, costPriceKhmerTopUp: 5.30, tag: '165 💎 + 2x WDP', isPass: true, status: 'Active', customImage: '/images/weekly-pass.png' },
+  { productId: 2, game: 'mlbb', diamondAmount: 55, name: '55 Diamonds', price: 0.95, resellerPrice: 0.95, costPriceFazerCards: 0.74, costPriceKhmerTopUp: 0.78, tag: 'Starter', status: 'Active', customImage: '/images/diamond-chest-3d.png' },
+  { productId: 3, game: 'mlbb', diamondAmount: 86, name: '86 Diamonds', price: 1.35, resellerPrice: 1.35, costPriceFazerCards: 1.17, costPriceKhmerTopUp: 1.20, tag: 'Bonus', status: 'Active', customImage: '/images/diamond-chest-3d.png' },
+  { productId: 5, game: 'mlbb', diamondAmount: 210, name: 'Weekly Pass', price: 1.55, resellerPrice: 1.55, costPriceFazerCards: 1.45, costPriceKhmerTopUp: 1.50, tag: 'ទទួលបាន 220 💎 + 70 arura ⭐', isPass: true, status: 'Active', customImage: '/images/weekly-pass.png' },
+  { productId: 19, game: 'mlbb', diamondAmount: 440, name: '2 Weekly Pass', price: 3.10, resellerPrice: 3.10, costPriceFazerCards: 2.90, costPriceKhmerTopUp: 3.00, tag: 'ទទួលបាន 440 💎 + 140 arura ⭐', isPass: true, status: 'Active', customImage: '/images/weekly-pass.png' },
+  { productId: 20, game: 'mlbb', diamondAmount: 660, name: '3 Weekly Pass', price: 4.65, resellerPrice: 4.65, costPriceFazerCards: 4.35, costPriceKhmerTopUp: 4.50, tag: '29 tickets 🎫', isPass: true, status: 'Active', customImage: '/images/weekly-pass.png' },
+  { productId: 21, game: 'mlbb', diamondAmount: 880, name: '4 Weekly Pass', price: 6.20, resellerPrice: 6.20, costPriceFazerCards: 5.80, costPriceKhmerTopUp: 6.00, tag: '4x WDP', isPass: true, status: 'Active', customImage: '/images/weekly-pass.png' },
+  { productId: 22, game: 'mlbb', diamondAmount: 1100, name: '5 Weekly Pass', price: 7.75, resellerPrice: 7.75, costPriceFazerCards: 7.25, costPriceKhmerTopUp: 7.50, tag: '5x WDP', isPass: true, status: 'Active', customImage: '/images/weekly-pass.png' },
+  { productId: 23, game: 'mlbb', diamondAmount: 1320, name: '6 Weekly Pass', price: 9.30, resellerPrice: 9.30, costPriceFazerCards: 8.70, costPriceKhmerTopUp: 9.00, tag: '6x WDP', isPass: true, status: 'Active', customImage: '/images/weekly-pass.png' },
+  { productId: 24, game: 'mlbb', diamondAmount: 605, name: '165 + 2Weekly', price: 5.50, resellerPrice: 5.50, costPriceFazerCards: 5.12, costPriceKhmerTopUp: 5.30, tag: '165 💎 + 2x WDP', isPass: true, status: 'Active', customImage: '/images/weekly-pass.png' },
   { productId: 207, game: 'mlbb', diamondAmount: 55, name: 'Weekly Elite Bundle', price: 0.85, resellerPrice: 0.85, costPriceFazerCards: 0.75, costPriceKhmerTopUp: 0.78, tag: 'ទទួលបាន 55 💎 + 20 arura ⭐', isPass: true, status: 'Active', customImage: '/images/weekly-pass.png' },
   { productId: 208, game: 'mlbb', diamondAmount: 275, name: 'Monthly Epic Bundle', price: 4.25, resellerPrice: 4.25, costPriceFazerCards: 3.73, costPriceKhmerTopUp: 3.90, tag: 'ទទួលបាន 275 💎 + 180 arura ⭐', isPass: true, status: 'Active', customImage: '/images/weekly-pass.png' },
-  { productId: 2, game: 'mlbb', diamondAmount: 110, name: '110 Diamonds', price: 1.70, resellerPrice: 1.70, costPriceFazerCards: 1.45, costPriceKhmerTopUp: 1.50, tag: 'Bonus', status: 'Active', customImage: '/images/diamond-chest-3d.png' },
-  { productId: 31, game: 'mlbb', diamondAmount: 165, name: '165 Diamonds', price: 2.40, resellerPrice: 2.40, costPriceFazerCards: 2.22, costPriceKhmerTopUp: 2.25, tag: 'HOT 🔥', status: 'Active', customImage: '/images/diamond-chest-3d.png' },
-  { productId: 15, game: 'mlbb', diamondAmount: 172, name: '172 Diamonds', price: 2.50, resellerPrice: 2.50, costPriceFazerCards: 2.31, costPriceKhmerTopUp: 2.35, tag: 'Standard', status: 'Active', customImage: '/images/diamond-chest-3d.png' },
-  { productId: 16, game: 'mlbb', diamondAmount: 257, name: '257 Diamonds', price: 3.69, resellerPrice: 3.69, costPriceFazerCards: 3.34, costPriceKhmerTopUp: 3.40, tag: 'Popular', status: 'Active', customImage: '/images/diamond-chest-3d.png' },
-  { productId: 32, game: 'mlbb', diamondAmount: 275, name: '275 Diamonds', price: 3.85, resellerPrice: 3.85, costPriceFazerCards: 3.55, costPriceKhmerTopUp: 3.60, tag: '29 tickets 🎟️', status: 'Active', customImage: '/images/diamond-chest-3d.png' },
-  { productId: 33, game: 'mlbb', diamondAmount: 312, name: '312 Diamonds', price: 4.55, resellerPrice: 4.55, costPriceFazerCards: 3.88, costPriceKhmerTopUp: 4.00, tag: 'STARLIGHT 🌟', status: 'Active', customImage: '/images/diamond-chest-3d.png' },
-  { productId: 34, game: 'mlbb', diamondAmount: 343, name: '343 Diamonds', price: 4.99, resellerPrice: 4.99, costPriceFazerCards: 4.25, costPriceKhmerTopUp: 4.40, tag: '29 tickets 🎟️', status: 'Active', customImage: '/images/diamond-chest-3d.png' },
-  { productId: 18, game: 'mlbb', diamondAmount: 429, name: '429 Diamonds', price: 6.30, resellerPrice: 6.30, costPriceFazerCards: 5.68, costPriceKhmerTopUp: 5.80, tag: '29 tickets 🎟️', status: 'Active', customImage: '/images/diamond-chest-3d.png' },
-  { productId: 19, game: 'mlbb', diamondAmount: 500, name: 'Twilight Pass', price: 8.50, resellerPrice: 8.50, costPriceFazerCards: 7.64, costPriceKhmerTopUp: 8.00, tag: 'VIP PASS 👑', isPass: true, status: 'Active', customImage: '/images/weekly-pass.png' },
-  { productId: 20, game: 'mlbb', diamondAmount: 514, name: '514 Diamonds', price: 7.35, resellerPrice: 7.35, costPriceFazerCards: 6.28, costPriceKhmerTopUp: 6.45, tag: 'Best Value', status: 'Active', customImage: '/images/diamond-chest-3d.png' },
-  { productId: 35, game: 'mlbb', diamondAmount: 565, name: '565 Diamonds', price: 7.80, resellerPrice: 7.80, costPriceFazerCards: 7.31, costPriceKhmerTopUp: 7.45, tag: 'Special', status: 'Active', customImage: '/images/diamond-chest-3d.png' },
-  { productId: 36, game: 'mlbb', diamondAmount: 600, name: '600 Diamonds', price: 8.50, resellerPrice: 8.50, costPriceFazerCards: 7.25, costPriceKhmerTopUp: 7.45, tag: 'Pro Pack', status: 'Active', customImage: '/images/diamond-chest-3d.png' },
-  { productId: 21, game: 'mlbb', diamondAmount: 706, name: '706 Diamonds', price: 9.99, resellerPrice: 9.99, costPriceFazerCards: 9.08, costPriceKhmerTopUp: 9.25, tag: 'VIP', status: 'Active', customImage: '/images/diamond-chest-3d.png' },
-  { productId: 37, game: 'mlbb', diamondAmount: 878, name: '878 Diamonds', price: 12.80, resellerPrice: 12.80, costPriceFazerCards: 10.90, costPriceKhmerTopUp: 11.20, tag: 'VIP PRO', status: 'Active', customImage: '/images/diamond-chest-3d.png' },
-  { productId: 38, game: 'mlbb', diamondAmount: 963, name: '963 Diamonds', price: 13.60, resellerPrice: 13.60, costPriceFazerCards: 11.60, costPriceKhmerTopUp: 11.90, tag: 'Grand Pack', status: 'Active', customImage: '/images/diamond-chest-3d.png' },
-  { productId: 22, game: 'mlbb', diamondAmount: 1050, name: '1050 Diamonds', price: 15.50, resellerPrice: 15.50, costPriceFazerCards: 13.20, costPriceKhmerTopUp: 13.60, tag: 'Royal Chest', status: 'Active', customImage: '/images/diamond-chest-3d.png' },
-  { productId: 39, game: 'mlbb', diamondAmount: 1412, name: '1412 Diamonds', price: 22.00, resellerPrice: 22.00, costPriceFazerCards: 18.80, costPriceKhmerTopUp: 19.20, tag: 'Treasury', status: 'Active', customImage: '/images/diamond-chest-3d.png' },
-  { productId: 23, game: 'mlbb', diamondAmount: 2195, name: '2195 Diamonds', price: 29.99, resellerPrice: 29.99, costPriceFazerCards: 27.49, costPriceKhmerTopUp: 28.00, tag: 'Mythic Pack', status: 'Active', customImage: '/images/diamond-chest-3d.png' },
-  { productId: 40, game: 'mlbb', diamondAmount: 2452, name: '2452 Diamonds', price: 32.50, resellerPrice: 32.50, costPriceFazerCards: 27.70, costPriceKhmerTopUp: 28.50, tag: 'Mythic Plus', status: 'Active', customImage: '/images/diamond-chest-3d.png' },
-  { productId: 41, game: 'mlbb', diamondAmount: 2901, name: '2901 Diamonds', price: 39.99, resellerPrice: 39.99, costPriceFazerCards: 34.00, costPriceKhmerTopUp: 35.00, tag: 'Legendary Pack', status: 'Active', customImage: '/images/diamond-chest-3d.png' },
-  { productId: 24, game: 'mlbb', diamondAmount: 3688, name: '3688 Diamonds', price: 49.99, resellerPrice: 49.99, costPriceFazerCards: 45.86, costPriceKhmerTopUp: 46.50, tag: 'Epic Vault', status: 'Active', customImage: '/images/diamond-chest-3d.png' },
-  { productId: 42, game: 'mlbb', diamondAmount: 4390, name: '4390 Diamonds', price: 62.99, resellerPrice: 62.99, costPriceFazerCards: 53.60, costPriceKhmerTopUp: 55.00, tag: 'Supreme Chest', status: 'Active', customImage: '/images/diamond-chest-3d.png' },
-  { productId: 25, game: 'mlbb', diamondAmount: 5532, name: '5532 Diamonds', price: 73.99, resellerPrice: 73.99, costPriceFazerCards: 69.24, costPriceKhmerTopUp: 70.00, tag: 'Immortal Pack', status: 'Active', customImage: '/images/diamond-chest-3d.png' },
-  { productId: 43, game: 'mlbb', diamondAmount: 6944, name: '6944 Diamonds', price: 92.99, resellerPrice: 92.99, costPriceFazerCards: 79.20, costPriceKhmerTopUp: 81.00, tag: 'Titan Pack', status: 'Active', customImage: '/images/diamond-chest-3d.png' },
-  { productId: 26, game: 'mlbb', diamondAmount: 9288, name: '9288 Diamonds', price: 125.00, resellerPrice: 125.00, costPriceFazerCards: 115.00, costPriceKhmerTopUp: 118.00, tag: 'ULTIMATE ⚡', status: 'Active', customImage: '/images/diamond-chest-3d.png' },
+  { productId: 17, game: 'mlbb', diamondAmount: 110, name: '110 Diamonds', price: 1.70, resellerPrice: 1.70, costPriceFazerCards: 1.45, costPriceKhmerTopUp: 1.50, tag: 'Bonus', status: 'Active', customImage: '/images/diamond-chest-3d.png' },
+  { productId: 18, game: 'mlbb', diamondAmount: 165, name: '165 Diamonds', price: 2.40, resellerPrice: 2.40, costPriceFazerCards: 2.22, costPriceKhmerTopUp: 2.25, tag: 'HOT 🔥', status: 'Active', customImage: '/images/diamond-chest-3d.png' },
+  { productId: 4, game: 'mlbb', diamondAmount: 172, name: '172 Diamonds', price: 2.50, resellerPrice: 2.50, costPriceFazerCards: 2.31, costPriceKhmerTopUp: 2.35, tag: 'Standard', status: 'Active', customImage: '/images/diamond-chest-3d.png' },
+  { productId: 6, game: 'mlbb', diamondAmount: 257, name: '257 Diamonds', price: 3.69, resellerPrice: 3.69, costPriceFazerCards: 3.34, costPriceKhmerTopUp: 3.40, tag: 'Popular', status: 'Active', customImage: '/images/diamond-chest-3d.png' },
+  { productId: 25, game: 'mlbb', diamondAmount: 275, name: '275 Diamonds', price: 3.85, resellerPrice: 3.85, costPriceFazerCards: 3.55, costPriceKhmerTopUp: 3.60, tag: '29 tickets 🎟️', status: 'Active', customImage: '/images/diamond-chest-3d.png' },
+  { productId: 26, game: 'mlbb', diamondAmount: 312, name: '312 Diamonds', price: 4.55, resellerPrice: 4.55, costPriceFazerCards: 3.88, costPriceKhmerTopUp: 4.00, tag: 'STARLIGHT 🌟', status: 'Active', customImage: '/images/diamond-chest-3d.png' },
+  { productId: 27, game: 'mlbb', diamondAmount: 343, name: '343 Diamonds', price: 4.99, resellerPrice: 4.99, costPriceFazerCards: 4.25, costPriceKhmerTopUp: 4.40, tag: '29 tickets 🎟️', status: 'Active', customImage: '/images/diamond-chest-3d.png' },
+  { productId: 8, game: 'mlbb', diamondAmount: 429, name: '429 Diamonds', price: 6.30, resellerPrice: 6.30, costPriceFazerCards: 5.68, costPriceKhmerTopUp: 5.80, tag: '29 tickets 🎟️', status: 'Active', customImage: '/images/diamond-chest-3d.png' },
+  { productId: 9, game: 'mlbb', diamondAmount: 500, name: 'Twilight Pass', price: 8.50, resellerPrice: 8.50, costPriceFazerCards: 7.64, costPriceKhmerTopUp: 8.00, tag: 'VIP PASS 👑', isPass: true, status: 'Active', customImage: '/images/weekly-pass.png' },
+  { productId: 10, game: 'mlbb', diamondAmount: 514, name: '514 Diamonds', price: 7.35, resellerPrice: 7.35, costPriceFazerCards: 6.28, costPriceKhmerTopUp: 6.45, tag: 'Best Value', status: 'Active', customImage: '/images/diamond-chest-3d.png' },
+  { productId: 28, game: 'mlbb', diamondAmount: 565, name: '565 Diamonds', price: 7.80, resellerPrice: 7.80, costPriceFazerCards: 7.31, costPriceKhmerTopUp: 7.45, tag: 'Special', status: 'Active', customImage: '/images/diamond-chest-3d.png' },
+  { productId: 29, game: 'mlbb', diamondAmount: 600, name: '600 Diamonds', price: 8.50, resellerPrice: 8.50, costPriceFazerCards: 7.25, costPriceKhmerTopUp: 7.45, tag: 'Pro Pack', status: 'Active', customImage: '/images/diamond-chest-3d.png' },
+  { productId: 11, game: 'mlbb', diamondAmount: 706, name: '706 Diamonds', price: 9.99, resellerPrice: 9.99, costPriceFazerCards: 9.08, costPriceKhmerTopUp: 9.25, tag: 'VIP', status: 'Active', customImage: '/images/diamond-chest-3d.png' },
+  { productId: 30, game: 'mlbb', diamondAmount: 878, name: '878 Diamonds', price: 12.80, resellerPrice: 12.80, costPriceFazerCards: 10.90, costPriceKhmerTopUp: 11.20, tag: 'VIP PRO', status: 'Active', customImage: '/images/diamond-chest-3d.png' },
+  { productId: 31, game: 'mlbb', diamondAmount: 963, name: '963 Diamonds', price: 13.60, resellerPrice: 13.60, costPriceFazerCards: 11.60, costPriceKhmerTopUp: 11.90, tag: 'Grand Pack', status: 'Active', customImage: '/images/diamond-chest-3d.png' },
+  { productId: 12, game: 'mlbb', diamondAmount: 1050, name: '1050 Diamonds', price: 15.50, resellerPrice: 15.50, costPriceFazerCards: 13.20, costPriceKhmerTopUp: 13.60, tag: 'Royal Chest', status: 'Active', customImage: '/images/diamond-chest-3d.png' },
+  { productId: 32, game: 'mlbb', diamondAmount: 1412, name: '1412 Diamonds', price: 22.00, resellerPrice: 22.00, costPriceFazerCards: 18.80, costPriceKhmerTopUp: 19.20, tag: 'Treasury', status: 'Active', customImage: '/images/diamond-chest-3d.png' },
+  { productId: 13, game: 'mlbb', diamondAmount: 2195, name: '2195 Diamonds', price: 29.99, resellerPrice: 29.99, costPriceFazerCards: 27.49, costPriceKhmerTopUp: 28.00, tag: 'Mythic Pack', status: 'Active', customImage: '/images/diamond-chest-3d.png' },
+  { productId: 33, game: 'mlbb', diamondAmount: 2452, name: '2452 Diamonds', price: 32.50, resellerPrice: 32.50, costPriceFazerCards: 27.70, costPriceKhmerTopUp: 28.50, tag: 'Mythic Plus', status: 'Active', customImage: '/images/diamond-chest-3d.png' },
+  { productId: 34, game: 'mlbb', diamondAmount: 2901, name: '2901 Diamonds', price: 39.99, resellerPrice: 39.99, costPriceFazerCards: 34.00, costPriceKhmerTopUp: 35.00, tag: 'Legendary Pack', status: 'Active', customImage: '/images/diamond-chest-3d.png' },
+  { productId: 14, game: 'mlbb', diamondAmount: 3688, name: '3688 Diamonds', price: 49.99, resellerPrice: 49.99, costPriceFazerCards: 45.86, costPriceKhmerTopUp: 46.50, tag: 'Epic Vault', status: 'Active', customImage: '/images/diamond-chest-3d.png' },
+  { productId: 35, game: 'mlbb', diamondAmount: 4390, name: '4390 Diamonds', price: 62.99, resellerPrice: 62.99, costPriceFazerCards: 53.60, costPriceKhmerTopUp: 55.00, tag: 'Supreme Chest', status: 'Active', customImage: '/images/diamond-chest-3d.png' },
+  { productId: 15, game: 'mlbb', diamondAmount: 5532, name: '5532 Diamonds', price: 73.99, resellerPrice: 73.99, costPriceFazerCards: 69.24, costPriceKhmerTopUp: 70.00, tag: 'Immortal Pack', status: 'Active', customImage: '/images/diamond-chest-3d.png' },
+  { productId: 36, game: 'mlbb', diamondAmount: 6944, name: '6944 Diamonds', price: 92.99, resellerPrice: 92.99, costPriceFazerCards: 79.20, costPriceKhmerTopUp: 81.00, tag: 'Titan Pack', status: 'Active', customImage: '/images/diamond-chest-3d.png' },
+  { productId: 16, game: 'mlbb', diamondAmount: 9288, name: '9288 Diamonds', price: 125.00, resellerPrice: 125.00, costPriceFazerCards: 115.00, costPriceKhmerTopUp: 118.00, tag: 'ULTIMATE ⚡', status: 'Active', customImage: '/images/diamond-chest-3d.png' },
 
   // PUBG Mobile
   { productId: 201, game: 'pubgm', diamondAmount: 60, name: '60 Unknown Cash (UC)', price: 0.95, resellerPrice: 0.87, costPriceFazerCards: 0.78, costPriceKhmerTopUp: 0.82, tag: 'Starter', status: 'Active' },
@@ -660,20 +660,36 @@ const PRICING_GAMES = [
 
     const list = [...ALL_GAMES_CATALOG_LIST];
 
-    // Apply DB products strictly matching by diamondAmount for MLBB or by productId
+    // Apply DB products strictly matching by productId or diamondAmount and pass type
     products.forEach(p => {
-      const idx = list.findIndex(item => (item.game === 'mlbb' && item.diamondAmount === p.diamondAmount) || (item.productId === p.productId));
+      const isPass = Boolean(p.isPass || (p.description && p.description.toLowerCase().includes('pass')) || (p.description && p.description.toLowerCase().includes('bundle')));
+      const idx = list.findIndex(item => {
+        if (item.productId === p.productId) return true;
+        if (item.game === 'mlbb' && item.diamondAmount === p.diamondAmount) {
+          const itemPass = Boolean(item.isPass || (item.name && item.name.toLowerCase().includes('pass')) || (item.name && item.name.toLowerCase().includes('bundle')));
+          return itemPass === isPass;
+        }
+        return false;
+      });
       if (idx !== -1) {
-        list[idx] = { ...list[idx], ...p, diamondAmount: p.diamondAmount };
+        list[idx] = { ...list[idx], ...p, productId: list[idx].productId, diamondAmount: p.diamondAmount };
       } else {
         list.push(p);
       }
     });
 
     customSaved.forEach(p => {
-      const idx = list.findIndex(item => (item.game === 'mlbb' && item.diamondAmount === p.diamondAmount) || item.productId === p.productId);
+      const isPass = Boolean(p.isPass || (p.name && p.name.toLowerCase().includes('pass')) || (p.name && p.name.toLowerCase().includes('bundle')));
+      const idx = list.findIndex(item => {
+        if (item.productId === p.productId) return true;
+        if (item.game === 'mlbb' && item.diamondAmount === p.diamondAmount) {
+          const itemPass = Boolean(item.isPass || (item.name && item.name.toLowerCase().includes('pass')) || (item.name && item.name.toLowerCase().includes('bundle')));
+          return itemPass === isPass;
+        }
+        return false;
+      });
       if (idx !== -1) {
-        list[idx] = { ...list[idx], ...p };
+        list[idx] = { ...list[idx], ...p, productId: list[idx].productId };
       }
     });
 

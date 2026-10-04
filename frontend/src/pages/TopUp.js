@@ -9,40 +9,42 @@ import WeAcceptPayments from '../components/WeAcceptPayments';
 // Game-specific packages matching upstream supplier catalog
 const GAME_PACKAGES_MAP = {
   mlbb: [
-    { productId: 12, diamondAmount: 55, name: '55 Diamonds', price: 0.95, tag: 'Starter', customImage: '/images/diamond-chest-3d.png' },
-    { productId: 13, diamondAmount: 86, name: '86 Diamonds', price: 1.35, tag: 'Bonus', customImage: '/images/diamond-chest-3d.png' },
-    { productId: 14, diamondAmount: 210, name: 'Weekly Pass', price: 1.55, tag: 'ទទួលបាន 220 💎 + 70 arura ⭐', isPass: true, customImage: '/images/weekly-pass.png' },
-    { productId: 201, diamondAmount: 440, name: '2 Weekly Pass', price: 3.10, tag: 'ទទួលបាន 440 💎 + 140 arura ⭐', isPass: true, customImage: '/images/weekly-pass.png' },
-    { productId: 202, diamondAmount: 660, name: '3 Weekly Pass', price: 4.65, tag: '29 tickets 🎫', isPass: true, customImage: '/images/weekly-pass.png' },
-    { productId: 203, diamondAmount: 880, name: '4 Weekly Pass', price: 6.20, tag: '4x WDP', isPass: true, customImage: '/images/weekly-pass.png' },
-    { productId: 204, diamondAmount: 1100, name: '5 Weekly Pass', price: 7.75, tag: '5x WDP', isPass: true, customImage: '/images/weekly-pass.png' },
-    { productId: 205, diamondAmount: 1320, name: '6 Weekly Pass', price: 9.30, tag: '6x WDP', isPass: true, customImage: '/images/weekly-pass.png' },
-    { productId: 206, diamondAmount: 605, name: '165 + 2Weekly', price: 5.50, tag: '165 💎 + 2x WDP', isPass: true, customImage: '/images/weekly-pass.png' },
-    { productId: 2, diamondAmount: 110, name: '110 Diamonds', price: 1.70, tag: 'Bonus', customImage: '/images/diamond-chest-3d.png' },
-    { productId: 31, diamondAmount: 165, name: '165 Diamonds', price: 2.40, tag: 'HOT 🔥', customImage: '/images/diamond-chest-3d.png' },
-    { productId: 15, diamondAmount: 172, name: '172 Diamonds', price: 2.50, tag: 'Standard', customImage: '/images/diamond-chest-3d.png' },
-    { productId: 16, diamondAmount: 257, name: '257 Diamonds', price: 3.69, tag: 'Popular', customImage: '/images/diamond-chest-3d.png' },
-    { productId: 32, diamondAmount: 275, name: '275 Diamonds', price: 3.85, tag: '29 tickets 🎟️', customImage: '/images/diamond-chest-3d.png' },
-    { productId: 33, diamondAmount: 312, name: '312 Diamonds', price: 4.55, tag: 'STARLIGHT 🌟', customImage: '/images/diamond-chest-3d.png' },
-    { productId: 34, diamondAmount: 343, name: '343 Diamonds', price: 4.99, tag: '29 tickets 🎟️', customImage: '/images/diamond-chest-3d.png' },
-    { productId: 18, diamondAmount: 429, name: '429 Diamonds', price: 6.30, tag: '29 tickets 🎟️', customImage: '/images/diamond-chest-3d.png' },
-    { productId: 19, diamondAmount: 500, name: 'Twilight Pass', price: 8.50, tag: 'VIP PASS 👑', isPass: true, customImage: '/images/weekly-pass.png' },
-    { productId: 20, diamondAmount: 514, name: '514 Diamonds', price: 7.35, tag: 'Best Value', customImage: '/images/diamond-chest-3d.png' },
-    { productId: 35, diamondAmount: 565, name: '565 Diamonds', price: 7.80, tag: 'Special', customImage: '/images/diamond-chest-3d.png' },
-    { productId: 36, diamondAmount: 600, name: '600 Diamonds', price: 8.50, tag: 'Pro Pack', customImage: '/images/diamond-chest-3d.png' },
-    { productId: 21, diamondAmount: 706, name: '706 Diamonds', price: 9.99, tag: 'VIP', customImage: '/images/diamond-chest-3d.png' },
-    { productId: 37, diamondAmount: 878, name: '878 Diamonds', price: 12.80, tag: 'VIP PRO', customImage: '/images/diamond-chest-3d.png' },
-    { productId: 38, diamondAmount: 963, name: '963 Diamonds', price: 13.60, tag: 'Grand Pack', customImage: '/images/diamond-chest-3d.png' },
-    { productId: 22, diamondAmount: 1050, name: '1050 Diamonds', price: 15.50, tag: 'Royal Chest', customImage: '/images/diamond-chest-3d.png' },
-    { productId: 39, diamondAmount: 1412, name: '1412 Diamonds', price: 22.00, tag: 'Treasury', customImage: '/images/diamond-chest-3d.png' },
-    { productId: 23, diamondAmount: 2195, name: '2195 Diamonds', price: 29.99, tag: 'Mythic Pack', customImage: '/images/diamond-chest-3d.png' },
-    { productId: 40, diamondAmount: 2452, name: '2452 Diamonds', price: 32.50, tag: 'Mythic Plus', customImage: '/images/diamond-chest-3d.png' },
-    { productId: 41, diamondAmount: 2901, name: '2901 Diamonds', price: 39.99, tag: 'Legendary Pack', customImage: '/images/diamond-chest-3d.png' },
-    { productId: 24, diamondAmount: 3688, name: '3688 Diamonds', price: 49.99, tag: 'Epic Vault', customImage: '/images/diamond-chest-3d.png' },
-    { productId: 42, diamondAmount: 4390, name: '4390 Diamonds', price: 62.99, tag: 'Supreme Chest', customImage: '/images/diamond-chest-3d.png' },
-    { productId: 25, diamondAmount: 5532, name: '5532 Diamonds', price: 73.99, tag: 'Immortal Pack', customImage: '/images/diamond-chest-3d.png' },
-    { productId: 43, diamondAmount: 6944, name: '6944 Diamonds', price: 92.99, tag: 'Titan Pack', customImage: '/images/diamond-chest-3d.png' },
-    { productId: 26, diamondAmount: 9288, name: '9288 Diamonds', price: 125.00, tag: 'ULTIMATE ⚡', customImage: '/images/diamond-chest-3d.png' },
+    { productId: 2, diamondAmount: 55, name: '55 Diamonds', price: 0.95, tag: 'Starter', customImage: '/images/diamond-chest-3d.png' },
+    { productId: 3, diamondAmount: 86, name: '86 Diamonds', price: 1.35, tag: 'Bonus', customImage: '/images/diamond-chest-3d.png' },
+    { productId: 5, diamondAmount: 210, name: 'Weekly Pass', price: 1.55, tag: 'ទទួលបាន 220 💎 + 70 arura ⭐', isPass: true, customImage: '/images/weekly-pass.png' },
+    { productId: 19, diamondAmount: 440, name: '2 Weekly Pass', price: 3.10, tag: 'ទទួលបាន 440 💎 + 140 arura ⭐', isPass: true, customImage: '/images/weekly-pass.png' },
+    { productId: 20, diamondAmount: 660, name: '3 Weekly Pass', price: 4.65, tag: '29 tickets 🎫', isPass: true, customImage: '/images/weekly-pass.png' },
+    { productId: 21, diamondAmount: 880, name: '4 Weekly Pass', price: 6.20, tag: '4x WDP', isPass: true, customImage: '/images/weekly-pass.png' },
+    { productId: 22, diamondAmount: 1100, name: '5 Weekly Pass', price: 7.75, tag: '5x WDP', isPass: true, customImage: '/images/weekly-pass.png' },
+    { productId: 23, diamondAmount: 1320, name: '6 Weekly Pass', price: 9.30, tag: '6x WDP', isPass: true, customImage: '/images/weekly-pass.png' },
+    { productId: 24, diamondAmount: 605, name: '165 + 2Weekly', price: 5.50, tag: '165 💎 + 2x WDP', isPass: true, customImage: '/images/weekly-pass.png' },
+    { productId: 207, diamondAmount: 55, name: 'Weekly Elite Bundle', price: 0.85, tag: 'ទទួលបាន 55 💎 + 20 arura ⭐', isPass: true, customImage: '/images/weekly-pass.png' },
+    { productId: 208, diamondAmount: 275, name: 'Monthly Epic Bundle', price: 4.25, tag: 'ទទួលបាន 275 💎 + 180 arura ⭐', isPass: true, customImage: '/images/weekly-pass.png' },
+    { productId: 17, diamondAmount: 110, name: '110 Diamonds', price: 1.70, tag: 'Bonus', customImage: '/images/diamond-chest-3d.png' },
+    { productId: 18, diamondAmount: 165, name: '165 Diamonds', price: 2.40, tag: 'HOT 🔥', customImage: '/images/diamond-chest-3d.png' },
+    { productId: 4, diamondAmount: 172, name: '172 Diamonds', price: 2.50, tag: 'Standard', customImage: '/images/diamond-chest-3d.png' },
+    { productId: 6, diamondAmount: 257, name: '257 Diamonds', price: 3.69, tag: 'Popular', customImage: '/images/diamond-chest-3d.png' },
+    { productId: 25, diamondAmount: 275, name: '275 Diamonds', price: 3.85, tag: '29 tickets 🎟️', customImage: '/images/diamond-chest-3d.png' },
+    { productId: 26, diamondAmount: 312, name: '312 Diamonds', price: 4.55, tag: 'STARLIGHT 🌟', customImage: '/images/diamond-chest-3d.png' },
+    { productId: 27, diamondAmount: 343, name: '343 Diamonds', price: 4.99, tag: '29 tickets 🎟️', customImage: '/images/diamond-chest-3d.png' },
+    { productId: 8, diamondAmount: 429, name: '429 Diamonds', price: 6.30, tag: '29 tickets 🎟️', customImage: '/images/diamond-chest-3d.png' },
+    { productId: 9, diamondAmount: 500, name: 'Twilight Pass', price: 8.50, tag: 'VIP PASS 👑', isPass: true, customImage: '/images/weekly-pass.png' },
+    { productId: 10, diamondAmount: 514, name: '514 Diamonds', price: 7.35, tag: 'Best Value', customImage: '/images/diamond-chest-3d.png' },
+    { productId: 28, diamondAmount: 565, name: '565 Diamonds', price: 7.80, tag: 'Special', customImage: '/images/diamond-chest-3d.png' },
+    { productId: 29, diamondAmount: 600, name: '600 Diamonds', price: 8.50, tag: 'Pro Pack', customImage: '/images/diamond-chest-3d.png' },
+    { productId: 11, diamondAmount: 706, name: '706 Diamonds', price: 9.99, tag: 'VIP', customImage: '/images/diamond-chest-3d.png' },
+    { productId: 30, diamondAmount: 878, name: '878 Diamonds', price: 12.80, tag: 'VIP PRO', customImage: '/images/diamond-chest-3d.png' },
+    { productId: 31, diamondAmount: 963, name: '963 Diamonds', price: 13.60, tag: 'Grand Pack', customImage: '/images/diamond-chest-3d.png' },
+    { productId: 12, diamondAmount: 1050, name: '1050 Diamonds', price: 15.50, tag: 'Royal Chest', customImage: '/images/diamond-chest-3d.png' },
+    { productId: 32, diamondAmount: 1412, name: '1412 Diamonds', price: 22.00, tag: 'Treasury', customImage: '/images/diamond-chest-3d.png' },
+    { productId: 13, diamondAmount: 2195, name: '2195 Diamonds', price: 29.99, tag: 'Mythic Pack', customImage: '/images/diamond-chest-3d.png' },
+    { productId: 33, diamondAmount: 2452, name: '2452 Diamonds', price: 32.50, tag: 'Mythic Plus', customImage: '/images/diamond-chest-3d.png' },
+    { productId: 34, diamondAmount: 2901, name: '2901 Diamonds', price: 39.99, tag: 'Legendary Pack', customImage: '/images/diamond-chest-3d.png' },
+    { productId: 14, diamondAmount: 3688, name: '3688 Diamonds', price: 49.99, tag: 'Epic Vault', customImage: '/images/diamond-chest-3d.png' },
+    { productId: 35, diamondAmount: 4390, name: '4390 Diamonds', price: 62.99, tag: 'Supreme Chest', customImage: '/images/diamond-chest-3d.png' },
+    { productId: 15, diamondAmount: 5532, name: '5532 Diamonds', price: 73.99, tag: 'Immortal Pack', customImage: '/images/diamond-chest-3d.png' },
+    { productId: 36, diamondAmount: 6944, name: '6944 Diamonds', price: 92.99, tag: 'Titan Pack', customImage: '/images/diamond-chest-3d.png' },
+    { productId: 16, diamondAmount: 9288, name: '9288 Diamonds', price: 125.00, tag: 'ULTIMATE ⚡', customImage: '/images/diamond-chest-3d.png' },
   ],
   pubgm: [
     { productId: 201, diamondAmount: 60, name: '60 Unknown Cash (UC)', price: 0.95, tag: 'Starter' },
@@ -344,14 +346,40 @@ const TopUp = () => {
     else if (gameId.startsWith('steam')) baseList = [...GAME_PACKAGES_MAP.steam];
     else baseList = [...GAME_PACKAGES_MAP.giftcards];
 
+    // Auto-purge any stale corrupted legacy cache where productId was 12 for 55 diamonds
+    try {
+      const savedRaw = localStorage.getItem('admin_custom_products');
+      if (savedRaw && (
+        savedRaw.includes('"productId":12,"diamondAmount":55') ||
+        savedRaw.includes('"productId":14,"diamondAmount":210') ||
+        savedRaw.includes('"productId":12,"name":"55 Diamonds"')
+      )) {
+        localStorage.removeItem('admin_custom_products');
+      }
+    } catch (e) {}
+
     // Merge with Admin custom prices
     try {
       const saved = localStorage.getItem('admin_custom_products');
       if (saved) {
         let customProducts = JSON.parse(saved);
         if (Array.isArray(customProducts)) {
+          const isMlbbGame = !gameId || gameId.startsWith('mlbb');
           baseList = baseList.map(item => {
-            const match = customProducts.find(p => p.productId === item.productId || (p.game === (gameId.startsWith('mlbb') ? 'mlbb' : gameId) && p.diamondAmount === item.diamondAmount));
+            const isItemPass = Boolean(item.isPass || (item.name && item.name.toLowerCase().includes('pass')) || (item.name && item.name.toLowerCase().includes('bundle')));
+
+            const match = customProducts.find(p => {
+              if (p.productId === item.productId) return true;
+              if (isMlbbGame && (p.game === 'mlbb' || !p.game) && p.diamondAmount === item.diamondAmount) {
+                const isPPass = Boolean(p.isPass || (p.description && p.description.toLowerCase().includes('pass')) || (p.description && p.description.toLowerCase().includes('bundle')) || (p.name && p.name.toLowerCase().includes('pass')));
+                return isItemPass === isPPass;
+              }
+              if (!isMlbbGame && p.game === gameId && p.diamondAmount === item.diamondAmount) {
+                return true;
+              }
+              return false;
+            });
+
             if (match) {
               const cleanedPrice = Number(match.price);
               // Clean any stale treasure-chest.png to the new 3D diamond chest
@@ -407,7 +435,23 @@ const TopUp = () => {
         const res = await productsAPI.getAll().catch(() => null);
         if (res && res.data && Array.isArray(res.data) && res.data.length > 0 && isSubscribed) {
           try {
-            localStorage.setItem('admin_custom_products', JSON.stringify(res.data));
+            let existing = [];
+            try {
+              existing = JSON.parse(localStorage.getItem('admin_custom_products') || '[]');
+              if (!Array.isArray(existing)) existing = [];
+            } catch (e) { existing = []; }
+
+            const merged = [...existing];
+            res.data.forEach(cloudProd => {
+              const idx = merged.findIndex(p => p.productId === cloudProd.productId);
+              if (idx !== -1) {
+                merged[idx] = { ...merged[idx], ...cloudProd };
+              } else {
+                merged.push({ ...cloudProd, game: 'mlbb' });
+              }
+            });
+
+            localStorage.setItem('admin_custom_products', JSON.stringify(merged));
           } catch (e) {}
           handleProductsUpdated();
         }
@@ -1196,7 +1240,7 @@ const TopUp = () => {
       const orderPayload = {
         playerID: pId,
         serverID: formData.serverID ? formData.serverID.trim() : 'Global',
-        productId: selectedProduct?.productId || 12,
+        productId: selectedProduct?.productId || 2,
         customDiamondAmount: effectiveDiamonds,
         price: rawPrice,
         amount: targetAmount,
@@ -1960,8 +2004,8 @@ const TopUp = () => {
                         const isSelected = selectedProduct.productId === pkg.productId;
                         const isPass = isPassItem(pkg);
                         const tagLower = (pkg.tag || '').toLowerCase();
-                        const isPopular = pkg.productId === 12 || pkg.diamondAmount === 55 || tagLower.includes('popular') || tagLower.includes('starter');
-                        const isRecommend = !isPopular && (pkg.productId === 13 || pkg.diamondAmount === 86 || tagLower.includes('bonus') || tagLower.includes('recommend') || tagLower.includes('best'));
+                        const isPopular = pkg.productId === 2 || pkg.diamondAmount === 55 || tagLower.includes('popular') || tagLower.includes('starter');
+                        const isRecommend = !isPopular && (pkg.productId === 3 || pkg.diamondAmount === 86 || tagLower.includes('bonus') || tagLower.includes('recommend') || tagLower.includes('best'));
                         const ribbon = isPopular
                           ? { text: 'Popular', cls: 'from-orange-500 to-amber-500 text-white' }
                           : isRecommend
@@ -2039,8 +2083,8 @@ const TopUp = () => {
                         const isSelected = selectedProduct.productId === pkg.productId;
                         const isPass = isPassItem(pkg);
                         const tagLower = (pkg.tag || '').toLowerCase();
-                        const isPopular = pkg.productId === 12 || pkg.diamondAmount === 55 || tagLower.includes('popular') || tagLower.includes('starter');
-                        const isRecommend = !isPopular && (pkg.productId === 13 || pkg.diamondAmount === 86 || tagLower.includes('bonus') || tagLower.includes('recommend') || tagLower.includes('best'));
+                        const isPopular = pkg.productId === 2 || pkg.diamondAmount === 55 || tagLower.includes('popular') || tagLower.includes('starter');
+                        const isRecommend = !isPopular && (pkg.productId === 3 || pkg.diamondAmount === 86 || tagLower.includes('bonus') || tagLower.includes('recommend') || tagLower.includes('best'));
                         const ribbon = isPopular
                           ? { text: 'Popular', cls: 'from-orange-500 to-amber-500 text-white' }
                           : isRecommend
@@ -2177,8 +2221,8 @@ const TopUp = () => {
                       const isSelected = selectedProduct.productId === pkg.productId;
                       const isPass = isPassItem(pkg);
                       const tagLower = (pkg.tag || '').toLowerCase();
-                      const isPopular = pkg.productId === 12 || pkg.diamondAmount === 55 || tagLower.includes('popular') || tagLower.includes('starter');
-                      const isRecommend = !isPopular && (pkg.productId === 13 || pkg.diamondAmount === 86 || tagLower.includes('bonus') || tagLower.includes('recommend') || tagLower.includes('best'));
+                      const isPopular = pkg.productId === 2 || pkg.diamondAmount === 55 || tagLower.includes('popular') || tagLower.includes('starter');
+                      const isRecommend = !isPopular && (pkg.productId === 3 || pkg.diamondAmount === 86 || tagLower.includes('bonus') || tagLower.includes('recommend') || tagLower.includes('best'));
                       const ribbon = isPopular
                         ? { text: 'Popular', cls: 'from-orange-500 to-amber-500 text-white shadow-orange-500/30' }
                         : isRecommend
