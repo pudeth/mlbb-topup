@@ -233,11 +233,17 @@ const GameSelection = () => {
     {
       id: 'ALL',
       label: language === 'km' ? 'ហ្គេមទាំងអស់' : 'All Games',
-      sub: language === 'km' ? 'All Games' : '',
+      sub: '',
       renderIcon: (isActive) => (
-        <svg className={`w-5 h-5 sm:w-6 sm:h-6 ${isActive ? 'text-amber-950' : 'text-amber-400'} fill-current drop-shadow-[0_0_8px_rgba(251,191,36,0.6)] transition-transform group-hover:scale-110`} viewBox="0 0 24 24">
-          <path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z" />
-        </svg>
+        <div className={`w-7 h-7 sm:w-8 sm:h-8 rounded-xl flex items-center justify-center transition-all ${
+          isActive
+            ? 'bg-amber-400/20 text-amber-300 ring-1 ring-amber-400/60 shadow-[0_0_12px_rgba(251,191,36,0.35)]'
+            : 'bg-slate-800/80 text-amber-400 ring-1 ring-white/10 group-hover:scale-105'
+        }`}>
+          <svg className="w-4 h-4 fill-current drop-shadow-[0_0_6px_rgba(251,191,36,0.5)]" viewBox="0 0 24 24">
+            <path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z" />
+          </svg>
+        </div>
       )
     },
     {
@@ -245,11 +251,13 @@ const GameSelection = () => {
       label: 'Telegram Stars',
       sub: '',
       renderIcon: (isActive) => (
-        <img
-          src="/images/telegram-logo.webp"
-          alt="Telegram Stars"
-          className="w-6 h-6 object-contain rounded-full transition-transform duration-200 group-hover:scale-110 drop-shadow-[0_0_8px_rgba(36,161,222,0.6)]"
-        />
+        <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-xl overflow-hidden ring-1 ring-white/10 flex items-center justify-center bg-[#229ED9]/15 group-hover:scale-105 transition-transform shadow-xs">
+          <img
+            src="/images/telegram-logo.webp"
+            alt="Telegram Stars"
+            className="w-full h-full object-contain p-0.5"
+          />
+        </div>
       )
     },
     {
@@ -257,11 +265,13 @@ const GameSelection = () => {
       label: 'Steam',
       sub: '',
       renderIcon: (isActive) => (
-        <img
-          src="/images/steam-logo.png"
-          alt="Steam"
-          className="w-6 h-6 object-contain rounded-full transition-transform duration-200 group-hover:scale-110 drop-shadow-[0_0_8px_rgba(20,80,140,0.6)]"
-        />
+        <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-xl overflow-hidden ring-1 ring-white/10 flex items-center justify-center bg-[#171a21] group-hover:scale-105 transition-transform shadow-xs">
+          <img
+            src="/images/steam-logo.png"
+            alt="Steam"
+            className="w-full h-full object-contain"
+          />
+        </div>
       )
     },
     {
@@ -269,15 +279,17 @@ const GameSelection = () => {
       label: 'Mobile Legends',
       sub: '',
       renderIcon: (isActive) => (
-        <img
-          src="/mlbb-logo.png"
-          alt="Mobile Legends"
-          onError={(e) => {
-            e.target.onerror = null;
-            e.target.src = '/images/mlbb_square_logo.png';
-          }}
-          className="w-6 h-6 object-cover rounded-md transition-transform duration-200 group-hover:scale-110 drop-shadow-[0_0_8px_rgba(251,191,36,0.6)] shadow-xs"
-        />
+        <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-xl overflow-hidden ring-1 ring-white/10 flex items-center justify-center group-hover:scale-105 transition-transform shadow-xs">
+          <img
+            src="/mlbb-logo.png"
+            alt="Mobile Legends"
+            onError={(e) => {
+              e.target.onerror = null;
+              e.target.src = '/images/mlbb_square_logo.png';
+            }}
+            className="w-full h-full object-cover"
+          />
+        </div>
       )
     },
     {
@@ -285,15 +297,17 @@ const GameSelection = () => {
       label: 'PUBG Mobile',
       sub: '',
       renderIcon: (isActive) => (
-        <img
-          src="/images/pubgm-logo.jpg"
-          alt="PUBG Mobile"
-          onError={(e) => {
-            e.target.onerror = null;
-            e.target.src = '/images/banner_pubg.jpg';
-          }}
-          className="w-6 h-6 object-cover rounded-md transition-transform duration-200 group-hover:scale-110 drop-shadow-[0_0_8px_rgba(245,158,11,0.5)] shadow-xs"
-        />
+        <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-xl overflow-hidden ring-1 ring-white/10 flex items-center justify-center group-hover:scale-105 transition-transform shadow-xs">
+          <img
+            src="/images/pubgm-logo.jpg"
+            alt="PUBG Mobile"
+            onError={(e) => {
+              e.target.onerror = null;
+              e.target.src = '/images/banner_pubg.jpg';
+            }}
+            className="w-full h-full object-cover"
+          />
+        </div>
       )
     },
     {
@@ -301,15 +315,17 @@ const GameSelection = () => {
       label: 'Free Fire',
       sub: '',
       renderIcon: (isActive) => (
-        <img
-          src={isActive ? '/images/freefire-logo.png' : '/images/freefire-logo-white.png'}
-          alt="Free Fire"
-          onError={(e) => {
-            e.target.onerror = null;
-            e.target.src = '/images/freefire-logo.png';
-          }}
-          className="h-4 sm:h-4.5 max-w-[58px] object-contain transition-transform duration-200 group-hover:scale-110 drop-shadow-[0_0_8px_rgba(255,180,0,0.6)]"
-        />
+        <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-xl overflow-hidden ring-1 ring-white/10 flex items-center justify-center group-hover:scale-105 transition-transform shadow-xs bg-[#ff5500]/10">
+          <img
+            src="/images/freefire-banner.webp"
+            alt="Free Fire"
+            onError={(e) => {
+              e.target.onerror = null;
+              e.target.src = '/images/freefire-logo.png';
+            }}
+            className="w-full h-full object-cover"
+          />
+        </div>
       )
     }
   ];
@@ -389,56 +405,63 @@ const GameSelection = () => {
   return (
     <section id="games-section" className="py-4 sm:py-6 max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 font-khmer space-y-6">
       
-      {/* Category Pills Horizontal Bar (Exact match to reference mockup - clean icons, NO crop boxes) */}
-      <div className="flex items-center gap-2 sm:gap-2.5 overflow-x-auto pb-2 scrollbar-none select-none">
-        {categories.map((cat) => {
-          const isActive = activeCategory === cat.id;
+      {/* Category Pills Horizontal Bar (Modern Glass Console Dock) */}
+      <div className="p-1.5 sm:p-2 rounded-2xl sm:rounded-3xl bg-slate-900/40 border border-slate-800/80 backdrop-blur-xl shadow-lg">
+        <div className="flex items-center gap-2 sm:gap-2.5 overflow-x-auto pb-0.5 scrollbar-none select-none">
+          {categories.map((cat) => {
+            const isActive = activeCategory === cat.id;
 
-          return (
-            <button
-              key={cat.id}
-              onClick={() => setActiveCategory(cat.id)}
-              className={`flex flex-col items-center justify-center p-2 min-w-[76px] sm:min-w-[88px] md:min-w-[96px] h-[64px] sm:h-[72px] rounded-2xl text-center transition-all duration-300 cursor-pointer shrink-0 select-none group ${
-                isActive
-                  ? 'bg-gradient-to-b from-amber-500 via-amber-400 to-yellow-500 text-slate-950 font-black shadow-[0_4px_16px_rgba(251,191,36,0.35)] scale-[1.02] border border-amber-300'
-                  : 'bg-[#0f172a]/90 hover:bg-[#1e293b] text-slate-300 border border-slate-800 hover:border-slate-700 shadow-md'
-              }`}
-            >
-              <div className="h-6 flex items-center justify-center mb-1">
-                {cat.renderIcon(isActive)}
-              </div>
-              <span className={`text-[10px] sm:text-[11px] font-black leading-tight line-clamp-1 ${
-                isActive ? 'text-slate-950 font-black' : 'text-slate-200'
-              }`}>
-                {cat.label}
-              </span>
-              {cat.sub && cat.sub.toLowerCase() !== cat.label.toLowerCase() ? (
-                <span className={`text-[7.5px] sm:text-[8px] mt-0.5 leading-none ${isActive ? 'text-amber-950 font-bold' : 'text-slate-400'}`}>
-                  {cat.sub}
+            return (
+              <button
+                key={cat.id}
+                onClick={() => setActiveCategory(cat.id)}
+                className={`flex flex-col items-center justify-center p-2 min-w-[76px] sm:min-w-[88px] md:min-w-[96px] h-[66px] sm:h-[72px] rounded-xl sm:rounded-2xl text-center transition-all duration-300 cursor-pointer shrink-0 select-none group relative ${
+                  isActive
+                    ? 'bg-gradient-to-b from-amber-500/25 via-amber-500/10 to-slate-950/90 text-white border border-amber-400/90 shadow-[0_0_20px_rgba(245,158,11,0.25)] ring-1 ring-amber-400/30 scale-[1.02]'
+                    : 'bg-[#0b1120]/70 hover:bg-[#131d33] text-slate-300 border border-slate-800/80 hover:border-slate-700/80 hover:text-white shadow-sm'
+                }`}
+              >
+                <div className="flex items-center justify-center mb-1">
+                  {cat.renderIcon(isActive)}
+                </div>
+                <span className={`text-[10px] sm:text-[11px] font-bold leading-tight line-clamp-1 transition-colors ${
+                  isActive ? 'text-amber-300 font-extrabold drop-shadow-[0_0_8px_rgba(251,191,36,0.3)]' : 'text-slate-300 group-hover:text-white'
+                }`}>
+                  {cat.label}
                 </span>
-              ) : null}
-            </button>
-          );
-        })}
+                {isActive ? (
+                  <div className="w-5 h-0.5 rounded-full bg-gradient-to-r from-amber-400 to-yellow-300 shadow-[0_0_8px_rgba(245,158,11,0.8)] mt-1 animate-pulse" />
+                ) : (
+                  <div className="w-5 h-0.5 mt-1 opacity-0" />
+                )}
+              </button>
+            );
+          })}
+        </div>
       </div>
 
       {/* Section Header: Popular Games */}
-      <div className="flex items-center justify-between pt-2">
+      <div className="flex items-center justify-between pt-1">
         <div className="flex items-center gap-2.5">
-          <span className="text-xl">🔥</span>
+          <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-amber-500/20 to-orange-500/10 border border-amber-500/30 flex items-center justify-center shadow-[0_0_12px_rgba(245,158,11,0.2)] text-base">
+            🔥
+          </div>
           <div>
-            <h2 className="text-lg sm:text-xl font-black text-white leading-tight">
-              {language === 'km' ? 'ហ្គេមពេញនិយម' : 'Popular Games'}
+            <h2 className="text-lg sm:text-xl font-black text-white leading-tight tracking-wide flex items-center gap-2">
+              <span>{language === 'km' ? 'ហ្គេមពេញនិយម' : 'Popular Games'}</span>
+              <span className="hidden sm:inline-block px-2 py-0.5 rounded-full text-[9px] font-black uppercase tracking-wider bg-red-500/20 text-red-400 border border-red-500/30">
+                Trending
+              </span>
             </h2>
             <p className="text-[10px] sm:text-xs text-slate-400 font-medium">
-              Popular Games
+              {language === 'km' ? 'ជ្រើសរើសហ្គេមដើម្បីបញ្ចូលទឹកប្រាក់ភ្លាមៗ' : 'Instant Top-Up & Top Digital Services'}
             </p>
           </div>
         </div>
 
         <button
           onClick={() => setActiveCategory('ALL')}
-          className="text-xs font-bold text-sky-400 hover:text-sky-300 flex items-center gap-1 transition-colors group cursor-pointer"
+          className="px-3 py-1.5 rounded-xl bg-sky-500/10 hover:bg-sky-500/20 border border-sky-500/20 hover:border-sky-500/40 text-xs font-bold text-sky-400 hover:text-sky-300 flex items-center gap-1.5 transition-all group cursor-pointer shadow-xs"
         >
           <span>{language === 'km' ? 'មើលទាំងអស់' : 'View all'}</span>
           <span className="transition-transform group-hover:translate-x-1">➔</span>
