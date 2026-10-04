@@ -177,6 +177,7 @@ namespace MLBBTopUp.Infrastructure.Services
                         { "phone", phone },
                         { "type", purchaseType },
                         { "payment_option", popupPaymentOption },
+                        { "view_type", "popup" },
                         { "return_url", returnUrl },
                         { "cancel_url", cancelUrl },
                         { "continue_success_url", continueSuccessUrl },

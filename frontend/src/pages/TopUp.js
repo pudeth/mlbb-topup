@@ -641,6 +641,15 @@ const TopUp = () => {
               form.appendChild(opt);
             }
 
+            // Ensure view_type popup input exists (reachtopup.com style)
+            if (!form.querySelector('input[name="view_type"]')) {
+              const vt = document.createElement('input');
+              vt.type = 'hidden';
+              vt.name = 'view_type';
+              vt.value = 'popup';
+              form.appendChild(vt);
+            }
+
             // Launch official ABA PayWay popup on Desktop or Drawer on Mobile!
             payway.checkout();
 
@@ -653,9 +662,9 @@ const TopUp = () => {
                   sheet.style.display = 'flex';
                   sheet.setAttribute('aria-hidden', 'false');
                   const contents = sheet.querySelector('.aba_checkout_contents');
-                  if (contents) contents.style.height = '520px';
+                  if (contents) contents.style.height = '500px';
                 }
-              }, 350);
+              }, 300);
             }
 
             console.log('[ABA PayWay] Official AbaPayway.checkout() launched successfully (Mobile & Desktop)!');
