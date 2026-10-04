@@ -4,28 +4,67 @@ import { ordersAPI, authAPI, topupAPI } from '../services/api';
 import { useLanguage } from '../context/LanguageContext';
 import LoadingSpinner from '../components/LoadingSpinner';
 
+// Bulletproof resolver for active player account
+export const getStoredPlayerAccount = () => {
+  try {
+    const saved = localStorage.getItem('player_account');
+    if (saved) {
+      const p = JSON.parse(saved);
+      if (p && (p.playerId || p.playerID)) {
+        return {
+          playerId: String(p.playerId || p.playerID).trim(),
+          serverId: String(p.serverId || p.serverID || 'Global').trim(),
+          realName: p.realName || p.name || `Player_${p.playerId || p.playerID}`
+        };
+      }
+    }
+
+    const userStr = localStorage.getItem('user');
+    if (userStr) {
+      const u = JSON.parse(userStr);
+      let pId = u.playerId || u.playerID || '';
+      let sId = u.serverId || u.serverID || '';
+
+      // If pId not explicit, extract from email (e.g. 1225368571_11446@player.tin-topup.com)
+      if (!pId && u.email) {
+        const emailMatch = u.email.match(/^(\d+)_([^_@]+)@/);
+        if (emailMatch) {
+          pId = emailMatch[1];
+          sId = emailMatch[2];
+        }
+      }
+
+      // If still not found, extract from name if Player_12345678
+      if (!pId && u.name) {
+        const nameMatch = u.name.match(/Player_(\d+)/i);
+        if (nameMatch) {
+          pId = nameMatch[1];
+        }
+      }
+
+      if (pId) {
+        const resolved = {
+          playerId: String(pId).trim(),
+          serverId: String(sId || 'Global').trim(),
+          realName: u.name || `Player_${pId}`
+        };
+        try {
+          localStorage.setItem('player_account', JSON.stringify(resolved));
+        } catch {}
+        return resolved;
+      }
+    }
+  } catch (err) {
+    console.warn('Failed to resolve stored player account:', err);
+  }
+  return null;
+};
+
 const OrderHistory = () => {
   const { language } = useLanguage();
 
   // Authentication & Player State
-  const [playerAccount, setPlayerAccount] = useState(() => {
-    try {
-      const saved = localStorage.getItem('player_account');
-      if (saved) return JSON.parse(saved);
-      const user = localStorage.getItem('user');
-      if (user) {
-        const u = JSON.parse(user);
-        if (u.playerId || u.playerID) {
-          return {
-            playerId: u.playerId || u.playerID,
-            serverId: u.serverId || u.serverID || 'Global',
-            realName: u.name || u.username || 'Player'
-          };
-        }
-      }
-    } catch (e) {}
-    return null;
-  });
+  const [playerAccount, setPlayerAccount] = useState(() => getStoredPlayerAccount());
 
   // Lookup form state
   const [formData, setFormData] = useState({
@@ -110,6 +149,30 @@ const OrderHistory = () => {
     }
   }, [playerAccount, loadOrdersForPlayer]);
 
+  // Auto-sync player account from storage/events
+  useEffect(() => {
+    const syncAccount = () => {
+      const acc = getStoredPlayerAccount();
+      if (acc) {
+        setPlayerAccount(prev => {
+          if (!prev || prev.playerId !== acc.playerId || prev.serverId !== acc.serverId) {
+            return acc;
+          }
+          return prev;
+        });
+      }
+    };
+
+    syncAccount();
+
+    window.addEventListener('player-login-success', syncAccount);
+    window.addEventListener('storage', syncAccount);
+    return () => {
+      window.removeEventListener('player-login-success', syncAccount);
+      window.removeEventListener('storage', syncAccount);
+    };
+  }, []);
+
   // Submit Lookup / Player Login
   const handlePlayerLogin = async (e) => {
     e.preventDefault();
@@ -182,16 +245,17 @@ const OrderHistory = () => {
       if (authResult?.token) {
         localStorage.setItem('token', authResult.token);
       }
-      if (authResult?.user || authResult?.name) {
-        localStorage.setItem('user', JSON.stringify(authResult.user || {
-          userId: authResult.userId,
-          name: authResult.name || realName,
-          email: authResult.email,
-          playerId: pId,
-          serverId: sId,
-          role: authResult.role || 'User'
-        }));
-      }
+      
+      const storedUser = {
+        ...(authResult?.user || {}),
+        userId: authResult?.userId || authResult?.user?.userId,
+        name: realName || authResult?.name || authResult?.user?.name,
+        email: authResult?.email || authResult?.user?.email,
+        playerId: pId,
+        serverId: sId,
+        role: authResult?.role || authResult?.user?.role || 'User'
+      };
+      localStorage.setItem('user', JSON.stringify(storedUser));
 
       // Save player account state
       const newPlayerAccount = {
@@ -201,6 +265,10 @@ const OrderHistory = () => {
       };
       setPlayerAccount(newPlayerAccount);
       localStorage.setItem('player_account', JSON.stringify(newPlayerAccount));
+
+      // Sync across all tabs and components
+      window.dispatchEvent(new Event('storage'));
+      window.dispatchEvent(new CustomEvent('player-login-success', { detail: newPlayerAccount }));
 
       // Step 3: Fetch orders immediately
       await loadOrdersForPlayer(pId, sId);
@@ -215,10 +283,14 @@ const OrderHistory = () => {
   // Switch / Logout Player
   const handleSwitchPlayer = () => {
     localStorage.removeItem('player_account');
+    localStorage.removeItem('token');
+    localStorage.removeItem('user');
     setPlayerAccount(null);
     setOrders([]);
     setVerifiedName('');
     setFormData({ playerId: '', serverId: '' });
+    window.dispatchEvent(new Event('storage'));
+    window.dispatchEvent(new CustomEvent('player-login-success', { detail: null }));
   };
 
   // Copy Order ID

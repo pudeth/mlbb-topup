@@ -167,14 +167,15 @@ export const PlayerLoginModal = ({ isOpen, onClose, onSuccess }) => {
       if (authResult?.token) {
         localStorage.setItem('token', authResult.token);
       }
-      if (authResult?.user || authResult?.name) {
-        localStorage.setItem('user', JSON.stringify(authResult.user || {
-          userId: authResult.userId,
-          name: authResult.name || realName,
-          email: authResult.email,
+      if (authResult?.user || authResult?.name || authResult?.token) {
+        localStorage.setItem('user', JSON.stringify({
+          ...(authResult?.user || {}),
+          userId: authResult?.userId || authResult?.user?.userId,
+          name: realName || authResult?.name || authResult?.user?.name,
+          email: authResult?.email || authResult?.user?.email,
           playerId: pId,
           serverId: sId,
-          role: authResult.role || 'User',
+          role: authResult?.role || authResult?.user?.role || 'User',
         }));
       }
 
