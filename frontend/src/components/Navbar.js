@@ -202,12 +202,6 @@ const Navbar = () => {
               )}
             </div>
 
-            {/* ABA PayWay Badge matching desktop screenshot */}
-              <div className="hidden sm:inline-flex items-center gap-1.5 h-10 px-3.5 rounded-xl bg-[#0a1426] border border-sky-500/40 text-sky-300 text-xs font-bold shadow-sm select-none">
-                <span className="text-xs">🏛️</span>
-                <span className="font-black text-[11px] tracking-tight">ABA PayWay</span>
-              </div>
-
             {/* User Login or Profile / Sign Out Control (Visible on Mobile & Desktop) */}
             {!isUserLoggedIn ? (
               <button
