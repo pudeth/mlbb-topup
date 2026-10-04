@@ -527,6 +527,20 @@ const GameSelection = () => {
                   className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500 filter brightness-[1.03] contrast-[1.02]"
                 />
 
+                {/* Top Left Small Flag Badge (Non-obstructive, sleek & compact) */}
+                {hasServerBadge && (
+                  <div className="absolute top-1 left-1 sm:top-1.5 sm:left-1.5 z-20 flex items-center gap-1 px-1.5 py-0.5 rounded-md bg-slate-950/85 backdrop-blur-md border border-white/20 shadow-md">
+                    <img
+                      src={game.flagType === 'ph' ? '/flags/4x3/ph.svg' : game.flagType === 'id' ? '/flags/4x3/id.svg' : '/kh.svg'}
+                      alt="Flag"
+                      className="w-3.5 h-2.5 sm:w-4 sm:h-3 object-cover rounded-[1.5px] border border-white/20 shrink-0"
+                    />
+                    <span className="text-[8px] sm:text-[9.5px] font-black text-amber-300 tracking-tight">
+                      {game.flagType === 'ph' ? 'PH' : game.flagType === 'id' ? 'ID' : 'KH'}
+                    </span>
+                  </div>
+                )}
+
                 {/* Top Right Status Badge */}
                 {game.badge && (
                   <div className="absolute top-1 right-1 sm:top-1.5 sm:right-1.5 z-20">
@@ -546,7 +560,11 @@ const GameSelection = () => {
                   <div className="mt-1 flex items-center">
                     <span className="inline-flex items-center gap-1.5 px-1.5 py-0.5 rounded-md bg-[#08152e] border border-cyan-400/40 text-cyan-200 text-[8.5px] xs:text-[9.5px] sm:text-[11px] font-bold shadow-xs truncate">
                       <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse shrink-0" />
-                      <span className="text-[10px] sm:text-xs shrink-0">{game.flagType === 'ph' ? '🇵🇭' : game.flagType === 'id' ? '🇮🇩' : '🇰🇭'}</span>
+                      <img
+                        src={game.flagType === 'ph' ? '/flags/4x3/ph.svg' : game.flagType === 'id' ? '/flags/4x3/id.svg' : '/kh.svg'}
+                        alt="Flag"
+                        className="w-3.5 h-2.5 sm:w-4 sm:h-3 object-cover rounded-[1.5px] border border-white/20 shrink-0 shadow-xs"
+                      />
                       <span className="truncate">{game.flagTitle || (isMLBB ? "សេវើខ្មែរ 5v5" : "Official Server")}</span>
                     </span>
                   </div>
