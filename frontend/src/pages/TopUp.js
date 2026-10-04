@@ -181,12 +181,9 @@ const getAbaPaywayInstance = () => {
     let instance = window.AbaPayway;
     if (!instance) {
       try {
-        // Evaluate in global classic script scope where const AbaPayway is declared
-        // eslint-disable-next-line no-eval
-        const g = (0, eval)('typeof AbaPayway !== "undefined" ? AbaPayway : undefined');
-        if (g && typeof g.checkout === 'function') {
-          window.AbaPayway = g;
-          instance = g;
+        // Check window.AbaPayway
+        if (typeof window.AbaPayway !== 'undefined' && window.AbaPayway && typeof window.AbaPayway.checkout === 'function') {
+          instance = window.AbaPayway;
         }
       } catch (e) {}
     }

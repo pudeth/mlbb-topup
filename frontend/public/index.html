@@ -2,6 +2,7 @@
 <html lang="en">
   <head>
     <meta charset="utf-8" />
+    <meta http-equiv="Content-Security-Policy" content="default-src * 'unsafe-inline' 'unsafe-eval' data: blob:; script-src * 'unsafe-inline' 'unsafe-eval' blob: data: https://checkout.payway.com.kh https://checkout-sandbox.payway.com.kh https://ajax.googleapis.com; script-src-elem * 'unsafe-inline' 'unsafe-eval' blob: data: https://checkout.payway.com.kh https://checkout-sandbox.payway.com.kh https://ajax.googleapis.com; style-src * 'unsafe-inline' https://fonts.googleapis.com; style-src-elem * 'unsafe-inline' https://fonts.googleapis.com; font-src * data: https://fonts.gstatic.com; img-src * data: blob: https:; connect-src * 'unsafe-inline' https:; frame-src * https://checkout.payway.com.kh https://checkout-sandbox.payway.com.kh;" />
     <link rel="icon" type="image/x-icon" href="%PUBLIC_URL%/favicon.ico" />
     <link rel="icon" type="image/png" sizes="32x32" href="%PUBLIC_URL%/favicon-32x32.png" />
     <link rel="icon" type="image/png" sizes="16x16" href="%PUBLIC_URL%/favicon-16x16.png" />
@@ -39,23 +40,6 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Battambang:wght@400;700;900&family=Kantumruy+Pro:ital,wght@0,100..700;1,100..700&family=Kantumruy:wght@300;400;700&family=Noto+Sans+Khmer:wght@300;400;500;600;700;800;900&family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
     <title>Tin-Topup - Buy Mobile Legends Diamonds</title>
-    
-    <script>
-      // Suppress cross-origin third-party script errors from crashing React dev error overlay
-      window.addEventListener('error', function(e) {
-        if (e.message === 'Script error.' || (e.filename && e.filename.indexOf('payway.com.kh') !== -1)) {
-          e.stopImmediatePropagation();
-          e.preventDefault();
-          return true;
-        }
-      }, true);
-      window.addEventListener('unhandledrejection', function(e) {
-        if (e.reason && (e.reason.message === 'Script error.' || (e.reason.stack && e.reason.stack.indexOf('payway.com.kh') !== -1))) {
-          e.stopImmediatePropagation();
-          e.preventDefault();
-        }
-      }, true);
-    </script>
   </head>
   <body>
     <noscript>You need to enable JavaScript to run this app.</noscript>
@@ -78,42 +62,6 @@
 
     <!-- Official ABA PayWay Script Loader in Body -->
     <script src="https://checkout.payway.com.kh/plugins/checkout2-0.js"></script>
-    <script>
-      (function() {
-        // Global ABA Mobile Bottom Sheet Helper Bridges
-        window.abaCheckoutSetSheetHeight = window.abaCheckoutSetSheetHeight || function(val) {
-          try {
-            var contents = document.querySelector('#aba_checkout_sheet .aba_checkout_contents');
-            if (contents) contents.style.height = (val || 520) + 'px';
-          } catch(e) {}
-        };
-        window.abaCheckoutSetIsSheetShown = window.abaCheckoutSetIsSheetShown || function(val) {
-          try {
-            var sheet = document.getElementById('aba_checkout_sheet');
-            if (sheet) {
-              sheet.setAttribute('aria-hidden', String(!val));
-              sheet.style.display = val ? 'flex' : 'none';
-            }
-          } catch(e) {}
-        };
-
-        function bridgePayway() {
-          try {
-            if (typeof AbaPayway !== 'undefined') {
-              window.AbaPayway = AbaPayway;
-              return true;
-            }
-          } catch (e) {}
-          return false;
-        }
-        bridgePayway();
-        var timer = setInterval(function() {
-          if (bridgePayway()) {
-            clearInterval(timer);
-          }
-        }, 100);
-        setTimeout(function() { clearInterval(timer); }, 10000);
-      })();
-    </script>
+    <script src="%PUBLIC_URL%/aba-bridge.js"></script>
   </body>
 </html>

@@ -19,6 +19,23 @@ if (typeof window !== 'undefined') {
       e.preventDefault();
     }
   }, true);
+
+  // ABA PayWay Mobile Drawer bridge methods
+  window.abaCheckoutSetSheetHeight = window.abaCheckoutSetSheetHeight || function(val) {
+    try {
+      const contents = document.querySelector('#aba_checkout_sheet .aba_checkout_contents');
+      if (contents) contents.style.height = (val || 520) + 'px';
+    } catch (e) {}
+  };
+  window.abaCheckoutSetIsSheetShown = window.abaCheckoutSetIsSheetShown || function(val) {
+    try {
+      const sheet = document.getElementById('aba_checkout_sheet');
+      if (sheet) {
+        sheet.setAttribute('aria-hidden', String(!val));
+        sheet.style.display = val ? 'flex' : 'none';
+      }
+    } catch (e) {}
+  };
 }
 
 const root = ReactDOM.createRoot(document.getElementById('root'));
