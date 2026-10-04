@@ -62,10 +62,41 @@
     <div id="root"></div>
     <div id="aba-checkout"></div>
 
+    <!-- Official ABA PayWay Mobile Bottom Sheet & App Container (Required by ABA checkout.prod.js on Mobile) -->
+    <div id="aba_checkout_sheet" class="aba_checkout_column aba_checkout_items_center aba_checkout_justify_end" aria-hidden="true" style="display: none;">
+      <div class="aba_checkout_overlay"></div>
+      <div class="aba_checkout_contents aba_checkout_column">
+        <header class="aba_checkout_column_header">
+          <div class="aba_checkout_draggable_area">
+            <div class="aba_checkout_draggable-thumb"></div>
+          </div>
+        </header>
+        <main class="aba_checkout_column" id="aba_checkout_app">
+        </main>
+      </div>
+    </div>
+
     <!-- Official ABA PayWay Script Loader in Body -->
     <script src="https://checkout.payway.com.kh/plugins/checkout2-0.js"></script>
     <script>
       (function() {
+        // Global ABA Mobile Bottom Sheet Helper Bridges
+        window.abaCheckoutSetSheetHeight = window.abaCheckoutSetSheetHeight || function(val) {
+          try {
+            var contents = document.querySelector('#aba_checkout_sheet .aba_checkout_contents');
+            if (contents) contents.style.height = (val || 520) + 'px';
+          } catch(e) {}
+        };
+        window.abaCheckoutSetIsSheetShown = window.abaCheckoutSetIsSheetShown || function(val) {
+          try {
+            var sheet = document.getElementById('aba_checkout_sheet');
+            if (sheet) {
+              sheet.setAttribute('aria-hidden', String(!val));
+              sheet.style.display = val ? 'flex' : 'none';
+            }
+          } catch(e) {}
+        };
+
         function bridgePayway() {
           try {
             if (typeof AbaPayway !== 'undefined') {
