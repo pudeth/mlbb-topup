@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useLanguage } from '../context/LanguageContext';
 import { getStoredGames, getMasterTopupStatus, fetchStoredGames, fetchMasterTopupStatus } from '../services/gamesConfig';
+import { CambodiaFlagFrame } from './CambodiaFlagBadge';
 
 // 12 Popular Games Preset matching desktop/laptop screenshot exactly
 const POPULAR_GAMES_PRESET = [
@@ -12,6 +13,11 @@ const POPULAR_GAMES_PRESET = [
     category: 'Free Fire',
     badge: 'HOT',
     badgeType: 'hot',
+    flagType: 'kh',
+    flagTitle: 'SEVER ខ្មែរ',
+    flagSubtitle: 'KH',
+    flagServerText: 'DIRECT',
+    flagFrameStyle: 'gold_cyber',
     image: 'https://res.cloudinary.com/dpz7vpmf8/image/upload/v1790944937/logo-game/srnteatj2ns0e2dswfwq.webp',
     fallbackImage: '/images/banner_freefire.jpg',
     status: 'Active',
@@ -24,6 +30,11 @@ const POPULAR_GAMES_PRESET = [
     category: 'Mobile Legends',
     badge: 'NEW',
     badgeType: 'new',
+    flagType: 'kh',
+    flagTitle: 'សេវើខ្មែរ 5v5',
+    flagSubtitle: '5V5',
+    flagServerText: 'SERVER',
+    flagFrameStyle: 'gold_cyber',
     image: '/mlbb-logo.png',
     fallbackImage: '/mlbb-logo.png',
     status: 'Active',
@@ -36,6 +47,11 @@ const POPULAR_GAMES_PRESET = [
     category: 'PUBG Mobile',
     badge: 'HOT',
     badgeType: 'hot',
+    flagType: 'global',
+    flagTitle: 'GLOBAL UC',
+    flagSubtitle: 'PUBG',
+    flagServerText: 'DIRECT',
+    flagFrameStyle: 'gold_cyber',
     image: 'https://res.cloudinary.com/dpz7vpmf8/image/upload/v1790944800/logo-game/ovdfdmru7jnhmwjvy6vy.jpg',
     fallbackImage: '/images/pubgm-banner.jpg',
     status: 'Active',
@@ -48,6 +64,11 @@ const POPULAR_GAMES_PRESET = [
     category: 'Mobile Legends',
     badge: 'NEW',
     badgeType: 'new',
+    flagType: 'kh',
+    flagTitle: 'សេវើខ្មែរ 5v5',
+    flagSubtitle: '5V5',
+    flagServerText: 'SERVER',
+    flagFrameStyle: 'gold_cyber',
     image: 'https://images.unsplash.com/photo-1550745165-9bc0b252726f?w=500&auto=format&fit=crop&q=80',
     fallbackImage: '/mlbb-logo.png',
     status: 'Active',
@@ -60,6 +81,11 @@ const POPULAR_GAMES_PRESET = [
     category: 'Mobile Legends',
     badge: 'PAUSED',
     badgeType: 'paused',
+    flagType: 'kh',
+    flagTitle: 'សេវើខ្មែរ 5v5',
+    flagSubtitle: '5V5',
+    flagServerText: 'SERVER',
+    flagFrameStyle: 'gold_cyber',
     image: 'https://images.unsplash.com/photo-1566577739112-5180d4bf9390?w=500&auto=format&fit=crop&q=80',
     fallbackImage: '/mlbb-logo.png',
     status: 'Paused',
@@ -151,10 +177,42 @@ const POPULAR_GAMES_PRESET = [
   }
 ];
 
+const mergeStoredWithPresets = (storedList) => {
+  if (!storedList || !Array.isArray(storedList) || storedList.length === 0) {
+    return POPULAR_GAMES_PRESET;
+  }
+  return POPULAR_GAMES_PRESET.map((p) => {
+    const found = storedList.find((g) => g.id === p.id || g.name?.toLowerCase() === p.name.toLowerCase());
+    if (!found) return p;
+    return {
+      ...p,
+      ...found,
+      genre: p.genre || found.genre || found.publisher,
+      category: p.category || found.category,
+      image: found.image || p.image,
+      fallbackImage: found.localFallbackImage || p.fallbackImage,
+      status: found.status || p.status,
+      flagType: found.flagType !== undefined ? found.flagType : p.flagType,
+      flagTitle: found.flagTitle || p.flagTitle,
+      flagSubtitle: found.flagSubtitle !== undefined ? found.flagSubtitle : p.flagSubtitle,
+      flagServerText: found.flagServerText || p.flagServerText,
+      flagFrameStyle: found.flagFrameStyle || p.flagFrameStyle,
+      flagImage: found.flagImage || p.flagImage,
+    };
+  });
+};
+
 const GameSelection = () => {
   const { language } = useLanguage();
   const navigate = useNavigate();
-  const [games, setGames] = useState(POPULAR_GAMES_PRESET);
+  const [games, setGames] = useState(() => {
+    try {
+      const stored = getStoredGames();
+      return mergeStoredWithPresets(stored);
+    } catch (e) {
+      return POPULAR_GAMES_PRESET;
+    }
+  });
   const [masterStatus, setMasterStatus] = useState(getMasterTopupStatus);
   const [activeCategory, setActiveCategory] = useState('ALL');
   const [searchQuery, setSearchQuery] = useState('');
@@ -174,12 +232,7 @@ const GameSelection = () => {
   useEffect(() => {
     const loaded = getStoredGames();
     if (loaded && loaded.length > 0) {
-      // Merge stored games with presets
-      const merged = POPULAR_GAMES_PRESET.map((p) => {
-        const found = loaded.find((g) => g.id === p.id || g.name?.toLowerCase() === p.name.toLowerCase());
-        return found ? { ...p, status: found.status || p.status, image: found.image || p.image } : p;
-      });
-      setGames(merged);
+      setGames(mergeStoredWithPresets(loaded));
     }
     setMasterStatus(getMasterTopupStatus());
 
@@ -190,11 +243,7 @@ const GameSelection = () => {
           fetchMasterTopupStatus()
         ]);
         if (cloudGames && Array.isArray(cloudGames) && cloudGames.length > 0) {
-          const merged = POPULAR_GAMES_PRESET.map((p) => {
-            const found = cloudGames.find((g) => g.id === p.id || g.name?.toLowerCase() === p.name.toLowerCase());
-            return found ? { ...p, status: found.status || p.status, image: found.image || p.image } : p;
-          });
-          setGames(merged);
+          setGames(mergeStoredWithPresets(cloudGames));
         }
         if (cloudStatus) {
           setMasterStatus(cloudStatus);
@@ -208,11 +257,7 @@ const GameSelection = () => {
     const handleStorageChange = () => {
       const stored = getStoredGames();
       if (stored && stored.length > 0) {
-        const merged = POPULAR_GAMES_PRESET.map((p) => {
-          const found = stored.find((g) => g.id === p.id || g.name?.toLowerCase() === p.name.toLowerCase());
-          return found ? { ...p, status: found.status || p.status, image: found.image || p.image } : p;
-        });
-        setGames(merged);
+        setGames(mergeStoredWithPresets(stored));
       }
       setMasterStatus(getMasterTopupStatus());
     };
@@ -451,6 +496,15 @@ const GameSelection = () => {
           const isMasterPaused = masterStatus?.status && masterStatus.status !== 'Active';
           const isGamePaused = game.status && game.status !== 'Active';
           const isInactive = isMasterPaused || isGamePaused;
+          const isMLBB = (game.id || '').startsWith('mlbb') || (game.name || '').toLowerCase().includes('mobile legend') || game.category === 'Mobile Legends';
+          const hasServerBadge = !isInactive && (
+            isMLBB ||
+            Boolean(game.flagTitle) ||
+            (game.flagType && game.flagType !== 'none') ||
+            game.badge?.includes('ខ្មែរ') ||
+            game.badge?.includes('SERVER') ||
+            game.badge?.includes('SEVER')
+          );
 
           return (
             <div
@@ -462,11 +516,6 @@ const GameSelection = () => {
                   : 'bg-gradient-to-b from-[#0f172a]/95 via-[#0b1222]/95 to-[#070b16]/98 border border-slate-800/80 hover:border-sky-500/50 shadow-[0_4px_16px_rgba(0,0,0,0.5)] hover:shadow-[0_10px_30px_rgba(14,165,233,0.15)] hover:-translate-y-0.5 cursor-pointer'
               }`}
             >
-              {/* Top Row: Status Badge Pill */}
-              <div className="flex items-center justify-between mb-1 z-10">
-                {renderBadge(game.badge, game.badgeType)}
-              </div>
-
               {/* Game Artwork Cover (4:3 aspect) */}
               <div className="relative aspect-[4/3] w-full rounded-lg sm:rounded-xl overflow-hidden bg-slate-950 mb-1 border border-slate-800/60 shadow-xs">
                 <img
@@ -474,12 +523,31 @@ const GameSelection = () => {
                   alt={game.name}
                   onError={(e) => {
                     e.target.onerror = null;
-                    e.target.src = game.fallbackImage || '/mlbb-logo.png';
+                    e.target.src = game.fallbackImage || game.localFallbackImage || '/mlbb-logo.png';
                   }}
                   className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
                 />
                 {/* Subtle gradient vignette */}
                 <div className="absolute inset-0 bg-gradient-to-t from-slate-950/60 via-transparent to-transparent pointer-events-none" />
+
+                {/* 3D Server Badge Frame (when active) */}
+                {!isInactive && hasServerBadge && (
+                  <div className="absolute top-1 left-1 z-20 pointer-events-none drop-shadow-[0_2px_8px_rgba(0,0,0,0.85)] scale-[0.52] xs:scale-[0.58] sm:scale-[0.68] md:scale-[0.76] origin-top-left">
+                    <CambodiaFlagFrame
+                      title={game.flagTitle || (isMLBB ? "សេវើខ្មែរ 5v5" : game.badge)}
+                      subtitle={game.flagSubtitle || (isMLBB ? "5V5" : "")}
+                      sub={game.flagServerText || (game.badge?.includes('PH') ? 'OFFICIAL' : game.badge?.includes('ID') ? 'FAST' : 'SERVER')}
+                      flagType={game.flagType || (game.badge?.includes('PH') ? 'ph' : game.badge?.includes('ID') ? 'id' : isMLBB ? 'kh' : 'kh')}
+                      flagImage={game.flagImage || null}
+                      badgeStyle={game.flagFrameStyle || "gold_cyber"}
+                    />
+                  </div>
+                )}
+
+                {/* Top Right Status Badge */}
+                <div className="absolute top-1 right-1 z-20">
+                  {renderBadge(game.badge, game.badgeType)}
+                </div>
               </div>
 
               {/* Game Details: Title & Genre */}
@@ -558,9 +626,9 @@ const GameSelection = () => {
             <div className="absolute -left-6 -top-6 w-24 h-24 bg-amber-500/20 rounded-full blur-xl pointer-events-none" />
             <div className="w-16 h-16 sm:w-18 sm:h-18 md:w-20 md:h-20 shrink-0 flex items-center justify-center relative z-10">
               <img
-                src="/images/special_gift_box_3d.jpg"
+                src="/images/special_gift_box_3d.png"
                 alt="Special Discount"
-                className="w-full h-full object-contain rounded-xl drop-shadow-[0_0_12px_rgba(251,191,36,0.4)] group-hover:scale-105 transition-transform"
+                className="w-full h-full object-contain drop-shadow-[0_0_12px_rgba(251,191,36,0.4)] group-hover:scale-105 transition-transform"
                 onError={(e) => {
                   e.target.src = '/images/special_art_gift.png';
                 }}
@@ -588,9 +656,9 @@ const GameSelection = () => {
             <div className="absolute -left-6 -top-6 w-24 h-24 bg-sky-500/20 rounded-full blur-xl pointer-events-none" />
             <div className="w-16 h-16 sm:w-18 sm:h-18 md:w-20 md:h-20 shrink-0 flex items-center justify-center relative z-10">
               <img
-                src="/images/special_telegram_stars_3d.jpg"
+                src="/images/special_telegram_stars_3d.png"
                 alt="Telegram Stars"
-                className="w-full h-full object-contain rounded-xl drop-shadow-[0_0_12px_rgba(56,189,248,0.4)] group-hover:scale-105 transition-transform"
+                className="w-full h-full object-contain drop-shadow-[0_0_12px_rgba(56,189,248,0.4)] group-hover:scale-105 transition-transform"
                 onError={(e) => {
                   e.target.src = '/images/special_art_telegram.png';
                 }}
@@ -618,9 +686,9 @@ const GameSelection = () => {
             <div className="absolute -left-6 -top-6 w-24 h-24 bg-blue-500/20 rounded-full blur-xl pointer-events-none" />
             <div className="w-16 h-16 sm:w-18 sm:h-18 md:w-20 md:h-20 shrink-0 flex items-center justify-center relative z-10">
               <img
-                src="/images/special_steam_wallet_3d.jpg"
+                src="/images/special_steam_wallet_3d.png"
                 alt="Steam Wallet"
-                className="w-full h-full object-contain rounded-xl drop-shadow-[0_0_12px_rgba(59,130,246,0.4)] group-hover:scale-105 transition-transform"
+                className="w-full h-full object-contain drop-shadow-[0_0_12px_rgba(59,130,246,0.4)] group-hover:scale-105 transition-transform"
                 onError={(e) => {
                   e.target.src = '/images/special_art_steam.png';
                 }}
