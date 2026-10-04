@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { Link } from 'react-router-dom';
 import { ordersAPI, authAPI, topupAPI } from '../services/api';
+import { useAuth } from '../context/AuthContext';
 import { useLanguage } from '../context/LanguageContext';
 import LoadingSpinner from '../components/LoadingSpinner';
 
@@ -62,9 +63,7 @@ export const getStoredPlayerAccount = () => {
 
 const OrderHistory = () => {
   const { language } = useLanguage();
-
-  // Authentication & Player State
-  const [playerAccount, setPlayerAccount] = useState(() => getStoredPlayerAccount());
+  const { playerAccount, loginPlayer, logout } = useAuth();
 
   // Lookup form state
   const [formData, setFormData] = useState({
@@ -149,30 +148,6 @@ const OrderHistory = () => {
     }
   }, [playerAccount, loadOrdersForPlayer]);
 
-  // Auto-sync player account from storage/events
-  useEffect(() => {
-    const syncAccount = () => {
-      const acc = getStoredPlayerAccount();
-      if (acc) {
-        setPlayerAccount(prev => {
-          if (!prev || prev.playerId !== acc.playerId || prev.serverId !== acc.serverId) {
-            return acc;
-          }
-          return prev;
-        });
-      }
-    };
-
-    syncAccount();
-
-    window.addEventListener('player-login-success', syncAccount);
-    window.addEventListener('storage', syncAccount);
-    return () => {
-      window.removeEventListener('player-login-success', syncAccount);
-      window.removeEventListener('storage', syncAccount);
-    };
-  }, []);
-
   // Submit Lookup / Player Login
   const handlePlayerLogin = async (e) => {
     e.preventDefault();
@@ -241,11 +216,6 @@ const OrderHistory = () => {
         }
       }
 
-      // Store token and user if returned
-      if (authResult?.token) {
-        localStorage.setItem('token', authResult.token);
-      }
-      
       const storedUser = {
         ...(authResult?.user || {}),
         userId: authResult?.userId || authResult?.user?.userId,
@@ -255,20 +225,15 @@ const OrderHistory = () => {
         serverId: sId,
         role: authResult?.role || authResult?.user?.role || 'User'
       };
-      localStorage.setItem('user', JSON.stringify(storedUser));
 
-      // Save player account state
       const newPlayerAccount = {
         playerId: pId,
         serverId: sId,
         realName: realName
       };
-      setPlayerAccount(newPlayerAccount);
-      localStorage.setItem('player_account', JSON.stringify(newPlayerAccount));
 
-      // Sync across all tabs and components
-      window.dispatchEvent(new Event('storage'));
-      window.dispatchEvent(new CustomEvent('player-login-success', { detail: newPlayerAccount }));
+      // Atomically update global auth state (Navbar, Sidebar, OrderHistory sync simultaneously)
+      loginPlayer(newPlayerAccount, authResult?.token, storedUser);
 
       // Step 3: Fetch orders immediately
       await loadOrdersForPlayer(pId, sId);
@@ -282,15 +247,10 @@ const OrderHistory = () => {
 
   // Switch / Logout Player
   const handleSwitchPlayer = () => {
-    localStorage.removeItem('player_account');
-    localStorage.removeItem('token');
-    localStorage.removeItem('user');
-    setPlayerAccount(null);
+    logout();
     setOrders([]);
     setVerifiedName('');
     setFormData({ playerId: '', serverId: '' });
-    window.dispatchEvent(new Event('storage'));
-    window.dispatchEvent(new CustomEvent('player-login-success', { detail: null }));
   };
 
   // Copy Order ID

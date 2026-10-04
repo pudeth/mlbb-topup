@@ -1,72 +1,18 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { useLanguage } from '../context/LanguageContext';
 import { BrandLogo } from './BrandLogo';
 import { SmartSearchBar } from './SmartSearchBar';
 const Navbar = () => {
-  const { user, logout, isAuthenticated, isAdmin } = useAuth();
+  const { user, playerAccount, logout, isAuthenticated, isAdmin } = useAuth();
   const { language, setLanguage, t } = useLanguage();
   const location = useLocation();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [langDropdownOpen, setLangDropdownOpen] = useState(false);
   const [userMenuOpen, setUserMenuOpen] = useState(false);
 
-  const [playerAccount, setPlayerAccount] = useState(() => {
-    try {
-      const saved = localStorage.getItem('player_account');
-      if (saved) return JSON.parse(saved);
-      const uStr = localStorage.getItem('user');
-      if (uStr) {
-        const u = JSON.parse(uStr);
-        let pId = u.playerId || u.playerID;
-        let sId = u.serverId || u.serverID;
-        if (!pId && u.email) {
-          const m = u.email.match(/^(\d+)_([^_@]+)@/);
-          if (m) { pId = m[1]; sId = m[2]; }
-        }
-        if (pId) return { playerId: pId, serverId: sId || 'Global', realName: u.name || `Player_${pId}` };
-      }
-    } catch {}
-    return null;
-  });
-
-  useEffect(() => {
-    const handleSync = () => {
-      try {
-        const saved = localStorage.getItem('player_account');
-        if (saved) {
-          setPlayerAccount(JSON.parse(saved));
-          return;
-        }
-        const uStr = localStorage.getItem('user');
-        if (uStr) {
-          const u = JSON.parse(uStr);
-          let pId = u.playerId || u.playerID;
-          let sId = u.serverId || u.serverID;
-          if (!pId && u.email) {
-            const m = u.email.match(/^(\d+)_([^_@]+)@/);
-            if (m) { pId = m[1]; sId = m[2]; }
-          }
-          if (pId) {
-            setPlayerAccount({ playerId: pId, serverId: sId || 'Global', realName: u.name || `Player_${pId}` });
-            return;
-          }
-        }
-        setPlayerAccount(null);
-      } catch {
-        setPlayerAccount(null);
-      }
-    };
-    window.addEventListener('player-login-success', handleSync);
-    window.addEventListener('storage', handleSync);
-    return () => {
-      window.removeEventListener('player-login-success', handleSync);
-      window.removeEventListener('storage', handleSync);
-    };
-  }, []);
-
-  const isUserLoggedIn = isAuthenticated() || !!playerAccount;
+  const isUserLoggedIn = isAuthenticated();
 
   const isActive = (path) => location.pathname === path;
 
@@ -323,13 +269,7 @@ const Navbar = () => {
                         type="button"
                         onClick={() => {
                           setUserMenuOpen(false);
-                          localStorage.removeItem('player_account');
-                          localStorage.removeItem('token');
-                          localStorage.removeItem('user');
-                          setPlayerAccount(null);
                           logout();
-                          window.dispatchEvent(new Event('storage'));
-                          window.dispatchEvent(new CustomEvent('player-login-success', { detail: null }));
                         }}
                         className="w-full flex items-center gap-2 px-3 py-2 rounded-xl text-xs font-bold text-rose-400 hover:text-rose-200 hover:bg-rose-950/40 transition-colors cursor-pointer mt-1"
                       >

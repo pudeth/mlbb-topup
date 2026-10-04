@@ -2,9 +2,11 @@ import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { topupAPI, authAPI } from '../services/api';
 import { useLanguage } from '../context/LanguageContext';
+import { useAuth } from '../context/AuthContext';
 
 export const PlayerLoginModal = ({ isOpen, onClose, onSuccess }) => {
   const { language } = useLanguage();
+  const { loginPlayer } = useAuth();
   const [formData, setFormData] = useState({
     playerId: '',
     serverId: '',
@@ -167,28 +169,24 @@ export const PlayerLoginModal = ({ isOpen, onClose, onSuccess }) => {
       if (authResult?.token) {
         localStorage.setItem('token', authResult.token);
       }
-      if (authResult?.user || authResult?.name || authResult?.token) {
-        localStorage.setItem('user', JSON.stringify({
-          ...(authResult?.user || {}),
-          userId: authResult?.userId || authResult?.user?.userId,
-          name: realName || authResult?.name || authResult?.user?.name,
-          email: authResult?.email || authResult?.user?.email,
-          playerId: pId,
-          serverId: sId,
-          role: authResult?.role || authResult?.user?.role || 'User',
-        }));
-      }
-
       const newPlayerAccount = {
         playerId: pId,
         serverId: sId,
         realName: realName,
       };
-      localStorage.setItem('player_account', JSON.stringify(newPlayerAccount));
 
-      // Trigger sync across components
-      window.dispatchEvent(new Event('storage'));
-      window.dispatchEvent(new CustomEvent('player-login-success', { detail: newPlayerAccount }));
+      const userProfile = {
+        ...(authResult?.user || {}),
+        userId: authResult?.userId || authResult?.user?.userId,
+        name: realName || authResult?.name || authResult?.user?.name,
+        email: authResult?.email || authResult?.user?.email,
+        playerId: pId,
+        serverId: sId,
+        role: authResult?.role || authResult?.user?.role || 'User',
+      };
+
+      // Instantly update global AuthContext
+      loginPlayer(newPlayerAccount, authResult?.token, userProfile);
 
       setSuccessMsg(language === 'km' ? 'ចូលគណនីជោគជ័យ!' : 'Logged in successfully!');
 

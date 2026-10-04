@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { useLanguage } from '../context/LanguageContext';
@@ -7,35 +7,8 @@ import { BrandLogo } from './BrandLogo';
 const DesktopSidebar = () => {
   const location = useLocation();
   const { language } = useLanguage();
-  const { user, logout, isAuthenticated } = useAuth();
-
-  const [playerAccount, setPlayerAccount] = useState(() => {
-    try {
-      return JSON.parse(localStorage.getItem('player_account') || 'null');
-    } catch {
-      return null;
-    }
-  });
-
-  useEffect(() => {
-    const handleStorageChange = () => {
-      try {
-        setPlayerAccount(JSON.parse(localStorage.getItem('player_account') || 'null'));
-      } catch {
-        setPlayerAccount(null);
-      }
-    };
-    window.addEventListener('storage', handleStorageChange);
-    return () => window.removeEventListener('storage', handleStorageChange);
-  }, []);
-
-  const handleLogout = () => {
-    localStorage.removeItem('player_account');
-    setPlayerAccount(null);
-    logout();
-  };
-
-  const isUserLoggedIn = isAuthenticated() || !!playerAccount;
+  const { user, playerAccount, logout, isAuthenticated } = useAuth();
+  const isUserLoggedIn = isAuthenticated();
 
   const isActive = (path) => {
     if (path === '/') return location.pathname === '/' && !location.hash;
@@ -230,7 +203,7 @@ const DesktopSidebar = () => {
             </Link>
 
             <button
-              onClick={handleLogout}
+              onClick={logout}
               className="w-full py-1.5 px-2 rounded-lg bg-slate-800/80 hover:bg-rose-950/50 border border-slate-700/60 hover:border-rose-500/40 text-slate-300 hover:text-rose-200 text-[11px] font-semibold flex items-center justify-center gap-1.5 transition-all cursor-pointer"
             >
               <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
