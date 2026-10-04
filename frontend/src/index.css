@@ -352,3 +352,19 @@ body.modal-open .ai-assistant-widget {
   mask-repeat: no-repeat;
   mask-position: center;
 }
+
+
+/* Scrollable product frame (TopUp) */
+.product-scroll-frame {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(56, 189, 248, 0.55) transparent;
+  -webkit-overflow-scrolling: touch;
+  scroll-behavior: smooth;
+}
+.product-scroll-frame::-webkit-scrollbar { width: 6px; }
+.product-scroll-frame::-webkit-scrollbar-track { background: transparent; margin: 6px 0; }
+.product-scroll-frame::-webkit-scrollbar-thumb {
+  background: linear-gradient(180deg, #0ea5e9, #22d3ee);
+  border-radius: 9999px;
+}
+.product-scroll-frame::-webkit-scrollbar-thumb:hover { background: #67e8f9; }
