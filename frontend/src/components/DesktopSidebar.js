@@ -3,6 +3,7 @@ import { Link, useLocation } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { useLanguage } from '../context/LanguageContext';
 import { BrandLogo } from './BrandLogo';
+import GamerAvatar from './GamerAvatar';
 
 const DesktopSidebar = () => {
   const location = useLocation();
@@ -188,9 +189,12 @@ const DesktopSidebar = () => {
               className="flex items-center gap-2.5 mb-2 group/profile cursor-pointer"
               title="View Player Orders & History"
             >
-              <div className="w-9 h-9 rounded-lg bg-gradient-to-tr from-sky-500 to-indigo-600 border border-sky-400/40 flex items-center justify-center shrink-0 text-white font-black text-sm shadow-md group-hover/profile:scale-105 transition-transform">
-                {((playerAccount?.realName || user?.name || playerAccount?.playerId || user?.email || 'P')).charAt(0).toUpperCase()}
-              </div>
+              <GamerAvatar 
+                avatarId={playerAccount?.avatar || user?.avatar} 
+                name={playerAccount?.realName || user?.name || playerAccount?.playerId} 
+                size="sm" 
+                showGlow={true} 
+              />
               <div className="flex flex-col min-w-0 flex-1 leading-tight">
                 <span className="text-[12px] font-bold text-white truncate group-hover/profile:text-sky-300 transition-colors">
                   {playerAccount?.realName || user?.name || (playerAccount?.playerId ? `ID: ${playerAccount.playerId}` : user?.email?.split('@')[0] || 'Player')}

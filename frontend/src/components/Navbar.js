@@ -4,6 +4,7 @@ import { useAuth } from '../context/AuthContext';
 import { useLanguage } from '../context/LanguageContext';
 import { BrandLogo } from './BrandLogo';
 import { SmartSearchBar } from './SmartSearchBar';
+import GamerAvatar from './GamerAvatar';
 const Navbar = () => {
   const { user, playerAccount, logout, isAuthenticated, isAdmin } = useAuth();
   const { language, setLanguage, t } = useLanguage();
@@ -223,9 +224,12 @@ const Navbar = () => {
                   className="h-10 px-2.5 sm:px-3 rounded-xl bg-slate-900/90 hover:bg-slate-800 border border-sky-500/40 text-white text-xs font-bold flex items-center gap-1.5 sm:gap-2 shadow-sm transition-all active:scale-95 cursor-pointer"
                   title="Player Account Menu"
                 >
-                  <div className="w-6 h-6 rounded-lg bg-gradient-to-tr from-sky-500 to-indigo-600 flex items-center justify-center text-white text-xs font-black shrink-0">
-                    {((playerAccount?.realName || user?.name || playerAccount?.playerId || 'P')).charAt(0).toUpperCase()}
-                  </div>
+                  <GamerAvatar 
+                    avatarId={playerAccount?.avatar || user?.avatar} 
+                    name={playerAccount?.realName || user?.name || playerAccount?.playerId} 
+                    size="xs" 
+                    showGlow={false} 
+                  />
                   <span className="hidden sm:inline max-w-[85px] truncate text-[11px] font-bold">
                     {playerAccount?.realName || user?.name || playerAccount?.playerId}
                   </span>
@@ -235,31 +239,39 @@ const Navbar = () => {
                 {userMenuOpen && (
                   <>
                     <div className="fixed inset-0 z-40" onClick={() => setUserMenuOpen(false)} />
-                    <div className="absolute right-0 mt-2 w-56 rounded-2xl bg-[#090f20]/95 backdrop-blur-2xl border border-sky-500/40 shadow-2xl p-2 z-50 animate-scaleUp font-khmer">
+                    <div className="absolute right-0 mt-2 w-60 rounded-2xl bg-[#090f20]/95 backdrop-blur-2xl border border-sky-500/40 shadow-2xl p-2 z-50 animate-scaleUp font-khmer">
                       {/* Top Header Card - Click to edit profile */}
                       <div 
                         onClick={() => {
                           setUserMenuOpen(false);
                           window.dispatchEvent(new CustomEvent('open-player-profile'));
                         }}
-                        className="px-3 py-2.5 border-b border-slate-800/80 mb-1 hover:bg-slate-800/50 rounded-xl transition-all cursor-pointer group"
+                        className="p-2.5 border-b border-slate-800/80 mb-1 hover:bg-slate-800/50 rounded-xl transition-all cursor-pointer group flex items-center gap-2.5"
                         title="Click to view & edit profile"
                       >
-                        <div className="flex items-center justify-between">
-                          <div className="text-xs font-black text-white truncate group-hover:text-cyan-300 transition-colors">
-                            {playerAccount?.realName || user?.name || 'Player'}
+                        <GamerAvatar 
+                          avatarId={playerAccount?.avatar || user?.avatar} 
+                          name={playerAccount?.realName || user?.name || playerAccount?.playerId} 
+                          size="sm" 
+                          showGlow={true} 
+                        />
+                        <div className="min-w-0 flex-1">
+                          <div className="flex items-center justify-between">
+                            <div className="text-xs font-black text-white truncate group-hover:text-cyan-300 transition-colors">
+                              {playerAccount?.realName || user?.name || 'Player'}
+                            </div>
+                            <span className="text-[10px] text-sky-400 group-hover:translate-x-0.5 transition-transform">✏️</span>
                           </div>
-                          <span className="text-[10px] text-sky-400 group-hover:translate-x-0.5 transition-transform">✏️</span>
-                        </div>
-                        <div className="text-[10px] text-sky-300 font-mono mt-0.5">
-                          ID: {playerAccount?.playerId || user?.email?.split('@')[0]}
-                        </div>
-                        {playerAccount?.serverId && (
-                          <div className="text-[9.5px] text-emerald-400 font-semibold mt-0.5 flex items-center gap-1">
-                            <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
-                            Zone: {playerAccount.serverId} • Active
+                          <div className="text-[10px] text-sky-300 font-mono mt-0.5 truncate">
+                            ID: {playerAccount?.playerId || user?.email?.split('@')[0]}
                           </div>
-                        )}
+                          {playerAccount?.serverId && (
+                            <div className="text-[9.5px] text-emerald-400 font-semibold mt-0.5 flex items-center gap-1">
+                              <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
+                              Zone: {playerAccount.serverId} • Active
+                            </div>
+                          )}
+                        </div>
                       </div>
 
                       {/* 1. Profile / Edit Info Option */}

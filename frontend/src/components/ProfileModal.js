@@ -2,16 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { useLanguage } from '../context/LanguageContext';
 import { topupAPI } from '../services/api';
-
-const AVATAR_PRESETS = [
-  { id: 'initial', label: 'Initial Badge', icon: '👤', bg: 'from-sky-500 to-indigo-600' },
-  { id: 'crown', label: 'Mythic King', icon: '👑', bg: 'from-amber-400 to-yellow-600' },
-  { id: 'lightning', label: 'Hyper Carry', icon: '⚡', bg: 'from-cyan-400 to-blue-600' },
-  { id: 'shield', label: 'Tank Defender', icon: '🛡️', bg: 'from-emerald-400 to-teal-700' },
-  { id: 'fire', label: 'Flame Fighter', icon: '🔥', bg: 'from-rose-500 to-red-700' },
-  { id: 'crystal', label: 'VIP Crystal', icon: '💎', bg: 'from-purple-400 to-pink-600' },
-  { id: 'ninja', label: 'Shadow Assassin', icon: '🥷', bg: 'from-slate-700 to-slate-900' }
-];
+import GamerAvatar, { GAMING_AVATAR_PRESETS, getGamerAvatarPreset } from './GamerAvatar';
 
 export const ProfileModal = ({ isOpen, onClose }) => {
   const { user, playerAccount, updateProfile } = useAuth();
@@ -32,6 +23,7 @@ export const ProfileModal = ({ isOpen, onClose }) => {
   const [saveError, setSaveError] = useState('');
   const [saving, setSaving] = useState(false);
   const [copiedId, setCopiedId] = useState(false);
+  const [avatarFilter, setAvatarFilter] = useState('all');
 
   // Sync form with current user/player data on open
   useEffect(() => {
@@ -127,7 +119,15 @@ export const ProfileModal = ({ isOpen, onClose }) => {
     }
   };
 
-  const currentPreset = AVATAR_PRESETS.find(p => p.id === formData.avatar) || AVATAR_PRESETS[0];
+  const currentPreset = getGamerAvatarPreset(formData.avatar);
+
+  const displayPresets = GAMING_AVATAR_PRESETS.filter(p => !p.aliasOf).filter(p => {
+    if (avatarFilter === 'all') return true;
+    if (avatarFilter === 'roles') return p.category === 'roles';
+    if (avatarFilter === 'ranks') return p.category === 'ranks';
+    if (avatarFilter === 'elements') return p.category === 'elements' || p.category === 'cyber';
+    return true;
+  });
 
   return (
     <div className="fixed inset-0 z-[9999] flex items-center justify-center p-3 sm:p-4 bg-slate-950/80 backdrop-blur-md select-none font-khmer animate-fadeIn">
@@ -139,11 +139,7 @@ export const ProfileModal = ({ isOpen, onClose }) => {
         {/* Top Header Glow Bar */}
         <div className="relative px-5 py-4 sm:px-6 sm:py-5 border-b border-slate-800/80 flex items-center justify-between bg-slate-900/40">
           <div className="flex items-center gap-3">
-            <div className={`w-10 h-10 rounded-2xl bg-gradient-to-tr ${currentPreset.bg} flex items-center justify-center text-white text-lg font-black shadow-[0_0_15px_rgba(14,165,233,0.4)] shrink-0`}>
-              {currentPreset.id === 'initial' 
-                ? (formData.name || 'P').charAt(0).toUpperCase()
-                : currentPreset.icon}
-            </div>
+            <GamerAvatar avatarId={formData.avatar} name={formData.name} size="md" showGlow={true} />
             <div>
               <h2 className="text-base sm:text-lg font-black text-white leading-tight">
                 {language === 'km' ? 'ការកំណត់ Profile អ្នកលេង' : 'Player Profile Settings'}
@@ -165,29 +161,130 @@ export const ProfileModal = ({ isOpen, onClose }) => {
         </div>
 
         {/* Scrollable Form Content */}
-        <div className="p-5 sm:p-6 overflow-y-auto space-y-5 flex-1">
+        <div className="p-4 sm:p-6 overflow-y-auto space-y-5 flex-1">
           
-          {/* Avatar Icon Selector */}
-          <div>
-            <label className="block text-[11px] font-bold text-slate-300 uppercase tracking-wider mb-2">
-              {language === 'km' ? 'ជ្រើសរើសរូបតំណាង (Badge Avatar)' : 'Choose Player Avatar'}
-            </label>
-            <div className="grid grid-cols-4 sm:grid-cols-7 gap-2">
-              {AVATAR_PRESETS.map((p) => {
-                const isSelected = formData.avatar === p.id;
+          {/* Gaming Avatar Selector Studio */}
+          <div className="space-y-3">
+            <div className="flex items-center justify-between">
+              <label className="block text-[11px] font-bold text-slate-300 uppercase tracking-wider flex items-center gap-1.5">
+                <span>🎮</span>
+                <span>{language === 'km' ? 'ជ្រើសរើសរូបតំណាងហ្គេម (Gaming Avatar)' : 'Choose Gaming Avatar'}</span>
+              </label>
+              <span className="text-[10px] text-cyan-400 font-bold uppercase tracking-wider">
+                {currentPreset.label}
+              </span>
+            </div>
+
+            {/* Live Gamer Profile Preview Card */}
+            <div className="relative rounded-2xl p-3.5 sm:p-4 bg-gradient-to-r from-[#0c1a36] via-[#081329] to-[#040b1a] border border-sky-500/40 shadow-[0_8px_25px_rgba(14,165,233,0.2)] overflow-hidden">
+              <div className="absolute top-0 right-0 w-36 h-36 bg-sky-500/10 rounded-full blur-2xl pointer-events-none" />
+              <div className="relative z-10 flex items-center justify-between gap-3">
+                <div className="flex items-center gap-3 min-w-0">
+                  <GamerAvatar avatarId={formData.avatar} name={formData.name} size="lg" showGlow={true} />
+                  <div className="min-w-0">
+                    <div className="flex items-center gap-1.5 flex-wrap">
+                      <span className={`px-2 py-0.5 rounded-md text-[9px] font-black uppercase tracking-wider ${currentPreset.badgeColor} shadow-sm`}>
+                        {currentPreset.badge}
+                      </span>
+                      <span className="text-[9.5px] font-bold text-amber-300 font-mono">
+                        ★ {currentPreset.tag}
+                      </span>
+                    </div>
+                    <h3 className="text-sm sm:text-base font-black text-white truncate mt-1">
+                      {formData.name || 'Guest Player'}
+                    </h3>
+                    <p className="text-[10px] sm:text-[11px] text-cyan-300 font-mono flex items-center gap-1.5 mt-0.5">
+                      <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
+                      <span>ID: {formData.playerId || '12345678'}</span>
+                      <span>•</span>
+                      <span>Zone: {formData.serverId || 'Global'}</span>
+                    </p>
+                  </div>
+                </div>
+                <div className="hidden xs:flex flex-col items-end text-right shrink-0">
+                  <span className="text-[9px] text-slate-400 uppercase tracking-wider font-bold">Gaming Title</span>
+                  <span className="text-xs font-black text-white drop-shadow">{currentPreset.title}</span>
+                </div>
+              </div>
+            </div>
+
+            {/* Gaming Category Filter Tabs */}
+            <div className="flex items-center gap-1 p-1 bg-slate-950/80 rounded-xl border border-slate-800/80 overflow-x-auto no-scrollbar">
+              <button
+                type="button"
+                onClick={() => setAvatarFilter('all')}
+                className={`px-2.5 py-1 rounded-lg text-[10.5px] font-bold transition-all whitespace-nowrap cursor-pointer ${
+                  avatarFilter === 'all'
+                    ? 'bg-gradient-to-r from-sky-500 to-blue-600 text-white shadow-sm'
+                    : 'text-slate-400 hover:text-white'
+                }`}
+              >
+                🔥 {language === 'km' ? 'ទាំងអស់' : 'All Gaming'}
+              </button>
+              <button
+                type="button"
+                onClick={() => setAvatarFilter('roles')}
+                className={`px-2.5 py-1 rounded-lg text-[10.5px] font-bold transition-all whitespace-nowrap cursor-pointer ${
+                  avatarFilter === 'roles'
+                    ? 'bg-gradient-to-r from-sky-500 to-blue-600 text-white shadow-sm'
+                    : 'text-slate-400 hover:text-white'
+                }`}
+              >
+                🎮 {language === 'km' ? 'Esports & តួនាទី' : 'Esports & Roles'}
+              </button>
+              <button
+                type="button"
+                onClick={() => setAvatarFilter('ranks')}
+                className={`px-2.5 py-1 rounded-lg text-[10.5px] font-bold transition-all whitespace-nowrap cursor-pointer ${
+                  avatarFilter === 'ranks'
+                    ? 'bg-gradient-to-r from-sky-500 to-blue-600 text-white shadow-sm'
+                    : 'text-slate-400 hover:text-white'
+                }`}
+              >
+                🏆 {language === 'km' ? 'Mythic & ចំណាត់ថ្នាក់' : 'Mythic & Ranks'}
+              </button>
+              <button
+                type="button"
+                onClick={() => setAvatarFilter('elements')}
+                className={`px-2.5 py-1 rounded-lg text-[10.5px] font-bold transition-all whitespace-nowrap cursor-pointer ${
+                  avatarFilter === 'elements'
+                    ? 'bg-gradient-to-r from-sky-500 to-blue-600 text-white shadow-sm'
+                    : 'text-slate-400 hover:text-white'
+                }`}
+              >
+                ⚡ {language === 'km' ? 'ធាតុ & Cyber' : 'Elements & Cyber'}
+              </button>
+            </div>
+
+            {/* Gaming Avatar Grid */}
+            <div className="grid grid-cols-2 xs:grid-cols-3 gap-2 max-h-56 overflow-y-auto pr-1">
+              {displayPresets.map((p) => {
+                const isSelected = formData.avatar === p.id || (p.aliasOf && formData.avatar === p.aliasOf);
                 return (
                   <button
                     key={p.id}
                     type="button"
                     onClick={() => setFormData({ ...formData, avatar: p.id })}
-                    className={`h-11 rounded-xl flex items-center justify-center text-base transition-all cursor-pointer relative ${
+                    className={`relative p-2 rounded-xl border transition-all text-left flex items-center gap-2 group cursor-pointer ${
                       isSelected
-                        ? `bg-gradient-to-tr ${p.bg} text-white shadow-[0_0_12px_rgba(34,211,238,0.6)] ring-2 ring-white scale-105`
-                        : 'bg-slate-900 border border-slate-800 text-slate-400 hover:text-white hover:border-slate-700'
+                        ? 'bg-gradient-to-br from-[#10244c] to-[#07132a] border-cyan-400 ring-2 ring-cyan-400/40 shadow-[0_0_15px_rgba(34,211,238,0.4)] scale-[1.02]'
+                        : 'bg-slate-900/80 hover:bg-slate-800/90 border-slate-800 hover:border-slate-700'
                     }`}
-                    title={p.label}
                   >
-                    {p.id === 'initial' ? (formData.name || 'P').charAt(0).toUpperCase() : p.icon}
+                    <GamerAvatar avatarId={p.id} name={formData.name} size="sm" showGlow={isSelected} />
+                    <div className="min-w-0 flex-1">
+                      <div className="text-[11px] font-black text-white truncate group-hover:text-cyan-300 transition-colors leading-tight">
+                        {p.label}
+                      </div>
+                      <div className="text-[9px] text-slate-400 font-semibold truncate leading-tight mt-0.5">
+                        {p.badge}
+                      </div>
+                    </div>
+                    {isSelected && (
+                      <span className="w-3.5 h-3.5 rounded-full bg-cyan-400 text-slate-950 flex items-center justify-center text-[9px] font-black shrink-0">
+                        ✓
+                      </span>
+                    )}
                   </button>
                 );
               })}
