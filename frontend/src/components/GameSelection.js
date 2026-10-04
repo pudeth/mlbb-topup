@@ -402,30 +402,30 @@ const GameSelection = () => {
   const renderBadge = (badge, badgeType) => {
     if (badgeType === 'paused') {
       return (
-        <span className="inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded-full text-[6.5px] sm:text-[8px] font-black tracking-wider uppercase bg-amber-500/20 text-amber-300 border border-amber-500/40 backdrop-blur-md shadow-xs">
-          <span className="w-1 h-1 rounded-full bg-amber-400 animate-pulse" />
+        <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[8px] sm:text-[9.5px] font-black tracking-wider uppercase bg-amber-500/25 text-amber-300 border border-amber-500/40 backdrop-blur-md shadow-xs">
+          <span className="w-1.5 h-1.5 rounded-full bg-amber-400 animate-pulse" />
           <span>PAUSED</span>
         </span>
       );
     }
     if (badgeType === 'closed') {
       return (
-        <span className="inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded-full text-[6.5px] sm:text-[8px] font-black tracking-wider uppercase bg-rose-500/20 text-rose-300 border border-rose-500/40 backdrop-blur-md shadow-xs">
-          <span className="w-1 h-1 rounded-full bg-rose-500" />
+        <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[8px] sm:text-[9.5px] font-black tracking-wider uppercase bg-rose-500/25 text-rose-300 border border-rose-500/40 backdrop-blur-md shadow-xs">
+          <span className="w-1.5 h-1.5 rounded-full bg-rose-500" />
           <span>CLOSED</span>
         </span>
       );
     }
     if (badgeType === 'new') {
       return (
-        <span className="inline-flex items-center px-1.5 py-0.5 rounded-full text-[6.5px] sm:text-[8px] font-black tracking-wider uppercase bg-gradient-to-r from-emerald-500 to-teal-500 text-slate-950 shadow-xs">
+        <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[8px] sm:text-[9.5px] font-black tracking-wider uppercase bg-gradient-to-r from-emerald-500 to-teal-500 text-slate-950 shadow-xs font-mono">
           NEW
         </span>
       );
     }
     // Default HOT
     return (
-      <span className="inline-flex items-center px-1.5 py-0.5 rounded-full text-[6.5px] sm:text-[8px] font-black tracking-wider uppercase bg-gradient-to-r from-red-600 to-rose-600 text-white shadow-xs">
+      <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[8px] sm:text-[9.5px] font-black tracking-wider uppercase bg-gradient-to-r from-red-600 to-rose-600 text-white shadow-xs font-mono">
         HOT
       </span>
     );
@@ -490,8 +490,8 @@ const GameSelection = () => {
         </button>
       </div>
 
-      {/* Popular Games 4-Column Responsive Grid matching screenshot */}
-      <div className="grid grid-cols-4 gap-1.5 sm:gap-2.5 md:gap-3.5 lg:gap-4">
+      {/* Popular Games Responsive Grid: 2 cols on mobile for big & clean cards, 3 on tablet, 4 on desktop */}
+      <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3 sm:gap-4 lg:gap-4.5">
         {filteredGames.map((game) => {
           const isMasterPaused = masterStatus?.status && masterStatus.status !== 'Active';
           const isGamePaused = game.status && game.status !== 'Active';
@@ -510,14 +510,14 @@ const GameSelection = () => {
             <div
               key={game.id}
               onClick={isInactive ? (e) => e.preventDefault() : () => handleGameClick(game)}
-              className={`group relative rounded-xl sm:rounded-2xl p-1.5 sm:p-2.5 transition-all duration-300 flex flex-col justify-between select-none overflow-hidden ${
+              className={`group relative rounded-2xl sm:rounded-3xl p-2.5 sm:p-3.5 transition-all duration-300 flex flex-col justify-between select-none overflow-hidden ${
                 isInactive
                   ? 'bg-gradient-to-b from-[#0c1222]/90 to-[#070b16]/95 border border-slate-800/80 opacity-80 cursor-not-allowed'
-                  : 'bg-gradient-to-b from-[#0f172a]/95 via-[#0b1222]/95 to-[#070b16]/98 border border-slate-800/80 hover:border-sky-500/50 shadow-[0_4px_16px_rgba(0,0,0,0.5)] hover:shadow-[0_10px_30px_rgba(14,165,233,0.15)] hover:-translate-y-0.5 cursor-pointer'
+                  : 'bg-gradient-to-b from-[#0f172a]/95 via-[#0b1222]/95 to-[#070b16]/98 border border-slate-800/90 hover:border-sky-500/60 shadow-[0_4px_20px_rgba(0,0,0,0.6)] hover:shadow-[0_12px_35px_rgba(14,165,233,0.22)] hover:-translate-y-1 cursor-pointer'
               }`}
             >
-              {/* Game Artwork Cover (4:3 aspect) */}
-              <div className="relative aspect-[4/3] w-full rounded-lg sm:rounded-xl overflow-hidden bg-slate-950 mb-1 border border-slate-800/60 shadow-xs">
+              {/* Game Artwork Cover (Bigger, cleaner & high-definition) */}
+              <div className="relative aspect-[16/11] sm:aspect-[4/3] w-full rounded-xl sm:rounded-2xl overflow-hidden bg-slate-950 mb-2 sm:mb-2.5 border border-slate-800/70 shadow-sm">
                 <img
                   src={game.image}
                   alt={game.name}
@@ -525,14 +525,14 @@ const GameSelection = () => {
                     e.target.onerror = null;
                     e.target.src = game.fallbackImage || game.localFallbackImage || '/mlbb-logo.png';
                   }}
-                  className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                  className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
                 />
                 {/* Subtle gradient vignette */}
-                <div className="absolute inset-0 bg-gradient-to-t from-slate-950/60 via-transparent to-transparent pointer-events-none" />
+                <div className="absolute inset-0 bg-gradient-to-t from-slate-950/80 via-transparent to-black/20 pointer-events-none" />
 
-                {/* 3D Server Badge Frame (when active) */}
+                {/* 3D Server Badge Frame (Preserved, crisp and clearly readable) */}
                 {!isInactive && hasServerBadge && (
-                  <div className="absolute top-1 left-1 z-20 pointer-events-none drop-shadow-[0_2px_8px_rgba(0,0,0,0.85)] scale-[0.52] xs:scale-[0.58] sm:scale-[0.68] md:scale-[0.76] origin-top-left">
+                  <div className="absolute top-1.5 left-1.5 z-20 pointer-events-none drop-shadow-[0_4px_12px_rgba(0,0,0,0.9)] scale-[0.78] xs:scale-[0.84] sm:scale-[0.88] md:scale-[0.92] origin-top-left">
                     <CambodiaFlagFrame
                       title={game.flagTitle || (isMLBB ? "សេវើខ្មែរ 5v5" : game.badge)}
                       subtitle={game.flagSubtitle || (isMLBB ? "5V5" : "")}
@@ -545,29 +545,40 @@ const GameSelection = () => {
                 )}
 
                 {/* Top Right Status Badge */}
-                <div className="absolute top-1 right-1 z-20">
+                <div className="absolute top-1.5 right-1.5 z-20">
                   {renderBadge(game.badge, game.badgeType)}
                 </div>
               </div>
 
-              {/* Game Details: Title & Genre */}
-              <div className="mb-1 sm:mb-1.5 text-center sm:text-left min-w-0">
-                <h3 className="font-black text-[8px] sm:text-[11px] md:text-xs text-white group-hover:text-amber-300 transition-colors truncate leading-tight tracking-tight">
+              {/* Game Details: Title, Server Name & Genre */}
+              <div className="mb-2 sm:mb-2.5 text-left min-w-0">
+                <h3 className="font-black text-xs xs:text-sm sm:text-base text-white group-hover:text-cyan-300 transition-colors truncate leading-tight tracking-tight">
                   {game.name}
                 </h3>
-                <p className="text-[6.5px] sm:text-[9px] font-bold text-sky-400 mt-0.5 truncate flex items-center justify-center sm:justify-start gap-0.5">
-                  <span className="w-1 h-1 rounded-full bg-sky-400 shrink-0 inline-block" />
+
+                {/* Server Name Indicator (Always kept and clearly readable) */}
+                {hasServerBadge && (
+                  <div className="mt-1 flex items-center gap-1.5">
+                    <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-md bg-sky-950/80 border border-sky-400/30 text-sky-200 text-[9.5px] sm:text-[10.5px] font-bold truncate">
+                      <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse shrink-0" />
+                      <span className="truncate">{game.flagTitle || (isMLBB ? "សេវើខ្មែរ 5v5" : "Official Server")}</span>
+                    </span>
+                  </div>
+                )}
+
+                <p className="text-[10px] sm:text-xs font-semibold text-slate-400 mt-1 truncate flex items-center gap-1.5">
+                  <span className="w-1.5 h-1.5 rounded-full bg-sky-400 shrink-0 inline-block" />
                   <span className="truncate">{game.genre}</span>
                 </p>
               </div>
 
-              {/* Action Button */}
+              {/* Action Button (Bigger, cleaner & comfortable to tap) */}
               <div className="mt-auto w-full">
                 {isInactive ? (
                   <button
                     type="button"
                     disabled
-                    className="w-full py-1 sm:py-1.5 px-1 rounded-lg bg-slate-800/90 text-slate-400 font-bold text-[7.5px] sm:text-[10px] flex items-center justify-center gap-0.5 cursor-not-allowed border border-slate-700/60"
+                    className="w-full h-8 sm:h-9 rounded-xl bg-slate-800/90 text-slate-400 font-bold text-xs sm:text-sm flex items-center justify-center gap-1 cursor-not-allowed border border-slate-700/60"
                   >
                     <span>{language === 'km' ? 'បិទមើល' : 'Closed'}</span>
                   </button>
@@ -578,10 +589,10 @@ const GameSelection = () => {
                       e.stopPropagation();
                       handleGameClick(game);
                     }}
-                    className="w-full py-1 sm:py-1.5 px-1 rounded-lg bg-gradient-to-r from-blue-600 via-sky-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white font-black text-[7.5px] sm:text-[10px] flex items-center justify-center gap-0.5 shadow-sm active:scale-95 transition-all cursor-pointer"
+                    className="w-full h-8 sm:h-9 rounded-xl bg-gradient-to-r from-blue-600 via-sky-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white font-black text-xs sm:text-sm flex items-center justify-center gap-1.5 shadow-md shadow-sky-500/20 active:scale-95 transition-all cursor-pointer"
                   >
                     <span>{language === 'km' ? 'ចូលលេង' : 'Play'}</span>
-                    <span className="text-[8px] sm:text-[10px]">›</span>
+                    <span className="text-sm">›</span>
                   </button>
                 )}
               </div>
