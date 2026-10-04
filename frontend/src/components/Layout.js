@@ -6,15 +6,24 @@ import AiAssistant from './AiAssistant';
 import MobileBottomNav from './MobileBottomNav';
 import DesktopSidebar from './DesktopSidebar';
 import { PlayerLoginModal } from './PlayerLoginModal';
+import ProfileModal from './ProfileModal';
 
 const Layout = ({ children }) => {
   const location = useLocation();
   const [isPlayerLoginOpen, setIsPlayerLoginOpen] = useState(false);
+  const [isProfileModalOpen, setIsProfileModalOpen] = useState(false);
 
   useEffect(() => {
     const handleOpen = () => setIsPlayerLoginOpen(true);
+    const handleOpenProfile = () => setIsProfileModalOpen(true);
+
     window.addEventListener('open-player-login', handleOpen);
-    return () => window.removeEventListener('open-player-login', handleOpen);
+    window.addEventListener('open-player-profile', handleOpenProfile);
+
+    return () => {
+      window.removeEventListener('open-player-login', handleOpen);
+      window.removeEventListener('open-player-profile', handleOpenProfile);
+    };
   }, []);
 
   const isAdminPath = location.pathname.startsWith('/admin') || location.pathname.startsWith('/topup/admin') || location.pathname.includes('/admin');
@@ -82,6 +91,12 @@ const Layout = ({ children }) => {
       <PlayerLoginModal
         isOpen={isPlayerLoginOpen}
         onClose={() => setIsPlayerLoginOpen(false)}
+      />
+
+      {/* Global Player Profile Edit Modal Popup */}
+      <ProfileModal
+        isOpen={isProfileModalOpen}
+        onClose={() => setIsProfileModalOpen(false)}
       />
     </div>
   );

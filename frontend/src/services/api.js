@@ -57,6 +57,7 @@ export const authAPI = {
   login: (data) => api.post('/auth/login', data),
   playerLogin: (data) => api.post('/auth/player-login', data),
   getCurrentUser: () => api.get('/auth/me'),
+  updateProfile: (data) => api.put('/auth/profile', data),
 };
 
 // Products API

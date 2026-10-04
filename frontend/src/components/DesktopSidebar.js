@@ -202,15 +202,27 @@ const DesktopSidebar = () => {
               </div>
             </Link>
 
-            <button
-              onClick={logout}
-              className="w-full py-1.5 px-2 rounded-lg bg-slate-800/80 hover:bg-rose-950/50 border border-slate-700/60 hover:border-rose-500/40 text-slate-300 hover:text-rose-200 text-[11px] font-semibold flex items-center justify-center gap-1.5 transition-all cursor-pointer"
-            >
-              <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                <path strokeLinecap="round" strokeLinejoin="round" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
-              </svg>
-              <span>{language === 'km' ? 'ចាកចេញ' : 'Logout'}</span>
-            </button>
+            <div className="flex items-center gap-1.5">
+              <button
+                type="button"
+                onClick={() => window.dispatchEvent(new CustomEvent('open-player-profile'))}
+                className="flex-1 py-1.5 px-2 rounded-lg bg-slate-800/80 hover:bg-slate-700/80 border border-slate-700/60 hover:border-cyan-400/50 text-slate-300 hover:text-cyan-300 text-[11px] font-semibold flex items-center justify-center gap-1 transition-all cursor-pointer"
+                title="Edit Profile"
+              >
+                <span>⚙️</span>
+                <span>Profile</span>
+              </button>
+
+              <button
+                onClick={logout}
+                className="flex-1 py-1.5 px-2 rounded-lg bg-slate-800/80 hover:bg-rose-950/50 border border-slate-700/60 hover:border-rose-500/40 text-slate-300 hover:text-rose-200 text-[11px] font-semibold flex items-center justify-center gap-1 transition-all cursor-pointer"
+              >
+                <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+                </svg>
+                <span>{language === 'km' ? 'ចាកចេញ' : 'Logout'}</span>
+              </button>
+            </div>
           </div>
         )}
       </div>

@@ -217,6 +217,41 @@ public class AuthService : IAuthService
         };
     }
 
+    public async Task<UserResponse?> UpdateProfileAsync(int userId, UpdateProfileRequest request)
+    {
+        var user = await _context.Users.FindAsync(userId);
+        if (user == null)
+        {
+            return null;
+        }
+
+        if (!string.IsNullOrWhiteSpace(request.Name))
+        {
+            user.Name = request.Name.Trim();
+        }
+
+        if (!string.IsNullOrWhiteSpace(request.Email) && request.Email.Contains("@"))
+        {
+            user.Email = request.Email.Trim().ToLower();
+        }
+
+        if (!string.IsNullOrWhiteSpace(request.Password) && request.Password.Length >= 4)
+        {
+            user.PasswordHash = BCrypt.Net.BCrypt.HashPassword(request.Password);
+        }
+
+        await _context.SaveChangesAsync();
+
+        return new UserResponse
+        {
+            UserId = user.UserId,
+            Name = user.Name,
+            Email = user.Email,
+            Role = user.Role,
+            CreatedAt = user.CreatedAt
+        };
+    }
+
     public string GenerateJwtToken(int userId, string email, string role)
     {
         var jwtSettings = _configuration.GetSection("Jwt");

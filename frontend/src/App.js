@@ -12,6 +12,7 @@ import Login from './pages/Login';
 import Register from './pages/Register';
 import Support from './pages/Support';
 import PrivacyPolicy from './pages/PrivacyPolicy';
+import Profile from './pages/Profile';
 import AdminDashboard from './pages/AdminDashboard';
 import AdminRoute from './components/AdminRoute';
 import Layout from './components/Layout';
@@ -34,7 +35,8 @@ function App() {
               <Route path="/terms-and-conditions" element={<PrivacyPolicy />} />
               <Route path="/privacy-policy" element={<PrivacyPolicy />} />
               
-              {/* Player Order History & Player Login */}
+              {/* Player Profile & Order History */}
+              <Route path="/profile" element={<Profile />} />
               <Route path="/order-history" element={<OrderHistory />} />
               <Route path="/player-login" element={<OrderHistory />} />
               

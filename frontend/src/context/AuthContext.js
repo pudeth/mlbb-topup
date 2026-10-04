@@ -151,6 +151,65 @@ export const AuthProvider = ({ children }) => {
     setPlayerAccount(null);
   };
 
+  // Update Profile (Syncs player_account, user, and backend)
+  const updateProfile = async (updates) => {
+    try {
+      const pId = updates.playerId ?? playerAccount?.playerId ?? user?.playerId;
+      const sId = updates.serverId ?? playerAccount?.serverId ?? user?.serverId ?? 'Global';
+      const rName = updates.realName ?? updates.name ?? playerAccount?.realName ?? user?.name ?? `Player_${pId}`;
+
+      const updatedUser = {
+        ...(user || {}),
+        name: rName,
+        email: updates.email ?? user?.email,
+        phone: updates.phone ?? user?.phone,
+        avatar: updates.avatar ?? user?.avatar,
+        playerId: pId,
+        serverId: sId,
+      };
+
+      const updatedPlayer = {
+        ...(playerAccount || {}),
+        playerId: pId,
+        serverId: sId,
+        realName: rName,
+        avatar: updates.avatar ?? playerAccount?.avatar ?? user?.avatar,
+        phone: updates.phone ?? playerAccount?.phone ?? user?.phone,
+      };
+
+      localStorage.setItem('user', JSON.stringify(updatedUser));
+      localStorage.setItem('player_account', JSON.stringify(updatedPlayer));
+
+      setUser(updatedUser);
+      setPlayerAccount(updatedPlayer);
+
+      // Attempt remote backend update if authenticated with token
+      const token = localStorage.getItem('token');
+      if (token) {
+        try {
+          await authAPI.updateProfile({
+            name: rName,
+            email: updatedUser.email,
+            password: updates.password || undefined,
+            playerId: pId,
+            serverId: sId,
+            phoneNumber: updates.phone || undefined,
+          });
+        } catch (backendErr) {
+          console.warn('Backend profile update note:', backendErr?.message);
+        }
+      }
+
+      window.dispatchEvent(new Event('storage'));
+      window.dispatchEvent(new CustomEvent('player-login-success', { detail: updatedPlayer }));
+
+      return { success: true };
+    } catch (err) {
+      console.error('Failed to update profile:', err);
+      return { success: false, error: err.message };
+    }
+  };
+
   const isAuthenticated = () => {
     return !!user || !!playerAccount;
   };
@@ -168,6 +227,7 @@ export const AuthProvider = ({ children }) => {
     login,
     register,
     loginPlayer,
+    updateProfile,
     logout,
     isAuthenticated,
     isAdmin,

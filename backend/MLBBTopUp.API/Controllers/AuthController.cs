@@ -107,6 +107,30 @@ public class AuthController : ControllerBase
     }
 
     /// <summary>
+    /// Update current authenticated user profile
+    /// </summary>
+    [HttpPut("profile")]
+    [Authorize]
+    public async Task<IActionResult> UpdateProfile([FromBody] UpdateProfileRequest request)
+    {
+        var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value 
+                          ?? User.FindFirst("sub")?.Value;
+
+        if (userIdClaim == null || !int.TryParse(userIdClaim, out int userId))
+        {
+            return Unauthorized(new { message = "Invalid token" });
+        }
+
+        var updatedUser = await _authService.UpdateProfileAsync(userId, request);
+        if (updatedUser == null)
+        {
+            return NotFound(new { message = "User not found" });
+        }
+
+        return Ok(updatedUser);
+    }
+
+    /// <summary>
     /// Test endpoint to verify authentication
     /// </summary>
     [HttpGet("test")]

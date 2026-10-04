@@ -241,21 +241,47 @@ const Navbar = () => {
                 {userMenuOpen && (
                   <>
                     <div className="fixed inset-0 z-40" onClick={() => setUserMenuOpen(false)} />
-                    <div className="absolute right-0 mt-2 w-52 rounded-2xl bg-[#090f20]/95 backdrop-blur-2xl border border-sky-500/40 shadow-2xl p-2 z-50 animate-scaleUp font-khmer">
-                      <div className="px-3 py-2 border-b border-slate-800/80 mb-1">
-                        <div className="text-xs font-black text-white truncate">
-                          {playerAccount?.realName || user?.name || 'Player'}
+                    <div className="absolute right-0 mt-2 w-56 rounded-2xl bg-[#090f20]/95 backdrop-blur-2xl border border-sky-500/40 shadow-2xl p-2 z-50 animate-scaleUp font-khmer">
+                      {/* Top Header Card - Click to edit profile */}
+                      <div 
+                        onClick={() => {
+                          setUserMenuOpen(false);
+                          window.dispatchEvent(new CustomEvent('open-player-profile'));
+                        }}
+                        className="px-3 py-2.5 border-b border-slate-800/80 mb-1 hover:bg-slate-800/50 rounded-xl transition-all cursor-pointer group"
+                        title="Click to view & edit profile"
+                      >
+                        <div className="flex items-center justify-between">
+                          <div className="text-xs font-black text-white truncate group-hover:text-cyan-300 transition-colors">
+                            {playerAccount?.realName || user?.name || 'Player'}
+                          </div>
+                          <span className="text-[10px] text-sky-400 group-hover:translate-x-0.5 transition-transform">✏️</span>
                         </div>
                         <div className="text-[10px] text-sky-300 font-mono mt-0.5">
                           ID: {playerAccount?.playerId || user?.email?.split('@')[0]}
                         </div>
                         {playerAccount?.serverId && (
-                          <div className="text-[9.5px] text-emerald-400 font-semibold mt-0.5">
+                          <div className="text-[9.5px] text-emerald-400 font-semibold mt-0.5 flex items-center gap-1">
+                            <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
                             Zone: {playerAccount.serverId} • Active
                           </div>
                         )}
                       </div>
 
+                      {/* 1. Profile / Edit Info Option */}
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setUserMenuOpen(false);
+                          window.dispatchEvent(new CustomEvent('open-player-profile'));
+                        }}
+                        className="w-full flex items-center gap-2 px-3 py-2 rounded-xl text-xs font-bold text-slate-300 hover:text-cyan-300 hover:bg-slate-800/70 transition-colors cursor-pointer"
+                      >
+                        <span>👤</span>
+                        <span>{language === 'km' ? 'ព័ត៌មាន Profile & កែប្រែ' : 'Profile & Edit Info'}</span>
+                      </button>
+
+                      {/* 2. Order History */}
                       <Link
                         to="/order-history"
                         onClick={() => setUserMenuOpen(false)}
@@ -265,6 +291,7 @@ const Navbar = () => {
                         <span>{language === 'km' ? 'ប្រវត្តិបញ្ជាទិញ' : 'Order History'}</span>
                       </Link>
 
+                      {/* 3. Sign Out */}
                       <button
                         type="button"
                         onClick={() => {
