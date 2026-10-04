@@ -107,7 +107,8 @@ public class OrderService : IOrderService
             var user = await _context.Users.FindAsync(userId.Value);
             if (user == null)
             {
-                return null;
+                // Graceful fallback: If JWT token belongs to a wiped or stale user ID, treat as guest order
+                userId = null;
             }
         }
 

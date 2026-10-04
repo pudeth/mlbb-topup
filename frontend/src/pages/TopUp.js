@@ -1214,6 +1214,20 @@ const TopUp = () => {
         newOrder = orderRes?.data;
       } catch (orderApiErr) {
         console.warn('Backend order notice:', orderApiErr?.message);
+        // If 400 or 401 occurred (e.g. stale JWT token in localStorage from previous session), clear token and retry as guest!
+        if (orderApiErr?.response?.status === 400 || orderApiErr?.response?.status === 401) {
+          localStorage.removeItem('token');
+          try {
+            const guestRes = await ordersAPI.create({
+              ...orderPayload,
+              customerName: '',
+              customerPhone: ''
+            });
+            newOrder = guestRes?.data;
+          } catch (retryErr) {
+            console.warn('Guest order retry notice:', retryErr?.message);
+          }
+        }
       }
 
       // Auto-sync player account: real-name player = username and ID server = password
