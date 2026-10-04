@@ -187,15 +187,36 @@ namespace MLBBTopUp.Infrastructure.Services
                         { "hash", popupHash }
                     };
 
-                    // Requirement ⑤: Exclusively use the official Purchase API (no calls to generate-qr)
+                    // Requirement ⑤: Exclusively use the official Purchase API and supply EMVCo KHQR string & deeplink for mobile display
                     var tranMd5 = Convert.ToHexString(MD5.HashData(Encoding.UTF8.GetBytes(tranId))).ToLower();
                     _logger.LogInformation("ABA PayWay Purchase API payload created for Order #{OrderId} (TranId: {TranId})", orderId, tranId);
+
+                    string khqrString = string.Empty;
+                    string khqrMd5 = tranMd5;
+                    try
+                    {
+                        var (genQr, genMd5) = KHQRService.GenerateEmvCoKhqr(
+                            "015499221@abaa",
+                            "DETH PHEAK",
+                            "Phnom Penh",
+                            amount,
+                            paywayCurrency
+                        );
+                        khqrString = genQr;
+                        if (!string.IsNullOrEmpty(genMd5)) khqrMd5 = genMd5;
+                    }
+                    catch (Exception khqrEx)
+                    {
+                        _logger.LogWarning(khqrEx, "Could not pre-generate EMVCo KHQR string: {Msg}", khqrEx.Message);
+                    }
 
                     return new PayWayCreateResult
                     {
                         Success = true,
                         TranId = tranId,
                         Md5Hash = tranMd5,
+                        QrString = khqrString,
+                        AbapayDeeplink = $"https://bakong.nbc.org.kh/pay?md5={khqrMd5}",
                         CheckoutUrl = checkoutUrl,
                         PurchaseUrl = purchaseUrl,
                         Hash = popupHash,

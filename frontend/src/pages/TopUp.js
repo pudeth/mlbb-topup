@@ -6,6 +6,69 @@ import { getStoredGames, getMasterTopupStatus, fetchStoredGames, fetchMasterTopu
 import ProductPackageImage from '../components/ProductPackageImage';
 import { AbaKhqrLogo } from '../components/AbaPaymentLogos';
 import WeAcceptPayments from '../components/WeAcceptPayments';
+import { QRCodeSVG } from 'qrcode.react';
+
+// EMVCo Standard Dynamic KHQR Generator (Ensures camera-scannable QR code even if API is delayed)
+const generateClientEmvCoKhqr = (amount, currency = 'USD') => {
+  try {
+    const isRiel = currency === 'KHR';
+    const currencyCode = isRiel ? '116' : '840';
+    const numAmt = Number(amount) || 0.95;
+    const finalAmt = isRiel ? Math.round(numAmt * 4100) : numAmt;
+    const amtStr = isRiel ? String(finalAmt) : finalAmt.toFixed(2);
+    const usdAcc = '004164074';
+    const khrAcc = '015499221';
+    const activeAcc = isRiel ? khrAcc : usdAcc;
+    const merchantName = 'DETH PHEAK';
+    const city = 'Phnom Penh';
+
+    let payload = '000201010212';
+    // Tag 29 ABA Info
+    const sub00 = '0016abaakhppxxx@abaa';
+    const sub01 = `01${String(activeAcc.length).padStart(2, '0')}${activeAcc}`;
+    const sub02 = '0208ABA Bank';
+    const tag29 = sub00 + sub01 + sub02;
+    payload += `29${String(tag29.length).padStart(2, '0')}${tag29}`;
+
+    // Tag 40 ABA P2P Dual
+    const sub40 = `0006abaP2P0112BE4DE1A15BB702${String(khrAcc.length).padStart(2, '0')}${khrAcc}03${String(usdAcc.length).padStart(2, '0')}${usdAcc}0404Dual`;
+    payload += `40${String(sub40.length).padStart(2, '0')}${sub40}`;
+
+    payload += '52040000'; // Tag 52: MCC
+    payload += `5303${currencyCode}`; // Tag 53: Currency
+    payload += `54${String(amtStr.length).padStart(2, '0')}${amtStr}`; // Tag 54: Amount
+    payload += '5802KH'; // Tag 58: Country
+    payload += `59${String(merchantName.length).padStart(2, '0')}${merchantName}`; // Tag 59: Merchant Name
+    payload += `60${String(city.length).padStart(2, '0')}${city}`; // Tag 60: City
+
+    // Tag 99 Expiration (6 minutes)
+    const now = Date.now();
+    const expire = now + 6 * 60 * 1000;
+    const tag99 = `00${String(String(now).length).padStart(2, '0')}${now}01${String(String(expire).length).padStart(2, '0')}${expire}`;
+    payload += `99${String(tag99.length).padStart(2, '0')}${tag99}`;
+
+    payload += '6304';
+
+    // CRC16 Calculation
+    let crc = 0xFFFF;
+    const polynomial = 0x1021;
+    const bytes = new TextEncoder().encode(payload);
+    for (const b of bytes) {
+      for (let i = 0; i < 8; i++) {
+        const bit = ((b >> (7 - i)) & 1) === 1;
+        const c15 = ((crc >> 15) & 1) === 1;
+        crc <<= 1;
+        if (c15 ^ bit) {
+          crc ^= polynomial;
+        }
+      }
+    }
+    const crcHex = (crc & 0xFFFF).toString(16).toUpperCase().padStart(4, '0');
+    return payload + crcHex;
+  } catch (e) {
+    return '00020101021229450016abaakhppxxx@abaa01090041640740208ABA Bank5802KH5910DETH PHEAK6010Phnom Penh6304';
+  }
+};
 
 // Game-specific packages matching upstream supplier catalog
 const GAME_PACKAGES_MAP = {
@@ -485,6 +548,7 @@ const TopUp = () => {
   const [qrExpired, setQrExpired] = useState(false);
   const qrExpiredRef = useRef(false);
   const timeLeftRef = useRef(360); // 6-minute (360 seconds) transaction lifetime (ABA PayWay standard)
+  const [countdown, setCountdown] = useState(360);
   const [currency, setCurrency] = useState('USD'); // 'USD' or 'KHR'
   const [productCategoryTab, setProductCategoryTab] = useState('all'); // 'all', 'passes', 'diamonds'
   const [layoutMode, setLayoutMode] = useState('tiles'); // 'list', 'tiles', 'grid'
@@ -568,12 +632,19 @@ const TopUp = () => {
   };
 
 
-  // Automatically trigger ABA Official Checkout Popup via AbaPayway.checkout() directly in the browser
+  // Automatically trigger ABA Official Checkout Popup via AbaPayway.checkout() directly in the browser (Desktop)
   useEffect(() => {
     // ABA Rule: Do NOT automatically close or hide the official ABA checkout popup upon payment.
-    // The official popup must remain visible so the customer can view the Success screen,
-    // download the official ABA receipt, and click "Continues Shopping" at their own discretion.
     if (paymentData && !paymentPaid && paymentData.gateway === 'aba_payway') {
+      const isMobile = typeof window !== 'undefined' && (
+        /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) ||
+        window.innerWidth < 768
+      );
+      if (isMobile) {
+        // Mobile users get the native responsive KHQR modal with direct 1-tap ABA Mobile deep link & scannable QR
+        return;
+      }
+
       const openOfficialAbaCheckout = () => {
         const payway = getAbaPaywayInstance();
         if (payway && typeof payway.checkout === 'function') {
@@ -584,12 +655,6 @@ const TopUp = () => {
               abaContainer = document.createElement('div');
               abaContainer.id = 'aba-checkout';
               document.body.appendChild(abaContainer);
-            }
-
-            // Remove any legacy custom sheet covering if present to keep ABA interface 100% clean
-            const legacySheet = document.getElementById('aba_checkout_sheet');
-            if (legacySheet) {
-              legacySheet.remove();
             }
 
             const purchaseUrl = paymentData.purchaseUrl || "https://checkout-sandbox.payway.com.kh/api/payment-gateway/v1/payments/purchase";
@@ -630,10 +695,10 @@ const TopUp = () => {
               form.appendChild(opt);
             }
 
-            // Launch official ABA PayWay popup / mobile drawer per ABA specification
+            // Launch official ABA PayWay popup on Desktop
             payway.checkout();
 
-            console.log('[ABA PayWay] Official AbaPayway.checkout() launched successfully (Mobile & Desktop)!');
+            console.log('[ABA PayWay] Official AbaPayway.checkout() launched successfully!');
             return true;
           } catch (e) {
             console.warn('[ABA PayWay] AbaPayway.checkout() notice:', e);
@@ -659,10 +724,20 @@ const TopUp = () => {
   useEffect(() => {
     if (!paymentData || paymentPaid) return;
     timeLeftRef.current = 360;
+    setCountdown(360);
     setQrExpired(false);
     qrExpiredRef.current = false;
     const timer = setInterval(() => {
       timeLeftRef.current -= 1;
+      setCountdown((prev) => {
+        if (prev <= 1) {
+          clearInterval(timer);
+          setQrExpired(true);
+          qrExpiredRef.current = true;
+          return 0;
+        }
+        return prev - 1;
+      });
       if (timeLeftRef.current <= 0) {
         clearInterval(timer);
         // Step ③ & ④: Stop checking & safely end the process within lifetime (5-15 min rule)
@@ -1284,6 +1359,55 @@ const TopUp = () => {
       setError(err.response?.data?.message || 'Failed to initialize payment. Please try again.');
       setLoading(false);
     }
+  };
+
+  const handleOpenBankApp = () => {
+    const deeplink = paymentData?.abapayDeeplink || paymentData?.khqrDeeplink || `https://bakong.nbc.org.kh/pay?md5=${paymentData?.md5Hash}`;
+    
+    // On mobile devices, attempt to open ABA Mobile directly
+    if (typeof navigator !== 'undefined' && /iPhone|iPad|iPod|Android/i.test(navigator.userAgent)) {
+      window.location.href = 'abamobilebank://';
+      setTimeout(() => {
+        if (deeplink && !deeplink.startsWith('abamobilebank://')) {
+          window.open(deeplink, '_blank');
+        }
+      }, 1000);
+    } else {
+      window.open(deeplink, '_blank');
+    }
+  };
+
+  const handleDownloadQr = () => {
+    try {
+      const svg = document.getElementById('khqr-svg');
+      if (!svg) return;
+      const svgData = new XMLSerializer().serializeToString(svg);
+      const canvas = document.createElement('canvas');
+      const ctx = canvas.getContext('2d');
+      const img = new Image();
+      img.onload = () => {
+        canvas.width = 440;
+        canvas.height = 440;
+        ctx.fillStyle = '#FFFFFF';
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+        ctx.drawImage(img, 20, 20, 400, 400);
+        const pngFile = canvas.toDataURL('image/png');
+        const downloadLink = document.createElement('a');
+        downloadLink.download = `KHQR_Order_${orderId || 'Payment'}.png`;
+        downloadLink.href = pngFile;
+        downloadLink.click();
+      };
+      img.src = 'data:image/svg+xml;base64,' + btoa(unescape(encodeURIComponent(svgData)));
+    } catch (e) {
+      console.warn('Could not export QR:', e);
+    }
+  };
+
+  const handleCancelPayment = () => {
+    closeAbaCheckoutPopup();
+    setPaymentData(null);
+    setOrderId(null);
+    setPaymentPaid(false);
   };
 
   const isMlbb = selectedGame.id.startsWith('mlbb');
@@ -2428,31 +2552,276 @@ const TopUp = () => {
 
 
       {/* ======================================================== */}
-      {/* ABA PAYWAY V2 3-SECOND POLLING AUDIT BAR                 */}
+      {/* OFFICIAL KHQR PAYMENT MODAL (MOBILE & DESKTOP)          */}
       {/* ======================================================== */}
       {paymentData && !paymentPaid && (
-        <div className="fixed bottom-4 right-4 z-[99999] max-w-sm w-[calc(100%-2rem)] sm:w-84 bg-slate-900/95 backdrop-blur-md border border-cyan-500/50 rounded-2xl p-3.5 shadow-2xl shadow-cyan-500/20 text-xs text-white space-y-2 animate-fadeIn">
+        <div className="fixed inset-0 z-[9999] flex items-center justify-center p-3 sm:p-4 bg-black/85 backdrop-blur-md overflow-y-auto animate-fadeIn select-none">
+          <div className="bg-[#0b1220] border-2 border-rose-500/40 rounded-3xl max-w-[360px] sm:max-w-md w-full shadow-2xl shadow-rose-950/60 text-center space-y-3 animate-scaleUp relative overflow-hidden my-auto border-t-0">
+            
+            {/* Top Red KHQR Header Bar */}
+            <div className="bg-gradient-to-r from-[#D81B60] via-[#E11D48] to-[#BE123C] px-5 py-3 flex items-center justify-between text-white shadow-md rounded-t-3xl">
+              <div className="flex items-center gap-2">
+                <span className="font-black text-xl tracking-wider text-white">KHQR</span>
+                <span className="text-[10px] font-bold bg-white/20 px-2 py-0.5 rounded-full uppercase tracking-wider">
+                  Bakong
+                </span>
+              </div>
+              <button
+                type="button"
+                onClick={handleCancelPayment}
+                className="w-7 h-7 rounded-full bg-black/25 hover:bg-black/45 text-white flex items-center justify-center text-sm font-bold transition-all cursor-pointer"
+                title={language === 'km' ? 'បិទ' : 'Close'}
+              >
+                ✕
+              </button>
+            </div>
+
+            <div className="px-4 sm:px-6 pb-4 space-y-3">
+              {/* Merchant & Order Header */}
+              {(() => {
+                const modalCur = paymentData?.currency || currency;
+                const isRiel = modalCur === 'KHR';
+                const rawAmt = paymentData?.amount != null
+                  ? Number(paymentData.amount)
+                  : (selectedProduct?.price || 0.95);
+                const dispAmt = isRiel
+                  ? Math.round(rawAmt < 100 ? rawAmt * 4100 : rawAmt)
+                  : (rawAmt > 100 ? Number((rawAmt / 4100).toFixed(2)) : rawAmt);
+                const effectiveQr = paymentData?.qrString || paymentData?.khqrQRCode || generateClientEmvCoKhqr(dispAmt, modalCur);
+
+                return (
+                  <>
+                    <div className="flex items-center justify-between border-b border-slate-800 pb-2 text-left font-khmer">
+                      <div>
+                        <div className="flex items-center gap-1.5">
+                          <span className="text-white font-bold text-sm tracking-tight">DETH PHEAK</span>
+                          <span className="text-[9.5px] text-emerald-400 font-semibold bg-emerald-500/15 border border-emerald-500/40 px-1.5 py-0.2 rounded">✓ Verified</span>
+                        </div>
+                        <span className="text-[11px] text-slate-400 truncate max-w-[170px] block">
+                          {selectedProduct?.name || 'Mobile Legends Diamonds'}
+                        </span>
+                      </div>
+                      <div className="text-right">
+                        <span className="text-[18px] sm:text-[20px] font-black text-emerald-400 leading-none block font-mono">
+                          {isRiel ? `${dispAmt.toLocaleString()} ៛` : `$${dispAmt.toFixed(2)}`}
+                        </span>
+                        <span className="text-[10.5px] text-slate-400 font-medium">
+                          {isRiel ? `$${(dispAmt / 4100).toFixed(2)}` : `~${Math.round(dispAmt * 4100).toLocaleString()} ៛`}
+                        </span>
+                      </div>
+                    </div>
+
+                    {/* QR Code Container with High-Contrast White Background */}
+                    <div className="relative inline-block mx-auto bg-white p-3.5 rounded-2xl shadow-xl border-4 border-slate-100">
+                      <QRCodeSVG
+                        id="khqr-svg"
+                        value={effectiveQr}
+                        size={190}
+                        level="H"
+                        includeMargin={false}
+                        className="w-[180px] h-[180px] sm:w-[195px] sm:h-[195px] select-none mx-auto block"
+                      />
+                      {/* Center Bakong $ Emblem */}
+                      <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+                        <div className="w-9 h-9 rounded-full bg-white shadow-md flex items-center justify-center p-0.5">
+                          <div className="w-full h-full rounded-full bg-[#E11D48] flex items-center justify-center border-2 border-white">
+                            <span className="text-white font-black text-xs leading-none">$</span>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Scan Instruction Text */}
+                    <div className="space-y-0.5 font-khmer">
+                      <p className="text-[12px] font-bold text-slate-100 leading-tight">
+                        {language === 'km'
+                          ? 'ស្កេនជាមួយកម្មវិធី ABA Mobile ឬកម្មវិធីធនាគារ KHQR'
+                          : 'Scan with ABA Mobile or any KHQR Banking App'}
+                      </p>
+                      <p className="text-[10.5px] text-slate-400">
+                        {language === 'km'
+                          ? 'គាំទ្រ ABA, ACLEDA, Wing, Canadia, Sathapana និង Bakong'
+                          : 'Supports ABA, ACLEDA, Wing, Canadia, Sathapana & Bakong'}
+                      </p>
+                    </div>
+
+                    {/* Real-Time Telemetry & Countdown Timer */}
+                    <div className="p-2 rounded-xl bg-slate-900/90 border border-slate-800 flex items-center justify-between text-[11px] font-mono">
+                      <div className="flex items-center gap-2">
+                        <span className="relative flex h-2 w-2">
+                          <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                          <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
+                        </span>
+                        <span className="text-slate-300 font-khmer text-[11px]">
+                          {pollTelemetry.status === 'APPROVED' ? (
+                            <span className="text-emerald-400 font-bold">✓ ទទួលបានការទូទាត់!</span>
+                          ) : (
+                            language === 'km' ? 'រង់ចាំទូទាត់ (3s)...' : 'Checking payment 3s...'
+                          )}
+                        </span>
+                      </div>
+                      <div className="flex items-center gap-1.5 text-amber-300">
+                        <span>⌛</span>
+                        <span className="font-bold">
+                          {`${String(Math.floor(countdown / 60)).padStart(2, '0')}:${String(countdown % 60).padStart(2, '0')}`}
+                        </span>
+                      </div>
+                    </div>
+
+                    {/* Action Buttons for Mobile & Desktop */}
+                    <div className="space-y-2 pt-1 font-khmer">
+                      {/* 1-Tap Open ABA Mobile (Crucial for Mobile Users!) */}
+                      <button
+                        type="button"
+                        onClick={handleOpenBankApp}
+                        className="w-full py-2.5 px-4 rounded-xl bg-gradient-to-r from-[#003B70] via-[#004d8c] to-[#0055A5] hover:brightness-110 text-white text-xs font-bold shadow-lg shadow-sky-950/50 flex items-center justify-center gap-2 cursor-pointer active:scale-[0.98] transition-all"
+                      >
+                        <img src="https://checkout.payway.com.kh/images/aba-pay.svg" alt="ABA" className="h-4 w-auto" />
+                        <span>{language === 'km' ? 'បើកកម្មវិធី ABA Mobile' : 'Open ABA Mobile App'}</span>
+                      </button>
+
+                      <div className="flex items-center gap-2">
+                        {/* Save QR Image Button */}
+                        <button
+                          type="button"
+                          onClick={handleDownloadQr}
+                          className="flex-1 py-2 px-3 rounded-xl bg-slate-800/80 hover:bg-slate-700/80 border border-slate-700 text-slate-300 hover:text-white text-[11px] font-semibold flex items-center justify-center gap-1.5 cursor-pointer active:scale-[0.98] transition-all"
+                        >
+                          <span>📥</span>
+                          <span>{language === 'km' ? 'រក្សាទុក QR' : 'Save QR'}</span>
+                        </button>
+
+                        {/* Cancel / Close Button */}
+                        <button
+                          type="button"
+                          onClick={handleCancelPayment}
+                          className="flex-1 py-2 px-3 rounded-xl bg-slate-800/50 hover:bg-slate-800 border border-slate-700 text-slate-400 hover:text-rose-400 text-[11px] font-semibold flex items-center justify-center gap-1.5 cursor-pointer active:scale-[0.98] transition-all"
+                        >
+                          <span>✕</span>
+                          <span>{language === 'km' ? 'បោះបង់' : 'Cancel'}</span>
+                        </button>
+                      </div>
+                    </div>
+
+                    {/* Order Reference Footnote */}
+                    <div className="pt-1 border-t border-slate-800/60 flex items-center justify-between text-[10px] text-slate-400 font-mono">
+                      <span>Order #{orderId}</span>
+                      {paymentData?.tranId && <span className="truncate max-w-[140px]">Tran: {paymentData.tranId}</span>}
+                    </div>
+                  </>
+                );
+              })()}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ======================================================== */}
+      {/* PAYMENT SUCCESS RECEIPT MODAL                           */}
+      {/* ======================================================== */}
+      {paymentPaid && !awaitingBalance && (
+        <div className="fixed inset-0 z-[9999] flex items-center justify-center p-3 sm:p-4 bg-black/85 backdrop-blur-md overflow-y-auto animate-fadeIn select-none">
+          <div className="bg-[#0b1220] border-2 border-emerald-500/60 rounded-3xl max-w-sm sm:max-w-md w-full p-5 sm:p-6 shadow-2xl shadow-emerald-500/20 text-center space-y-4 animate-scaleUp relative overflow-hidden my-auto">
+            {/* Glow */}
+            <div className="absolute -top-20 left-1/2 -translate-x-1/2 w-48 h-48 bg-emerald-500/15 rounded-full blur-3xl pointer-events-none" />
+
+            <div className="w-16 h-16 rounded-full bg-gradient-to-tr from-emerald-500 to-teal-400 text-slate-950 text-3xl flex items-center justify-center mx-auto shadow-lg">
+              ✅
+            </div>
+
+            <div className="space-y-1 relative">
+              <span className="px-3 py-0.5 rounded-full bg-emerald-500/20 text-emerald-400 border border-emerald-500/40 text-[11px] font-black uppercase tracking-widest inline-flex items-center gap-1">
+                Payment Confirmed
+              </span>
+              <h2 className="text-xl sm:text-2xl font-black text-white pt-1">
+                {language === 'km' ? 'ការទូទាត់ទទួលបានជោគជ័យ!' : 'Payment Received Successfully!'}
+              </h2>
+              <p className="text-xs text-slate-300 font-khmer">
+                {language === 'km' ? 'ពេជ្រនឹងត្រូវបានបញ្ចូលទៅក្នុងគណនីរបស់អ្នកភ្លាមៗ' : 'Your diamonds will be delivered to your account shortly.'}
+              </p>
+            </div>
+
+            {/* Receipt Summary */}
+            <div className="p-3.5 rounded-2xl bg-[#111728] border border-slate-800 text-left space-y-2 text-xs font-khmer shadow-inner">
+              <div className="flex justify-between items-center pb-1.5 border-b border-slate-800">
+                <span className="text-slate-400">Order:</span>
+                <span className="font-mono font-black text-emerald-400">#{orderId}</span>
+              </div>
+              <div className="flex justify-between items-center">
+                <span className="text-slate-400">Player ID:</span>
+                <span className="font-mono text-white">{formData.playerID} ({formData.serverID || 'Global'})</span>
+              </div>
+              <div className="flex justify-between items-center">
+                <span className="text-slate-400">Package:</span>
+                <span className="text-white font-bold">{selectedProduct?.name}</span>
+              </div>
+              <div className="flex justify-between items-center pt-1.5 border-t border-slate-800">
+                <span className="text-slate-400">Amount Paid:</span>
+                <span className="font-mono font-black text-emerald-400">
+                  {currency === 'KHR'
+                    ? `${(paymentData?.amount ? Math.round(paymentData.amount) : Math.round(selectedProduct?.price * 4100)).toLocaleString()} ៛`
+                    : `$${(paymentData?.amount ? paymentData.amount : selectedProduct?.price || 0.95).toFixed(2)}`}
+                </span>
+              </div>
+              {paymentData?.tranId && (
+                <div className="flex justify-between items-center pt-1 border-t border-slate-800/60 text-[10px]">
+                  <span className="text-slate-400">ABA Tran ID:</span>
+                  <span className="font-mono text-slate-300">{paymentData.tranId}</span>
+                </div>
+              )}
+            </div>
+
+            {/* Done & History CTA */}
+            <div className="space-y-2 pt-1 font-khmer">
+              <Link
+                to="/order-history"
+                className="w-full py-2.5 px-4 rounded-xl bg-gradient-to-r from-emerald-500 to-teal-500 hover:brightness-110 text-black font-black text-xs uppercase tracking-wider flex items-center justify-center gap-1.5 shadow-lg active:scale-[0.98] transition-all"
+              >
+                <span>💳</span>
+                <span>{language === 'km' ? 'ពិនិត្យប្រវត្តិបញ្ជាទិញ' : 'View Order History'}</span>
+              </Link>
+              <button
+                type="button"
+                onClick={() => {
+                  setPaymentPaid(false);
+                  setPaymentData(null);
+                  setOrderId(null);
+                }}
+                className="w-full py-2 px-3 rounded-xl bg-slate-800/80 hover:bg-slate-700 text-slate-300 text-xs font-semibold active:scale-[0.98] transition-all cursor-pointer"
+              >
+                {language === 'km' ? 'ទិញបន្ថែមទៀត (Top-Up More)' : 'Top-Up More'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ======================================================== */}
+      {/* ABA PAYWAY V2 3-SECOND POLLING AUDIT BAR (DESKTOP / CORNER) */}
+      {/* ======================================================== */}
+      {paymentData && !paymentPaid && (
+        <div className="fixed bottom-4 right-4 z-[9990] max-w-xs w-[calc(100%-2rem)] sm:w-80 bg-slate-900/90 backdrop-blur-md border border-cyan-500/40 rounded-2xl p-2.5 shadow-2xl text-[11px] text-white space-y-1.5 animate-fadeIn hidden sm:block">
           <div className="flex items-center justify-between gap-2">
             <div className="flex items-center gap-2">
-              <span className="relative flex h-2.5 w-2.5">
+              <span className="relative flex h-2 w-2">
                 <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-cyan-400 opacity-75"></span>
-                <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-cyan-500"></span>
+                <span className="relative inline-flex rounded-full h-2 w-2 bg-cyan-500"></span>
               </span>
-              <span className="font-bold text-cyan-300 text-xs tracking-wide">ABA PayWay V2 Poller</span>
+              <span className="font-bold text-cyan-300 text-xs tracking-wide">ABA PayWay Poller</span>
             </div>
-            <span className="text-[11px] font-mono bg-cyan-950/80 text-cyan-300 px-2 py-0.5 rounded border border-cyan-800">
-              Check #{pollTelemetry.count || 0} • 3.0s
+            <span className="text-[10px] font-mono bg-cyan-950/80 text-cyan-300 px-1.5 py-0.5 rounded border border-cyan-800">
+              #{pollTelemetry.count || 0} • 3.0s
             </span>
           </div>
 
-          <div className="flex items-center justify-between text-[11px] text-slate-300">
+          <div className="flex items-center justify-between text-[10.5px] text-slate-300">
             <span>Bank Status: <strong className={pollTelemetry.status === 'APPROVED' ? 'text-emerald-400' : 'text-amber-400'}>{pollTelemetry.status || 'PENDING'}</strong></span>
-            <span className="text-slate-400 font-mono text-[10px]">{pollTelemetry.lastTime || 'Starting...'}</span>
+            <span className="text-slate-400 font-mono text-[9.5px]">{pollTelemetry.lastTime || 'Starting...'}</span>
           </div>
 
           {paymentData?.tranId && (
-            <div className="pt-2 border-t border-slate-800 flex items-center justify-between text-[10px]">
-              <span className="font-mono text-slate-400 truncate max-w-[130px]">Tran: {paymentData.tranId}</span>
+            <div className="pt-1.5 border-t border-slate-800 flex items-center justify-between text-[9.5px]">
+              <span className="font-mono text-slate-400 truncate max-w-[120px]">Tran: {paymentData.tranId}</span>
               <a 
                 href={`https://mlbb-backend-api.onrender.com/api/payway/polling-log/${paymentData.tranId}`} 
                 target="_blank" 
@@ -2460,7 +2829,7 @@ const TopUp = () => {
                 className="text-cyan-400 hover:text-cyan-300 underline font-semibold flex items-center gap-1"
                 title="View live ABA gateway server audit logs"
               >
-                Audit Server Logs ↗
+                Logs ↗
               </a>
             </div>
           )}
