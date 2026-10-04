@@ -63,7 +63,7 @@ export const getStoredPlayerAccount = () => {
 
 const OrderHistory = () => {
   const { language } = useLanguage();
-  const { playerAccount, loginPlayer, logout } = useAuth();
+  const { playerAccount, loginPlayer } = useAuth();
 
   // Lookup form state
   const [formData, setFormData] = useState({
@@ -245,13 +245,6 @@ const OrderHistory = () => {
     }
   };
 
-  // Switch / Logout Player
-  const handleSwitchPlayer = () => {
-    logout();
-    setOrders([]);
-    setVerifiedName('');
-    setFormData({ playerId: '', serverId: '' });
-  };
 
   // Copy Order ID
   const handleCopyOrderId = (id) => {
@@ -455,47 +448,7 @@ const OrderHistory = () => {
           /* ======================================================== */
           <div className="space-y-4 sm:space-y-6">
 
-            {/* Clean Action Controls Bar */}
-            <div className="flex items-center justify-between gap-3 pt-1 pb-2">
-              <Link
-                to="/topup"
-                className="inline-flex items-center gap-2 px-3 py-1.5 rounded-xl bg-slate-900/80 border border-slate-800 text-xs font-bold text-slate-300 hover:text-cyan-400 hover:border-cyan-500/40 transition-all cursor-pointer"
-              >
-                <span>←</span>
-                <span>{language === 'km' ? 'ទៅកាន់ទំព័រទិញ' : 'Back to Top-Up'}</span>
-              </Link>
 
-              <div className="flex items-center gap-2">
-                <button
-                  type="button"
-                  onClick={() => loadOrdersForPlayer(playerAccount.playerId, playerAccount.serverId)}
-                  disabled={loadingOrders}
-                  className="px-3 py-1.5 rounded-xl bg-slate-900 border border-slate-800 hover:border-cyan-400/60 text-xs font-bold text-slate-300 hover:text-white flex items-center gap-1.5 transition-all cursor-pointer disabled:opacity-50"
-                  title="Refresh Orders"
-                >
-                  <span className={loadingOrders ? 'animate-spin' : ''}>🔄</span>
-                  <span>{language === 'km' ? 'ផ្ទុកឡើងវិញ' : 'Refresh'}</span>
-                </button>
-
-                <button
-                  type="button"
-                  onClick={handleSwitchPlayer}
-                  className="px-3 py-1.5 rounded-xl bg-rose-950/40 border border-rose-500/40 hover:bg-rose-900/50 text-xs font-bold text-rose-300 flex items-center gap-1.5 transition-all cursor-pointer"
-                  title="Sign Out / Logout"
-                >
-                  <span>🚪</span>
-                  <span>{language === 'km' ? 'ចាកចេញ' : 'Sign Out'}</span>
-                </button>
-
-                <Link
-                  to="/topup"
-                  className="px-3.5 py-1.5 rounded-xl bg-gradient-to-r from-[#00E599] to-[#00F5B8] text-slate-950 font-black text-xs flex items-center gap-1.5 shadow-sm hover:scale-105 active:scale-95 transition-all"
-                >
-                  <span>💎</span>
-                  <span>{language === 'km' ? 'ទិញបន្ថែម' : 'New Top-Up'}</span>
-                </Link>
-              </div>
-            </div>
 
             {/* Filter Tabs & Count */}
             <div className="flex items-center justify-between gap-2 flex-wrap">
