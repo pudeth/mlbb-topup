@@ -147,52 +147,7 @@ const OrderStatus = () => {
         </div>
       </div>
 
-      {/* Order Details Grid */}
-      <div className="card border border-slate-800 space-y-4 mb-6">
-        <h3 className="text-sm font-black text-white uppercase tracking-wider border-b border-slate-800 pb-3">
-          Order Summary
-        </h3>
 
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 text-xs">
-          <div className="p-3 rounded-xl bg-slate-900 border border-slate-800">
-            <span className="text-slate-400 block mb-1">Player ID</span>
-            <strong className="text-white font-mono text-sm">{order?.playerID}</strong>
-          </div>
-
-          <div className="p-3 rounded-xl bg-slate-900 border border-slate-800">
-            <span className="text-slate-400 block mb-1">Zone / Server</span>
-            <strong className="text-white font-mono text-sm">{order?.serverID}</strong>
-          </div>
-
-          <div className="p-3 rounded-xl bg-slate-900 border border-slate-800">
-            <span className="text-slate-400 block mb-1">Diamond Package</span>
-            <strong className="text-amber-400 text-sm">{order?.diamondAmount} 💎</strong>
-          </div>
-
-          <div className="p-3 rounded-xl bg-slate-900 border border-slate-800">
-            <span className="text-slate-400 block mb-1">Total Paid</span>
-            <strong className="text-cyan-400 text-sm font-mono">${order?.amount?.toFixed(2)}</strong>
-          </div>
-        </div>
-      </div>
-
-      {/* Action Buttons */}
-      <div className="flex flex-col sm:flex-row gap-3 mb-6 print:hidden">
-        <button
-          type="button"
-          onClick={() => window.print()}
-          className="flex-1 py-3 px-4 rounded-xl bg-gradient-to-r from-sky-500 to-[#0055a5] hover:from-sky-400 hover:to-[#004485] text-white font-bold text-sm shadow-lg flex items-center justify-center gap-2 transition-all active:scale-[0.98]"
-        >
-          <span>🖨️</span>
-          <span>Download / Print Receipt (PDF)</span>
-        </button>
-        <Link to="/topup" className="btn btn-gold flex-1 text-center py-3 font-bold shadow-glow-gold">
-          ⚡ Make Another Top-Up
-        </Link>
-        <Link to="/support" className="btn btn-secondary flex-1 text-center py-3 font-semibold">
-          🎧 Contact Support
-        </Link>
-      </div>
 
       {/* Dedicated Printable Official Invoice (Visible only when Printing / Saving as PDF) */}
       <div id="official-printable-invoice" className="hidden print:block text-slate-900 bg-white p-8 max-w-2xl mx-auto font-sans">
