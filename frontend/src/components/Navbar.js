@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { useLanguage } from '../context/LanguageContext';
@@ -10,6 +10,63 @@ const Navbar = () => {
   const location = useLocation();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [langDropdownOpen, setLangDropdownOpen] = useState(false);
+  const [userMenuOpen, setUserMenuOpen] = useState(false);
+
+  const [playerAccount, setPlayerAccount] = useState(() => {
+    try {
+      const saved = localStorage.getItem('player_account');
+      if (saved) return JSON.parse(saved);
+      const uStr = localStorage.getItem('user');
+      if (uStr) {
+        const u = JSON.parse(uStr);
+        let pId = u.playerId || u.playerID;
+        let sId = u.serverId || u.serverID;
+        if (!pId && u.email) {
+          const m = u.email.match(/^(\d+)_([^_@]+)@/);
+          if (m) { pId = m[1]; sId = m[2]; }
+        }
+        if (pId) return { playerId: pId, serverId: sId || 'Global', realName: u.name || `Player_${pId}` };
+      }
+    } catch {}
+    return null;
+  });
+
+  useEffect(() => {
+    const handleSync = () => {
+      try {
+        const saved = localStorage.getItem('player_account');
+        if (saved) {
+          setPlayerAccount(JSON.parse(saved));
+          return;
+        }
+        const uStr = localStorage.getItem('user');
+        if (uStr) {
+          const u = JSON.parse(uStr);
+          let pId = u.playerId || u.playerID;
+          let sId = u.serverId || u.serverID;
+          if (!pId && u.email) {
+            const m = u.email.match(/^(\d+)_([^_@]+)@/);
+            if (m) { pId = m[1]; sId = m[2]; }
+          }
+          if (pId) {
+            setPlayerAccount({ playerId: pId, serverId: sId || 'Global', realName: u.name || `Player_${pId}` });
+            return;
+          }
+        }
+        setPlayerAccount(null);
+      } catch {
+        setPlayerAccount(null);
+      }
+    };
+    window.addEventListener('player-login-success', handleSync);
+    window.addEventListener('storage', handleSync);
+    return () => {
+      window.removeEventListener('player-login-success', handleSync);
+      window.removeEventListener('storage', handleSync);
+    };
+  }, []);
+
+  const isUserLoggedIn = isAuthenticated() || !!playerAccount;
 
   const isActive = (path) => location.pathname === path;
 
@@ -205,17 +262,86 @@ const Navbar = () => {
                 <span className="font-black text-[11px] tracking-tight">ABA PayWay</span>
               </div>
 
-            {/* Logout Button */}
-            {isAuthenticated() && (
+            {/* User Login or Profile / Sign Out Control (Visible on Mobile & Desktop) */}
+            {!isUserLoggedIn ? (
               <button
-                onClick={logout}
-                className="hidden lg:inline-flex items-center gap-1.5 h-10 px-3.5 bg-slate-900/80 hover:bg-rose-950/40 border border-slate-800 hover:border-rose-500/40 text-slate-400 hover:text-rose-300 text-xs font-semibold rounded-xl transition-all whitespace-nowrap active:scale-95"
+                type="button"
+                onClick={() => window.dispatchEvent(new CustomEvent('open-player-login'))}
+                className="h-10 px-3 sm:px-3.5 rounded-xl bg-gradient-to-r from-blue-600 via-sky-600 to-cyan-500 hover:from-blue-500 hover:to-cyan-400 text-white text-xs font-bold flex items-center gap-1.5 shadow-[0_2px_10px_rgba(14,165,233,0.3)] transition-all active:scale-95 cursor-pointer whitespace-nowrap"
+                title="Login with Player ID & Server ID"
               >
-                <svg className="w-3.5 h-3.5 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+                <svg className="w-4 h-4 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
                 </svg>
-                <span>Logout</span>
+                <span className="font-bold">{language === 'km' ? 'ចូលគណនី' : 'Login'}</span>
               </button>
+            ) : (
+              <div className="relative">
+                <button
+                  type="button"
+                  onClick={() => setUserMenuOpen(!userMenuOpen)}
+                  className="h-10 px-2.5 sm:px-3 rounded-xl bg-slate-900/90 hover:bg-slate-800 border border-sky-500/40 text-white text-xs font-bold flex items-center gap-1.5 sm:gap-2 shadow-sm transition-all active:scale-95 cursor-pointer"
+                  title="Player Account Menu"
+                >
+                  <div className="w-6 h-6 rounded-lg bg-gradient-to-tr from-sky-500 to-indigo-600 flex items-center justify-center text-white text-xs font-black shrink-0">
+                    {((playerAccount?.realName || user?.name || playerAccount?.playerId || 'P')).charAt(0).toUpperCase()}
+                  </div>
+                  <span className="hidden sm:inline max-w-[85px] truncate text-[11px] font-bold">
+                    {playerAccount?.realName || user?.name || playerAccount?.playerId}
+                  </span>
+                  <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse shrink-0" />
+                </button>
+
+                {userMenuOpen && (
+                  <>
+                    <div className="fixed inset-0 z-40" onClick={() => setUserMenuOpen(false)} />
+                    <div className="absolute right-0 mt-2 w-52 rounded-2xl bg-[#090f20]/95 backdrop-blur-2xl border border-sky-500/40 shadow-2xl p-2 z-50 animate-scaleUp font-khmer">
+                      <div className="px-3 py-2 border-b border-slate-800/80 mb-1">
+                        <div className="text-xs font-black text-white truncate">
+                          {playerAccount?.realName || user?.name || 'Player'}
+                        </div>
+                        <div className="text-[10px] text-sky-300 font-mono mt-0.5">
+                          ID: {playerAccount?.playerId || user?.email?.split('@')[0]}
+                        </div>
+                        {playerAccount?.serverId && (
+                          <div className="text-[9.5px] text-emerald-400 font-semibold mt-0.5">
+                            Zone: {playerAccount.serverId} • Active
+                          </div>
+                        )}
+                      </div>
+
+                      <Link
+                        to="/order-history"
+                        onClick={() => setUserMenuOpen(false)}
+                        className="w-full flex items-center gap-2 px-3 py-2 rounded-xl text-xs font-bold text-slate-300 hover:text-white hover:bg-slate-800/70 transition-colors"
+                      >
+                        <span>📋</span>
+                        <span>{language === 'km' ? 'ប្រវត្តិបញ្ជាទិញ' : 'Order History'}</span>
+                      </Link>
+
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setUserMenuOpen(false);
+                          localStorage.removeItem('player_account');
+                          localStorage.removeItem('token');
+                          localStorage.removeItem('user');
+                          setPlayerAccount(null);
+                          logout();
+                          window.dispatchEvent(new Event('storage'));
+                          window.dispatchEvent(new CustomEvent('player-login-success', { detail: null }));
+                        }}
+                        className="w-full flex items-center gap-2 px-3 py-2 rounded-xl text-xs font-bold text-rose-400 hover:text-rose-200 hover:bg-rose-950/40 transition-colors cursor-pointer mt-1"
+                      >
+                        <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                          <path strokeLinecap="round" strokeLinejoin="round" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+                        </svg>
+                        <span>{language === 'km' ? 'ចាកចេញ (Sign Out)' : 'Sign Out'}</span>
+                      </button>
+                    </div>
+                  </>
+                )}
+              </div>
             )}
 
             {/* Mobile Hamburger / Close Button - Hidden to match clean mockup where bottom dock handles navigation */}

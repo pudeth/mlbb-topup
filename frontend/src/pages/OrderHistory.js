@@ -521,10 +521,10 @@ const OrderHistory = () => {
                   type="button"
                   onClick={handleSwitchPlayer}
                   className="px-3 py-1.5 rounded-xl bg-rose-950/40 border border-rose-500/40 hover:bg-rose-900/50 text-xs font-bold text-rose-300 flex items-center gap-1.5 transition-all cursor-pointer"
-                  title="Switch Player Account"
+                  title="Sign Out / Logout"
                 >
                   <span>🚪</span>
-                  <span>{language === 'km' ? 'ប្តូរ Player' : 'Switch'}</span>
+                  <span>{language === 'km' ? 'ចាកចេញ' : 'Sign Out'}</span>
                 </button>
 
                 <Link
