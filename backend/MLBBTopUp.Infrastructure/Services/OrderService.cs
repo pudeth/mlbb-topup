@@ -164,6 +164,27 @@ public class OrderService : IOrderService
         return orders.Select(o => MapToResponse(o));
     }
 
+    public async Task<IEnumerable<OrderResponse>> GetOrdersByPlayerAsync(string playerId, string? serverId)
+    {
+        var p = (playerId ?? string.Empty).Trim();
+        var s = (serverId ?? string.Empty).Trim();
+
+        var query = _context.Orders
+            .Include(o => o.Product)
+            .Where(o => o.PlayerID == p);
+
+        if (!string.IsNullOrEmpty(s))
+        {
+            query = query.Where(o => o.ServerID == s);
+        }
+
+        var orders = await query
+            .OrderByDescending(o => o.CreatedAt)
+            .ToListAsync();
+
+        return orders.Select(o => MapToResponse(o));
+    }
+
     public async Task<IEnumerable<OrderResponse>> GetAllOrdersAsync()
     {
         var orders = await _context.Orders

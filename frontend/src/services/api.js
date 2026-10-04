@@ -55,6 +55,7 @@ api.interceptors.response.use(
 export const authAPI = {
   register: (data) => api.post('/auth/register', data),
   login: (data) => api.post('/auth/login', data),
+  playerLogin: (data) => api.post('/auth/player-login', data),
   getCurrentUser: () => api.get('/auth/me'),
 };
 
@@ -69,6 +70,7 @@ export const ordersAPI = {
   create: (data) => api.post('/orders', data),
   getById: (id) => api.get(`/orders/${id}`),
   getMyOrders: () => api.get('/orders/my-orders'),
+  getByPlayer: (playerId, serverId) => api.get('/orders/by-player', { params: { playerId, serverId } }),
   getStatus: (id) => api.get(`/orders/${id}/status`),
   getQuickStatus: (id) => api.get(`/orders/${id}/quick-status`),
   checkPayment: (id, manualConfirm = false) =>

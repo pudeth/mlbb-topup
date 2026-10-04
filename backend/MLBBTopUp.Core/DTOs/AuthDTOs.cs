@@ -30,3 +30,10 @@ public class UserResponse
     public string Role { get; set; } = string.Empty;
     public DateTime CreatedAt { get; set; }
 }
+
+public class PlayerAuthRequest
+{
+    public string PlayerId { get; set; } = string.Empty;
+    public string ServerId { get; set; } = string.Empty;
+    public string? RealName { get; set; }
+}

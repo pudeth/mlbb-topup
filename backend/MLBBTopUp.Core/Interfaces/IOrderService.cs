@@ -7,6 +7,7 @@ public interface IOrderService
     Task<OrderResponse?> CreateOrderAsync(int? userId, CreateOrderRequest request);
     Task<OrderResponse?> GetOrderByIdAsync(int orderId);
     Task<IEnumerable<OrderResponse>> GetUserOrdersAsync(int userId);
+    Task<IEnumerable<OrderResponse>> GetOrdersByPlayerAsync(string playerId, string? serverId);
     Task<IEnumerable<OrderResponse>> GetAllOrdersAsync();
     Task<IEnumerable<OrderResponse>> GetPendingOrdersAsync();
     Task<OrderStatusResponse?> GetOrderStatusAsync(int orderId);

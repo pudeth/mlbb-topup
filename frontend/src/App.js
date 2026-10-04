@@ -13,8 +13,6 @@ import Register from './pages/Register';
 import Support from './pages/Support';
 import PrivacyPolicy from './pages/PrivacyPolicy';
 import AdminDashboard from './pages/AdminDashboard';
-import Wallet from './pages/Wallet';
-import PrivateRoute from './components/PrivateRoute';
 import AdminRoute from './components/AdminRoute';
 import Layout from './components/Layout';
 
@@ -36,12 +34,8 @@ function App() {
               <Route path="/terms-and-conditions" element={<PrivacyPolicy />} />
               <Route path="/privacy-policy" element={<PrivacyPolicy />} />
               
-              {/* Protected routes */}
-              <Route path="/order-history" element={
-                <PrivateRoute>
-                  <OrderHistory />
-                </PrivateRoute>
-              } />
+              {/* Player Order History */}
+              <Route path="/order-history" element={<OrderHistory />} />
               
               {/* Admin routes */}
               <Route path="/admin" element={

@@ -123,6 +123,22 @@ public class OrdersController : BaseController
     }
 
     /// <summary>
+    /// Get order history for a player by PlayerID and ServerID
+    /// </summary>
+    [HttpGet("by-player")]
+    [AllowAnonymous]
+    public async Task<IActionResult> GetOrdersByPlayer([FromQuery] string playerId, [FromQuery] string? serverId = null)
+    {
+        if (string.IsNullOrWhiteSpace(playerId))
+        {
+            return BadRequest(new { message = "Player ID is required" });
+        }
+
+        var orders = await _orderService.GetOrdersByPlayerAsync(playerId, serverId);
+        return Ok(orders);
+    }
+
+    /// <summary>
     /// Get order status (guest orders accessible by order ID)
     /// </summary>
     [HttpGet("{id}/status")]

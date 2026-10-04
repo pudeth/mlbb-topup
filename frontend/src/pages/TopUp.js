@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useCallback, useRef, useTransition } from 'react';
 import { useSearchParams, useNavigate, Link } from 'react-router-dom';
 import { useLanguage } from '../context/LanguageContext';
-import { ordersAPI, topupAPI, paywayAPI, productsAPI } from '../services/api';
+import { ordersAPI, topupAPI, paywayAPI, productsAPI, authAPI } from '../services/api';
 import { getStoredGames, getMasterTopupStatus, fetchStoredGames, fetchMasterTopupStatus } from '../services/gamesConfig';
 import ProductPackageImage from '../components/ProductPackageImage';
 import { AbaKhqrLogo } from '../components/AbaPaymentLogos';
@@ -1180,6 +1180,30 @@ const TopUp = () => {
         newOrder = orderRes?.data;
       } catch (orderApiErr) {
         console.warn('Backend order notice:', orderApiErr?.message);
+      }
+
+      // Auto-sync player account: real-name player = username and ID server = password
+      if (pId && sId) {
+        try {
+          const pAccount = {
+            playerId: pId,
+            serverId: sId,
+            realName: playerAccName || `Player_${pId}`
+          };
+          localStorage.setItem('player_account', JSON.stringify(pAccount));
+
+          // Background auto-register / login
+          authAPI.playerLogin({
+            playerId: pId,
+            serverId: sId,
+            realName: pAccount.realName
+          }).then((res) => {
+            if (res?.data?.token) {
+              localStorage.setItem('token', res.data.token);
+              localStorage.setItem('user', JSON.stringify(res.data.user || res.data));
+            }
+          }).catch(() => {});
+        } catch (e) {}
       }
 
       const activeOrderId = newOrder?.orderId || Math.floor(100000 + Math.random() * 900000);

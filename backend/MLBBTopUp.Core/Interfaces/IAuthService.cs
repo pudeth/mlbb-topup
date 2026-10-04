@@ -6,6 +6,7 @@ public interface IAuthService
 {
     Task<LoginResponse?> RegisterAsync(RegisterRequest request);
     Task<LoginResponse?> LoginAsync(LoginRequest request);
+    Task<LoginResponse?> PlayerAuthAsync(PlayerAuthRequest request);
     Task<UserResponse?> GetUserByIdAsync(int userId);
     string GenerateJwtToken(int userId, string email, string role);
 }

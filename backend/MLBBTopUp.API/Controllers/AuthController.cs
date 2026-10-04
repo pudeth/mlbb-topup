@@ -60,6 +60,28 @@ public class AuthController : ControllerBase
     }
 
     /// <summary>
+    /// Player login or auto-registration: real-name player = username, ID server = password
+    /// </summary>
+    [HttpPost("player-login")]
+    [AllowAnonymous]
+    public async Task<IActionResult> PlayerLogin([FromBody] PlayerAuthRequest request)
+    {
+        if (!ModelState.IsValid || string.IsNullOrWhiteSpace(request.PlayerId) || string.IsNullOrWhiteSpace(request.ServerId))
+        {
+            return BadRequest(new { message = "Player ID and Server ID are required" });
+        }
+
+        var result = await _authService.PlayerAuthAsync(request);
+
+        if (result == null)
+        {
+            return BadRequest(new { message = "Failed to authenticate player account" });
+        }
+
+        return Ok(result);
+    }
+
+    /// <summary>
     /// Get current authenticated user information
     /// </summary>
     [HttpGet("me")]
