@@ -205,19 +205,6 @@ const Navbar = () => {
                 <span className="font-black text-[11px] tracking-tight">ABA PayWay</span>
               </div>
 
-              {/* User Profile Avatar with Glowing Cyan/Blue Ring */}
-              <Link
-                to={isAuthenticated() ? (isAdmin() ? '/admin' : '/order-history') : '/login'}
-                className="relative w-10 h-10 rounded-full p-0.5 bg-gradient-to-tr from-cyan-400 via-blue-500 to-indigo-600 shrink-0 shadow-[0_0_12px_rgba(56,189,248,0.35)] hover:scale-105 transition-transform"
-                title={isAuthenticated() ? (user?.name || user?.email) : 'Login'}
-              >
-                <img
-                  src="https://images.unsplash.com/photo-1566492031773-4f4e44671857?w=100&auto=format&fit=crop&q=80"
-                  alt="User Profile"
-                  className="w-full h-full object-cover rounded-full"
-                />
-              </Link>
-
             {/* Logout Button */}
             {isAuthenticated() && (
               <button

@@ -42,14 +42,12 @@ const MobileBottomNav = () => {
   const isAllGames = pathname === '/' && hash === '#games-section';
   const isPromo = pathname === '/' && hash === '#promotions';
   const isHistory = pathname === '/order-history';
-  const isAccount = pathname === '/login' || pathname === '/register' || pathname === '/admin';
 
-  // 5 Tab labels matching screenshot
+  // 4 Tab labels matching screenshot
   const labelHome = language === 'km' ? 'ទំព័រដើម' : 'Home';
   const labelGames = language === 'km' ? 'ហ្គេម' : 'Games';
   const labelPromo = language === 'km' ? 'ប្រូម៉ូសិន' : 'Promos';
   const labelHistory = language === 'km' ? 'ប្រវត្តិ' : 'History';
-  const labelAccount = language === 'km' ? 'គណនី' : 'Account';
 
   return (
     <>
@@ -138,24 +136,6 @@ const MobileBottomNav = () => {
               {labelHistory}
             </span>
             {isHistory && (
-              <span className="absolute -bottom-1 w-1.5 h-1.5 rounded-full bg-cyan-400 shadow-[0_0_8px_rgba(34,211,238,1)] animate-pulse" />
-            )}
-          </Link>
-
-          {/* 5. Account */}
-          <Link
-            to="/order-history"
-            className="flex-1 flex flex-col items-center justify-center py-1 transition-all duration-200 group relative cursor-pointer"
-          >
-            <div className={`transition-all duration-300 ${isAccount ? 'scale-115 text-cyan-400 drop-shadow-[0_0_10px_rgba(34,211,238,0.85)]' : 'text-slate-400 group-hover:text-slate-200'}`}>
-              <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                <path strokeLinecap="round" strokeLinejoin="round" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
-              </svg>
-            </div>
-            <span className={`text-[10px] sm:text-[11px] mt-0.5 leading-tight tracking-tight transition-colors ${isAccount ? 'text-cyan-400 font-black' : 'text-slate-400 font-semibold group-hover:text-slate-200'}`}>
-              {labelAccount}
-            </span>
-            {isAccount && (
               <span className="absolute -bottom-1 w-1.5 h-1.5 rounded-full bg-cyan-400 shadow-[0_0_8px_rgba(34,211,238,1)] animate-pulse" />
             )}
           </Link>
