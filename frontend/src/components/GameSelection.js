@@ -2,7 +2,6 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useLanguage } from '../context/LanguageContext';
 import { getStoredGames, getMasterTopupStatus, fetchStoredGames, fetchMasterTopupStatus } from '../services/gamesConfig';
-import { CambodiaFlagFrame } from './CambodiaFlagBadge';
 
 // 12 Popular Games Preset matching desktop/laptop screenshot exactly
 const POPULAR_GAMES_PRESET = [
@@ -516,7 +515,7 @@ const GameSelection = () => {
                   : 'bg-gradient-to-b from-[#0f172a]/95 via-[#0b1222]/95 to-[#070b16]/98 border border-slate-800/90 hover:border-sky-500/60 shadow-[0_4px_20px_rgba(0,0,0,0.6)] hover:shadow-[0_12px_35px_rgba(14,165,233,0.22)] hover:-translate-y-1 cursor-pointer'
               }`}
             >
-              {/* Game Artwork Cover (3 cards per row) */}
+              {/* Game Artwork Cover (Clean, bright & completely unobstructed) */}
               <div className="relative aspect-[4/3] w-full rounded-lg sm:rounded-2xl overflow-hidden bg-slate-950 mb-1.5 sm:mb-2.5 border border-slate-800/70 shadow-sm">
                 <img
                   src={game.image}
@@ -525,29 +524,15 @@ const GameSelection = () => {
                     e.target.onerror = null;
                     e.target.src = game.fallbackImage || game.localFallbackImage || '/mlbb-logo.png';
                   }}
-                  className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                  className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500 filter brightness-[1.03] contrast-[1.02]"
                 />
-                {/* Subtle gradient vignette */}
-                <div className="absolute inset-0 bg-gradient-to-t from-slate-950/80 via-transparent to-black/20 pointer-events-none" />
-
-                {/* 3D Server Badge Frame (Preserved, scaled smoothly for 3-column mobile layout) */}
-                {!isInactive && hasServerBadge && (
-                  <div className="absolute top-1 left-1 sm:top-1.5 sm:left-1.5 z-20 pointer-events-none drop-shadow-[0_4px_12px_rgba(0,0,0,0.9)] scale-[0.6] xs:scale-[0.7] sm:scale-[0.84] md:scale-[0.92] origin-top-left">
-                    <CambodiaFlagFrame
-                      title={game.flagTitle || (isMLBB ? "សេវើខ្មែរ 5v5" : game.badge)}
-                      subtitle={game.flagSubtitle || (isMLBB ? "5V5" : "")}
-                      sub={game.flagServerText || (game.badge?.includes('PH') ? 'OFFICIAL' : game.badge?.includes('ID') ? 'FAST' : 'SERVER')}
-                      flagType={game.flagType || (game.badge?.includes('PH') ? 'ph' : game.badge?.includes('ID') ? 'id' : isMLBB ? 'kh' : 'kh')}
-                      flagImage={game.flagImage || null}
-                      badgeStyle={game.flagFrameStyle || "gold_cyber"}
-                    />
-                  </div>
-                )}
 
                 {/* Top Right Status Badge */}
-                <div className="absolute top-1 right-1 sm:top-1.5 sm:right-1.5 z-20">
-                  {renderBadge(game.badge, game.badgeType)}
-                </div>
+                {game.badge && (
+                  <div className="absolute top-1 right-1 sm:top-1.5 sm:right-1.5 z-20">
+                    {renderBadge(game.badge, game.badgeType)}
+                  </div>
+                )}
               </div>
 
               {/* Game Details: Title, Server Name & Genre */}
@@ -556,11 +541,12 @@ const GameSelection = () => {
                   {game.name}
                 </h3>
 
-                {/* Server Name Indicator (Always kept and clearly readable) */}
+                {/* Server Name Indicator (Clean, prominent & unblocking) */}
                 {hasServerBadge && (
-                  <div className="mt-0.5 sm:mt-1 flex items-center gap-1">
-                    <span className="inline-flex items-center gap-1 px-1 sm:px-1.5 py-0.5 rounded bg-sky-950/80 border border-sky-400/30 text-sky-200 text-[8px] xs:text-[9px] sm:text-[10.5px] font-bold truncate">
+                  <div className="mt-1 flex items-center">
+                    <span className="inline-flex items-center gap-1.5 px-1.5 py-0.5 rounded-md bg-[#08152e] border border-cyan-400/40 text-cyan-200 text-[8.5px] xs:text-[9.5px] sm:text-[11px] font-bold shadow-xs truncate">
                       <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse shrink-0" />
+                      <span className="text-[10px] sm:text-xs shrink-0">{game.flagType === 'ph' ? '🇵🇭' : game.flagType === 'id' ? '🇮🇩' : '🇰🇭'}</span>
                       <span className="truncate">{game.flagTitle || (isMLBB ? "សេវើខ្មែរ 5v5" : "Official Server")}</span>
                     </span>
                   </div>
