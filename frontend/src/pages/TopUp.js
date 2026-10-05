@@ -1043,24 +1043,10 @@ const TopUp = () => {
 
   // Real-Time Poller Telemetry for ABA PayWay QA Verification
   const pollCountRef = useRef(0);
-  const [pollTelemetry, setPollTelemetry] = useState({
-    count: 0,
-    status: 'PENDING',
-    lastTime: null,
-    tranId: null
-  });
 
-  // Reset telemetry upon new transaction
+  // Reset poll count upon new transaction
   useEffect(() => {
-    const tid = paymentData?.tranId || paymentData?.tran_id || paymentData?.formData?.tran_id;
     pollCountRef.current = 0;
-    setPollTelemetry({
-      count: 0,
-      status: 'PENDING',
-      lastTime: null,
-      tranId: tid || null
-    });
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [paymentData?.tranId]);
 
   const checkPaymentStatus = useCallback(async () => {
@@ -1094,13 +1080,6 @@ const TopUp = () => {
         try {
           const r = await paywayAPI.checkStatus(curTranId, curOrderId);
           const payStatus = (r?.data?.status || '').toUpperCase() || 'PENDING';
-
-          setPollTelemetry({
-            count: currentCount,
-            status: payStatus,
-            lastTime: timeStr,
-            tranId: curTranId
-          });
 
           console.log(
             `%c[ABA PayWay V2 Poller] ⏱️ ${timeStr} | Check #${currentCount} (+3.0s) | Target: check-transaction-2 | TranID: ${curTranId} | Status: ${payStatus}`,
@@ -2497,45 +2476,6 @@ const TopUp = () => {
 
 
 
-      {/* ======================================================== */}
-      {/* ABA PAYWAY V2 3-SECOND POLLING AUDIT BAR (DESKTOP / CORNER) */}
-      {/* ======================================================== */}
-      {paymentData && !paymentPaid && (
-        <div className="fixed bottom-4 right-4 z-[9990] max-w-xs w-[calc(100%-2rem)] sm:w-80 bg-slate-900/90 backdrop-blur-md border border-cyan-500/40 rounded-2xl p-2.5 shadow-2xl text-[11px] text-white space-y-1.5 animate-fadeIn hidden sm:block">
-          <div className="flex items-center justify-between gap-2">
-            <div className="flex items-center gap-2">
-              <span className="relative flex h-2 w-2">
-                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-cyan-400 opacity-75"></span>
-                <span className="relative inline-flex rounded-full h-2 w-2 bg-cyan-500"></span>
-              </span>
-              <span className="font-bold text-cyan-300 text-xs tracking-wide">ABA PayWay Poller</span>
-            </div>
-            <span className="text-[10px] font-mono bg-cyan-950/80 text-cyan-300 px-1.5 py-0.5 rounded border border-cyan-800">
-              #{pollTelemetry.count || 0} • 3.0s
-            </span>
-          </div>
-
-          <div className="flex items-center justify-between text-[10.5px] text-slate-300">
-            <span>Bank Status: <strong className={pollTelemetry.status === 'APPROVED' ? 'text-emerald-400' : 'text-amber-400'}>{pollTelemetry.status || 'PENDING'}</strong></span>
-            <span className="text-slate-400 font-mono text-[9.5px]">{pollTelemetry.lastTime || 'Starting...'}</span>
-          </div>
-
-          {paymentData?.tranId && (
-            <div className="pt-1.5 border-t border-slate-800 flex items-center justify-between text-[9.5px]">
-              <span className="font-mono text-slate-400 truncate max-w-[120px]">Tran: {paymentData.tranId}</span>
-              <a 
-                href={`https://mlbb-backend-api.onrender.com/api/payway/polling-log/${paymentData.tranId}`} 
-                target="_blank" 
-                rel="noreferrer"
-                className="text-cyan-400 hover:text-cyan-300 underline font-semibold flex items-center gap-1"
-                title="View live ABA gateway server audit logs"
-              >
-                Logs ↗
-              </a>
-            </div>
-          )}
-        </div>
-      )}
 
       {/* ======================================================== */}
       {/* AWAITING BALANCE — PENDING RECEIPT (provider low balance) */}
