@@ -581,7 +581,7 @@ const GameSelection = () => {
                     }}
                     className="w-full h-7 sm:h-9 rounded-lg sm:rounded-xl bg-gradient-to-r from-blue-600 via-sky-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white font-black text-[10px] xs:text-xs sm:text-sm flex items-center justify-center gap-1 shadow-md shadow-sky-500/20 active:scale-95 transition-all cursor-pointer"
                   >
-                    <span>{language === 'km' ? 'ចូលលេង' : 'Play'}</span>
+                    <span>{language === 'km' ? 'បញ្ចូល' : 'Top Up'}</span>
                     <span className="text-xs sm:text-sm">›</span>
                   </button>
                 )}

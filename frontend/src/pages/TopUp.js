@@ -2336,8 +2336,8 @@ const TopUp = () => {
                   className="group/sg relative w-full h-10 sm:h-12 rounded-xl overflow-hidden bg-gradient-to-r from-blue-600 via-sky-500 to-cyan-400 text-white font-black text-xs sm:text-base flex items-center justify-center gap-2 shadow-[0_8px_24px_-6px_rgba(14,165,233,0.75)] hover:shadow-[0_10px_30px_-4px_rgba(34,211,238,0.85)] active:scale-[0.98] transition-all cursor-pointer tracking-wide"
                 >
                   <span className="absolute inset-0 -translate-x-full group-hover/sg:translate-x-full transition-transform duration-700 bg-gradient-to-r from-transparent via-white/25 to-transparent" />
-                  <svg className="relative w-3.5 h-3.5 sm:w-4 sm:h-4" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z" /></svg>
-                  <span className="relative">Start Game</span>
+                  <svg className="relative w-3.5 h-3.5 sm:w-4 sm:h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><rect x="2" y="5" width="20" height="14" rx="2"/><line x1="2" y1="10" x2="22" y2="10"/></svg>
+                  <span className="relative">{language === 'km' ? 'បង់ប្រាក់ឥឡូវនេះ' : 'Pay Now'}</span>
                 </button>
               </div>
 

@@ -422,7 +422,7 @@ export const SmartSearchBar = ({ isMobile = false, onFilterClick }) => {
                           }}
                           className="py-1 px-2.5 sm:px-3 rounded-xl bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white font-bold text-[10px] sm:text-xs flex items-center gap-1 shadow-md shadow-blue-600/30 group-hover:scale-105 active:scale-95 transition-all cursor-pointer"
                         >
-                          <span>{language === 'km' ? 'ចូលលេង' : 'Play'}</span>
+                          <span>{language === 'km' ? 'បញ្ចូល' : 'Top Up'}</span>
                           <span className="text-[11px] font-mono">›</span>
                         </button>
                       </div>
