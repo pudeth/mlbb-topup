@@ -531,21 +531,6 @@ const TopUp = () => {
     }
   };
 
-  const handleStartGameAction = () => {
-    if (!formData.playerID.trim()) {
-      setError(language === 'km' ? 'សូមបញ្ចូល Player ID (UID) របស់អ្នកជាមុនសិន' : 'Please enter your Player ID (UID) first');
-      const el = document.getElementById('player_id_input');
-      if (el) {
-        el.focus();
-        el.scrollIntoView({ behavior: 'smooth', block: 'center' });
-      }
-      return;
-    }
-    const el = checkoutSectionRef.current || document.getElementById('packages-section');
-    if (el) {
-      el.scrollIntoView({ behavior: 'smooth', block: 'start' });
-    }
-  };
 
   // Payment states
   const [orderId, setOrderId] = useState(null);
@@ -2308,8 +2293,8 @@ const TopUp = () => {
                 </div>
               )}
 
-              {/* Action Buttons: Verification & Pay Now */}
-              <div className="space-y-2.5 pt-1">
+              {/* Verification Button */}
+              <div className="pt-1">
                 <button
                   type="button"
                   onClick={handleVerifyAccount}
@@ -2330,41 +2315,6 @@ const TopUp = () => {
                     <svg className="w-4 h-4 text-sky-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><circle cx="11" cy="11" r="7" /><path d="M21 21l-4.3-4.3" /></svg>
                   )}
                   <span>{accountChecking ? (language === 'km' ? 'កំពុងផ្ទៀងផ្ទាត់...' : 'Checking...') : verifiedAccount?.valid ? (language === 'km' ? 'បានផ្ទៀងផ្ទាត់ជោគជ័យ' : 'Player Verified') : (language === 'km' ? 'ពិនិត្យឈ្មោះអ្នកលេង' : 'Check Player Name')}</span>
-                </button>
-
-                <button
-                  type="button"
-                  onClick={handleStartGameAction}
-                  className="group/pay relative w-full h-11 sm:h-12.5 rounded-xl sm:rounded-2xl overflow-hidden bg-gradient-to-r from-blue-600 via-sky-500 to-cyan-400 hover:from-blue-500 hover:via-sky-400 hover:to-cyan-300 text-white font-black text-xs sm:text-base flex items-center justify-center gap-2.5 shadow-[0_6px_25px_-4px_rgba(14,165,233,0.7),inset_0_1px_1px_rgba(255,255,255,0.6),inset_0_-2px_4px_rgba(2,30,80,0.4)] border border-sky-300/60 active:scale-[0.98] transition-all duration-300 cursor-pointer tracking-wide"
-                >
-                  {/* Shimmer light sweep reflection */}
-                  <span className="absolute inset-0 -translate-x-full group-hover/pay:translate-x-full transition-transform duration-1000 bg-gradient-to-r from-transparent via-white/30 to-transparent pointer-events-none" />
-
-                  {/* Left Icon: Glowing Card / Payment Icon */}
-                  <div className="relative w-5 h-5 rounded-lg bg-white/20 backdrop-blur-md flex items-center justify-center shadow-xs">
-                    <svg className="w-3.5 h-3.5 text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                      <rect x="2" y="5" width="20" height="14" rx="2" />
-                      <line x1="2" y1="10" x2="22" y2="10" />
-                    </svg>
-                  </div>
-
-                  {/* Center Text */}
-                  <span className="relative drop-shadow-[0_1px_2px_rgba(0,0,0,0.5)]">
-                    {language === 'km' ? 'បង់ប្រាក់ឥឡូវនេះ' : 'Pay Now'}
-                  </span>
-
-                  {/* Right Arrow Chevron with hover slide */}
-                  <svg 
-                    className="relative w-4 h-4 text-cyan-100 transition-transform duration-200 group-hover/pay:translate-x-1" 
-                    viewBox="0 0 24 24" 
-                    fill="none" 
-                    stroke="currentColor" 
-                    strokeWidth="3" 
-                    strokeLinecap="round" 
-                    strokeLinejoin="round"
-                  >
-                    <polyline points="9 18 15 12 9 6" />
-                  </svg>
                 </button>
               </div>
 
