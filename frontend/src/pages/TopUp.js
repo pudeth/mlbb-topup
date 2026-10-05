@@ -2308,36 +2308,63 @@ const TopUp = () => {
                 </div>
               )}
 
-              {/* Buttons */}
-              <div className="space-y-2 pt-0.5">
+              {/* Action Buttons: Verification & Pay Now */}
+              <div className="space-y-2.5 pt-1">
                 <button
                   type="button"
                   onClick={handleVerifyAccount}
                   disabled={accountChecking || !formData.playerID.trim()}
-                  className={`w-full h-9 sm:h-10 rounded-xl border font-bold text-[11px] sm:text-sm flex items-center justify-center gap-1.5 transition-all cursor-pointer active:scale-[0.98] disabled:cursor-not-allowed ${
+                  className={`w-full h-10 sm:h-11 rounded-xl border font-bold text-xs sm:text-sm flex items-center justify-center gap-2 transition-all cursor-pointer active:scale-[0.98] disabled:cursor-not-allowed ${
                     verifiedAccount?.valid
-                      ? 'border-emerald-400/50 bg-emerald-500/10 text-emerald-300'
-                      : 'border-sky-400/40 bg-sky-500/10 text-sky-200 hover:bg-sky-500/20 hover:border-sky-300/70 disabled:opacity-45'
+                      ? 'border-emerald-400/60 bg-emerald-950/60 text-emerald-300 shadow-[0_0_15px_rgba(52,211,153,0.2)]'
+                      : formData.playerID.trim()
+                      ? 'border-sky-400/60 bg-slate-900/90 text-sky-200 hover:bg-sky-950/60 hover:border-sky-300 hover:text-white shadow-sm'
+                      : 'border-slate-800 bg-slate-900/60 text-slate-400 hover:border-slate-700'
                   }`}
                 >
                   {accountChecking ? (
-                    <svg className="w-3.5 h-3.5 animate-spin" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="3" className="opacity-25" /><path d="M4 12a8 8 0 018-8" stroke="currentColor" strokeWidth="3" strokeLinecap="round" /></svg>
+                    <svg className="w-4 h-4 animate-spin text-sky-400" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="3" className="opacity-25" /><path d="M4 12a8 8 0 018-8" stroke="currentColor" strokeWidth="3" strokeLinecap="round" /></svg>
                   ) : verifiedAccount?.valid ? (
-                    <svg className="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><path d="M20 6L9 17l-5-5" /></svg>
+                    <span className="w-4 h-4 rounded-full bg-emerald-400 text-slate-950 flex items-center justify-center text-[10px] font-black">✓</span>
                   ) : (
-                    <svg className="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><circle cx="11" cy="11" r="7" /><path d="M21 21l-4.3-4.3" /></svg>
+                    <svg className="w-4 h-4 text-sky-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><circle cx="11" cy="11" r="7" /><path d="M21 21l-4.3-4.3" /></svg>
                   )}
-                  <span>{accountChecking ? 'Checking...' : verifiedAccount?.valid ? 'Verified' : 'Check Player Name'}</span>
+                  <span>{accountChecking ? (language === 'km' ? 'កំពុងផ្ទៀងផ្ទាត់...' : 'Checking...') : verifiedAccount?.valid ? (language === 'km' ? 'បានផ្ទៀងផ្ទាត់ជោគជ័យ' : 'Player Verified') : (language === 'km' ? 'ពិនិត្យឈ្មោះអ្នកលេង' : 'Check Player Name')}</span>
                 </button>
 
                 <button
                   type="button"
                   onClick={handleStartGameAction}
-                  className="group/sg relative w-full h-10 sm:h-12 rounded-xl overflow-hidden bg-gradient-to-r from-blue-600 via-sky-500 to-cyan-400 text-white font-black text-xs sm:text-base flex items-center justify-center gap-2 shadow-[0_8px_24px_-6px_rgba(14,165,233,0.75)] hover:shadow-[0_10px_30px_-4px_rgba(34,211,238,0.85)] active:scale-[0.98] transition-all cursor-pointer tracking-wide"
+                  className="group/pay relative w-full h-11 sm:h-12.5 rounded-xl sm:rounded-2xl overflow-hidden bg-gradient-to-r from-blue-600 via-sky-500 to-cyan-400 hover:from-blue-500 hover:via-sky-400 hover:to-cyan-300 text-white font-black text-xs sm:text-base flex items-center justify-center gap-2.5 shadow-[0_6px_25px_-4px_rgba(14,165,233,0.7),inset_0_1px_1px_rgba(255,255,255,0.6),inset_0_-2px_4px_rgba(2,30,80,0.4)] border border-sky-300/60 active:scale-[0.98] transition-all duration-300 cursor-pointer tracking-wide"
                 >
-                  <span className="absolute inset-0 -translate-x-full group-hover/sg:translate-x-full transition-transform duration-700 bg-gradient-to-r from-transparent via-white/25 to-transparent" />
-                  <svg className="relative w-3.5 h-3.5 sm:w-4 sm:h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><rect x="2" y="5" width="20" height="14" rx="2"/><line x1="2" y1="10" x2="22" y2="10"/></svg>
-                  <span className="relative">{language === 'km' ? 'បង់ប្រាក់ឥឡូវនេះ' : 'Pay Now'}</span>
+                  {/* Shimmer light sweep reflection */}
+                  <span className="absolute inset-0 -translate-x-full group-hover/pay:translate-x-full transition-transform duration-1000 bg-gradient-to-r from-transparent via-white/30 to-transparent pointer-events-none" />
+
+                  {/* Left Icon: Glowing Card / Payment Icon */}
+                  <div className="relative w-5 h-5 rounded-lg bg-white/20 backdrop-blur-md flex items-center justify-center shadow-xs">
+                    <svg className="w-3.5 h-3.5 text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                      <rect x="2" y="5" width="20" height="14" rx="2" />
+                      <line x1="2" y1="10" x2="22" y2="10" />
+                    </svg>
+                  </div>
+
+                  {/* Center Text */}
+                  <span className="relative drop-shadow-[0_1px_2px_rgba(0,0,0,0.5)]">
+                    {language === 'km' ? 'បង់ប្រាក់ឥឡូវនេះ' : 'Pay Now'}
+                  </span>
+
+                  {/* Right Arrow Chevron with hover slide */}
+                  <svg 
+                    className="relative w-4 h-4 text-cyan-100 transition-transform duration-200 group-hover/pay:translate-x-1" 
+                    viewBox="0 0 24 24" 
+                    fill="none" 
+                    stroke="currentColor" 
+                    strokeWidth="3" 
+                    strokeLinecap="round" 
+                    strokeLinejoin="round"
+                  >
+                    <polyline points="9 18 15 12 9 6" />
+                  </svg>
                 </button>
               </div>
 
