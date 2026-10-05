@@ -663,7 +663,7 @@ const TopUp = () => {
               document.body.appendChild(sheetDiv);
             }
 
-            const purchaseUrl = paymentData.purchaseUrl || "https://checkout-sandbox.payway.com.kh/api/payment-gateway/v1/payments/purchase";
+            const purchaseUrl = paymentData.purchaseUrl || "https://checkout.payway.com.kh/api/payment-gateway/v1/payments/purchase";
 
             // Prepare #aba_merchant_request form in DOM with target="aba_webservice"
             let form = document.getElementById('aba_merchant_request');
@@ -2623,7 +2623,7 @@ const TopUp = () => {
         id="aba_merchant_request"
         method="POST"
         target="aba_webservice"
-        action={paymentData?.purchaseUrl || "https://checkout-sandbox.payway.com.kh/api/payment-gateway/v1/payments/purchase"}
+        action={paymentData?.purchaseUrl || "https://checkout.payway.com.kh/api/payment-gateway/v1/payments/purchase"}
         className="hidden"
       >
         {paymentData?.formData &&

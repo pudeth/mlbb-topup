@@ -117,9 +117,9 @@ namespace MLBBTopUp.Infrastructure.Services
         {
             try
             {
-                var merchantId = _configuration["AbaPayWay:MerchantId"] ?? "ec478601";
+                var merchantId = _configuration["AbaPayWay:MerchantId"] ?? "tintopup";
                 var apiKey = _configuration["AbaPayWay:ApiKey"] ?? string.Empty;
-                var baseUrl = (_configuration["AbaPayWay:BaseUrl"] ?? "https://checkout-sandbox.payway.com.kh").TrimEnd('/');
+                var baseUrl = (_configuration["AbaPayWay:BaseUrl"] ?? "https://checkout.payway.com.kh").TrimEnd('/');
 
                 var reqTime = DateTime.UtcNow.ToString("yyyyMMddHHmmss");
                 var tranId = $"TRX{orderId}-{DateTime.UtcNow.Ticks.ToString().Substring(8, 5)}";
@@ -131,8 +131,8 @@ namespace MLBBTopUp.Infrastructure.Services
                 var qrLifetime = "6"; 
                 var qrImageTemplate = "template1";
                 
-                var firstName = "Pu";
-                var lastName = "Deth";
+                var firstName = "PHEAK";
+                var lastName = "DETH";
                 var email = "pudeth@example.com";
                 var phone = "012345678";
                 
@@ -236,7 +236,7 @@ namespace MLBBTopUp.Infrastructure.Services
         public async Task<PayWayCheckResult> CheckTransactionAsync(string tranId)
         {
             var merchantId = _configuration["AbaPayWay:MerchantId"] ?? string.Empty;
-            var baseUrl = _configuration["AbaPayWay:BaseUrl"] ?? "https://checkout-sandbox.payway.com.kh";
+            var baseUrl = _configuration["AbaPayWay:BaseUrl"] ?? "https://checkout.payway.com.kh";
 
             if (string.IsNullOrEmpty(merchantId) || tranId.StartsWith("TRX-MOCK"))
             {
@@ -366,9 +366,9 @@ namespace MLBBTopUp.Infrastructure.Services
 
         public async Task<string> GetTransactionDetailsAsync(string tranId)
         {
-            var merchantId = _configuration["AbaPayWay:MerchantId"] ?? "ec478601";
+            var merchantId = _configuration["AbaPayWay:MerchantId"] ?? "tintopup";
             var apiKey = _configuration["AbaPayWay:ApiKey"] ?? string.Empty;
-            var baseUrl = (_configuration["AbaPayWay:BaseUrl"] ?? "https://checkout-sandbox.payway.com.kh").TrimEnd('/');
+            var baseUrl = (_configuration["AbaPayWay:BaseUrl"] ?? "https://checkout.payway.com.kh").TrimEnd('/');
 
             if (string.IsNullOrEmpty(apiKey))
                 return "{}";
@@ -406,9 +406,9 @@ namespace MLBBTopUp.Infrastructure.Services
 
         public async Task<string> CloseTransactionAsync(string tranId)
         {
-            var merchantId = _configuration["AbaPayWay:MerchantId"] ?? "ec478601";
+            var merchantId = _configuration["AbaPayWay:MerchantId"] ?? "tintopup";
             var apiKey = _configuration["AbaPayWay:ApiKey"] ?? string.Empty;
-            var baseUrl = (_configuration["AbaPayWay:BaseUrl"] ?? "https://checkout-sandbox.payway.com.kh").TrimEnd('/');
+            var baseUrl = (_configuration["AbaPayWay:BaseUrl"] ?? "https://checkout.payway.com.kh").TrimEnd('/');
 
             if (string.IsNullOrEmpty(apiKey))
                 return "{}";
@@ -447,9 +447,9 @@ namespace MLBBTopUp.Infrastructure.Services
 
         public async Task<string> GetTransactionListAsync(string fromDate = "", string toDate = "", string fromAmount = "", string toAmount = "", string status = "", string page = "1", string pagination = "40")
         {
-            var merchantId = _configuration["AbaPayWay:MerchantId"] ?? "ec478601";
+            var merchantId = _configuration["AbaPayWay:MerchantId"] ?? "tintopup";
             var apiKey = _configuration["AbaPayWay:ApiKey"] ?? string.Empty;
-            var baseUrl = (_configuration["AbaPayWay:BaseUrl"] ?? "https://checkout-sandbox.payway.com.kh").TrimEnd('/');
+            var baseUrl = (_configuration["AbaPayWay:BaseUrl"] ?? "https://checkout.payway.com.kh").TrimEnd('/');
 
             if (string.IsNullOrEmpty(apiKey))
                 return "{}";
@@ -501,9 +501,9 @@ namespace MLBBTopUp.Infrastructure.Services
 
         public async Task<string> GetExchangeRateAsync()
         {
-            var merchantId = _configuration["AbaPayWay:MerchantId"] ?? "ec478601";
+            var merchantId = _configuration["AbaPayWay:MerchantId"] ?? "tintopup";
             var apiKey = _configuration["AbaPayWay:ApiKey"] ?? string.Empty;
-            var baseUrl = (_configuration["AbaPayWay:BaseUrl"] ?? "https://checkout-sandbox.payway.com.kh").TrimEnd('/');
+            var baseUrl = (_configuration["AbaPayWay:BaseUrl"] ?? "https://checkout.payway.com.kh").TrimEnd('/');
 
             if (string.IsNullOrEmpty(apiKey))
                 return "{}";
@@ -541,9 +541,9 @@ namespace MLBBTopUp.Infrastructure.Services
 
         public async Task<string> CreateTokenPaymentAsync(string token, int orderId, decimal amount, string ctid, string tokenFlag = "CITU_FLEX", string currency = "USD")
         {
-            var merchantId = _configuration["AbaPayWay:MerchantId"] ?? "ec478601";
+            var merchantId = _configuration["AbaPayWay:MerchantId"] ?? "tintopup";
             var apiKey = _configuration["AbaPayWay:ApiKey"] ?? string.Empty;
-            var baseUrl = (_configuration["AbaPayWay:BaseUrl"] ?? "https://checkout-sandbox.payway.com.kh").TrimEnd('/');
+            var baseUrl = (_configuration["AbaPayWay:BaseUrl"] ?? "https://checkout.payway.com.kh").TrimEnd('/');
 
             if (string.IsNullOrEmpty(apiKey))
                 return "{}";
@@ -615,9 +615,9 @@ namespace MLBBTopUp.Infrastructure.Services
         {
             try
             {
-                var merchantId = _configuration["AbaPayWay:MerchantId"] ?? "ec478601";
+                var merchantId = _configuration["AbaPayWay:MerchantId"] ?? "tintopup";
                 var apiKey = _configuration["AbaPayWay:ApiKey"] ?? string.Empty;
-                var baseUrl = (_configuration["AbaPayWay:BaseUrl"] ?? "https://checkout-sandbox.payway.com.kh").TrimEnd('/');
+                var baseUrl = (_configuration["AbaPayWay:BaseUrl"] ?? "https://checkout.payway.com.kh").TrimEnd('/');
 
                 var reqTime = DateTime.UtcNow.ToString("yyyyMMddHHmmss");
                 var tranId = $"TRX{orderId}-{DateTime.UtcNow.Ticks.ToString().Substring(8, 5)}";
@@ -629,8 +629,8 @@ namespace MLBBTopUp.Infrastructure.Services
                 var qrLifetime = "6"; 
                 var tokenFlag = "CITR_FIX";
                 
-                var firstName = "Pu";
-                var lastName = "Deth";
+                var firstName = "PHEAK";
+                var lastName = "DETH";
                 var email = "pudeth@example.com";
                 var phone = "012345678";
                 
@@ -707,9 +707,9 @@ namespace MLBBTopUp.Infrastructure.Services
 
         public async Task<string> LinkAccountAsync(string ctid, string currency = "USD")
         {
-            var merchantId = _configuration["AbaPayWay:MerchantId"] ?? "ec478601";
+            var merchantId = _configuration["AbaPayWay:MerchantId"] ?? "tintopup";
             var apiKey = _configuration["AbaPayWay:ApiKey"] ?? string.Empty;
-            var baseUrl = (_configuration["AbaPayWay:BaseUrl"] ?? "https://checkout-sandbox.payway.com.kh").TrimEnd('/');
+            var baseUrl = (_configuration["AbaPayWay:BaseUrl"] ?? "https://checkout.payway.com.kh").TrimEnd('/');
 
             if (string.IsNullOrEmpty(apiKey))
                 return "{}";
@@ -764,9 +764,9 @@ namespace MLBBTopUp.Infrastructure.Services
 
         public async Task<PayWayCreateResult> LinkCardAsync(string ctid, string currency = "USD")
         {
-            var merchantId = _configuration["AbaPayWay:MerchantId"] ?? "ec478601";
+            var merchantId = _configuration["AbaPayWay:MerchantId"] ?? "tintopup";
             var apiKey = _configuration["AbaPayWay:ApiKey"] ?? string.Empty;
-            var baseUrl = (_configuration["AbaPayWay:BaseUrl"] ?? "https://checkout-sandbox.payway.com.kh").TrimEnd('/');
+            var baseUrl = (_configuration["AbaPayWay:BaseUrl"] ?? "https://checkout.payway.com.kh").TrimEnd('/');
 
             var reqTime = DateTime.UtcNow.ToString("yyyyMMddHHmmss");
             var requestId = Guid.NewGuid().ToString("N").Substring(0, 20); // 20 chars
@@ -813,9 +813,9 @@ namespace MLBBTopUp.Infrastructure.Services
 
         public async Task<string> RenewTokenAsync(string ctid, string pwt)
         {
-            var merchantId = _configuration["AbaPayWay:MerchantId"] ?? "ec478601";
+            var merchantId = _configuration["AbaPayWay:MerchantId"] ?? "tintopup";
             var apiKey = _configuration["AbaPayWay:ApiKey"] ?? string.Empty;
-            var baseUrl = (_configuration["AbaPayWay:BaseUrl"] ?? "https://checkout-sandbox.payway.com.kh").TrimEnd('/');
+            var baseUrl = (_configuration["AbaPayWay:BaseUrl"] ?? "https://checkout.payway.com.kh").TrimEnd('/');
 
             if (string.IsNullOrEmpty(apiKey))
                 return "{}";
@@ -859,9 +859,9 @@ namespace MLBBTopUp.Infrastructure.Services
 
         public async Task<string> GetTokenDetailsAsync(string requestId)
         {
-            var merchantId = _configuration["AbaPayWay:MerchantId"] ?? "ec478601";
+            var merchantId = _configuration["AbaPayWay:MerchantId"] ?? "tintopup";
             var apiKey = _configuration["AbaPayWay:ApiKey"] ?? string.Empty;
-            var baseUrl = (_configuration["AbaPayWay:BaseUrl"] ?? "https://checkout-sandbox.payway.com.kh").TrimEnd('/');
+            var baseUrl = (_configuration["AbaPayWay:BaseUrl"] ?? "https://checkout.payway.com.kh").TrimEnd('/');
 
             if (string.IsNullOrEmpty(apiKey))
                 return "{}";
@@ -902,9 +902,9 @@ namespace MLBBTopUp.Infrastructure.Services
 
         public async Task<string> RemoveTokenAsync(string ctid, string pwt)
         {
-            var merchantId = _configuration["AbaPayWay:MerchantId"] ?? "ec478601";
+            var merchantId = _configuration["AbaPayWay:MerchantId"] ?? "tintopup";
             var apiKey = _configuration["AbaPayWay:ApiKey"] ?? string.Empty;
-            var baseUrl = (_configuration["AbaPayWay:BaseUrl"] ?? "https://checkout-sandbox.payway.com.kh").TrimEnd('/');
+            var baseUrl = (_configuration["AbaPayWay:BaseUrl"] ?? "https://checkout.payway.com.kh").TrimEnd('/');
 
             if (string.IsNullOrEmpty(apiKey))
                 return "{}";
@@ -946,9 +946,9 @@ namespace MLBBTopUp.Infrastructure.Services
 
         public async Task<string> GenerateQrAsync(int orderId, decimal amount, string currency = "USD")
         {
-            var merchantId = _configuration["AbaPayWay:MerchantId"] ?? "ec478601";
+            var merchantId = _configuration["AbaPayWay:MerchantId"] ?? "tintopup";
             var apiKey = _configuration["AbaPayWay:ApiKey"] ?? string.Empty;
-            var baseUrl = (_configuration["AbaPayWay:BaseUrl"] ?? "https://checkout-sandbox.payway.com.kh").TrimEnd('/');
+            var baseUrl = (_configuration["AbaPayWay:BaseUrl"] ?? "https://checkout.payway.com.kh").TrimEnd('/');
 
             if (string.IsNullOrEmpty(apiKey))
                 return "{}";
@@ -1024,10 +1024,10 @@ namespace MLBBTopUp.Infrastructure.Services
 
         public async Task<string> CreatePaymentLinkAsync(string title, decimal amount, string returnUrl, string merchantRefNo, string currency = "USD")
         {
-            var merchantId = _configuration["AbaPayWay:MerchantId"] ?? "ec478601";
+            var merchantId = _configuration["AbaPayWay:MerchantId"] ?? "tintopup";
             var apiKey = _configuration["AbaPayWay:ApiKey"] ?? string.Empty;
             var rsaPublicKeyBase64 = _configuration["AbaPayWay:RsaPublicKey"] ?? string.Empty; 
-            var baseUrl = (_configuration["AbaPayWay:BaseUrl"] ?? "https://checkout-sandbox.payway.com.kh").TrimEnd('/');
+            var baseUrl = (_configuration["AbaPayWay:BaseUrl"] ?? "https://checkout.payway.com.kh").TrimEnd('/');
 
             if (string.IsNullOrEmpty(apiKey) || string.IsNullOrEmpty(rsaPublicKeyBase64))
                 return $"{{\"error\": \"Missing ApiKey or RsaPublicKey\"}}";
@@ -1124,10 +1124,10 @@ namespace MLBBTopUp.Infrastructure.Services
 
         public async Task<string> GetPaymentLinkDetailsAsync(string linkId)
         {
-            var merchantId = _configuration["AbaPayWay:MerchantId"] ?? "ec478601";
+            var merchantId = _configuration["AbaPayWay:MerchantId"] ?? "tintopup";
             var apiKey = _configuration["AbaPayWay:ApiKey"] ?? string.Empty;
             var rsaPublicKeyBase64 = _configuration["AbaPayWay:RsaPublicKey"] ?? string.Empty; 
-            var baseUrl = (_configuration["AbaPayWay:BaseUrl"] ?? "https://checkout-sandbox.payway.com.kh").TrimEnd('/');
+            var baseUrl = (_configuration["AbaPayWay:BaseUrl"] ?? "https://checkout.payway.com.kh").TrimEnd('/');
 
             if (string.IsNullOrEmpty(apiKey) || string.IsNullOrEmpty(rsaPublicKeyBase64))
                 return $"{{\"error\": \"Missing ApiKey or RsaPublicKey\"}}";
@@ -1178,10 +1178,10 @@ namespace MLBBTopUp.Infrastructure.Services
 
         public async Task<string> CompletePreAuthAsync(string tranId, decimal completeAmount, object payout = null)
         {
-            var merchantId = _configuration["AbaPayWay:MerchantId"] ?? "ec478601";
+            var merchantId = _configuration["AbaPayWay:MerchantId"] ?? "tintopup";
             var apiKey = _configuration["AbaPayWay:ApiKey"] ?? string.Empty;
             var rsaPublicKeyBase64 = _configuration["AbaPayWay:RsaPublicKey"] ?? string.Empty; 
-            var baseUrl = (_configuration["AbaPayWay:BaseUrl"] ?? "https://checkout-sandbox.payway.com.kh").TrimEnd('/');
+            var baseUrl = (_configuration["AbaPayWay:BaseUrl"] ?? "https://checkout.payway.com.kh").TrimEnd('/');
 
             if (string.IsNullOrEmpty(apiKey) || string.IsNullOrEmpty(rsaPublicKeyBase64))
                 return $"{{\"error\": \"Missing ApiKey or RsaPublicKey\"}}";
@@ -1239,10 +1239,10 @@ namespace MLBBTopUp.Infrastructure.Services
 
         public async Task<string> CancelPreAuthAsync(string tranId)
         {
-            var merchantId = _configuration["AbaPayWay:MerchantId"] ?? "ec478601";
+            var merchantId = _configuration["AbaPayWay:MerchantId"] ?? "tintopup";
             var apiKey = _configuration["AbaPayWay:ApiKey"] ?? string.Empty;
             var rsaPublicKeyBase64 = _configuration["AbaPayWay:RsaPublicKey"] ?? string.Empty; 
-            var baseUrl = (_configuration["AbaPayWay:BaseUrl"] ?? "https://checkout-sandbox.payway.com.kh").TrimEnd('/');
+            var baseUrl = (_configuration["AbaPayWay:BaseUrl"] ?? "https://checkout.payway.com.kh").TrimEnd('/');
 
             if (string.IsNullOrEmpty(apiKey) || string.IsNullOrEmpty(rsaPublicKeyBase64))
                 return $"{{\"error\": \"Missing ApiKey or RsaPublicKey\"}}";
@@ -1293,10 +1293,10 @@ namespace MLBBTopUp.Infrastructure.Services
 
         public async Task<string> PayoutAsync(string tranId, decimal totalAmount, object beneficiaries, string currency = "USD")
         {
-            var merchantId = _configuration["AbaPayWay:MerchantId"] ?? "ec478601";
+            var merchantId = _configuration["AbaPayWay:MerchantId"] ?? "tintopup";
             var apiKey = _configuration["AbaPayWay:ApiKey"] ?? string.Empty;
             var rsaPublicKeyBase64 = _configuration["AbaPayWay:RsaPublicKey"] ?? string.Empty; 
-            var baseUrl = (_configuration["AbaPayWay:BaseUrl"] ?? "https://checkout-sandbox.payway.com.kh").TrimEnd('/');
+            var baseUrl = (_configuration["AbaPayWay:BaseUrl"] ?? "https://checkout.payway.com.kh").TrimEnd('/');
 
             if (string.IsNullOrEmpty(apiKey) || string.IsNullOrEmpty(rsaPublicKeyBase64))
                 return $"{{\"error\": \"Missing ApiKey or RsaPublicKey\"}}";
@@ -1358,10 +1358,10 @@ namespace MLBBTopUp.Infrastructure.Services
 
         public async Task<string> UpdateBeneficiaryStatusAsync(string payee, int status)
         {
-            var merchantId = _configuration["AbaPayWay:MerchantId"] ?? "ec478601";
+            var merchantId = _configuration["AbaPayWay:MerchantId"] ?? "tintopup";
             var apiKey = _configuration["AbaPayWay:ApiKey"] ?? string.Empty;
             var rsaPublicKeyBase64 = _configuration["AbaPayWay:RsaPublicKey"] ?? string.Empty; 
-            var baseUrl = (_configuration["AbaPayWay:BaseUrl"] ?? "https://checkout-sandbox.payway.com.kh").TrimEnd('/');
+            var baseUrl = (_configuration["AbaPayWay:BaseUrl"] ?? "https://checkout.payway.com.kh").TrimEnd('/');
 
             if (string.IsNullOrEmpty(apiKey) || string.IsNullOrEmpty(rsaPublicKeyBase64))
                 return $"{{\"error\": \"Missing ApiKey or RsaPublicKey\"}}";
@@ -1413,10 +1413,10 @@ namespace MLBBTopUp.Infrastructure.Services
 
         public async Task<string> AddBeneficiaryAsync(string payee)
         {
-            var merchantId = _configuration["AbaPayWay:MerchantId"] ?? "ec478601";
+            var merchantId = _configuration["AbaPayWay:MerchantId"] ?? "tintopup";
             var apiKey = _configuration["AbaPayWay:ApiKey"] ?? string.Empty;
             var rsaPublicKeyBase64 = _configuration["AbaPayWay:RsaPublicKey"] ?? string.Empty; 
-            var baseUrl = (_configuration["AbaPayWay:BaseUrl"] ?? "https://checkout-sandbox.payway.com.kh").TrimEnd('/');
+            var baseUrl = (_configuration["AbaPayWay:BaseUrl"] ?? "https://checkout.payway.com.kh").TrimEnd('/');
 
             if (string.IsNullOrEmpty(apiKey) || string.IsNullOrEmpty(rsaPublicKeyBase64))
                 return $"{{\"error\": \"Missing ApiKey or RsaPublicKey\"}}";
@@ -1467,9 +1467,9 @@ namespace MLBBTopUp.Infrastructure.Services
 
         public async Task<string> GetTransactionsByMerchantRefAsync(string merchantRef)
         {
-            var merchantId = _configuration["AbaPayWay:MerchantId"] ?? "ec478601";
+            var merchantId = _configuration["AbaPayWay:MerchantId"] ?? "tintopup";
             var apiKey = _configuration["AbaPayWay:ApiKey"] ?? string.Empty;
-            var baseUrl = (_configuration["AbaPayWay:BaseUrl"] ?? "https://checkout-sandbox.payway.com.kh").TrimEnd('/');
+            var baseUrl = (_configuration["AbaPayWay:BaseUrl"] ?? "https://checkout.payway.com.kh").TrimEnd('/');
 
             if (string.IsNullOrEmpty(apiKey))
                 return "{}";
