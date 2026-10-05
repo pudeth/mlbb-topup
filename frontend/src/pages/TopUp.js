@@ -713,17 +713,17 @@ const TopUp = () => {
             // Launch official ABA PayWay popup on Desktop or Drawer on Mobile!
             payway.checkout();
 
-            // Enforce gray opacity overlay (#7E8596 with 75% opacity) on desktop and mobile
+            // Enforce gray/navy opacity overlay (#081B37 at 60%) on desktop and mobile
             const enforceGrayOverlay = () => {
               const desktopEl = document.getElementById('aba-checkout');
               if (desktopEl) {
-                desktopEl.style.setProperty('background', 'rgba(126, 133, 150, 0.75)', 'important');
+                desktopEl.style.setProperty('background', '#081B3799', 'important');
                 desktopEl.style.setProperty('backdrop-filter', 'blur(2px)', 'important');
                 desktopEl.style.setProperty('-webkit-backdrop-filter', 'blur(2px)', 'important');
               }
               const mobileOverlay = document.querySelector('#aba_checkout_sheet .aba_checkout_overlay');
               if (mobileOverlay) {
-                mobileOverlay.style.setProperty('background', 'rgba(126, 133, 150, 0.75)', 'important');
+                mobileOverlay.style.setProperty('background', '#081B3799', 'important');
                 mobileOverlay.style.setProperty('backdrop-filter', 'blur(2px)', 'important');
                 mobileOverlay.style.setProperty('-webkit-backdrop-filter', 'blur(2px)', 'important');
               }

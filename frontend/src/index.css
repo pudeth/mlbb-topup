@@ -426,7 +426,7 @@ body.modal-open .ai-assistant-widget {
   pointer-events: none !important;
 }
 
-/* Gray Opacity Overlay Background (Matches user reference #7E8596) */
+/* Gray/Navy Opacity Overlay Background (#081B37 at 60%) */
 html body #aba_checkout_sheet .aba_checkout_overlay,
 body .aba_checkout_overlay,
 .aba_checkout_overlay {
@@ -436,7 +436,7 @@ body .aba_checkout_overlay,
   right: 0 !important;
   bottom: 0 !important;
   z-index: -1 !important;
-  background: rgba(126, 133, 150, 0.75) !important;
+  background: #081B3799 !important;
   backdrop-filter: blur(2px) !important;
   -webkit-backdrop-filter: blur(2px) !important;
   opacity: 1 !important;
@@ -542,7 +542,7 @@ body .aba_checkout_overlay,
   display: none !important;
 }
 
-/* Desktop Modal Styling with Gray Opacity Overlay (Matches user reference #7E8596) */
+/* Desktop Modal Styling with Gray/Navy Opacity Overlay (#081B37 at 60%) */
 html body #aba-checkout.aba-checkout-desktop,
 body .aba-checkout-desktop,
 div.aba-checkout-desktop,
@@ -553,7 +553,7 @@ div.aba-checkout-desktop,
   bottom: 0 !important;
   left: 0 !important;
   overflow: auto !important;
-  background: rgba(126, 133, 150, 0.75) !important;
+  background: #081B3799 !important;
   backdrop-filter: blur(2px) !important;
   -webkit-backdrop-filter: blur(2px) !important;
   z-index: 999999999 !important;
