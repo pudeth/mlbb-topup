@@ -151,12 +151,10 @@ namespace MLBBTopUp.Infrastructure.Services
                     var publicCallbackUrl = _configuration["AbaPayWay:CallbackUrl"] ?? "https://mlbb-backend-api.onrender.com/api/payway/callback";
                     var returnUrl = Convert.ToBase64String(Encoding.UTF8.GetBytes(publicCallbackUrl));
 
-                    // Frontend client URLs: public HTTPS on port 443 encoded in Base64 (Requirement ④)
+                    // Frontend client URLs: plain HTTPS URLs for browser redirection
                     var frontendBase = _configuration["FrontendUrl"] ?? "https://mlbb-topup-jet.vercel.app";
-                    var cancelUrlRaw = _configuration["AbaPayWay:CancelUrl"] ?? $"{frontendBase.TrimEnd('/')}/topup";
-                    var continueSuccessUrlRaw = _configuration["AbaPayWay:ContinueSuccessUrl"] ?? $"{frontendBase.TrimEnd('/')}/topup";
-                    var cancelUrl = Convert.ToBase64String(Encoding.UTF8.GetBytes(cancelUrlRaw));
-                    var continueSuccessUrl = Convert.ToBase64String(Encoding.UTF8.GetBytes(continueSuccessUrlRaw));
+                    var cancelUrl = _configuration["AbaPayWay:CancelUrl"] ?? $"{frontendBase.TrimEnd('/')}/topup";
+                    var continueSuccessUrl = _configuration["AbaPayWay:ContinueSuccessUrl"] ?? $"{frontendBase.TrimEnd('/')}/topup";
                     var returnDeeplink = "abamobilebank://ababank.com"; // Success URL for Mobile Continuation
                     var lifetime = "6"; // 6-minute lifetime (aligned with ABA PayWay guidelines)
 
@@ -652,9 +650,9 @@ namespace MLBBTopUp.Infrastructure.Services
                     var publicCallbackSub = _configuration["AbaPayWay:CallbackUrl"] ?? "https://mlbb-backend-api.onrender.com/api/payway/callback";
                     var returnUrl = Convert.ToBase64String(Encoding.UTF8.GetBytes(publicCallbackSub));
                     var frontendSubBase = _configuration["FrontendUrl"] ?? "https://mlbb-topup-jet.vercel.app";
-                    var continueSuccessUrl = Convert.ToBase64String(Encoding.UTF8.GetBytes($"{frontendSubBase.TrimEnd('/')}/topup"));
+                    var continueSuccessUrl = $"{frontendSubBase.TrimEnd('/')}/topup";
                     var returnDeeplink = "abamobilebank://ababank.com";
-                    var cancelUrl = Convert.ToBase64String(Encoding.UTF8.GetBytes($"{frontendSubBase.TrimEnd('/')}/topup"));
+                    var cancelUrl = $"{frontendSubBase.TrimEnd('/')}/topup";
 
                     var popupHash = GenerateSubscriptionHash(reqTime, merchantId, tranId, amtStr, itemsBase64,
                         "", firstName, lastName, email, phone, purchaseType, popupPaymentOption,
