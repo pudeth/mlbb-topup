@@ -115,6 +115,17 @@ public class OrderService : IOrderService
         // Sanitize and auto-extract Player ID and Server ID if entered together
         var (cleanPlayerId, cleanServerId) = SanitizePlayerAndServerId(request.PlayerID, request.ServerID);
 
+        // Auto-link to existing user account if order was placed as guest but player has registered
+        if (!userId.HasValue && !string.IsNullOrWhiteSpace(cleanPlayerId))
+        {
+            var existingUser = await _context.Users
+                .FirstOrDefaultAsync(u => u.Email.StartsWith(cleanPlayerId + "_") || u.Name.Contains(cleanPlayerId));
+            if (existingUser != null)
+            {
+                userId = existingUser.UserId;
+            }
+        }
+
         // Create order
         var order = new Order
         {
@@ -156,9 +167,22 @@ public class OrderService : IOrderService
 
     public async Task<IEnumerable<OrderResponse>> GetUserOrdersAsync(int userId)
     {
-        var orders = await _context.Orders
+        var user = await _context.Users.FindAsync(userId);
+        string? userPlayerId = null;
+        if (user != null && !string.IsNullOrEmpty(user.Email))
+        {
+            var match = System.Text.RegularExpressions.Regex.Match(user.Email, @"^(\d+)_");
+            if (match.Success)
+            {
+                userPlayerId = match.Groups[1].Value;
+            }
+        }
+
+        var query = _context.Orders
             .Include(o => o.Product)
-            .Where(o => o.UserId == userId)
+            .Where(o => o.UserId == userId || (userPlayerId != null && o.PlayerID == userPlayerId));
+
+        var orders = await query
             .OrderByDescending(o => o.CreatedAt)
             .ToListAsync();
 
@@ -174,9 +198,13 @@ public class OrderService : IOrderService
             .Include(o => o.Product)
             .Where(o => o.PlayerID == p);
 
-        if (!string.IsNullOrEmpty(s))
+        if (!string.IsNullOrEmpty(s) && !s.Equals("Global", StringComparison.OrdinalIgnoreCase))
         {
-            query = query.Where(o => o.ServerID == s);
+            var hasExact = await query.AnyAsync(o => o.ServerID == s);
+            if (hasExact)
+            {
+                query = query.Where(o => o.ServerID == s || string.IsNullOrEmpty(o.ServerID) || o.ServerID == "Global");
+            }
         }
 
         var orders = await query

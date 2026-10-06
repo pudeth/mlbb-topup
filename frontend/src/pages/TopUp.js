@@ -1,7 +1,9 @@
 import React, { useState, useEffect, useCallback, useRef, useTransition } from 'react';
 import { useSearchParams, useNavigate, Link } from 'react-router-dom';
 import { useLanguage } from '../context/LanguageContext';
+import { useAuth } from '../context/AuthContext';
 import { ordersAPI, topupAPI, paywayAPI, productsAPI, authAPI } from '../services/api';
+import { saveLocalOrder, updateLocalOrderStatus } from '../utils/orderStorage';
 import { getStoredGames, getMasterTopupStatus, fetchStoredGames, fetchMasterTopupStatus } from '../services/gamesConfig';
 import { CambodiaFlagFrame } from '../components/CambodiaFlagBadge';
 import ProductPackageImage from '../components/ProductPackageImage';
@@ -245,6 +247,7 @@ const MLBB_BANNERS = [
 
 const TopUp = () => {
   const { t, language } = useLanguage();
+  const { user, playerAccount } = useAuth();
   const [searchParams, setSearchParams] = useSearchParams();
   const navigate = useNavigate();
 
@@ -491,6 +494,27 @@ const TopUp = () => {
     productId: products[0]?.productId || 100,
     paymentMethod: 'abapayway',
   });
+
+  // Auto-fill and synchronize with active player account or user
+  useEffect(() => {
+    const activePlayerId = playerAccount?.playerId || user?.playerId || '';
+    const activeServerId = playerAccount?.serverId || user?.serverId || '';
+    if (activePlayerId) {
+      setFormData(prev => ({
+        ...prev,
+        playerID: prev.playerID || activePlayerId,
+        serverID: (prev.serverID === 'Global' && activeServerId) ? activeServerId : (prev.serverID || activeServerId || 'Global')
+      }));
+      if (playerAccount?.realName || user?.name) {
+        setVerifiedAccount(prev => prev || {
+          valid: true,
+          name: playerAccount?.realName || user?.name,
+          id: activePlayerId,
+          server: activeServerId
+        });
+      }
+    }
+  }, [playerAccount, user]);
 
   const handlePastePlayerId = async () => {
     try {
@@ -1124,6 +1148,10 @@ const TopUp = () => {
         const confirmResult = await ordersAPI.checkPayment(curOrderId, true);
         // Check if topup is awaiting balance (provider has no funds)
         const topupStatus = confirmResult?.data?.topupStatus || confirmResult?.data?.order?.TopupStatus || '';
+        updateLocalOrderStatus(curOrderId, {
+          paymentStatus: 'Paid',
+          topupStatus: topupStatus === 'AwaitingBalance' ? 'Processing' : 'Completed'
+        });
         if (topupStatus === 'AwaitingBalance') {
           // Show pending receipt — admin needs to approve
           setAwaitingBalance(true);
@@ -1296,6 +1324,25 @@ const TopUp = () => {
 
       const activeOrderId = newOrder?.orderId || Math.floor(100000 + Math.random() * 900000);
       setOrderId(activeOrderId);
+
+      // Persist order locally right away so purchase is NEVER lost
+      saveLocalOrder({
+        orderId: activeOrderId,
+        playerId: pId,
+        serverId: sId,
+        accountName: playerAccName,
+        customerName: customerName,
+        productName: pkgName,
+        diamondAmount: effectiveDiamonds,
+        amount: targetAmount,
+        price: rawPrice,
+        currency: currency,
+        paymentStatus: 'Pending',
+        topupStatus: 'Pending',
+        createdAt: new Date().toISOString(),
+        gameName: gameTitle,
+        paymentMethod: 'abapayway'
+      });
 
       let createdPayment = null;
 
@@ -2175,6 +2222,45 @@ const TopUp = () => {
                 </div>
               </div>
 
+              {/* Saved Account Quick Selector */}
+              {(playerAccount?.playerId || user?.playerId) && (
+                <div className="flex items-center gap-2 mb-2">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      const pId = playerAccount?.playerId || user?.playerId || '';
+                      const sId = playerAccount?.serverId || user?.serverId || '';
+                      setFormData(prev => ({
+                        ...prev,
+                        playerID: pId,
+                        serverID: sId || prev.serverID
+                      }));
+                      if (playerAccount?.realName || user?.name) {
+                        setVerifiedAccount({
+                          valid: true,
+                          name: playerAccount?.realName || user?.name,
+                          id: pId,
+                          server: sId
+                        });
+                      }
+                    }}
+                    className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold border transition-all cursor-pointer ${
+                      formData.playerID === (playerAccount?.playerId || user?.playerId)
+                        ? 'bg-sky-500/20 text-sky-300 border-sky-400/50 shadow-[0_0_12px_rgba(56,189,248,0.25)]'
+                        : 'bg-slate-900/90 text-slate-400 border-slate-700/80 hover:text-white hover:border-slate-500'
+                    }`}
+                  >
+                    <span>⚡</span>
+                    <span>{language === 'km' ? 'គណនីរក្សាទុក' : 'Saved'}:</span>
+                    <span className="text-white font-extrabold">{playerAccount?.realName || user?.name || 'Player'}</span>
+                    <span className="font-mono text-cyan-300">({playerAccount?.playerId || user?.playerId})</span>
+                    {formData.playerID === (playerAccount?.playerId || user?.playerId) && (
+                      <span className="text-emerald-400 font-black">✓ Active</span>
+                    )}
+                  </button>
+                </div>
+              )}
+
               {/* Inputs */}
               <div className={`grid gap-2 ${isMlbb || isHoyoverse ? 'grid-cols-1 sm:grid-cols-[1fr_0.75fr]' : 'grid-cols-1'}`}>
                 {/* Player ID with inline paste & clear */}
@@ -2554,8 +2640,16 @@ const TopUp = () => {
                 onClick={async () => {
                   try {
                     await ordersAPI.confirmPaid(orderId);
+                    updateLocalOrderStatus(orderId, {
+                      paymentStatus: 'Paid',
+                      topupStatus: 'Processing'
+                    });
                     setConfirmSent(true);
                   } catch {
+                    updateLocalOrderStatus(orderId, {
+                      paymentStatus: 'Paid',
+                      topupStatus: 'Processing'
+                    });
                     setConfirmSent(true); // still mark as sent on error
                   }
                 }}

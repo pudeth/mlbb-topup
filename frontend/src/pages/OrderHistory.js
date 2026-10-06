@@ -5,6 +5,8 @@ import { useAuth } from '../context/AuthContext';
 import { useLanguage } from '../context/LanguageContext';
 import LoadingSpinner from '../components/LoadingSpinner';
 import { formatDateTime } from '../utils/dateTime';
+import { getLocalOrders, saveLocalOrder, mergeOrders } from '../utils/orderStorage';
+import GamerAvatar from '../components/GamerAvatar';
 
 // Bulletproof resolver for active player account
 export const getStoredPlayerAccount = () => {
@@ -64,7 +66,7 @@ export const getStoredPlayerAccount = () => {
 
 const OrderHistory = () => {
   const { language } = useLanguage();
-  const { playerAccount, loginPlayer } = useAuth();
+  const { playerAccount, loginPlayer, logout, user } = useAuth();
 
   // Lookup form state
   const [formData, setFormData] = useState({
@@ -218,39 +220,69 @@ const OrderHistory = () => {
     }
   };
 
-  // Fetch orders for active player
+  // Fetch orders for active player - always loads local first, then merges remote
   const loadOrdersForPlayer = useCallback(async (pId, sId) => {
     if (!pId) return;
     setLoadingOrders(true);
     setOrdersError('');
 
+    // 1. Load local orders immediately so UI shows instantly (never empty)
+    const localOrders = getLocalOrders(pId);
+    if (localOrders.length > 0) {
+      setOrders(localOrders);
+    }
+
     try {
-      // 1. Try fetching by player endpoint
-      let playerOrders = [];
+      // 2. Fetch remote orders (server has authoritative data)
+      let remoteOrders = [];
       try {
         const res = await ordersAPI.getByPlayer(pId, sId);
         if (Array.isArray(res.data)) {
-          playerOrders = res.data;
+          remoteOrders = res.data;
         }
       } catch (e) {
-        // Fallback to my-orders if authenticated
+        // Fallback: my-orders endpoint if user is logged in
         try {
           const res = await ordersAPI.getMyOrders();
           if (Array.isArray(res.data)) {
-            playerOrders = res.data.filter(o => 
-              String(o.playerID || o.playerId) === String(pId)
+            remoteOrders = res.data.filter(o =>
+              String(o.playerID || o.playerId).trim() === String(pId).trim()
             );
           }
         } catch (err2) {}
       }
 
-      setOrders(playerOrders);
+      // 3. Merge remote + local so nothing is ever lost
+      const merged = mergeOrders(remoteOrders, localOrders);
+
+      // 4. Save any remote orders that weren't in local storage
+      remoteOrders.forEach(o => saveLocalOrder(o));
+
+      // 5. Update state with merged list
+      setOrders(merged.length > 0 ? merged : localOrders);
     } catch (err) {
-      setOrdersError(language === 'km' ? 'មិនអាចទាញយកទិន្នន័យបញ្ជាទិញបានទេ' : 'Failed to load order history');
+      // On complete failure, still show what we have locally
+      if (localOrders.length === 0) {
+        setOrdersError(language === 'km' ? 'មិនអាចទាញយកទិន្នន័យបញ្ជាទិញបានទេ' : 'Failed to load order history');
+      }
     } finally {
       setLoadingOrders(false);
     }
   }, [language]);
+
+  // Listen for real-time order updates (e.g. from TopUp.js after payment)
+  useEffect(() => {
+    const handleOrderUpdate = () => {
+      if (playerAccount?.playerId) {
+        const fresh = getLocalOrders(playerAccount.playerId);
+        if (fresh.length > 0) {
+          setOrders(prev => mergeOrders([], [...fresh, ...prev]));
+        }
+      }
+    };
+    window.addEventListener('orders-updated', handleOrderUpdate);
+    return () => window.removeEventListener('orders-updated', handleOrderUpdate);
+  }, [playerAccount]);
 
   // Load orders if playerAccount is already active
   useEffect(() => {
@@ -663,7 +695,65 @@ const OrderHistory = () => {
           /* ======================================================== */
           <div className="space-y-4 sm:space-y-6">
 
+            {/* Active Player Info Header Banner */}
+            <div className="p-4 sm:p-5 rounded-3xl bg-gradient-to-r from-[#0d1733] via-[#0a1126] to-[#070b18] border border-sky-500/30 shadow-[0_10px_30px_rgba(0,0,0,0.6),0_0_20px_rgba(14,165,233,0.1)] flex flex-col sm:flex-row sm:items-center justify-between gap-4 animate-fadeIn">
+              <div className="flex items-center gap-3.5 min-w-0">
+                <GamerAvatar
+                  avatarId={playerAccount?.avatar || user?.avatar}
+                  name={playerAccount?.realName || user?.name || playerAccount?.playerId}
+                  size="md"
+                  showGlow={true}
+                />
+                <div className="min-w-0">
+                  <div className="flex items-center gap-2">
+                    <h2 className="text-base sm:text-lg font-black text-white truncate">
+                      {playerAccount?.realName || user?.name || 'Player'}
+                    </h2>
+                    <span className="px-2 py-0.5 rounded-full text-[9px] font-bold bg-emerald-500/20 text-emerald-400 border border-emerald-500/40 flex items-center gap-1">
+                      <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
+                      Active
+                    </span>
+                  </div>
+                  <div className="flex items-center gap-2 mt-0.5 text-xs font-mono text-slate-300">
+                    <span className="text-cyan-300 font-bold">ID: {playerAccount?.playerId}</span>
+                    <span className="text-slate-600">•</span>
+                    <span className="text-slate-400">Zone: {playerAccount?.serverId || 'Global'}</span>
+                  </div>
+                </div>
+              </div>
 
+              {/* Action Buttons: Sync / Refresh, Top Up & Switch */}
+              <div className="flex items-center gap-2 flex-wrap">
+                <button
+                  type="button"
+                  onClick={() => loadOrdersForPlayer(playerAccount.playerId, playerAccount.serverId)}
+                  disabled={loadingOrders}
+                  className="px-3.5 py-2 rounded-xl bg-slate-900/90 hover:bg-slate-800 border border-slate-700/80 hover:border-sky-400/50 text-slate-200 hover:text-white text-xs font-bold flex items-center gap-1.5 transition-all cursor-pointer active:scale-95 shadow-sm disabled:opacity-50"
+                  title="Reload and sync orders"
+                >
+                  <span className={loadingOrders ? 'animate-spin' : ''}>🔄</span>
+                  <span>{language === 'km' ? 'ផ្ទុកទិន្នន័យឡើងវិញ' : 'Sync Orders'}</span>
+                </button>
+
+                <Link
+                  to="/topup"
+                  className="px-4 py-2 rounded-xl bg-gradient-to-r from-[#00E599] to-[#00F5B8] text-slate-950 font-black text-xs shadow-lg hover:scale-105 active:scale-95 transition-all flex items-center gap-1.5"
+                >
+                  <span>💎</span>
+                  <span>{language === 'km' ? 'ទិញពេជ្របន្ថែម' : 'Top Up Now'}</span>
+                </Link>
+
+                <button
+                  type="button"
+                  onClick={() => logout()}
+                  className="px-3 py-2 rounded-xl bg-rose-950/40 hover:bg-rose-900/60 border border-rose-500/30 text-rose-300 hover:text-rose-100 text-xs font-bold flex items-center gap-1 transition-all cursor-pointer"
+                  title="Switch to another player ID"
+                >
+                  <span>🚪</span>
+                  <span>{language === 'km' ? 'ប្តូរ ID' : 'Switch ID'}</span>
+                </button>
+              </div>
+            </div>
 
             {/* Filter Tabs & Count */}
             <div className="flex items-center justify-between gap-2 flex-wrap">
