@@ -10,9 +10,28 @@ public class FazerCardsTokenItem
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
 }
 
+public class CustomProviderItem
+{
+    public string Id { get; set; } = Guid.NewGuid().ToString("N")[..8];
+    public string Name { get; set; } = string.Empty;
+    public string Subtitle { get; set; } = string.Empty;
+    public string Icon { get; set; } = "🌐";
+    public string Badge { get; set; } = "CUSTOM";
+    public string BadgeColor { get; set; } = "emerald";
+    public string ApiUrl { get; set; } = string.Empty;
+    public string ApiKey { get; set; } = string.Empty;
+    public string? MerchantId { get; set; }
+    public decimal BalanceUSD { get; set; } = 0m;
+    public string? DocsUrl { get; set; }
+    public string? RefillUrl { get; set; }
+    public string Category { get; set; } = "Custom Gateway";
+    public bool IsDefault { get; set; } = false;
+    public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
+}
+
 public class SupplierSettingsModel
 {
-    public string ActiveProvider { get; set; } = "FazerCards"; // "FazerCards" or "KhmerTopUp"
+    public string ActiveProvider { get; set; } = "FazerCards"; // "FazerCards", "KhmerTopUp", or custom id/name
     public string Environment { get; set; } = "Production";    // "Production" or "Sandbox"
     public bool AutoDispatchOnPayment { get; set; } = true;
     public bool AutoFailoverEnabled { get; set; } = true;       // Automatic failover if primary provider balance is 0 or fails
@@ -20,6 +39,8 @@ public class SupplierSettingsModel
     public string ApiKey { get; set; } = "fc_5f79a0016d5d87bd1e83ea4f";
     public string FazerCardsApiKey { get; set; } = "fc_5f79a0016d5d87bd1e83ea4f";
     public List<FazerCardsTokenItem> FazerCardsTokens { get; set; } = new();
+    public List<CustomProviderItem> CustomProviders { get; set; } = new();
+    public object? Providers { get; set; }
     public string KhmerTopUpApiKey { get; set; } = "kt_6d38a3a5940e970221cc62fa306ae96044736364";
     public string FazerCardsApiUrl { get; set; } = "https://api.fzr.cards/api/v2";
     public string KhmerTopUpApiUrl { get; set; } = "https://khmer-topup.com/api/v1/orders";

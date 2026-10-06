@@ -9,7 +9,21 @@ import { CambodiaFlagSvg, CambodiaFlagFrame, CambodiaCornerBadge, DynamicFlagMed
 import CreativeFlagDropdown from '../components/CreativeFlagDropdown';
 import ProductPackageImage from '../components/ProductPackageImage';
 import { uploadToCloudinary, readFileAsDataUrl, getCloudinaryConfig, saveCloudinaryConfig } from '../services/cloudinary';
-import { getStoredProviderSettings, fetchStoredProviderSettings, switchActiveProvider, saveStoredProviderSettings, addStoredFazerCardsToken, switchStoredFazerCardsToken, deleteStoredFazerCardsToken } from '../services/supplierGateway';
+import {
+  DEFAULT_PROVIDERS,
+  PROVIDER_PRESETS,
+  getStoredProviderSettings,
+  fetchStoredProviderSettings,
+  switchActiveProvider,
+  saveStoredProviderSettings,
+  addStoredFazerCardsToken,
+  switchStoredFazerCardsToken,
+  deleteStoredFazerCardsToken,
+  addCustomProvider,
+  updateCustomProvider,
+  deleteCustomProvider,
+  updateProviderBalance
+} from '../services/supplierGateway';
 
 const AdminDashboard = () => {
 
@@ -338,6 +352,7 @@ const PRICING_GAMES = [
   const [providerTesting, setProviderTesting] = useState(false);
   const [switchingProvider, setSwitchingProvider] = useState(false);
   const [balanceEditModalOpen, setBalanceEditModalOpen] = useState(false);
+  const [editingProviderId, setEditingProviderId] = useState(null);
   const [editingProviderName, setEditingProviderName] = useState('FazerCards');
   const [newBalanceInput, setNewBalanceInput] = useState('');
   const [addFzrTokenModalOpen, setAddFzrTokenModalOpen] = useState(false);
@@ -347,6 +362,27 @@ const PRICING_GAMES = [
   const [showFzrTokenSecret, setShowFzrTokenSecret] = useState(false);
   const [testingFzrTokenId, setTestingFzrTokenId] = useState(null);
   const [savingFzrToken, setSavingFzrToken] = useState(false);
+
+  // Dynamic Multi-Provider Management States
+  const [addProviderModalOpen, setAddProviderModalOpen] = useState(false);
+  const [editProviderModalOpen, setEditProviderModalOpen] = useState(false);
+  const [editingProvider, setEditingProvider] = useState(null);
+  const [showProviderSecretKey, setShowProviderSecretKey] = useState(false);
+  const [providerFormData, setProviderFormData] = useState({
+    name: '',
+    subtitle: '',
+    icon: '🌐',
+    badge: 'API GATEWAY',
+    badgeColor: 'emerald',
+    apiUrl: '',
+    apiKey: '',
+    merchantId: '',
+    balanceUSD: '0.00',
+    docsUrl: '',
+    refillUrl: '',
+    category: 'Custom Gateway',
+    setAsActive: false,
+  });
 
   // Event Banner Management State with Cloud Database Sync
   const [eventBanners, setEventBanners] = useState(() => getAllStoredBanners());
@@ -576,8 +612,10 @@ const PRICING_GAMES = [
   const handleQuickSwitchProvider = async (targetProvider) => {
     setSwitchingProvider(true);
     try {
-      showToast('info', `⚡ Switching active supplier to ${targetProvider}...`);
-      const updated = await switchActiveProvider(targetProvider);
+      const targetName = typeof targetProvider === 'object' ? targetProvider.name : targetProvider;
+      const targetId = typeof targetProvider === 'object' ? targetProvider.id : targetProvider;
+      showToast('info', `⚡ Switching active supplier to ${targetName}...`);
+      const updated = await switchActiveProvider(targetId);
       setProviderSettings(updated);
 
       // Explicitly notify backend API as well
@@ -586,11 +624,10 @@ const PRICING_GAMES = [
       });
       await adminAPI.updateProviderSettings(updated).catch(() => {});
 
-      const targetBal = updated.activeProvider === 'KhmerTopUp'
-        ? (updated.khmerTopUpBalanceUSD ?? 1.25)
-        : (updated.fazerCardsBalanceUSD ?? 18.50);
+      const activeObj = (updated.providers || []).find(p => p.id === updated.activeProvider || p.name === updated.activeProvider);
+      const targetBal = activeObj?.balanceUSD ?? updated.balanceUSD ?? 0;
 
-      showToast('success', `✅ Active Gateway switched to ${updated.activeProvider}! Live Balance: $${Number(targetBal).toFixed(2)} USD (~${(Number(targetBal) * 4100).toLocaleString()} ៛)`);
+      showToast('success', `✅ Active Gateway switched to ${activeObj?.name || updated.activeProvider}! Live Balance: $${Number(targetBal).toFixed(2)} USD (~${Math.round(Number(targetBal) * 4100).toLocaleString()} ៛)`);
     } catch (err) {
       showToast('error', err.response?.data?.message || `Failed to switch to ${targetProvider}`);
     } finally {
@@ -598,9 +635,16 @@ const PRICING_GAMES = [
     }
   };
 
-  const handleOpenBalanceEdit = (providerName, currentBal) => {
-    setEditingProviderName(providerName);
-    setNewBalanceInput(String(currentBal));
+  const handleOpenBalanceEdit = (providerOrName, currentBal) => {
+    if (typeof providerOrName === 'object' && providerOrName !== null) {
+      setEditingProviderId(providerOrName.id);
+      setEditingProviderName(providerOrName.name);
+      setNewBalanceInput(String(providerOrName.balanceUSD ?? currentBal ?? 0));
+    } else {
+      setEditingProviderId(providerOrName);
+      setEditingProviderName(providerOrName);
+      setNewBalanceInput(String(currentBal ?? 0));
+    }
     setBalanceEditModalOpen(true);
   };
 
@@ -612,23 +656,114 @@ const PRICING_GAMES = [
       return;
     }
 
-    let updated = { ...providerSettings };
-    if (editingProviderName === 'FazerCards') {
-      updated.fazerCardsBalanceUSD = val;
-      if (updated.activeProvider === 'FazerCards') {
-        updated.balanceUSD = val;
-      }
-    } else {
-      updated.khmerTopUpBalanceUSD = val;
-      if (updated.activeProvider === 'KhmerTopUp') {
-        updated.balanceUSD = val;
-      }
+    try {
+      const targetId = editingProviderId || editingProviderName;
+      const updated = await updateProviderBalance(targetId, val);
+      setProviderSettings(updated);
+      showToast('success', `Updated ${editingProviderName} balance to $${val.toFixed(2)} USD (~${Math.round(val * 4100).toLocaleString()} ៛)!`);
+      setBalanceEditModalOpen(false);
+    } catch (err) {
+      showToast('error', err?.message || 'Failed to update balance');
+    }
+  };
+
+  // Dynamic Provider Add / Edit / Delete Handlers
+  const handleSelectPreset = (preset) => {
+    setProviderFormData(prev => ({
+      ...prev,
+      name: preset.name || '',
+      subtitle: preset.subtitle || '',
+      icon: preset.icon || '🌐',
+      badge: preset.badge || 'API',
+      badgeColor: preset.badgeColor || 'emerald',
+      apiUrl: preset.apiUrl || '',
+      docsUrl: preset.docsUrl || '',
+      refillUrl: preset.refillUrl || '',
+      category: preset.category || 'Preset Gateway',
+      apiKey: preset.apiKey || '',
+    }));
+    showToast('info', `Preset "${preset.name}" loaded! Fill in your API credentials to connect.`);
+  };
+
+  const handleOpenAddProviderModal = () => {
+    setEditingProvider(null);
+    setProviderFormData({
+      name: '',
+      subtitle: '',
+      icon: '🌐',
+      badge: 'API GATEWAY',
+      badgeColor: 'emerald',
+      apiUrl: '',
+      apiKey: '',
+      merchantId: '',
+      balanceUSD: '0.00',
+      docsUrl: '',
+      refillUrl: '',
+      category: 'Custom Gateway',
+      setAsActive: false,
+    });
+    setShowProviderSecretKey(false);
+    setAddProviderModalOpen(true);
+  };
+
+  const handleOpenEditProviderModal = (provider) => {
+    setEditingProvider(provider);
+    setProviderFormData({
+      name: provider.name || '',
+      subtitle: provider.subtitle || '',
+      icon: provider.icon || '🌐',
+      badge: provider.badge || 'API',
+      badgeColor: provider.badgeColor || 'emerald',
+      apiUrl: provider.apiUrl || '',
+      apiKey: provider.apiKey || '',
+      merchantId: provider.merchantId || '',
+      balanceUSD: String(provider.balanceUSD ?? 0),
+      docsUrl: provider.docsUrl || '',
+      refillUrl: provider.refillUrl || '',
+      category: provider.category || 'Custom Gateway',
+      setAsActive: providerSettings.activeProvider === provider.id || providerSettings.activeProvider === provider.name,
+    });
+    setShowProviderSecretKey(false);
+    setEditProviderModalOpen(true);
+  };
+
+  const handleSaveProviderFormSubmit = async (e) => {
+    e.preventDefault();
+    if (!providerFormData.name.trim()) {
+      showToast('error', 'Provider Name is required!');
+      return;
     }
 
-    setProviderSettings(updated);
-    await saveStoredProviderSettings(updated).catch(() => {});
-    showToast('success', `Updated ${editingProviderName} balance to $${val.toFixed(2)} USD (~${(val * 4100).toLocaleString()} ៛)!`);
-    setBalanceEditModalOpen(false);
+    try {
+      if (editingProvider) {
+        showToast('info', `Saving changes to ${providerFormData.name}...`);
+        const updated = await updateCustomProvider(editingProvider.id, providerFormData);
+        setProviderSettings(updated);
+        showToast('success', `✅ Provider "${providerFormData.name}" updated successfully!`);
+        setEditProviderModalOpen(false);
+      } else {
+        showToast('info', `Adding provider "${providerFormData.name}"...`);
+        const updated = await addCustomProvider(providerFormData);
+        setProviderSettings(updated);
+        showToast('success', `✅ Provider "${providerFormData.name}" added successfully!`);
+        setAddProviderModalOpen(false);
+      }
+    } catch (err) {
+      showToast('error', err?.message || 'Failed to save provider settings');
+    }
+  };
+
+  const handleDeleteProviderConfirm = async (providerId, providerName) => {
+    if (!window.confirm(`Are you sure you want to delete supplier "${providerName}"? This action cannot be undone.`)) {
+      return;
+    }
+    try {
+      const updated = await deleteCustomProvider(providerId);
+      setProviderSettings(updated);
+      showToast('success', `🗑️ Provider "${providerName}" removed.`);
+    } catch (err) {
+      showToast('error', err?.message || 'Cannot delete provider');
+    }
   };
 
   // Pricing Matrix Filter & Search
@@ -1596,10 +1731,21 @@ const PRICING_GAMES = [
         }
       }
 
+      // Sync active provider's API key into providers list
+      let provList = Array.isArray(providerSettings.providers) ? [...providerSettings.providers] : [...DEFAULT_PROVIDERS];
+      const activeIdx = provList.findIndex(p => p.id === providerSettings.activeProvider || p.name === providerSettings.activeProvider);
+      if (activeIdx >= 0) {
+        provList[activeIdx] = {
+          ...provList[activeIdx],
+          apiKey: providerSettings.apiKey,
+        };
+      }
+
       const payload = {
         ...providerSettings,
         fazerCardsApiKey: fzrKey,
         fazerCardsTokens: tokens,
+        providers: provList,
         balanceUSD: activeBal,
       };
 
@@ -3897,13 +4043,26 @@ const PRICING_GAMES = [
         {/* ========================================================= */}
         {!loading && activeTab === 'provider' && (
           <div className="space-y-6 animate-fadeIn">
-            <div>
-              <h2 className="text-2xl sm:text-3xl font-black text-white flex items-center gap-2">
-                <span>🏦</span> Supplier API Gateways & Account Balance
-              </h2>
-              <p className="text-xs sm:text-sm text-slate-400 mt-1">
-                Configure your upstream supplier connection (Khmer TopUp or FazerCards Reseller) and view live credit.
-              </p>
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+              <div>
+                <h2 className="text-2xl sm:text-3xl font-black text-white flex items-center gap-2">
+                  <span>🏦</span> Supplier API Gateways & Account Balance
+                </h2>
+                <p className="text-xs sm:text-sm text-slate-400 mt-1">
+                  Connect upstream suppliers (FazerCards, Khmer TopUp, Smile One, LapakGaming, UniPin, Moonton Partner, or Custom REST), switch gateways with 1 click, and manage API keys.
+                </p>
+              </div>
+              <button
+                type="button"
+                onClick={handleOpenAddProviderModal}
+                className="px-4 py-2.5 rounded-2xl bg-gradient-to-r from-emerald-500 to-teal-400 hover:from-emerald-400 hover:to-teal-300 text-slate-950 font-black text-xs shadow-lg shadow-emerald-500/20 flex items-center gap-2 transition-all transform hover:scale-105 shrink-0 cursor-pointer self-start sm:self-auto"
+              >
+                <span>➕</span>
+                <span>Add New Provider</span>
+                <span className="px-2 py-0.5 rounded-full bg-black/25 text-slate-900 font-extrabold text-[10px]">
+                  {(providerSettings.providers || DEFAULT_PROVIDERS).length} Active
+                </span>
+              </button>
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -3917,6 +4076,8 @@ const PRICING_GAMES = [
                 </div>
 
                 {(() => {
+                  const allProvidersList = providerSettings.providers || DEFAULT_PROVIDERS;
+                  const activeProvObj = allProvidersList.find(p => p.id === providerSettings.activeProvider || p.name === providerSettings.activeProvider) || allProvidersList[0];
                   const activeFzrToken = (providerSettings.fazerCardsTokens || []).find(t => t.isActive) || (providerSettings.fazerCardsTokens || [])[0];
                   const standbyFzrTokens = (providerSettings.fazerCardsTokens || []).filter(t => t.id !== activeFzrToken?.id && t.token !== activeFzrToken?.token);
 
@@ -3925,24 +4086,26 @@ const PRICING_GAMES = [
                       {/* Top Grid: Provider Selection & Environment Mode */}
                       <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                         <div>
-                          <label className="block text-slate-400 mb-1 font-semibold">Active MLBB Provider</label>
+                          <label className="block text-slate-400 mb-1 font-semibold">Active Supplier Gateway</label>
                           <select
                             value={providerSettings.activeProvider}
                             onChange={(e) => {
-                              const nextP = e.target.value;
-                              const nextKey = nextP === 'FazerCards'
-                                ? (providerSettings.fazerCardsApiKey || 'fc_5f79a0016d5d87bd1e83ea4f')
-                                : (providerSettings.khmerTopUpApiKey || 'kt_6d38a3a5940e970221cc62fa306ae96044736364');
+                              const nextId = e.target.value;
+                              const targetProv = allProvidersList.find(p => p.id === nextId);
+                              const nextKey = targetProv?.apiKey || (nextId === 'FazerCards' ? (providerSettings.fazerCardsApiKey || 'fc_5f79a0016d5d87bd1e83ea4f') : (providerSettings.khmerTopUpApiKey || 'kt_6d38a3a5940e970221cc62fa306ae96044736364'));
                               setProviderSettings({
                                 ...providerSettings,
-                                activeProvider: nextP,
+                                activeProvider: nextId,
                                 apiKey: nextKey,
                               });
                             }}
                             className="input w-full text-xs py-2 rounded-xl font-bold bg-dark-bg border-slate-700 text-amber-300 focus:border-amber-400"
                           >
-                            <option value="FazerCards">🎮 FazerCards Reseller</option>
-                            <option value="KhmerTopUp">🇰🇭 Khmer TopUp (Direct)</option>
+                            {allProvidersList.map((p) => (
+                              <option key={p.id} value={p.id}>
+                                {p.icon || '🌐'} {p.name} {p.badge ? `(${p.badge})` : ''}
+                              </option>
+                            ))}
                           </select>
                         </div>
 
@@ -4137,36 +4300,130 @@ const PRICING_GAMES = [
                           )}
                         </div>
                       ) : (
-                        <div className="space-y-2 pt-1">
-                          <div className="flex justify-between items-center mb-1">
-                            <label className="text-slate-300 font-bold">
-                              🇰🇭 Khmer TopUp API Key (kt_...)
-                            </label>
-                            <span className="text-[10px] text-slate-500 font-mono">Auto-populated</span>
+                        <div className="space-y-3 pt-1">
+                          {/* Active Provider Showcase Banner */}
+                          <div className="p-3.5 rounded-2xl bg-gradient-to-br from-cyan-500/10 via-slate-900/60 to-dark-bg border border-cyan-500/30 shadow-lg space-y-3">
+                            <div className="flex items-center justify-between">
+                              <div className="flex items-center gap-2">
+                                <span className="text-xl">{activeProvObj?.icon || '🌐'}</span>
+                                <div>
+                                  <div className="flex items-center gap-2">
+                                    <span className="text-xs font-bold text-white">{activeProvObj?.name || providerSettings.activeProvider}</span>
+                                    {activeProvObj?.badge && (
+                                      <span className="px-1.5 py-0.5 rounded text-[9px] font-bold bg-cyan-500/20 text-cyan-300 border border-cyan-500/30">
+                                        {activeProvObj.badge}
+                                      </span>
+                                    )}
+                                  </div>
+                                  <span className="text-[10px] text-slate-400 block truncate">{activeProvObj?.subtitle || activeProvObj?.apiUrl}</span>
+                                </div>
+                              </div>
+                              <button
+                                type="button"
+                                onClick={() => handleOpenEditProviderModal(activeProvObj)}
+                                className="px-2.5 py-1 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 font-bold text-[10px] border border-slate-700 flex items-center gap-1 cursor-pointer"
+                              >
+                                <span>⚙️</span>
+                                <span>Edit Config</span>
+                              </button>
+                            </div>
+
+                            {/* API Key Input */}
+                            <div>
+                              <div className="flex justify-between items-center mb-1">
+                                <label className="text-slate-300 font-bold text-[11px]">
+                                  API Secret Key / Token:
+                                </label>
+                                <span className="text-[10px] text-slate-500 font-mono">
+                                  {activeProvObj?.id === 'KhmerTopUp' ? 'Direct Auto-fill' : 'Active Credential'}
+                                </span>
+                              </div>
+                              <div className="relative">
+                                <input
+                                  type={showProviderSecretKey ? "text" : "password"}
+                                  value={providerSettings.apiKey || ''}
+                                  onChange={(e) => {
+                                    const val = e.target.value;
+                                    setProviderSettings({
+                                      ...providerSettings,
+                                      apiKey: val,
+                                      khmerTopUpApiKey: providerSettings.activeProvider === 'KhmerTopUp' ? val : providerSettings.khmerTopUpApiKey
+                                    });
+                                  }}
+                                  className="input w-full font-mono text-xs py-2.5 pl-3 pr-20 rounded-xl text-cyan-300 bg-black/50 border-slate-700/80 focus:border-cyan-400"
+                                  placeholder="API Key string..."
+                                />
+                                <div className="absolute right-1.5 top-1/2 -translate-y-1/2 flex items-center gap-1">
+                                  <button
+                                    type="button"
+                                    onClick={() => setShowProviderSecretKey(!showProviderSecretKey)}
+                                    className="p-1.5 text-xs rounded-lg hover:bg-slate-700 text-slate-400 hover:text-white"
+                                    title={showProviderSecretKey ? "Hide key" : "Show key"}
+                                  >
+                                    {showProviderSecretKey ? '👁️' : '🔒'}
+                                  </button>
+                                  <button
+                                    type="button"
+                                    onClick={() => {
+                                      if (providerSettings.apiKey) {
+                                        navigator.clipboard.writeText(providerSettings.apiKey);
+                                        showToast('success', 'API key copied!');
+                                      }
+                                    }}
+                                    className="px-2 py-1 text-[10px] font-bold rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-200"
+                                    title="Copy Key"
+                                  >
+                                    📋
+                                  </button>
+                                </div>
+                              </div>
+                            </div>
+
+                            {/* API Endpoint URL Input */}
+                            <div>
+                              <label className="text-slate-300 font-bold text-[11px] block mb-1">
+                                Gateway Endpoint URL:
+                              </label>
+                              <input
+                                type="text"
+                                value={activeProvObj?.apiUrl || ''}
+                                onChange={(e) => {
+                                  const val = e.target.value;
+                                  const updatedProvs = allProvidersList.map(p =>
+                                    p.id === activeProvObj.id ? { ...p, apiUrl: val } : p
+                                  );
+                                  setProviderSettings({
+                                    ...providerSettings,
+                                    providers: updatedProvs
+                                  });
+                                }}
+                                className="input w-full font-mono text-xs py-2 rounded-xl text-slate-300 bg-black/40 border-slate-700"
+                                placeholder="https://..."
+                              />
+                            </div>
                           </div>
-                          <input
-                            type="text"
-                            value={providerSettings.apiKey}
-                            onChange={(e) =>
-                              setProviderSettings({ ...providerSettings, apiKey: e.target.value })
-                            }
-                            className="input w-full font-mono text-xs py-2.5 rounded-xl text-cyan-300 bg-dark-bg border-slate-700"
-                          />
                         </div>
                       )}
 
                       {/* Action Buttons */}
-                      <div className="flex items-center gap-2 pt-2 border-t border-slate-800">
-                        <button type="submit" className="btn btn-primary text-xs py-2.5 px-4 font-bold shadow-glow-cyan">
+                      <div className="flex flex-wrap items-center gap-2 pt-2 border-t border-slate-800">
+                        <button type="submit" className="btn btn-primary text-xs py-2.5 px-4 font-bold shadow-glow-cyan cursor-pointer">
                           💾 Save Settings
                         </button>
                         <button
                           type="button"
                           onClick={handleTestProviderConnection}
                           disabled={providerTesting}
-                          className="btn btn-secondary text-xs py-2.5 px-4 font-bold"
+                          className="btn btn-secondary text-xs py-2.5 px-4 font-bold cursor-pointer"
                         >
                           {providerTesting ? '🔄 Testing...' : '⚡ Test Connection'}
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => handleOpenBalanceEdit(activeProvObj)}
+                          className="px-3.5 py-2.5 rounded-xl bg-amber-500/10 hover:bg-amber-500/20 text-amber-300 border border-amber-500/30 text-xs font-bold transition-all ml-auto cursor-pointer"
+                        >
+                          💳 Adjust Live Balance
                         </button>
                       </div>
                     </form>
@@ -4178,163 +4435,154 @@ const PRICING_GAMES = [
               <div className="card space-y-4 bg-dark-input/60 border-slate-800 rounded-3xl shadow-xl">
                 <div className="flex items-center justify-between">
                   <h3 className="font-bold text-white text-base">⚡ 1-Click Gateway Switcher</h3>
-                  <span className="text-[10px] text-slate-400">Live Dual Balances</span>
+                  <span className="text-[10px] text-slate-400">
+                    {(providerSettings.providers || DEFAULT_PROVIDERS).length} Gateways Ready
+                  </span>
                 </div>
 
                 <p className="text-xs text-slate-300 leading-relaxed">
                   Switch your storefront's automated fulfillment provider with a single click:
                 </p>
 
-                <div className="space-y-3.5 text-xs">
-                  {/* Supplier 1: FazerCards Reseller */}
-                  <div className={`p-4 rounded-2xl border transition-all space-y-2.5 ${
-                    providerSettings.activeProvider === 'FazerCards'
-                      ? 'bg-purple-950/40 border-purple-500/60 shadow-[0_0_20px_rgba(168,85,247,0.15)]'
-                      : 'bg-dark-bg border-slate-800 hover:border-slate-700'
-                  }`}>
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-2">
-                        <span className="text-lg">🎮</span>
-                        <div>
-                          <span className="font-bold text-purple-300 text-sm">FazerCards Reseller</span>
-                          <span className="text-[10px] text-slate-400 block">Global Wholesale Catalog (api.fzr.cards)</span>
+                <div className="space-y-3.5 text-xs max-h-[640px] overflow-y-auto pr-1">
+                  {(providerSettings.providers || DEFAULT_PROVIDERS).map((prov) => {
+                    const isActive = providerSettings.activeProvider === prov.id || providerSettings.activeProvider === prov.name;
+                    const isDefault = prov.isDefault || prov.id === 'FazerCards' || prov.id === 'KhmerTopUp';
+                    const balanceUSD = Number(prov.balanceUSD ?? 0);
+                    const balanceKHR = Math.round(balanceUSD * 4100);
+
+                    return (
+                      <div
+                        key={prov.id}
+                        className={`p-4 rounded-2xl border transition-all space-y-2.5 ${
+                          isActive
+                            ? 'bg-purple-950/40 border-purple-500/60 shadow-[0_0_20px_rgba(168,85,247,0.15)]'
+                            : 'bg-dark-bg border-slate-800 hover:border-slate-700'
+                        }`}
+                      >
+                        <div className="flex items-center justify-between">
+                          <div className="flex items-center gap-2.5 min-w-0">
+                            <span className="text-xl shrink-0">{prov.icon || '🌐'}</span>
+                            <div className="min-w-0">
+                              <div className="flex items-center gap-2 flex-wrap">
+                                <span className="font-bold text-white text-sm truncate">{prov.name}</span>
+                                {prov.badge && (
+                                  <span className="px-1.5 py-0.5 rounded text-[9px] font-black uppercase tracking-wider bg-slate-800 text-slate-300 border border-slate-700">
+                                    {prov.badge}
+                                  </span>
+                                )}
+                              </div>
+                              <span className="text-[10px] text-slate-400 block truncate">{prov.subtitle || prov.apiUrl}</span>
+                            </div>
+                          </div>
+                          {isActive ? (
+                            <span className="badge badge-success text-[10px] font-black animate-pulse shrink-0">ACTIVE 🟢</span>
+                          ) : (
+                            <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-slate-800 text-slate-400 border border-slate-700 shrink-0">STANDBY</span>
+                          )}
+                        </div>
+
+                        {/* Balance Display */}
+                        <div className="flex items-center justify-between p-2.5 rounded-xl bg-black/40 border border-slate-800/80">
+                          <div className="flex items-center gap-2">
+                            <span className="text-slate-400 text-xs">Available Credit:</span>
+                            <button
+                              type="button"
+                              onClick={() => handleOpenBalanceEdit(prov)}
+                              className="text-[10px] text-amber-400 hover:text-amber-300 font-bold underline cursor-pointer"
+                              title="Update credit balance"
+                            >
+                              ✏️ Edit
+                            </button>
+                          </div>
+                          <div className="text-right">
+                            <span className="font-mono font-black text-amber-300 text-sm">
+                              ${balanceUSD.toFixed(2)} USD
+                            </span>
+                            <span className="text-[10px] text-emerald-400 font-bold block">
+                              ~{balanceKHR.toLocaleString()} ៛ KHR
+                            </span>
+                          </div>
+                        </div>
+
+                        {/* Switch Button */}
+                        <div className="flex gap-2 pt-1">
+                          {isActive ? (
+                            <div className="w-full py-2 rounded-xl bg-purple-600/20 text-purple-300 border border-purple-500/40 font-black text-center text-xs flex items-center justify-center gap-1.5">
+                              <span>✅</span>
+                              <span>Currently Active Provider</span>
+                            </div>
+                          ) : (
+                            <button
+                              type="button"
+                              disabled={switchingProvider}
+                              onClick={() => handleQuickSwitchProvider(prov)}
+                              className="w-full py-2 rounded-xl bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 text-white font-black text-xs shadow-lg shadow-purple-600/30 transition-all flex items-center justify-center gap-1.5 cursor-pointer"
+                            >
+                              <span>⚡</span>
+                              <span>{switchingProvider ? 'Switching...' : `Switch to ${prov.name} ($${balanceUSD.toFixed(2)})`}</span>
+                            </button>
+                          )}
+                        </div>
+
+                        {/* Footer Links & Actions */}
+                        <div className="flex items-center justify-between pt-1 text-[10px] border-t border-slate-800/60">
+                          <div className="flex items-center gap-2">
+                            {prov.docsUrl && (
+                              <a
+                                href={prov.docsUrl}
+                                target="_blank"
+                                rel="noreferrer"
+                                className="text-amber-400 hover:underline font-bold"
+                              >
+                                📖 Docs
+                              </a>
+                            )}
+                            {prov.docsUrl && prov.refillUrl && <span className="text-slate-600">|</span>}
+                            {prov.refillUrl && (
+                              <a
+                                href={prov.refillUrl}
+                                target="_blank"
+                                rel="noreferrer"
+                                className="text-cyan-400 hover:underline font-bold"
+                              >
+                                💳 Refill
+                              </a>
+                            )}
+                          </div>
+                          <div className="flex items-center gap-1.5">
+                            <button
+                              type="button"
+                              onClick={() => handleOpenEditProviderModal(prov)}
+                              className="px-2 py-0.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 font-bold text-[10px] transition-colors cursor-pointer"
+                            >
+                              ⚙️ Config
+                            </button>
+                            {!isDefault && (
+                              <button
+                                type="button"
+                                onClick={() => handleDeleteProviderConfirm(prov.id, prov.name)}
+                                className="px-2 py-0.5 rounded-lg bg-rose-950/40 hover:bg-rose-900/60 text-rose-400 border border-rose-500/30 font-bold text-[10px] transition-colors cursor-pointer"
+                                title="Delete Provider"
+                              >
+                                🗑️
+                              </button>
+                            )}
+                          </div>
                         </div>
                       </div>
-                      {providerSettings.activeProvider === 'FazerCards' ? (
-                        <span className="badge badge-success text-[10px] font-black animate-pulse">ACTIVE 🟢</span>
-                      ) : (
-                        <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-slate-800 text-slate-400 border border-slate-700">STANDBY</span>
-                      )}
-                    </div>
+                    );
+                  })}
 
-                    {/* Balance Display */}
-                    <div className="flex items-center justify-between p-2.5 rounded-xl bg-black/40 border border-slate-800/80">
-                      <span className="text-slate-400 text-xs">Available Credit:</span>
-                      <div className="text-right">
-                        <span className="font-mono font-black text-amber-300 text-sm">
-                          ${(providerSettings.fazerCardsBalanceUSD || 18.50).toFixed(2)} USD
-                        </span>
-                        <span className="text-[10px] text-emerald-400 font-bold block">
-                          ~{Math.round((providerSettings.fazerCardsBalanceUSD || 18.50) * 4100).toLocaleString()} ៛ KHR
-                        </span>
-                      </div>
-                    </div>
-
-                    {/* Switch Button */}
-                    <div className="flex gap-2 pt-1">
-                      {providerSettings.activeProvider === 'FazerCards' ? (
-                        <div className="w-full py-2 rounded-xl bg-purple-600/20 text-purple-300 border border-purple-500/40 font-black text-center text-xs flex items-center justify-center gap-1.5">
-                          <span>✅</span>
-                          <span>Currently Active Provider</span>
-                        </div>
-                      ) : (
-                        <button
-                          type="button"
-                          disabled={switchingProvider}
-                          onClick={() => handleQuickSwitchProvider('FazerCards')}
-                          className="w-full py-2 rounded-xl bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 text-white font-black text-xs shadow-lg shadow-purple-600/30 transition-all flex items-center justify-center gap-1.5 cursor-pointer"
-                        >
-                          <span>⚡</span>
-                          <span>{switchingProvider ? 'Switching...' : 'Switch to FazerCards ($18.50)'}</span>
-                        </button>
-                      )}
-                    </div>
-
-                    <div className="flex gap-2 pt-0.5 text-[10px]">
-                      <a
-                        href="https://reseller.fazercards.com/en/catalog/mobile-legends"
-                        target="_blank"
-                        rel="noreferrer"
-                        className="text-amber-400 hover:underline font-bold"
-                      >
-                        💎 MLBB Wholesale Prices
-                      </a>
-                      <span className="text-slate-600">|</span>
-                      <a
-                        href="https://reseller.fazercards.com/panel/balance"
-                        target="_blank"
-                        rel="noreferrer"
-                        className="text-cyan-400 hover:underline font-bold"
-                      >
-                        💳 Top Up Balance ($18.50)
-                      </a>
-                    </div>
-                  </div>
-
-                  {/* Supplier 2: Khmer TopUp */}
-                  <div className={`p-4 rounded-2xl border transition-all space-y-2.5 ${
-                    providerSettings.activeProvider === 'KhmerTopUp'
-                      ? 'bg-cyan-950/40 border-cyan-500/60 shadow-[0_0_20px_rgba(6,182,212,0.15)]'
-                      : 'bg-dark-bg border-slate-800 hover:border-slate-700'
-                  }`}>
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-2">
-                        <span className="fi fi-kh rounded-xs shadow-xs text-lg inline-block" />
-                        <div>
-                          <span className="font-bold text-cyan-300 text-sm">Khmer TopUp</span>
-                          <span className="text-[10px] text-slate-400 block">Direct Cambodia MLBB (khmer-topup.com)</span>
-                        </div>
-                      </div>
-                      {providerSettings.activeProvider === 'KhmerTopUp' ? (
-                        <span className="badge badge-success text-[10px] font-black animate-pulse">ACTIVE 🟢</span>
-                      ) : (
-                        <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-slate-800 text-slate-400 border border-slate-700">STANDBY</span>
-                      )}
-                    </div>
-
-                    {/* Balance Display */}
-                    <div className="flex items-center justify-between p-2.5 rounded-xl bg-black/40 border border-slate-800/80">
-                      <span className="text-slate-400 text-xs">Available Credit:</span>
-                      <div className="text-right">
-                        <span className="font-mono font-black text-amber-300 text-sm">
-                          ${(providerSettings.khmerTopUpBalanceUSD || 1.25).toFixed(2)} USD
-                        </span>
-                        <span className="text-[10px] text-emerald-400 font-bold block">
-                          ~{Math.round((providerSettings.khmerTopUpBalanceUSD || 1.25) * 4100).toLocaleString()} ៛ KHR
-                        </span>
-                      </div>
-                    </div>
-
-                    {/* Switch Button */}
-                    <div className="flex gap-2 pt-1">
-                      {providerSettings.activeProvider === 'KhmerTopUp' ? (
-                        <div className="w-full py-2 rounded-xl bg-cyan-600/20 text-cyan-300 border border-cyan-500/40 font-black text-center text-xs flex items-center justify-center gap-1.5">
-                          <span>✅</span>
-                          <span>Currently Active Provider</span>
-                        </div>
-                      ) : (
-                        <button
-                          type="button"
-                          disabled={switchingProvider}
-                          onClick={() => handleQuickSwitchProvider('KhmerTopUp')}
-                          className="w-full py-2 rounded-xl bg-gradient-to-r from-cyan-600 to-blue-600 hover:from-cyan-500 hover:to-blue-500 text-white font-black text-xs shadow-lg shadow-cyan-600/30 transition-all flex items-center justify-center gap-1.5 cursor-pointer"
-                        >
-                          <span>⚡</span>
-                          <span>{switchingProvider ? 'Switching...' : 'Switch to Khmer TopUp ($1.25)'}</span>
-                        </button>
-                      )}
-                    </div>
-
-                    <div className="flex gap-2 pt-0.5 text-[10px]">
-                      <a
-                        href="https://khmer-topup.com/tl/api-docs"
-                        target="_blank"
-                        rel="noreferrer"
-                        className="text-amber-400 hover:underline font-bold"
-                      >
-                        📖 API Docs
-                      </a>
-                      <span className="text-slate-600">|</span>
-                      <a
-                        href="https://khmer-topup.com/wallet"
-                        target="_blank"
-                        rel="noreferrer"
-                        className="text-cyan-400 hover:underline font-bold"
-                      >
-                        💳 Wallet Refill ($1.25)
-                      </a>
-                    </div>
-                  </div>
+                  {/* Add Provider CTA Card */}
+                  <button
+                    type="button"
+                    onClick={handleOpenAddProviderModal}
+                    className="w-full p-4 rounded-2xl border-2 border-dashed border-slate-800 hover:border-emerald-500/60 bg-dark-bg/40 hover:bg-emerald-500/5 text-slate-400 hover:text-emerald-300 flex items-center justify-center gap-2 transition-all cursor-pointer group"
+                  >
+                    <span className="text-base group-hover:scale-125 transition-transform">➕</span>
+                    <span className="font-bold text-xs">Add Another Supplier Gateway (Smile One, UniPin, Custom REST...)</span>
+                  </button>
                 </div>
               </div>
             </div>
@@ -6290,6 +6538,247 @@ const PRICING_GAMES = [
                   className="btn btn-primary text-xs py-2 px-4 shadow-glow-cyan"
                 >
                   Save Balance
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* Add / Edit Custom Supplier Gateway Modal */}
+      {(addProviderModalOpen || editProviderModalOpen) && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-md animate-fadeIn overflow-y-auto">
+          <div className="bg-dark-card border border-dark-border rounded-3xl max-w-lg w-full p-6 space-y-4 shadow-2xl animate-scaleUp my-8">
+            {/* Header */}
+            <div className="flex justify-between items-center pb-2 border-b border-dark-border">
+              <div className="flex items-center gap-2.5">
+                <span className="text-2xl p-2 rounded-2xl bg-emerald-500/10 border border-emerald-500/20">
+                  {providerFormData.icon || '🌐'}
+                </span>
+                <div>
+                  <h3 className="font-black text-white text-base">
+                    {editingProvider ? `Configure ${providerFormData.name || 'Gateway'}` : 'Connect New Supplier Gateway'}
+                  </h3>
+                  <p className="text-[11px] text-emerald-400 font-semibold">
+                    {editingProvider ? 'Update credentials, endpoint URL, or balance' : 'Add custom upstream API or choose from 1-click presets'}
+                  </p>
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={() => {
+                  setAddProviderModalOpen(false);
+                  setEditProviderModalOpen(false);
+                }}
+                className="text-slate-400 hover:text-white font-bold p-1 rounded-lg hover:bg-slate-800 cursor-pointer"
+              >
+                ✕
+              </button>
+            </div>
+
+            {/* 1-Click Fast Presets (Only when adding or exploring) */}
+            {!editingProvider && (
+              <div className="p-3.5 rounded-2xl bg-gradient-to-br from-purple-950/30 to-slate-900 border border-purple-500/30 space-y-2">
+                <div className="flex items-center justify-between">
+                  <span className="text-[11px] font-bold text-purple-300 flex items-center gap-1.5">
+                    <span>⚡</span> 1-Click Gateway Presets:
+                  </span>
+                  <span className="text-[10px] text-slate-400">Click to Auto-fill</span>
+                </div>
+                <div className="grid grid-cols-2 sm:grid-cols-3 gap-1.5">
+                  {PROVIDER_PRESETS.map((preset) => (
+                    <button
+                      key={preset.id}
+                      type="button"
+                      onClick={() => handleSelectPreset(preset)}
+                      className="p-2 rounded-xl bg-slate-900/80 hover:bg-purple-900/40 border border-slate-800 hover:border-purple-500/50 text-left transition-all text-xs group cursor-pointer"
+                    >
+                      <div className="flex items-center gap-1.5 font-bold text-white group-hover:text-purple-300 truncate text-[11px]">
+                        <span>{preset.icon}</span>
+                        <span className="truncate">{preset.name}</span>
+                      </div>
+                      <span className="text-[9px] text-slate-500 block truncate mt-0.5">
+                        {preset.badge}
+                      </span>
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* Form */}
+            <form onSubmit={handleSaveProviderFormSubmit} className="space-y-3.5 text-xs">
+              {/* Row 1: Provider Name & Icon */}
+              <div className="grid grid-cols-3 gap-3">
+                <div className="col-span-2">
+                  <label className="block text-slate-300 mb-1 font-semibold">
+                    Provider Name <span className="text-rose-400">*</span>
+                  </label>
+                  <input
+                    type="text"
+                    required
+                    value={providerFormData.name}
+                    onChange={(e) => setProviderFormData({ ...providerFormData, name: e.target.value })}
+                    className="input w-full text-xs py-2 rounded-xl bg-dark-bg border-slate-700 text-white font-bold"
+                    placeholder="e.g. Smile One or LapakGaming"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-slate-300 mb-1 font-semibold">Icon</label>
+                  <div className="flex items-center gap-1">
+                    <input
+                      type="text"
+                      maxLength={4}
+                      value={providerFormData.icon}
+                      onChange={(e) => setProviderFormData({ ...providerFormData, icon: e.target.value })}
+                      className="input w-12 text-center text-base py-1.5 rounded-xl bg-dark-bg border-slate-700 font-bold"
+                    />
+                    <div className="flex gap-1 overflow-x-auto text-sm py-1">
+                      {['🌐', '⚡', '💎', '🚀', '🎮', '🇰🇭'].map(ic => (
+                        <button
+                          key={ic}
+                          type="button"
+                          onClick={() => setProviderFormData({ ...providerFormData, icon: ic })}
+                          className="hover:scale-125 transition-transform cursor-pointer"
+                        >
+                          {ic}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Row 2: Subtitle / Description */}
+              <div>
+                <label className="block text-slate-300 mb-1 font-semibold">Subtitle / Description</label>
+                <input
+                  type="text"
+                  value={providerFormData.subtitle}
+                  onChange={(e) => setProviderFormData({ ...providerFormData, subtitle: e.target.value })}
+                  className="input w-full text-xs py-2 rounded-xl bg-dark-bg border-slate-700 text-slate-300"
+                  placeholder="e.g. Official Moonton Global Partner (smile.one)"
+                />
+              </div>
+
+              {/* Row 3: API Endpoint URL */}
+              <div>
+                <label className="block text-slate-300 mb-1 font-semibold">
+                  API Endpoint URL
+                </label>
+                <input
+                  type="text"
+                  value={providerFormData.apiUrl}
+                  onChange={(e) => setProviderFormData({ ...providerFormData, apiUrl: e.target.value })}
+                  className="input w-full text-xs py-2 rounded-xl font-mono text-cyan-300 bg-dark-bg border-slate-700"
+                  placeholder="https://api.provider.com/v1/orders"
+                />
+              </div>
+
+              {/* Row 4: API Key / Token String with Reveal Toggle */}
+              <div>
+                <div className="flex justify-between items-center mb-1">
+                  <label className="text-slate-300 font-semibold">API Secret Key / Bearer Token</label>
+                  <button
+                    type="button"
+                    onClick={() => setShowProviderSecretKey(!showProviderSecretKey)}
+                    className="text-[10px] text-cyan-400 hover:underline cursor-pointer"
+                  >
+                    {showProviderSecretKey ? 'Hide 🔒' : 'Reveal 👁️'}
+                  </button>
+                </div>
+                <input
+                  type={showProviderSecretKey ? "text" : "password"}
+                  value={providerFormData.apiKey}
+                  onChange={(e) => setProviderFormData({ ...providerFormData, apiKey: e.target.value })}
+                  className="input w-full text-xs py-2 rounded-xl font-mono text-amber-300 bg-dark-bg border-slate-700 focus:border-amber-400"
+                  placeholder="API Key string, JWT token, or Bearer string..."
+                />
+              </div>
+
+              {/* Row 5: Merchant ID & Live Balance */}
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-slate-300 mb-1 font-semibold">Merchant / Partner ID (Optional)</label>
+                  <input
+                    type="text"
+                    value={providerFormData.merchantId}
+                    onChange={(e) => setProviderFormData({ ...providerFormData, merchantId: e.target.value })}
+                    className="input w-full text-xs py-2 rounded-xl bg-dark-bg border-slate-700"
+                    placeholder="e.g. user_88291"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-slate-300 mb-1 font-semibold">Available Credit (USD)</label>
+                  <input
+                    type="number"
+                    step="0.01"
+                    value={providerFormData.balanceUSD}
+                    onChange={(e) => setProviderFormData({ ...providerFormData, balanceUSD: e.target.value })}
+                    className="input w-full text-xs py-2 rounded-xl font-mono font-bold text-amber-300 bg-dark-bg border-slate-700"
+                    placeholder="0.00"
+                  />
+                </div>
+              </div>
+
+              {/* Row 6: Docs URL & Refill URL */}
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-slate-400 mb-1 font-semibold text-[11px]">API Docs URL (Optional)</label>
+                  <input
+                    type="text"
+                    value={providerFormData.docsUrl}
+                    onChange={(e) => setProviderFormData({ ...providerFormData, docsUrl: e.target.value })}
+                    className="input w-full text-xs py-1.5 rounded-xl bg-dark-bg border-slate-700"
+                    placeholder="https://provider.com/docs"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-slate-400 mb-1 font-semibold text-[11px]">Wallet Refill URL (Optional)</label>
+                  <input
+                    type="text"
+                    value={providerFormData.refillUrl}
+                    onChange={(e) => setProviderFormData({ ...providerFormData, refillUrl: e.target.value })}
+                    className="input w-full text-xs py-1.5 rounded-xl bg-dark-bg border-slate-700"
+                    placeholder="https://provider.com/wallet"
+                  />
+                </div>
+              </div>
+
+              {/* Checkbox: Set as active gateway */}
+              <div className="p-3 rounded-xl bg-slate-900/60 border border-slate-800 flex items-center gap-2.5">
+                <input
+                  type="checkbox"
+                  id="setAsActiveProvCheck"
+                  checked={providerFormData.setAsActive}
+                  onChange={(e) => setProviderFormData({ ...providerFormData, setAsActive: e.target.checked })}
+                  className="w-4 h-4 rounded text-emerald-500 bg-slate-800 border-slate-700 focus:ring-emerald-400 cursor-pointer"
+                />
+                <label htmlFor="setAsActiveProvCheck" className="text-slate-300 text-xs font-semibold cursor-pointer">
+                  ⚡ Set as currently active storefront provider upon saving
+                </label>
+              </div>
+
+              {/* Footer Buttons */}
+              <div className="flex justify-end gap-2 pt-3 border-t border-dark-border">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setAddProviderModalOpen(false);
+                    setEditProviderModalOpen(false);
+                  }}
+                  className="btn btn-secondary text-xs py-2 px-3.5 cursor-pointer"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  className="btn btn-primary text-xs py-2 px-5 font-bold shadow-glow-cyan cursor-pointer"
+                >
+                  💾 {editingProvider ? 'Save Provider Changes' : 'Connect & Add Provider'}
                 </button>
               </div>
             </form>

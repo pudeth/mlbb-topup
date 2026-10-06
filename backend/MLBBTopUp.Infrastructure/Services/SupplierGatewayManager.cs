@@ -244,14 +244,16 @@ public class SupplierGatewayManager : ISupplierGatewayManager
                 AutoDispatchOnPayment = _settings.AutoDispatchOnPayment,
                 AutoFailoverEnabled = _settings.AutoFailoverEnabled,
                 MerchantId = _settings.MerchantId,
-                ApiKey = _settings.ActiveProvider == "KhmerTopUp" ? _settings.KhmerTopUpApiKey : _settings.FazerCardsApiKey,
+                ApiKey = _settings.ApiKey,
                 FazerCardsApiKey = _settings.FazerCardsApiKey,
                 FazerCardsTokens = _settings.FazerCardsTokens != null ? new List<FazerCardsTokenItem>(_settings.FazerCardsTokens) : new(),
+                CustomProviders = _settings.CustomProviders != null ? new List<CustomProviderItem>(_settings.CustomProviders) : new(),
+                Providers = _settings.Providers,
                 KhmerTopUpApiKey = _settings.KhmerTopUpApiKey,
                 FazerCardsApiUrl = _settings.FazerCardsApiUrl,
                 KhmerTopUpApiUrl = _settings.KhmerTopUpApiUrl,
                 WebhookUrl = _settings.WebhookUrl,
-                BalanceUSD = _settings.ActiveProvider == "KhmerTopUp" ? _settings.KhmerTopUpBalanceUSD : _settings.FazerCardsBalanceUSD,
+                BalanceUSD = _settings.BalanceUSD,
                 FazerCardsBalanceUSD = _settings.FazerCardsBalanceUSD,
                 KhmerTopUpBalanceUSD = _settings.KhmerTopUpBalanceUSD,
                 Status = _settings.Status,
@@ -267,12 +269,14 @@ public class SupplierGatewayManager : ISupplierGatewayManager
         {
             if (!string.IsNullOrWhiteSpace(incoming.ActiveProvider))
             {
-                _settings.ActiveProvider = incoming.ActiveProvider.Contains("khmer", StringComparison.OrdinalIgnoreCase) ? "KhmerTopUp" : "FazerCards";
+                _settings.ActiveProvider = incoming.ActiveProvider;
             }
             _settings.Environment = incoming.Environment ?? _settings.Environment;
             _settings.AutoDispatchOnPayment = incoming.AutoDispatchOnPayment;
             _settings.AutoFailoverEnabled = incoming.AutoFailoverEnabled;
             if (!string.IsNullOrWhiteSpace(incoming.KhmerTopUpApiKey)) _settings.KhmerTopUpApiKey = incoming.KhmerTopUpApiKey;
+            if (incoming.CustomProviders != null) _settings.CustomProviders = incoming.CustomProviders;
+            if (incoming.Providers != null) _settings.Providers = incoming.Providers;
 
             // Preserve old tokens: merge incoming tokens into existing keyring
             _settings.FazerCardsTokens ??= new();
@@ -321,8 +325,24 @@ public class SupplierGatewayManager : ISupplierGatewayManager
                 }
             }
 
-            _settings.ApiKey = _settings.ActiveProvider == "KhmerTopUp" ? _settings.KhmerTopUpApiKey : _settings.FazerCardsApiKey;
-            _settings.BalanceUSD = _settings.ActiveProvider == "KhmerTopUp" ? _settings.KhmerTopUpBalanceUSD : _settings.FazerCardsBalanceUSD;
+            if (!string.IsNullOrWhiteSpace(incoming.ApiKey))
+            {
+                _settings.ApiKey = incoming.ApiKey;
+            }
+            else
+            {
+                _settings.ApiKey = _settings.ActiveProvider == "KhmerTopUp" ? _settings.KhmerTopUpApiKey : _settings.FazerCardsApiKey;
+            }
+
+            if (incoming.BalanceUSD > 0)
+            {
+                _settings.BalanceUSD = incoming.BalanceUSD;
+            }
+            else
+            {
+                _settings.BalanceUSD = _settings.ActiveProvider == "KhmerTopUp" ? _settings.KhmerTopUpBalanceUSD : _settings.FazerCardsBalanceUSD;
+            }
+
             _settings.UpdatedAt = DateTime.UtcNow;
             copy = GetSettings();
         }
@@ -440,15 +460,34 @@ public class SupplierGatewayManager : ISupplierGatewayManager
 
     public async Task<SupplierSettingsModel> SwitchProviderAsync(string targetProvider)
     {
-        string normalized = (!string.IsNullOrWhiteSpace(targetProvider) && targetProvider.Contains("khmer", StringComparison.OrdinalIgnoreCase))
-            ? "KhmerTopUp"
-            : "FazerCards";
+        if (string.IsNullOrWhiteSpace(targetProvider)) return GetSettings();
+        string normalized = targetProvider.Trim();
+        if (targetProvider.Contains("khmer", StringComparison.OrdinalIgnoreCase)) normalized = "KhmerTopUp";
+        else if (targetProvider.Contains("fazer", StringComparison.OrdinalIgnoreCase)) normalized = "FazerCards";
+
         SupplierSettingsModel copy;
         lock (_lock)
         {
             _settings.ActiveProvider = normalized;
-            _settings.ApiKey = normalized == "KhmerTopUp" ? _settings.KhmerTopUpApiKey : _settings.FazerCardsApiKey;
-            _settings.BalanceUSD = normalized == "KhmerTopUp" ? _settings.KhmerTopUpBalanceUSD : _settings.FazerCardsBalanceUSD;
+            if (normalized == "KhmerTopUp")
+            {
+                _settings.ApiKey = _settings.KhmerTopUpApiKey;
+                _settings.BalanceUSD = _settings.KhmerTopUpBalanceUSD;
+            }
+            else if (normalized == "FazerCards")
+            {
+                _settings.ApiKey = _settings.FazerCardsApiKey;
+                _settings.BalanceUSD = _settings.FazerCardsBalanceUSD;
+            }
+            else
+            {
+                var custom = _settings.CustomProviders?.FirstOrDefault(p => p.Id.Equals(normalized, StringComparison.OrdinalIgnoreCase) || p.Name.Equals(normalized, StringComparison.OrdinalIgnoreCase));
+                if (custom != null)
+                {
+                    _settings.ApiKey = custom.ApiKey;
+                    _settings.BalanceUSD = custom.BalanceUSD;
+                }
+            }
             _settings.UpdatedAt = DateTime.UtcNow;
             copy = GetSettings();
         }
