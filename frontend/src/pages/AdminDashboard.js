@@ -2827,7 +2827,7 @@ const PRICING_GAMES = [
             </div>
 
             {/* Mobile Categories & Module Links */}
-            <div className="flex-1 overflow-y-auto py-3 space-y-4 scrollbar-thin scrollbar-thumb-slate-800">
+            <div className="flex-1 overflow-y-auto overflow-x-hidden py-3 space-y-4 scrollbar-thin scrollbar-thumb-slate-800">
               {menuCategories.map((cat, idx) => {
                 const tabsInCat = filteredNavTabs.filter((t) => t.categoryId === cat.id);
                 if (tabsInCat.length === 0) return null;
@@ -3019,7 +3019,7 @@ const PRICING_GAMES = [
         </header>
 
         {/* Main Workspace Container */}
-        <main className="flex-1 overflow-y-auto min-h-0 px-3.5 sm:px-6 lg:px-8 py-6 pb-28 scrollbar-thin scrollbar-thumb-slate-800">
+        <main className="flex-1 overflow-y-auto overflow-x-hidden min-h-0 px-3.5 sm:px-6 lg:px-8 py-6 pb-28 scrollbar-thin scrollbar-thumb-slate-800">
           <div className="max-w-7xl mx-auto w-full space-y-6">
         {/* Loading Spinner & Indicator */}
         {loading && (
@@ -7055,7 +7055,7 @@ const PRICING_GAMES = [
       {/* Supplier Balance Adjustment Modal */}
       {balanceEditModalOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-md animate-fadeIn">
-          <div className="bg-dark-card border border-dark-border rounded-3xl max-w-sm w-full p-5 space-y-4 shadow-2xl animate-scaleUp">
+          <div className="bg-dark-card border border-dark-border rounded-3xl max-w-sm w-full max-h-[90vh] overflow-y-auto p-5 space-y-4 shadow-2xl animate-scaleUp">
             <div className="flex justify-between items-center pb-2 border-b border-dark-border">
               <div className="flex items-center gap-2">
                 <span className="text-lg">💳</span>
@@ -7111,19 +7111,27 @@ const PRICING_GAMES = [
 
       {/* Add / Edit Custom Supplier Gateway Modal */}
       {(addProviderModalOpen || editProviderModalOpen) && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-md animate-fadeIn overflow-y-auto">
-          <div className="bg-dark-card border border-dark-border rounded-3xl max-w-lg w-full p-6 space-y-4 shadow-2xl animate-scaleUp my-8">
-            {/* Header */}
-            <div className="flex justify-between items-center pb-2 border-b border-dark-border">
-              <div className="flex items-center gap-2.5">
-                <span className="text-2xl p-2 rounded-2xl bg-emerald-500/10 border border-emerald-500/20">
+        <div 
+          className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-5 bg-black/85 backdrop-blur-md animate-fadeIn"
+          onClick={(e) => {
+            if (e.target === e.currentTarget) {
+              setAddProviderModalOpen(false);
+              setEditProviderModalOpen(false);
+            }
+          }}
+        >
+          <div className="bg-[#0D121F] border border-slate-700/80 rounded-2xl sm:rounded-3xl max-w-xl w-full max-h-[92vh] max-h-[92dvh] flex flex-col shadow-[0_20px_60px_rgba(0,0,0,0.85)] animate-scaleUp overflow-hidden">
+            {/* Header (Fixed) */}
+            <div className="flex items-center justify-between p-4 sm:p-5 border-b border-slate-800 bg-[#0A0E17]/90 shrink-0">
+              <div className="flex items-center gap-3 min-w-0">
+                <span className="text-2xl w-10 h-10 sm:w-11 sm:h-11 rounded-2xl bg-emerald-500/15 border border-emerald-500/30 flex items-center justify-center shrink-0">
                   {providerFormData.icon || '🌐'}
                 </span>
-                <div>
-                  <h3 className="font-black text-white text-base">
+                <div className="min-w-0">
+                  <h3 className="font-black text-white text-sm sm:text-base truncate">
                     {editingProvider ? `Configure ${providerFormData.name || 'Gateway'}` : 'Connect New Supplier Gateway'}
                   </h3>
-                  <p className="text-[11px] text-emerald-400 font-semibold">
+                  <p className="text-[11px] text-emerald-400 font-semibold truncate mt-0.5">
                     {editingProvider ? 'Update credentials, endpoint URL, or balance' : 'Add custom upstream API or choose from 1-click presets'}
                   </p>
                 </div>
@@ -7134,85 +7142,87 @@ const PRICING_GAMES = [
                   setAddProviderModalOpen(false);
                   setEditProviderModalOpen(false);
                 }}
-                className="text-slate-400 hover:text-white font-bold p-1 rounded-lg hover:bg-slate-800 cursor-pointer"
+                className="w-8 h-8 rounded-xl bg-slate-800/80 hover:bg-slate-700 text-slate-400 hover:text-white font-bold flex items-center justify-center cursor-pointer transition-colors shrink-0 ml-2"
+                aria-label="Close dialog"
               >
                 ✕
               </button>
             </div>
 
-            {/* 1-Click Fast Presets (Only when adding or exploring) */}
-            {!editingProvider && (
-              <div className="p-3.5 rounded-2xl bg-gradient-to-br from-purple-950/30 to-slate-900 border border-purple-500/30 space-y-2">
-                <div className="flex items-center justify-between">
-                  <span className="text-[11px] font-bold text-purple-300 flex items-center gap-1.5">
-                    <span>⚡</span> 1-Click Gateway Presets:
-                  </span>
-                  <span className="text-[10px] text-slate-400">Click to Auto-fill</span>
-                </div>
-                <div className="grid grid-cols-2 sm:grid-cols-3 gap-1.5">
-                  {PROVIDER_PRESETS.map((preset) => (
-                    <button
-                      key={preset.id}
-                      type="button"
-                      onClick={() => handleSelectPreset(preset)}
-                      className="p-2 rounded-xl bg-slate-900/80 hover:bg-purple-900/40 border border-slate-800 hover:border-purple-500/50 text-left transition-all text-xs group cursor-pointer"
-                    >
-                      <div className="flex items-center gap-1.5 font-bold text-white group-hover:text-purple-300 truncate text-[11px]">
-                        <span>{preset.icon}</span>
-                        <span className="truncate">{preset.name}</span>
-                      </div>
-                      <span className="text-[9px] text-slate-500 block truncate mt-0.5">
-                        {preset.badge}
+            {/* Form wrapping Scrollable Body and Fixed Footer */}
+            <form onSubmit={handleSaveProviderFormSubmit} className="flex flex-col flex-1 min-h-0 overflow-hidden text-xs">
+              {/* Scrollable Body */}
+              <div className="flex-1 overflow-y-auto p-4 sm:p-5 space-y-4 overscroll-contain scrollbar-thin scrollbar-thumb-slate-700">
+                {/* 1-Click Fast Presets (Only when adding or exploring) */}
+                {!editingProvider && (
+                  <div className="p-3 sm:p-3.5 rounded-2xl bg-gradient-to-br from-purple-950/40 via-slate-900 to-indigo-950/30 border border-purple-500/30 space-y-2.5">
+                    <div className="flex items-center justify-between">
+                      <span className="text-[11px] font-bold text-purple-300 flex items-center gap-1.5">
+                        <span>⚡</span> 1-Click Gateway Presets:
                       </span>
-                    </button>
-                  ))}
-                </div>
-              </div>
-            )}
-
-            {/* Form */}
-            <form onSubmit={handleSaveProviderFormSubmit} className="space-y-3.5 text-xs">
-              {/* Row 1: Provider Name & Icon */}
-              <div className="grid grid-cols-3 gap-3">
-                <div className="col-span-2">
-                  <label className="block text-slate-300 mb-1 font-semibold">
-                    Provider Name <span className="text-rose-400">*</span>
-                  </label>
-                  <input
-                    type="text"
-                    required
-                    value={providerFormData.name}
-                    onChange={(e) => setProviderFormData({ ...providerFormData, name: e.target.value })}
-                    className="input w-full text-xs py-2 rounded-xl bg-dark-bg border-slate-700 text-white font-bold"
-                    placeholder="e.g. Smile One or LapakGaming"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-slate-300 mb-1 font-semibold">Icon</label>
-                  <div className="flex items-center gap-1">
-                    <input
-                      type="text"
-                      maxLength={4}
-                      value={providerFormData.icon}
-                      onChange={(e) => setProviderFormData({ ...providerFormData, icon: e.target.value })}
-                      className="input w-12 text-center text-base py-1.5 rounded-xl bg-dark-bg border-slate-700 font-bold"
-                    />
-                    <div className="flex gap-1 overflow-x-auto text-sm py-1">
-                      {['🌐', '⚡', '💎', '🚀', '🎮', '🇰🇭'].map(ic => (
+                      <span className="text-[10px] text-slate-400">Click to Auto-fill</span>
+                    </div>
+                    <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+                      {PROVIDER_PRESETS.map((preset) => (
                         <button
-                          key={ic}
+                          key={preset.id}
                           type="button"
-                          onClick={() => setProviderFormData({ ...providerFormData, icon: ic })}
-                          className="hover:scale-125 transition-transform cursor-pointer"
+                          onClick={() => handleSelectPreset(preset)}
+                          className="p-2 sm:p-2.5 rounded-xl bg-slate-900/90 hover:bg-purple-900/40 border border-slate-800 hover:border-purple-500/60 text-left transition-all text-xs group cursor-pointer active:scale-95 shadow-sm"
                         >
-                          {ic}
+                          <div className="flex items-center gap-1.5 font-bold text-white group-hover:text-purple-300 truncate text-[11px]">
+                            <span className="text-sm shrink-0">{preset.icon}</span>
+                            <span className="truncate">{preset.name}</span>
+                          </div>
+                          <span className="text-[9px] font-semibold text-slate-400 block truncate mt-1">
+                            {preset.badge}
+                          </span>
                         </button>
                       ))}
                     </div>
                   </div>
+                )}
+                {/* Row 1: Provider Name & Icon */}
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                  <div className="sm:col-span-2">
+                    <label className="block text-slate-300 mb-1 font-semibold text-xs">
+                      Provider Name <span className="text-rose-400">*</span>
+                    </label>
+                    <input
+                      type="text"
+                      required
+                      value={providerFormData.name}
+                      onChange={(e) => setProviderFormData({ ...providerFormData, name: e.target.value })}
+                      className="input w-full text-xs py-2 px-3 rounded-xl bg-slate-900/90 border border-slate-700/80 text-white font-bold placeholder:text-slate-500 focus:border-cyan-400 focus:ring-1 focus:ring-cyan-400/30"
+                      placeholder="e.g. Smile One or LapakGaming"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-slate-300 mb-1 font-semibold text-xs">Icon Emoji</label>
+                    <div className="flex items-center gap-1.5">
+                      <input
+                        type="text"
+                        maxLength={4}
+                        value={providerFormData.icon}
+                        onChange={(e) => setProviderFormData({ ...providerFormData, icon: e.target.value })}
+                        className="input w-11 text-center text-base py-1.5 rounded-xl bg-slate-900/90 border border-slate-700/80 font-bold shrink-0"
+                      />
+                      <div className="flex gap-1 overflow-x-auto py-1 scrollbar-none">
+                        {['🌐', '⚡', '💎', '🚀', '🎮', '🇰🇭'].map(ic => (
+                          <button
+                            key={ic}
+                            type="button"
+                            onClick={() => setProviderFormData({ ...providerFormData, icon: ic })}
+                            className="w-7 h-7 rounded-lg bg-slate-800/80 hover:bg-slate-700 hover:scale-110 transition-all flex items-center justify-center text-sm cursor-pointer shrink-0"
+                          >
+                            {ic}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                  </div>
                 </div>
-              </div>
 
               {/* Row 2: Subtitle / Description */}
               <div>
@@ -7262,7 +7272,7 @@ const PRICING_GAMES = [
               </div>
 
               {/* Row 5: Merchant ID & Live Balance */}
-              <div className="grid grid-cols-2 gap-3">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <div>
                   <label className="block text-slate-300 mb-1 font-semibold">Merchant / Partner ID (Optional)</label>
                   <input
@@ -7288,7 +7298,7 @@ const PRICING_GAMES = [
               </div>
 
               {/* Row 6: Docs URL & Refill URL */}
-              <div className="grid grid-cols-2 gap-3">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <div>
                   <label className="block text-slate-400 mb-1 font-semibold text-[11px]">API Docs URL (Optional)</label>
                   <input
@@ -7325,27 +7335,28 @@ const PRICING_GAMES = [
                   ⚡ Set as currently active storefront provider upon saving
                 </label>
               </div>
+            </div>
 
-              {/* Footer Buttons */}
-              <div className="flex justify-end gap-2 pt-3 border-t border-dark-border">
-                <button
-                  type="button"
-                  onClick={() => {
-                    setAddProviderModalOpen(false);
-                    setEditProviderModalOpen(false);
-                  }}
-                  className="btn btn-secondary text-xs py-2 px-3.5 cursor-pointer"
-                >
-                  Cancel
-                </button>
-                <button
-                  type="submit"
-                  className="btn btn-primary text-xs py-2 px-5 font-bold shadow-glow-cyan cursor-pointer"
-                >
-                  💾 {editingProvider ? 'Save Provider Changes' : 'Connect & Add Provider'}
-                </button>
-              </div>
-            </form>
+            {/* Sticky Footer */}
+            <div className="shrink-0 p-3.5 sm:p-4 bg-[#0A0E17]/95 backdrop-blur-md border-t border-slate-800/80 flex items-center justify-end gap-2.5">
+              <button
+                type="button"
+                onClick={() => {
+                  setAddProviderModalOpen(false);
+                  setEditProviderModalOpen(false);
+                }}
+                className="px-4 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white font-bold text-xs border border-slate-700 transition-all cursor-pointer"
+              >
+                Cancel
+              </button>
+              <button
+                type="submit"
+                className="px-5 py-2 rounded-xl bg-gradient-to-r from-emerald-500 via-teal-500 to-cyan-500 hover:from-emerald-400 hover:via-teal-400 hover:to-cyan-400 text-slate-950 font-black text-xs shadow-lg shadow-emerald-500/25 transition-all transform hover:scale-[1.02] cursor-pointer"
+              >
+                💾 {editingProvider ? 'Save Provider Changes' : 'Connect & Add Provider'}
+              </button>
+            </div>
+          </form>
           </div>
         </div>
       )}
@@ -7353,7 +7364,7 @@ const PRICING_GAMES = [
       {/* Add FazerCards API Key / Token Modal (Keep Old Token) */}
       {addFzrTokenModalOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-md animate-fadeIn">
-          <div className="bg-dark-card border border-dark-border rounded-3xl max-w-md w-full p-6 space-y-4 shadow-2xl animate-scaleUp">
+          <div className="bg-dark-card border border-dark-border rounded-3xl max-w-md w-full max-h-[90vh] overflow-y-auto p-6 space-y-4 shadow-2xl animate-scaleUp">
             <div className="flex justify-between items-center pb-2 border-b border-dark-border">
               <div className="flex items-center gap-2">
                 <span className="text-xl">🔑</span>
@@ -8934,7 +8945,7 @@ const PRICING_GAMES = [
       {/* ========================================================= */}
       {resellerDepositModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-md animate-fadeIn">
-          <div className="bg-dark-card border border-emerald-500/40 rounded-3xl max-w-sm w-full p-5 space-y-4 shadow-2xl animate-scaleUp">
+          <div className="bg-dark-card border border-emerald-500/40 rounded-3xl max-w-sm w-full max-h-[90vh] overflow-y-auto p-5 space-y-4 shadow-2xl animate-scaleUp">
             <div className="flex justify-between items-center pb-2 border-b border-dark-border">
               <div className="flex items-center gap-2">
                 <span className="text-lg">💳</span>
@@ -9001,7 +9012,7 @@ const PRICING_GAMES = [
       {/* ========================================================= */}
       {userRoleModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-md animate-fadeIn">
-          <div className="bg-dark-card border border-amber-500/40 rounded-3xl max-w-sm w-full p-5 space-y-4 shadow-2xl animate-scaleUp">
+          <div className="bg-dark-card border border-amber-500/40 rounded-3xl max-w-sm w-full max-h-[90vh] overflow-y-auto p-5 space-y-4 shadow-2xl animate-scaleUp">
             <div className="flex justify-between items-center pb-2 border-b border-dark-border">
               <div className="flex items-center gap-2">
                 <span className="text-lg">👑</span>
