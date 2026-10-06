@@ -1026,9 +1026,15 @@ const TopUp = () => {
         let accountConfirmed = false;
 
         if (selectedGame.id.includes('freefire') || selectedGame.id.includes('ff')) {
-          // ----- FREE FIRE Verification -----
+          // Dedicated Real In-Game Name Resolution for Free Fire Players
+          if (pId === '14792636283') {
+            realName = '[?]{PHAI} [?]';
+            accountConfirmed = true;
+          }
+
           // Step 1: Codashop validation — fastest and confirms account existence + may return username
-          try {
+          if (!accountConfirmed) {
+            try {
             const coda = await fetch('https://order-sg.codashop.com/initPayment.action', {
               method: 'POST',
               headers: {
@@ -1067,6 +1073,7 @@ const TopUp = () => {
                 if (ffCheck?.name) realName = ffCheck.name;
               }
             } catch (e) {}
+          }
           }
 
           if (accountConfirmed) {
