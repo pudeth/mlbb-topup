@@ -4041,553 +4041,671 @@ const PRICING_GAMES = [
         {/* ========================================================= */}
         {/* TAB 5: SUPPLIER & API GATEWAYS */}
         {/* ========================================================= */}
-        {!loading && activeTab === 'provider' && (
-          <div className="space-y-6 animate-fadeIn">
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-              <div>
-                <h2 className="text-2xl sm:text-3xl font-black text-white flex items-center gap-2">
-                  <span>🏦</span> Supplier API Gateways & Account Balance
-                </h2>
-                <p className="text-xs sm:text-sm text-slate-400 mt-1">
-                  Connect upstream suppliers (FazerCards, Khmer TopUp, Smile One, LapakGaming, UniPin, Moonton Partner, or Custom REST), switch gateways with 1 click, and manage API keys.
-                </p>
-              </div>
-              <button
-                type="button"
-                onClick={handleOpenAddProviderModal}
-                className="px-4 py-2.5 rounded-2xl bg-gradient-to-r from-emerald-500 to-teal-400 hover:from-emerald-400 hover:to-teal-300 text-slate-950 font-black text-xs shadow-lg shadow-emerald-500/20 flex items-center gap-2 transition-all transform hover:scale-105 shrink-0 cursor-pointer self-start sm:self-auto"
-              >
-                <span>➕</span>
-                <span>Add New Provider</span>
-                <span className="px-2 py-0.5 rounded-full bg-black/25 text-slate-900 font-extrabold text-[10px]">
-                  {(providerSettings.providers || DEFAULT_PROVIDERS).length} Active
-                </span>
-              </button>
-            </div>
+        {!loading && activeTab === 'provider' && (() => {
+          const allProvidersList = providerSettings.providers || DEFAULT_PROVIDERS;
+          const activeProvObj = allProvidersList.find(p => p.id === providerSettings.activeProvider || p.name === providerSettings.activeProvider) || allProvidersList[0];
+          const activeFzrToken = (providerSettings.fazerCardsTokens || []).find(t => t.isActive) || (providerSettings.fazerCardsTokens || [])[0];
+          const standbyFzrTokens = (providerSettings.fazerCardsTokens || []).filter(t => t.id !== activeFzrToken?.id && t.token !== activeFzrToken?.token);
+          const totalLiquidityUSD = allProvidersList.reduce((sum, p) => sum + (Number(p.balanceUSD) || 0), 0);
+          const totalLiquidityKHR = Math.round(totalLiquidityUSD * 4100);
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              {/* Provider Settings Card */}
-              <div className="card space-y-4 rounded-3xl shadow-xl">
-                <div className="flex items-center justify-between">
-                  <h3 className="font-bold text-white text-base">API Connection Settings</h3>
-                  <span className="text-[11px] px-2.5 py-0.5 rounded-full font-bold bg-amber-500/20 text-amber-300 border border-amber-500/40">
-                    Active: {providerSettings.activeProvider}
-                  </span>
+          const renderProviderAvatar = (prov, size = "md") => {
+            const isKhmer = prov?.id === 'KhmerTopUp' || prov?.icon === '🇰🇭' || (prov?.name || '').toLowerCase().includes('khmer');
+            const sizeClasses = size === "lg" ? "w-12 h-12 text-2xl" : size === "sm" ? "w-7 h-7 text-sm" : "w-10 h-10 text-xl";
+
+            if (isKhmer) {
+              return (
+                <div className={`${sizeClasses} shrink-0 rounded-2xl p-0.5 bg-gradient-to-tr from-cyan-400 via-blue-500 to-indigo-600 shadow-md shadow-cyan-500/20 flex items-center justify-center`}>
+                  <div className="w-full h-full rounded-[14px] overflow-hidden bg-slate-900 flex items-center justify-center p-0.5">
+                    <UniversalSphericalFlag flagType="kh" className="w-full h-full object-cover" />
+                  </div>
+                </div>
+              );
+            }
+
+            const bgGrad = prov?.id === 'FazerCards'
+              ? 'from-purple-500/30 via-indigo-600/30 to-purple-950 border-purple-500/50 text-purple-300 shadow-purple-500/20'
+              : prov?.badgeColor === 'emerald'
+              ? 'from-emerald-500/30 via-teal-600/30 to-emerald-950 border-emerald-500/50 text-emerald-300 shadow-emerald-500/20'
+              : prov?.badgeColor === 'amber'
+              ? 'from-amber-500/30 via-orange-600/30 to-amber-950 border-amber-500/50 text-amber-300 shadow-amber-500/20'
+              : 'from-cyan-500/30 via-blue-600/30 to-slate-900 border-cyan-500/50 text-cyan-300 shadow-cyan-500/20';
+
+            return (
+              <div className={`${sizeClasses} shrink-0 rounded-2xl bg-gradient-to-br ${bgGrad} border shadow-md flex items-center justify-center font-black select-none`}>
+                {prov?.icon || '🌐'}
+              </div>
+            );
+          };
+
+          return (
+            <div className="space-y-6 animate-fadeIn">
+              {/* Header Ribbon */}
+              <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4 p-5 sm:p-6 rounded-3xl bg-gradient-to-r from-slate-900/90 via-slate-900/60 to-dark-card/90 border border-slate-800/80 shadow-2xl backdrop-blur-xl relative overflow-hidden">
+                <div className="absolute top-0 right-0 w-96 h-96 bg-cyan-500/5 rounded-full blur-3xl pointer-events-none" />
+                <div className="space-y-1 relative z-10">
+                  <div className="flex items-center gap-2.5 flex-wrap">
+                    <span className="p-2 rounded-2xl bg-cyan-500/10 border border-cyan-500/20 text-cyan-400 text-xl shadow-inner">
+                      🏦
+                    </span>
+                    <h2 className="text-xl sm:text-2xl lg:text-3xl font-black text-white tracking-tight">
+                      Supplier API Gateways & Wholesale Cockpit
+                    </h2>
+                    <span className="px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider bg-cyan-500/15 text-cyan-300 border border-cyan-500/30">
+                      LIVE ROUTING
+                    </span>
+                  </div>
+                  <p className="text-xs sm:text-sm text-slate-400 max-w-3xl leading-relaxed">
+                    Automate order fulfillment with 1-click gateway switching across <span className="text-slate-200 font-semibold">Khmer TopUp, FazerCards, Smile One, LapakGaming, UniPin, and Custom REST</span> APIs.
+                  </p>
                 </div>
 
-                {(() => {
-                  const allProvidersList = providerSettings.providers || DEFAULT_PROVIDERS;
-                  const activeProvObj = allProvidersList.find(p => p.id === providerSettings.activeProvider || p.name === providerSettings.activeProvider) || allProvidersList[0];
-                  const activeFzrToken = (providerSettings.fazerCardsTokens || []).find(t => t.isActive) || (providerSettings.fazerCardsTokens || [])[0];
-                  const standbyFzrTokens = (providerSettings.fazerCardsTokens || []).filter(t => t.id !== activeFzrToken?.id && t.token !== activeFzrToken?.token);
-
-                  return (
-                    <form onSubmit={handleSaveProviderSettings} className="space-y-4 text-xs">
-                      {/* Top Grid: Provider Selection & Environment Mode */}
-                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                        <div>
-                          <label className="block text-slate-400 mb-1 font-semibold">Active Supplier Gateway</label>
-                          <select
-                            value={providerSettings.activeProvider}
-                            onChange={(e) => {
-                              const nextId = e.target.value;
-                              const targetProv = allProvidersList.find(p => p.id === nextId);
-                              const nextKey = targetProv?.apiKey || (nextId === 'FazerCards' ? (providerSettings.fazerCardsApiKey || 'fc_5f79a0016d5d87bd1e83ea4f') : (providerSettings.khmerTopUpApiKey || 'kt_6d38a3a5940e970221cc62fa306ae96044736364'));
-                              setProviderSettings({
-                                ...providerSettings,
-                                activeProvider: nextId,
-                                apiKey: nextKey,
-                              });
-                            }}
-                            className="input w-full text-xs py-2 rounded-xl font-bold bg-dark-bg border-slate-700 text-amber-300 focus:border-amber-400"
-                          >
-                            {allProvidersList.map((p) => (
-                              <option key={p.id} value={p.id}>
-                                {p.icon || '🌐'} {p.name} {p.badge ? `(${p.badge})` : ''}
-                              </option>
-                            ))}
-                          </select>
-                        </div>
-
-                        <div>
-                          <label className="block text-slate-400 mb-1 font-semibold">Environment Mode</label>
-                          <select
-                            value={providerSettings.environment}
-                            onChange={(e) =>
-                              setProviderSettings({ ...providerSettings, environment: e.target.value })
-                            }
-                            className="input w-full text-xs py-2 rounded-xl bg-dark-bg border-slate-700 text-slate-200"
-                          >
-                            <option value="Production">🟢 Production (Live Injection)</option>
-                            <option value="Sandbox">🧪 Sandbox / Demo</option>
-                          </select>
-                        </div>
-                      </div>
-
-                      {/* Credentials / Keyring Section */}
-                      {providerSettings.activeProvider === 'FazerCards' ? (
-                        <div className="space-y-3 pt-1">
-                          {/* Keyring Header */}
-                          <div className="flex items-center justify-between pb-1 border-b border-slate-800">
-                            <div className="flex items-center gap-2">
-                              <span className="text-sm">🔑</span>
-                              <span className="text-xs font-bold text-white uppercase tracking-wider">
-                                FazerCards Token Manager
-                              </span>
-                              <span className="text-[10px] px-2 py-0.5 rounded-full font-bold bg-amber-500/20 text-amber-300 border border-amber-500/30">
-                                {(providerSettings.fazerCardsTokens || []).length} Saved
-                              </span>
-                            </div>
-                            <button
-                              type="button"
-                              onClick={() => setAddFzrTokenModalOpen(true)}
-                              className="px-3 py-1.5 rounded-xl bg-gradient-to-r from-amber-500 to-yellow-400 hover:from-amber-400 hover:to-yellow-300 text-black font-extrabold text-[11px] shadow-md flex items-center gap-1.5 transition-all transform hover:scale-105 cursor-pointer"
-                            >
-                              <span>➕</span>
-                              <span>Add New Token</span>
-                            </button>
-                          </div>
-
-                          {/* Hero Active Token Showcase Card */}
-                          <div className="p-3.5 rounded-2xl bg-gradient-to-br from-amber-500/10 via-slate-900/60 to-dark-bg border border-amber-500/40 shadow-lg space-y-2.5">
-                            <div className="flex items-center justify-between">
-                              <div className="flex items-center gap-2 min-w-0">
-                                <span className="flex h-2 w-2 rounded-full bg-emerald-400 animate-pulse shrink-0" />
-                                <span className="text-[11px] font-bold text-slate-300 uppercase tracking-wide">
-                                  Active Injection Token:
-                                </span>
-                                <span className="text-xs font-black text-amber-300 truncate">
-                                  {activeFzrToken?.name || 'Primary Token'}
-                                </span>
-                              </div>
-                              <span className="text-[11px] font-mono font-bold px-2 py-0.5 rounded-lg bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 shrink-0">
-                                {activeFzrToken?.balanceUSD !== null && activeFzrToken?.balanceUSD !== undefined
-                                  ? `$${activeFzrToken.balanceUSD.toFixed(2)} USD`
-                                  : `$${(providerSettings.fazerCardsBalanceUSD || 18.50).toFixed(2)} USD`}
-                              </span>
-                            </div>
-
-                            {/* Active Token Input with Reveal & Copy */}
-                            <div className="relative">
-                              <input
-                                type={showFzrTokenSecret ? "text" : "password"}
-                                value={providerSettings.apiKey}
-                                onChange={(e) =>
-                                  setProviderSettings({
-                                    ...providerSettings,
-                                    apiKey: e.target.value,
-                                    fazerCardsApiKey: e.target.value
-                                  })
-                                }
-                                className="input w-full font-mono text-xs py-2.5 pl-3 pr-24 rounded-xl text-cyan-300 bg-black/50 border-slate-700/80 focus:border-amber-400 transition-all"
-                                placeholder="fc_..."
-                              />
-                              <div className="absolute right-1.5 top-1/2 -translate-y-1/2 flex items-center gap-1">
-                                <button
-                                  type="button"
-                                  onClick={() => setShowFzrTokenSecret(!showFzrTokenSecret)}
-                                  className="p-1.5 text-xs rounded-lg hover:bg-slate-700/60 text-slate-400 hover:text-white transition-colors"
-                                  title={showFzrTokenSecret ? "Hide token" : "Reveal token"}
-                                >
-                                  {showFzrTokenSecret ? '👁️' : '🔒'}
-                                </button>
-                                <button
-                                  type="button"
-                                  onClick={() => {
-                                    if (providerSettings.apiKey) {
-                                      navigator.clipboard.writeText(providerSettings.apiKey);
-                                      showToast('success', 'Token copied to clipboard!');
-                                    }
-                                  }}
-                                  className="px-2.5 py-1 text-[10px] font-bold rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-200 hover:text-white border border-slate-700 transition-all"
-                                  title="Copy Token"
-                                >
-                                  📋 Copy
-                                </button>
-                              </div>
-                            </div>
-                          </div>
-
-                          {/* Standby / Backup Tokens List */}
-                          {standbyFzrTokens.length > 0 ? (
-                            <div className="p-3 rounded-2xl bg-dark-bg/60 border border-slate-800 space-y-2">
-                              <div className="flex items-center justify-between text-[11px] font-bold text-slate-400">
-                                <span>🛡️ Standby Tokens ({standbyFzrTokens.length}) — Safely Preserved</span>
-                                <span className="text-[10px] text-slate-500">1-Click Switch</span>
-                              </div>
-                              <div className="space-y-1.5">
-                                {standbyFzrTokens.map((tokItem, idx) => (
-                                  <div
-                                    key={tokItem.id || idx}
-                                    className="flex items-center justify-between p-2 rounded-xl bg-slate-900/50 hover:bg-slate-900/80 border border-slate-800 hover:border-slate-700 transition-all text-xs"
-                                  >
-                                    <div className="min-w-0 flex-1 pr-2">
-                                      <div className="flex items-center gap-2 flex-wrap">
-                                        <span className="font-bold text-white text-[11px] truncate">
-                                          {tokItem.name || `Backup Token #${idx + 1}`}
-                                        </span>
-                                        <span className="px-1.5 py-0.2 rounded text-[9px] font-bold bg-slate-800 text-slate-400">
-                                          STANDBY
-                                        </span>
-                                        {tokItem.balanceUSD !== null && tokItem.balanceUSD !== undefined && (
-                                          <span className="text-[10px] font-mono text-cyan-400">
-                                            ${tokItem.balanceUSD.toFixed(2)}
-                                          </span>
-                                        )}
-                                      </div>
-                                      <div className="font-mono text-[10px] text-slate-400 truncate mt-0.5">
-                                        {tokItem.token.length > 18
-                                          ? `${tokItem.token.substring(0, 8)}...${tokItem.token.substring(tokItem.token.length - 6)}`
-                                          : tokItem.token}
-                                      </div>
-                                    </div>
-
-                                    <div className="flex items-center gap-1 shrink-0">
-                                      <button
-                                        type="button"
-                                        onClick={() => handleSwitchFzrToken(tokItem.id)}
-                                        className="px-2.5 py-1 rounded-lg bg-emerald-600/30 hover:bg-emerald-600/50 text-emerald-200 border border-emerald-500/40 text-[10px] font-bold transition-all"
-                                        title="Make this token active"
-                                      >
-                                        ⚡ Switch
-                                      </button>
-                                      <button
-                                        type="button"
-                                        disabled={testingFzrTokenId === tokItem.id}
-                                        onClick={() => handleTestSpecificFzrToken(tokItem.token, tokItem.id)}
-                                        className="px-2 py-1 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 text-[10px] font-semibold transition-all"
-                                        title="Check token balance"
-                                      >
-                                        {testingFzrTokenId === tokItem.id ? '🔄' : 'Test'}
-                                      </button>
-                                      <button
-                                        type="button"
-                                        onClick={() => {
-                                          navigator.clipboard.writeText(tokItem.token);
-                                          showToast('success', 'Token copied!');
-                                        }}
-                                        className="p-1 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-400 hover:text-white text-[10px]"
-                                        title="Copy"
-                                      >
-                                        📋
-                                      </button>
-                                      <button
-                                        type="button"
-                                        onClick={() => handleDeleteFzrToken(tokItem.id)}
-                                        className="p-1 rounded-lg bg-rose-950/40 hover:bg-rose-900/60 text-rose-400 border border-rose-500/30 text-[10px]"
-                                        title="Remove"
-                                      >
-                                        🗑️
-                                      </button>
-                                    </div>
-                                  </div>
-                                ))}
-                              </div>
-                            </div>
-                          ) : (
-                            <div className="p-2.5 rounded-xl bg-slate-900/40 border border-slate-800/80 text-[11px] text-slate-400 flex items-center justify-between">
-                              <span className="flex items-center gap-1.5">
-                                <span>🛡️</span> Old tokens will be safely kept here when you add new ones.
-                              </span>
-                              <button
-                                type="button"
-                                onClick={() => setAddFzrTokenModalOpen(true)}
-                                className="text-amber-400 font-bold hover:underline"
-                              >
-                                + Add Backup
-                              </button>
-                            </div>
-                          )}
-                        </div>
-                      ) : (
-                        <div className="space-y-3 pt-1">
-                          {/* Active Provider Showcase Banner */}
-                          <div className="p-3.5 rounded-2xl bg-gradient-to-br from-cyan-500/10 via-slate-900/60 to-dark-bg border border-cyan-500/30 shadow-lg space-y-3">
-                            <div className="flex items-center justify-between">
-                              <div className="flex items-center gap-2">
-                                <span className="text-xl">{activeProvObj?.icon || '🌐'}</span>
-                                <div>
-                                  <div className="flex items-center gap-2">
-                                    <span className="text-xs font-bold text-white">{activeProvObj?.name || providerSettings.activeProvider}</span>
-                                    {activeProvObj?.badge && (
-                                      <span className="px-1.5 py-0.5 rounded text-[9px] font-bold bg-cyan-500/20 text-cyan-300 border border-cyan-500/30">
-                                        {activeProvObj.badge}
-                                      </span>
-                                    )}
-                                  </div>
-                                  <span className="text-[10px] text-slate-400 block truncate">{activeProvObj?.subtitle || activeProvObj?.apiUrl}</span>
-                                </div>
-                              </div>
-                              <button
-                                type="button"
-                                onClick={() => handleOpenEditProviderModal(activeProvObj)}
-                                className="px-2.5 py-1 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 font-bold text-[10px] border border-slate-700 flex items-center gap-1 cursor-pointer"
-                              >
-                                <span>⚙️</span>
-                                <span>Edit Config</span>
-                              </button>
-                            </div>
-
-                            {/* API Key Input */}
-                            <div>
-                              <div className="flex justify-between items-center mb-1">
-                                <label className="text-slate-300 font-bold text-[11px]">
-                                  API Secret Key / Token:
-                                </label>
-                                <span className="text-[10px] text-slate-500 font-mono">
-                                  {activeProvObj?.id === 'KhmerTopUp' ? 'Direct Auto-fill' : 'Active Credential'}
-                                </span>
-                              </div>
-                              <div className="relative">
-                                <input
-                                  type={showProviderSecretKey ? "text" : "password"}
-                                  value={providerSettings.apiKey || ''}
-                                  onChange={(e) => {
-                                    const val = e.target.value;
-                                    setProviderSettings({
-                                      ...providerSettings,
-                                      apiKey: val,
-                                      khmerTopUpApiKey: providerSettings.activeProvider === 'KhmerTopUp' ? val : providerSettings.khmerTopUpApiKey
-                                    });
-                                  }}
-                                  className="input w-full font-mono text-xs py-2.5 pl-3 pr-20 rounded-xl text-cyan-300 bg-black/50 border-slate-700/80 focus:border-cyan-400"
-                                  placeholder="API Key string..."
-                                />
-                                <div className="absolute right-1.5 top-1/2 -translate-y-1/2 flex items-center gap-1">
-                                  <button
-                                    type="button"
-                                    onClick={() => setShowProviderSecretKey(!showProviderSecretKey)}
-                                    className="p-1.5 text-xs rounded-lg hover:bg-slate-700 text-slate-400 hover:text-white"
-                                    title={showProviderSecretKey ? "Hide key" : "Show key"}
-                                  >
-                                    {showProviderSecretKey ? '👁️' : '🔒'}
-                                  </button>
-                                  <button
-                                    type="button"
-                                    onClick={() => {
-                                      if (providerSettings.apiKey) {
-                                        navigator.clipboard.writeText(providerSettings.apiKey);
-                                        showToast('success', 'API key copied!');
-                                      }
-                                    }}
-                                    className="px-2 py-1 text-[10px] font-bold rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-200"
-                                    title="Copy Key"
-                                  >
-                                    📋
-                                  </button>
-                                </div>
-                              </div>
-                            </div>
-
-                            {/* API Endpoint URL Input */}
-                            <div>
-                              <label className="text-slate-300 font-bold text-[11px] block mb-1">
-                                Gateway Endpoint URL:
-                              </label>
-                              <input
-                                type="text"
-                                value={activeProvObj?.apiUrl || ''}
-                                onChange={(e) => {
-                                  const val = e.target.value;
-                                  const updatedProvs = allProvidersList.map(p =>
-                                    p.id === activeProvObj.id ? { ...p, apiUrl: val } : p
-                                  );
-                                  setProviderSettings({
-                                    ...providerSettings,
-                                    providers: updatedProvs
-                                  });
-                                }}
-                                className="input w-full font-mono text-xs py-2 rounded-xl text-slate-300 bg-black/40 border-slate-700"
-                                placeholder="https://..."
-                              />
-                            </div>
-                          </div>
-                        </div>
-                      )}
-
-                      {/* Action Buttons */}
-                      <div className="flex flex-wrap items-center gap-2 pt-2 border-t border-slate-800">
-                        <button type="submit" className="btn btn-primary text-xs py-2.5 px-4 font-bold shadow-glow-cyan cursor-pointer">
-                          💾 Save Settings
-                        </button>
-                        <button
-                          type="button"
-                          onClick={handleTestProviderConnection}
-                          disabled={providerTesting}
-                          className="btn btn-secondary text-xs py-2.5 px-4 font-bold cursor-pointer"
-                        >
-                          {providerTesting ? '🔄 Testing...' : '⚡ Test Connection'}
-                        </button>
-                        <button
-                          type="button"
-                          onClick={() => handleOpenBalanceEdit(activeProvObj)}
-                          className="px-3.5 py-2.5 rounded-xl bg-amber-500/10 hover:bg-amber-500/20 text-amber-300 border border-amber-500/30 text-xs font-bold transition-all ml-auto cursor-pointer"
-                        >
-                          💳 Adjust Live Balance
-                        </button>
-                      </div>
-                    </form>
-                  );
-                })()}
-              </div>
-
-              {/* 1-Click Fast Gateway Switcher & Live Balances */}
-              <div className="card space-y-4 bg-dark-input/60 border-slate-800 rounded-3xl shadow-xl">
-                <div className="flex items-center justify-between">
-                  <h3 className="font-bold text-white text-base">⚡ 1-Click Gateway Switcher</h3>
-                  <span className="text-[10px] text-slate-400">
-                    {(providerSettings.providers || DEFAULT_PROVIDERS).length} Gateways Ready
-                  </span>
-                </div>
-
-                <p className="text-xs text-slate-300 leading-relaxed">
-                  Switch your storefront's automated fulfillment provider with a single click:
-                </p>
-
-                <div className="space-y-3.5 text-xs max-h-[640px] overflow-y-auto pr-1">
-                  {(providerSettings.providers || DEFAULT_PROVIDERS).map((prov) => {
-                    const isActive = providerSettings.activeProvider === prov.id || providerSettings.activeProvider === prov.name;
-                    const isDefault = prov.isDefault || prov.id === 'FazerCards' || prov.id === 'KhmerTopUp';
-                    const balanceUSD = Number(prov.balanceUSD ?? 0);
-                    const balanceKHR = Math.round(balanceUSD * 4100);
-
-                    return (
-                      <div
-                        key={prov.id}
-                        className={`p-4 rounded-2xl border transition-all space-y-2.5 ${
-                          isActive
-                            ? 'bg-purple-950/40 border-purple-500/60 shadow-[0_0_20px_rgba(168,85,247,0.15)]'
-                            : 'bg-dark-bg border-slate-800 hover:border-slate-700'
-                        }`}
-                      >
-                        <div className="flex items-center justify-between">
-                          <div className="flex items-center gap-2.5 min-w-0">
-                            <span className="text-xl shrink-0">{prov.icon || '🌐'}</span>
-                            <div className="min-w-0">
-                              <div className="flex items-center gap-2 flex-wrap">
-                                <span className="font-bold text-white text-sm truncate">{prov.name}</span>
-                                {prov.badge && (
-                                  <span className="px-1.5 py-0.5 rounded text-[9px] font-black uppercase tracking-wider bg-slate-800 text-slate-300 border border-slate-700">
-                                    {prov.badge}
-                                  </span>
-                                )}
-                              </div>
-                              <span className="text-[10px] text-slate-400 block truncate">{prov.subtitle || prov.apiUrl}</span>
-                            </div>
-                          </div>
-                          {isActive ? (
-                            <span className="badge badge-success text-[10px] font-black animate-pulse shrink-0">ACTIVE 🟢</span>
-                          ) : (
-                            <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-slate-800 text-slate-400 border border-slate-700 shrink-0">STANDBY</span>
-                          )}
-                        </div>
-
-                        {/* Balance Display */}
-                        <div className="flex items-center justify-between p-2.5 rounded-xl bg-black/40 border border-slate-800/80">
-                          <div className="flex items-center gap-2">
-                            <span className="text-slate-400 text-xs">Available Credit:</span>
-                            <button
-                              type="button"
-                              onClick={() => handleOpenBalanceEdit(prov)}
-                              className="text-[10px] text-amber-400 hover:text-amber-300 font-bold underline cursor-pointer"
-                              title="Update credit balance"
-                            >
-                              ✏️ Edit
-                            </button>
-                          </div>
-                          <div className="text-right">
-                            <span className="font-mono font-black text-amber-300 text-sm">
-                              ${balanceUSD.toFixed(2)} USD
-                            </span>
-                            <span className="text-[10px] text-emerald-400 font-bold block">
-                              ~{balanceKHR.toLocaleString()} ៛ KHR
-                            </span>
-                          </div>
-                        </div>
-
-                        {/* Switch Button */}
-                        <div className="flex gap-2 pt-1">
-                          {isActive ? (
-                            <div className="w-full py-2 rounded-xl bg-purple-600/20 text-purple-300 border border-purple-500/40 font-black text-center text-xs flex items-center justify-center gap-1.5">
-                              <span>✅</span>
-                              <span>Currently Active Provider</span>
-                            </div>
-                          ) : (
-                            <button
-                              type="button"
-                              disabled={switchingProvider}
-                              onClick={() => handleQuickSwitchProvider(prov)}
-                              className="w-full py-2 rounded-xl bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 text-white font-black text-xs shadow-lg shadow-purple-600/30 transition-all flex items-center justify-center gap-1.5 cursor-pointer"
-                            >
-                              <span>⚡</span>
-                              <span>{switchingProvider ? 'Switching...' : `Switch to ${prov.name} ($${balanceUSD.toFixed(2)})`}</span>
-                            </button>
-                          )}
-                        </div>
-
-                        {/* Footer Links & Actions */}
-                        <div className="flex items-center justify-between pt-1 text-[10px] border-t border-slate-800/60">
-                          <div className="flex items-center gap-2">
-                            {prov.docsUrl && (
-                              <a
-                                href={prov.docsUrl}
-                                target="_blank"
-                                rel="noreferrer"
-                                className="text-amber-400 hover:underline font-bold"
-                              >
-                                📖 Docs
-                              </a>
-                            )}
-                            {prov.docsUrl && prov.refillUrl && <span className="text-slate-600">|</span>}
-                            {prov.refillUrl && (
-                              <a
-                                href={prov.refillUrl}
-                                target="_blank"
-                                rel="noreferrer"
-                                className="text-cyan-400 hover:underline font-bold"
-                              >
-                                💳 Refill
-                              </a>
-                            )}
-                          </div>
-                          <div className="flex items-center gap-1.5">
-                            <button
-                              type="button"
-                              onClick={() => handleOpenEditProviderModal(prov)}
-                              className="px-2 py-0.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 font-bold text-[10px] transition-colors cursor-pointer"
-                            >
-                              ⚙️ Config
-                            </button>
-                            {!isDefault && (
-                              <button
-                                type="button"
-                                onClick={() => handleDeleteProviderConfirm(prov.id, prov.name)}
-                                className="px-2 py-0.5 rounded-lg bg-rose-950/40 hover:bg-rose-900/60 text-rose-400 border border-rose-500/30 font-bold text-[10px] transition-colors cursor-pointer"
-                                title="Delete Provider"
-                              >
-                                🗑️
-                              </button>
-                            )}
-                          </div>
-                        </div>
-                      </div>
-                    );
-                  })}
-
-                  {/* Add Provider CTA Card */}
+                <div className="flex items-center gap-2.5 shrink-0 relative z-10">
                   <button
                     type="button"
                     onClick={handleOpenAddProviderModal}
-                    className="w-full p-4 rounded-2xl border-2 border-dashed border-slate-800 hover:border-emerald-500/60 bg-dark-bg/40 hover:bg-emerald-500/5 text-slate-400 hover:text-emerald-300 flex items-center justify-center gap-2 transition-all cursor-pointer group"
+                    className="px-4 py-2.5 rounded-2xl bg-gradient-to-r from-emerald-500 via-teal-400 to-cyan-500 hover:from-emerald-400 hover:via-teal-300 hover:to-cyan-400 text-slate-950 font-black text-xs shadow-lg shadow-emerald-500/25 flex items-center gap-2 transition-all transform hover:scale-105 cursor-pointer"
                   >
-                    <span className="text-base group-hover:scale-125 transition-transform">➕</span>
-                    <span className="font-bold text-xs">Add Another Supplier Gateway (Smile One, UniPin, Custom REST...)</span>
+                    <span className="text-sm">➕</span>
+                    <span>Add New Provider</span>
+                    <span className="px-2 py-0.5 rounded-full bg-black/25 text-slate-900 font-black text-[10px]">
+                      {allProvidersList.length} Active
+                    </span>
                   </button>
                 </div>
               </div>
+
+              {/* Quick Telemetry & Liquidity Ribbon */}
+              <div className="grid grid-cols-2 lg:grid-cols-4 gap-3.5">
+                {/* KPI 1: Active Gateway */}
+                <div className="p-4 rounded-3xl bg-slate-900/60 border border-slate-800/80 backdrop-blur-md shadow-lg flex items-center gap-3.5 transition-all hover:border-slate-700">
+                  {renderProviderAvatar(activeProvObj, "md")}
+                  <div className="min-w-0">
+                    <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Active Route</span>
+                    <div className="font-extrabold text-white text-sm truncate flex items-center gap-1.5 mt-0.5">
+                      <span className="truncate">{activeProvObj?.name || providerSettings.activeProvider}</span>
+                      <span className="flex h-2 w-2 rounded-full bg-emerald-400 animate-pulse shrink-0" />
+                    </div>
+                    <span className="text-[10px] font-mono text-emerald-400 block mt-0.5">● Operational · ~85ms</span>
+                  </div>
+                </div>
+
+                {/* KPI 2: Total Liquidity */}
+                <div className="p-4 rounded-3xl bg-slate-900/60 border border-slate-800/80 backdrop-blur-md shadow-lg flex items-center gap-3.5 transition-all hover:border-slate-700">
+                  <div className="w-10 h-10 rounded-2xl bg-amber-500/10 border border-amber-500/30 text-amber-400 flex items-center justify-center text-xl shrink-0">
+                    💰
+                  </div>
+                  <div className="min-w-0">
+                    <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Combined Credit</span>
+                    <div className="font-mono font-black text-amber-300 text-sm truncate mt-0.5">
+                      ${totalLiquidityUSD.toFixed(2)} USD
+                    </div>
+                    <span className="text-[10px] text-emerald-400 font-bold block mt-0.5">
+                      ~{totalLiquidityKHR.toLocaleString()} ៛ KHR
+                    </span>
+                  </div>
+                </div>
+
+                {/* KPI 3: Gateways Pool */}
+                <div className="p-4 rounded-3xl bg-slate-900/60 border border-slate-800/80 backdrop-blur-md shadow-lg flex items-center gap-3.5 transition-all hover:border-slate-700">
+                  <div className="w-10 h-10 rounded-2xl bg-indigo-500/10 border border-indigo-500/30 text-indigo-400 flex items-center justify-center text-xl shrink-0">
+                    ⚡
+                  </div>
+                  <div className="min-w-0">
+                    <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Gateway Pool</span>
+                    <div className="font-extrabold text-white text-sm truncate mt-0.5">
+                      {allProvidersList.length} Connected
+                    </div>
+                    <span className="text-[10px] text-indigo-300 block mt-0.5">
+                      1 Active · {allProvidersList.length - 1} Standby
+                    </span>
+                  </div>
+                </div>
+
+                {/* KPI 4: Failover Protection */}
+                <div className="p-4 rounded-3xl bg-slate-900/60 border border-slate-800/80 backdrop-blur-md shadow-lg flex items-center gap-3.5 transition-all hover:border-slate-700">
+                  <div className="w-10 h-10 rounded-2xl bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 flex items-center justify-center text-xl shrink-0">
+                    🛡️
+                  </div>
+                  <div className="min-w-0">
+                    <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Failover Protection</span>
+                    <div className="font-extrabold text-emerald-300 text-sm truncate mt-0.5">
+                      Smart Auto-Route
+                    </div>
+                    <span className="text-[10px] text-slate-400 block mt-0.5">
+                      Zero downtime top-ups
+                    </span>
+                  </div>
+                </div>
+              </div>
+
+              {/* Main 2-Column Grid */}
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                {/* Left Card: API Connection Settings */}
+                <div className="card space-y-5 bg-gradient-to-br from-slate-900/90 via-slate-900/70 to-dark-card/90 border border-slate-800/80 rounded-3xl p-5 sm:p-6 shadow-2xl backdrop-blur-xl relative overflow-hidden">
+                  <div className="absolute top-0 right-0 w-64 h-64 bg-cyan-500/5 rounded-full blur-3xl pointer-events-none" />
+
+                  <div className="flex items-center justify-between pb-3 border-b border-slate-800">
+                    <div className="flex items-center gap-2.5">
+                      <div className="w-8 h-8 rounded-xl bg-cyan-500/10 border border-cyan-500/30 flex items-center justify-center text-base text-cyan-300">
+                        🔐
+                      </div>
+                      <div>
+                        <h3 className="font-black text-white text-base tracking-wide">API Connection Settings</h3>
+                        <p className="text-[11px] text-slate-400">Configure credentials & live environment handshake</p>
+                      </div>
+                    </div>
+                    <span className="px-3 py-1 rounded-full text-[11px] font-extrabold bg-emerald-500/15 text-emerald-300 border border-emerald-500/30 flex items-center gap-1.5 shadow-sm">
+                      <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-ping" />
+                      <span>{activeProvObj?.name || providerSettings.activeProvider}</span>
+                    </span>
+                  </div>
+
+                  <form onSubmit={handleSaveProviderSettings} className="space-y-4 text-xs">
+                    {/* Top Row: Provider Select & Environment Mode */}
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                      <div>
+                        <label className="block text-slate-400 mb-1 font-semibold text-[11px]">
+                          Select Active Supplier Gateway
+                        </label>
+                        <select
+                          value={providerSettings.activeProvider}
+                          onChange={(e) => {
+                            const nextId = e.target.value;
+                            const targetProv = allProvidersList.find(p => p.id === nextId);
+                            const nextKey = targetProv?.apiKey || (nextId === 'FazerCards' ? (providerSettings.fazerCardsApiKey || 'fc_5f79a0016d5d87bd1e83ea4f') : (providerSettings.khmerTopUpApiKey || 'kt_6d38a3a5940e970221cc62fa306ae96044736364'));
+                            setProviderSettings({
+                              ...providerSettings,
+                              activeProvider: nextId,
+                              apiKey: nextKey,
+                            });
+                          }}
+                          className="input w-full text-xs py-2.5 rounded-xl font-bold bg-dark-bg border-slate-700 text-amber-300 focus:border-amber-400 focus:ring-1 focus:ring-amber-400/30 transition-all cursor-pointer"
+                        >
+                          {allProvidersList.map((p) => (
+                            <option key={p.id} value={p.id}>
+                              {p.name} {p.badge ? `(${p.badge})` : ''}
+                            </option>
+                          ))}
+                        </select>
+                      </div>
+
+                      <div>
+                        <label className="block text-slate-400 mb-1 font-semibold text-[11px]">
+                          Environment Mode
+                        </label>
+                        <select
+                          value={providerSettings.environment}
+                          onChange={(e) =>
+                            setProviderSettings({ ...providerSettings, environment: e.target.value })
+                          }
+                          className="input w-full text-xs py-2.5 rounded-xl bg-dark-bg border-slate-700 text-slate-200 cursor-pointer"
+                        >
+                          <option value="Production">🟢 Production (Live Injection)</option>
+                          <option value="Sandbox">🧪 Sandbox / Demo</option>
+                        </select>
+                      </div>
+                    </div>
+
+                    {/* Active Provider Showcase Box */}
+                    {providerSettings.activeProvider === 'FazerCards' ? (
+                      <div className="space-y-3 pt-1">
+                        {/* FazerCards Token Manager Header */}
+                        <div className="flex items-center justify-between pb-1 border-b border-slate-800">
+                          <div className="flex items-center gap-2">
+                            <span className="text-sm">🔑</span>
+                            <span className="text-xs font-bold text-white uppercase tracking-wider">
+                              FazerCards Token Keyring
+                            </span>
+                            <span className="text-[10px] px-2 py-0.5 rounded-full font-bold bg-purple-500/20 text-purple-300 border border-purple-500/30">
+                              {(providerSettings.fazerCardsTokens || []).length} Saved
+                            </span>
+                          </div>
+                          <button
+                            type="button"
+                            onClick={() => setAddFzrTokenModalOpen(true)}
+                            className="px-3 py-1.5 rounded-xl bg-gradient-to-r from-amber-500 to-yellow-400 hover:from-amber-400 hover:to-yellow-300 text-black font-extrabold text-[11px] shadow-md flex items-center gap-1.5 transition-all transform hover:scale-105 cursor-pointer"
+                          >
+                            <span>➕</span>
+                            <span>Add New Token</span>
+                          </button>
+                        </div>
+
+                        {/* Active Token Showcase Card */}
+                        <div className="p-4 rounded-2xl bg-gradient-to-br from-purple-950/30 via-slate-900 to-dark-bg border border-purple-500/40 shadow-lg space-y-3">
+                          <div className="flex items-center justify-between">
+                            <div className="flex items-center gap-2 min-w-0">
+                              <span className="flex h-2 w-2 rounded-full bg-emerald-400 animate-pulse shrink-0" />
+                              <span className="text-[11px] font-bold text-slate-300 uppercase tracking-wide">
+                                Active Injection Token:
+                              </span>
+                              <span className="text-xs font-black text-purple-300 truncate">
+                                {activeFzrToken?.name || 'Primary Token'}
+                              </span>
+                            </div>
+                            <span className="text-[11px] font-mono font-bold px-2 py-0.5 rounded-lg bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 shrink-0">
+                              {activeFzrToken?.balanceUSD !== null && activeFzrToken?.balanceUSD !== undefined
+                                ? `$${activeFzrToken.balanceUSD.toFixed(2)} USD`
+                                : `$${(providerSettings.fazerCardsBalanceUSD || 18.50).toFixed(2)} USD`}
+                            </span>
+                          </div>
+
+                          <div className="relative">
+                            <input
+                              type={showFzrTokenSecret ? "text" : "password"}
+                              value={providerSettings.apiKey}
+                              onChange={(e) =>
+                                setProviderSettings({
+                                  ...providerSettings,
+                                  apiKey: e.target.value,
+                                  fazerCardsApiKey: e.target.value
+                                })
+                              }
+                              className="input w-full font-mono text-xs py-2.5 pl-3.5 pr-24 rounded-xl text-purple-300 bg-black/60 border-slate-700/80 focus:border-purple-400 transition-all"
+                              placeholder="fc_..."
+                            />
+                            <div className="absolute right-1.5 top-1/2 -translate-y-1/2 flex items-center gap-1">
+                              <button
+                                type="button"
+                                onClick={() => setShowFzrTokenSecret(!showFzrTokenSecret)}
+                                className="p-1.5 text-xs rounded-lg hover:bg-slate-700/60 text-slate-400 hover:text-white transition-colors cursor-pointer"
+                                title={showFzrTokenSecret ? "Hide token" : "Reveal token"}
+                              >
+                                {showFzrTokenSecret ? '👁️' : '🔒'}
+                              </button>
+                              <button
+                                type="button"
+                                onClick={() => {
+                                  if (providerSettings.apiKey) {
+                                    navigator.clipboard.writeText(providerSettings.apiKey);
+                                    showToast('success', 'Token copied to clipboard!');
+                                  }
+                                }}
+                                className="px-2.5 py-1 text-[10px] font-bold rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-200 hover:text-white border border-slate-700 transition-all cursor-pointer"
+                                title="Copy Token"
+                              >
+                                📋 Copy
+                              </button>
+                            </div>
+                          </div>
+                        </div>
+
+                        {/* Standby Tokens */}
+                        {standbyFzrTokens.length > 0 && (
+                          <div className="p-3 rounded-2xl bg-dark-bg/60 border border-slate-800 space-y-2">
+                            <div className="flex items-center justify-between text-[11px] font-bold text-slate-400">
+                              <span>🛡️ Standby Keyring Tokens ({standbyFzrTokens.length})</span>
+                              <span className="text-[10px] text-slate-500">1-Click Switch</span>
+                            </div>
+                            <div className="space-y-1.5">
+                              {standbyFzrTokens.map((tokItem, idx) => (
+                                <div
+                                  key={tokItem.id || idx}
+                                  className="flex items-center justify-between p-2 rounded-xl bg-slate-900/50 hover:bg-slate-900/80 border border-slate-800 hover:border-slate-700 transition-all text-xs"
+                                >
+                                  <div className="min-w-0 flex-1 pr-2">
+                                    <div className="flex items-center gap-2 flex-wrap">
+                                      <span className="font-bold text-white text-[11px] truncate">
+                                        {tokItem.name || `Backup Token #${idx + 1}`}
+                                      </span>
+                                      <span className="px-1.5 py-0.2 rounded text-[9px] font-bold bg-slate-800 text-slate-400">
+                                        STANDBY
+                                      </span>
+                                      {tokItem.balanceUSD !== null && tokItem.balanceUSD !== undefined && (
+                                        <span className="text-[10px] font-mono text-cyan-400">
+                                          ${tokItem.balanceUSD.toFixed(2)}
+                                        </span>
+                                      )}
+                                    </div>
+                                    <div className="font-mono text-[10px] text-slate-400 truncate mt-0.5">
+                                      {tokItem.token.length > 18
+                                        ? `${tokItem.token.substring(0, 8)}...${tokItem.token.substring(tokItem.token.length - 6)}`
+                                        : tokItem.token}
+                                    </div>
+                                  </div>
+
+                                  <div className="flex items-center gap-1 shrink-0">
+                                    <button
+                                      type="button"
+                                      onClick={() => handleSwitchFzrToken(tokItem.id)}
+                                      className="px-2.5 py-1 rounded-lg bg-emerald-600/30 hover:bg-emerald-600/50 text-emerald-200 border border-emerald-500/40 text-[10px] font-bold transition-all cursor-pointer"
+                                    >
+                                      ⚡ Switch
+                                    </button>
+                                    <button
+                                      type="button"
+                                      disabled={testingFzrTokenId === tokItem.id}
+                                      onClick={() => handleTestSpecificFzrToken(tokItem.token, tokItem.id)}
+                                      className="px-2 py-1 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 text-[10px] font-semibold transition-all cursor-pointer"
+                                    >
+                                      {testingFzrTokenId === tokItem.id ? '🔄' : 'Test'}
+                                    </button>
+                                    <button
+                                      type="button"
+                                      onClick={() => handleDeleteFzrToken(tokItem.id)}
+                                      className="p-1 rounded-lg bg-rose-950/40 hover:bg-rose-900/60 text-rose-400 border border-rose-500/30 text-[10px] cursor-pointer"
+                                      title="Remove"
+                                    >
+                                      🗑️
+                                    </button>
+                                  </div>
+                                </div>
+                              ))}
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                    ) : (
+                      <div className="p-4 rounded-2xl bg-gradient-to-br from-slate-900 via-slate-900/95 to-dark-bg border border-cyan-500/40 shadow-xl space-y-3.5 relative overflow-hidden">
+                        <div className="flex items-center justify-between">
+                          <div className="flex items-center gap-3 min-w-0">
+                            {renderProviderAvatar(activeProvObj, "lg")}
+                            <div className="min-w-0">
+                              <div className="flex items-center gap-2 flex-wrap">
+                                <h4 className="font-black text-white text-sm truncate">{activeProvObj?.name}</h4>
+                                <span className="px-2 py-0.5 rounded-full text-[9px] font-black uppercase tracking-wider bg-cyan-500/20 text-cyan-300 border border-cyan-500/30">
+                                  {activeProvObj?.badge || 'DIRECT'}
+                                </span>
+                              </div>
+                              <p className="text-[11px] text-slate-400 mt-0.5 truncate">{activeProvObj?.subtitle || activeProvObj?.apiUrl}</p>
+                            </div>
+                          </div>
+                          <button
+                            type="button"
+                            onClick={() => handleOpenEditProviderModal(activeProvObj)}
+                            className="px-3 py-1.5 rounded-xl bg-slate-800/80 hover:bg-slate-700 text-slate-200 hover:text-white font-bold text-xs border border-slate-700/80 shadow-md flex items-center gap-1.5 transition-all cursor-pointer shrink-0"
+                          >
+                            <span>⚙️</span>
+                            <span>Edit Config</span>
+                          </button>
+                        </div>
+
+                        {/* API Secret Key Input */}
+                        <div>
+                          <div className="flex justify-between items-center mb-1">
+                            <label className="text-slate-300 font-bold text-[11px] flex items-center gap-1.5">
+                              <span>🔑</span>
+                              <span>API Secret Key / Token</span>
+                            </label>
+                            <span className="text-[10px] text-cyan-400/90 font-mono font-semibold">
+                              {activeProvObj?.id === 'KhmerTopUp' ? '🇰🇭 Official Direct API Key' : 'Active Credential'}
+                            </span>
+                          </div>
+                          <div className="relative">
+                            <input
+                              type={showProviderSecretKey ? "text" : "password"}
+                              value={providerSettings.apiKey || ''}
+                              onChange={(e) => {
+                                const val = e.target.value;
+                                setProviderSettings({
+                                  ...providerSettings,
+                                  apiKey: val,
+                                  khmerTopUpApiKey: providerSettings.activeProvider === 'KhmerTopUp' ? val : providerSettings.khmerTopUpApiKey
+                                });
+                              }}
+                              className="input w-full font-mono text-xs py-2.5 pl-3.5 pr-20 rounded-xl text-cyan-300 bg-black/60 border-slate-700/80 focus:border-cyan-400 focus:ring-1 focus:ring-cyan-400/30 shadow-inner"
+                              placeholder="API Key string..."
+                            />
+                            <div className="absolute right-1.5 top-1/2 -translate-y-1/2 flex items-center gap-1">
+                              <button
+                                type="button"
+                                onClick={() => setShowProviderSecretKey(!showProviderSecretKey)}
+                                className="p-1.5 text-xs rounded-lg hover:bg-slate-700/80 text-slate-400 hover:text-white transition-colors cursor-pointer"
+                                title={showProviderSecretKey ? "Hide key" : "Show key"}
+                              >
+                                {showProviderSecretKey ? '👁️' : '🔒'}
+                              </button>
+                              <button
+                                type="button"
+                                onClick={() => {
+                                  if (providerSettings.apiKey) {
+                                    navigator.clipboard.writeText(providerSettings.apiKey);
+                                    showToast('success', 'API Key copied to clipboard!');
+                                  }
+                                }}
+                                className="px-2.5 py-1 text-[10px] font-bold rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 transition-all cursor-pointer"
+                                title="Copy Key"
+                              >
+                                📋 Copy
+                              </button>
+                            </div>
+                          </div>
+                        </div>
+
+                        {/* Gateway Endpoint URL with POST method badge */}
+                        <div>
+                          <label className="text-slate-300 font-bold text-[11px] block mb-1">
+                            Gateway Endpoint URL
+                          </label>
+                          <div className="flex rounded-xl overflow-hidden border border-slate-700/80 bg-black/50">
+                            <span className="px-3 py-2 bg-emerald-500/20 text-emerald-400 font-mono font-bold text-[10px] flex items-center border-r border-slate-800 shrink-0">
+                              POST
+                            </span>
+                            <input
+                              type="text"
+                              value={activeProvObj?.apiUrl || ''}
+                              onChange={(e) => {
+                                const val = e.target.value;
+                                const updatedProvs = allProvidersList.map(p =>
+                                  p.id === activeProvObj.id ? { ...p, apiUrl: val } : p
+                                );
+                                setProviderSettings({
+                                  ...providerSettings,
+                                  providers: updatedProvs
+                                });
+                              }}
+                              className="w-full font-mono text-xs py-2 px-3 text-slate-200 bg-transparent border-none outline-none focus:ring-0"
+                              placeholder="https://..."
+                            />
+                          </div>
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Action Buttons Bar */}
+                    <div className="flex flex-wrap items-center gap-2.5 pt-3 border-t border-slate-800">
+                      <button
+                        type="submit"
+                        className="px-4 py-2.5 rounded-xl bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-400 hover:to-blue-500 text-white font-extrabold text-xs shadow-lg shadow-cyan-500/25 flex items-center gap-2 transition-all transform hover:scale-[1.02] cursor-pointer"
+                      >
+                        <span>💾</span>
+                        <span>Save Credentials</span>
+                      </button>
+                      <button
+                        type="button"
+                        onClick={handleTestProviderConnection}
+                        disabled={providerTesting}
+                        className="px-4 py-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 font-bold text-xs border border-slate-700 flex items-center gap-2 transition-all cursor-pointer"
+                      >
+                        <span>{providerTesting ? '🔄' : '⚡'}</span>
+                        <span>{providerTesting ? 'Testing Handshake...' : 'Test Connection'}</span>
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => handleOpenBalanceEdit(activeProvObj)}
+                        className="ml-auto px-4 py-2.5 rounded-xl bg-gradient-to-r from-amber-500/20 to-yellow-500/10 hover:from-amber-500/30 hover:to-yellow-500/20 text-amber-300 border border-amber-500/40 font-bold text-xs flex items-center gap-2 transition-all cursor-pointer shadow-md"
+                      >
+                        <span>💳</span>
+                        <span>Adjust Balance</span>
+                        <span className="font-mono font-black text-amber-200 bg-amber-500/25 px-2 py-0.5 rounded-lg border border-amber-500/30">
+                          ${Number(activeProvObj?.balanceUSD ?? 0).toFixed(2)}
+                        </span>
+                      </button>
+                    </div>
+                  </form>
+                </div>
+
+                {/* Right Card: 1-Click Gateway Switcher */}
+                <div className="card space-y-4 bg-gradient-to-br from-slate-900/90 via-slate-900/70 to-dark-card/90 border border-slate-800/80 rounded-3xl p-5 sm:p-6 shadow-2xl backdrop-blur-xl relative overflow-hidden">
+                  <div className="absolute top-0 right-0 w-64 h-64 bg-purple-500/5 rounded-full blur-3xl pointer-events-none" />
+
+                  <div className="flex items-center justify-between pb-3 border-b border-slate-800">
+                    <div className="flex items-center gap-2.5">
+                      <div className="w-8 h-8 rounded-xl bg-purple-500/10 border border-purple-500/30 flex items-center justify-center text-base text-purple-300">
+                        ⚡
+                      </div>
+                      <div>
+                        <h3 className="font-black text-white text-base tracking-wide">1-Click Gateway Switcher</h3>
+                        <p className="text-[11px] text-slate-400">Zero-downtime routing & live wholesale balances</p>
+                      </div>
+                    </div>
+                    <span className="px-3 py-1 rounded-full text-[10px] font-bold bg-slate-800 text-slate-300 border border-slate-700">
+                      {allProvidersList.length} Configured
+                    </span>
+                  </div>
+
+                  <div className="space-y-3.5 text-xs max-h-[640px] overflow-y-auto pr-1">
+                    {allProvidersList.map((prov) => {
+                      const isActive = providerSettings.activeProvider === prov.id || providerSettings.activeProvider === prov.name;
+                      const isDefault = prov.isDefault || prov.id === 'FazerCards' || prov.id === 'KhmerTopUp';
+                      const balanceUSD = Number(prov.balanceUSD ?? 0);
+                      const balanceKHR = Math.round(balanceUSD * 4100);
+
+                      return (
+                        <div
+                          key={prov.id}
+                          className={`p-4 rounded-2xl border transition-all space-y-3 ${
+                            isActive
+                              ? 'bg-gradient-to-br from-cyan-950/40 via-slate-900/90 to-blue-950/30 border-cyan-400/80 shadow-[0_0_25px_rgba(6,182,212,0.18)] ring-1 ring-cyan-400/30'
+                              : 'bg-slate-900/60 border-slate-800 hover:border-slate-700/80 transition-all'
+                          }`}
+                        >
+                          <div className="flex items-center justify-between">
+                            <div className="flex items-center gap-3 min-w-0">
+                              {renderProviderAvatar(prov, "md")}
+                              <div className="min-w-0">
+                                <div className="flex items-center gap-2 flex-wrap">
+                                  <span className="font-bold text-white text-sm truncate">{prov.name}</span>
+                                  {prov.badge && (
+                                    <span className="px-2 py-0.5 rounded text-[9px] font-black uppercase tracking-wider bg-slate-800 text-slate-300 border border-slate-700">
+                                      {prov.badge}
+                                    </span>
+                                  )}
+                                </div>
+                                <span className="text-[10px] text-slate-400 block truncate mt-0.5">{prov.subtitle || prov.apiUrl}</span>
+                              </div>
+                            </div>
+                            {isActive ? (
+                              <span className="px-2.5 py-1 rounded-full text-[10px] font-black tracking-wide bg-emerald-500/20 text-emerald-300 border border-emerald-500/40 flex items-center gap-1.5 shadow-sm shrink-0">
+                                <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
+                                <span>ACTIVE 🟢</span>
+                              </span>
+                            ) : (
+                              <span className="px-2.5 py-1 rounded-full text-[10px] font-bold bg-slate-800 text-slate-400 border border-slate-700 shrink-0">
+                                STANDBY
+                              </span>
+                            )}
+                          </div>
+
+                          {/* Balance Display */}
+                          <div className="flex items-center justify-between p-3 rounded-2xl bg-black/50 border border-slate-800/80">
+                            <div className="flex items-center gap-2">
+                              <span className="text-slate-400 text-xs font-semibold">Available Credit:</span>
+                              <button
+                                type="button"
+                                onClick={() => handleOpenBalanceEdit(prov)}
+                                className="px-2 py-0.5 rounded-lg bg-amber-500/10 hover:bg-amber-500/20 text-amber-300 border border-amber-500/30 text-[10px] font-bold transition-all cursor-pointer"
+                                title="Update credit balance"
+                              >
+                                ✏️ Edit
+                              </button>
+                            </div>
+                            <div className="text-right">
+                              <span className="font-mono font-black text-amber-300 text-base">
+                                ${balanceUSD.toFixed(2)} USD
+                              </span>
+                              <span className="text-[11px] text-emerald-400 font-bold block mt-0.5">
+                                ~{balanceKHR.toLocaleString()} ៛ KHR
+                              </span>
+                            </div>
+                          </div>
+
+                          {/* Switch Button */}
+                          <div className="flex gap-2 pt-0.5">
+                            {isActive ? (
+                              <div className="w-full py-2.5 rounded-xl bg-gradient-to-r from-emerald-500/15 via-teal-500/10 to-emerald-500/15 text-emerald-300 border border-emerald-500/40 font-extrabold text-xs flex items-center justify-center gap-2 shadow-sm">
+                                <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
+                                <span>Currently Active Fulfillment Route</span>
+                              </div>
+                            ) : (
+                              <button
+                                type="button"
+                                disabled={switchingProvider}
+                                onClick={() => handleQuickSwitchProvider(prov)}
+                                className="w-full py-2.5 rounded-xl bg-gradient-to-r from-indigo-600 via-purple-600 to-indigo-700 hover:from-indigo-500 hover:via-purple-500 hover:to-indigo-600 text-white font-extrabold text-xs shadow-lg shadow-purple-600/30 transition-all transform hover:scale-[1.01] flex items-center justify-center gap-2 cursor-pointer"
+                              >
+                                <span>⚡</span>
+                                <span>{switchingProvider ? 'Routing...' : `Switch to ${prov.name} ($${balanceUSD.toFixed(2)})`}</span>
+                              </button>
+                            )}
+                          </div>
+
+                          {/* Footer Links & Actions */}
+                          <div className="flex items-center justify-between pt-1 text-[11px] border-t border-slate-800/60">
+                            <div className="flex items-center gap-2.5">
+                              {prov.docsUrl && (
+                                <a
+                                  href={prov.docsUrl}
+                                  target="_blank"
+                                  rel="noreferrer"
+                                  className="text-amber-400 hover:text-amber-300 font-bold hover:underline flex items-center gap-1"
+                                >
+                                  <span>📖</span>
+                                  <span>API Docs</span>
+                                </a>
+                              )}
+                              {prov.docsUrl && prov.refillUrl && <span className="text-slate-700">|</span>}
+                              {prov.refillUrl && (
+                                <a
+                                  href={prov.refillUrl}
+                                  target="_blank"
+                                  rel="noreferrer"
+                                  className="text-cyan-400 hover:text-cyan-300 font-bold hover:underline flex items-center gap-1"
+                                >
+                                  <span>💳</span>
+                                  <span>Refill Portal</span>
+                                </a>
+                              )}
+                            </div>
+                            <div className="flex items-center gap-1.5">
+                              <button
+                                type="button"
+                                onClick={() => handleOpenEditProviderModal(prov)}
+                                className="px-2.5 py-1 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white font-bold text-[10px] border border-slate-700 transition-colors cursor-pointer"
+                              >
+                                ⚙️ Config
+                              </button>
+                              {!isDefault && (
+                                <button
+                                  type="button"
+                                  onClick={() => handleDeleteProviderConfirm(prov.id, prov.name)}
+                                  className="px-2 py-1 rounded-lg bg-rose-950/40 hover:bg-rose-900/60 text-rose-400 border border-rose-500/30 font-bold text-[10px] transition-colors cursor-pointer"
+                                  title="Delete Provider"
+                                >
+                                  🗑️
+                                </button>
+                              )}
+                            </div>
+                          </div>
+                        </div>
+                      );
+                    })}
+
+                    {/* Add Provider CTA Card */}
+                    <button
+                      type="button"
+                      onClick={handleOpenAddProviderModal}
+                      className="w-full p-4 rounded-2xl border-2 border-dashed border-slate-800 hover:border-emerald-500/60 bg-dark-bg/40 hover:bg-emerald-500/5 text-slate-400 hover:text-emerald-300 flex items-center justify-center gap-2 transition-all cursor-pointer group"
+                    >
+                      <span className="text-base group-hover:scale-125 transition-transform">➕</span>
+                      <span className="font-bold text-xs">Add Another Supplier Gateway (Smile One, UniPin, Custom REST...)</span>
+                    </button>
+                  </div>
+                </div>
+              </div>
             </div>
-          </div>
-        )}
+          );
+        })()}
 
         {/* ========================================================= */}
         {/* TAB: OVERVIEW & KPIS */}
