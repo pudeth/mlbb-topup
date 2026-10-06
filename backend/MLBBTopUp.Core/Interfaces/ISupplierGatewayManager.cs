@@ -45,9 +45,9 @@ public class SupplierSettingsModel
     public string FazerCardsApiUrl { get; set; } = "https://api.fzr.cards/api/v2";
     public string KhmerTopUpApiUrl { get; set; } = "https://khmer-topup.com/api/v1/orders";
     public string WebhookUrl { get; set; } = "https://mlbb-backend-api.onrender.com/api/supplier/webhook";
-    public decimal BalanceUSD { get; set; } = 18.50m;
-    public decimal FazerCardsBalanceUSD { get; set; } = 18.50m;
-    public decimal KhmerTopUpBalanceUSD { get; set; } = 1.45m;
+    public decimal BalanceUSD { get; set; } = 0.49m;
+    public decimal FazerCardsBalanceUSD { get; set; } = 0.01m;
+    public decimal KhmerTopUpBalanceUSD { get; set; } = 0.49m;
     public string Status { get; set; } = "Connected & Active";
     public DateTime UpdatedAt { get; set; } = DateTime.UtcNow;
 }

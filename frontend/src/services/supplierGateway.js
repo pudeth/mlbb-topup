@@ -12,7 +12,7 @@ export const DEFAULT_PROVIDERS = [
     badgeColor: 'purple',
     apiUrl: 'https://api.fzr.cards/api/v2',
     apiKey: 'fc_5f79a0016d5d87bd1e83ea4f',
-    balanceUSD: 18.50,
+    balanceUSD: 0.01,
     docsUrl: 'https://reseller.fazercards.com/en/catalog/mobile-legends',
     refillUrl: 'https://reseller.fazercards.com/panel/balance',
     isDefault: true,
@@ -27,7 +27,7 @@ export const DEFAULT_PROVIDERS = [
     badgeColor: 'cyan',
     apiUrl: 'https://khmer-topup.com/api/v1/orders',
     apiKey: 'kt_6d38a3a5940e970221cc62fa306ae96044736364',
-    balanceUSD: 1.25,
+    balanceUSD: 0.49,
     docsUrl: 'https://khmer-topup.com/tl/api-docs',
     refillUrl: 'https://khmer-topup.com/wallet',
     isDefault: true,
@@ -117,16 +117,16 @@ export const DEFAULT_PROVIDER_SETTINGS = {
       name: 'Primary Token (Default)',
       token: 'fc_5f79a0016d5d87bd1e83ea4f',
       isActive: true,
-      balanceUSD: 18.50,
+      balanceUSD: 0.01,
       createdAt: '2026-01-01T00:00:00.000Z'
     }
   ],
   khmerTopUpApiKey: 'kt_6d38a3a5940e970221cc62fa306ae96044736364',
   providers: DEFAULT_PROVIDERS,
   webhookUrl: 'https://mlbb-backend-api.onrender.com/api/supplier/webhook',
-  balanceUSD: 18.50,
-  fazerCardsBalanceUSD: 18.50,
-  khmerTopUpBalanceUSD: 1.25,
+  balanceUSD: 0.49,
+  fazerCardsBalanceUSD: 0.01,
+  khmerTopUpBalanceUSD: 0.49,
   status: 'Connected & Active',
   updatedAt: new Date().toISOString()
 };
@@ -181,20 +181,30 @@ export const getStoredProviderSettings = () => {
       provList.splice(1, 0, DEFAULT_PROVIDERS[1]);
     }
 
+    // Sanitize stale legacy defaults if present
+    if (merged.khmerTopUpBalanceUSD === 1.25 || merged.khmerTopUpBalanceUSD === 1.45) {
+      merged.khmerTopUpBalanceUSD = 0.49;
+    }
+    if (merged.fazerCardsBalanceUSD === 18.50) {
+      merged.fazerCardsBalanceUSD = 0.01;
+    }
+
     // Keep FazerCards and KhmerTopUp balances synchronized with top-level fields
     provList = provList.map(p => {
       if (p.id === 'FazerCards') {
+        const bal = merged.fazerCardsBalanceUSD !== undefined ? Number(merged.fazerCardsBalanceUSD) : 0.01;
         return {
           ...p,
           apiKey: merged.fazerCardsApiKey || p.apiKey,
-          balanceUSD: merged.fazerCardsBalanceUSD !== undefined ? merged.fazerCardsBalanceUSD : p.balanceUSD
+          balanceUSD: bal === 18.50 ? 0.01 : bal
         };
       }
       if (p.id === 'KhmerTopUp') {
+        const bal = merged.khmerTopUpBalanceUSD !== undefined ? Number(merged.khmerTopUpBalanceUSD) : 0.49;
         return {
           ...p,
           apiKey: merged.khmerTopUpApiKey || p.apiKey,
-          balanceUSD: merged.khmerTopUpBalanceUSD !== undefined ? merged.khmerTopUpBalanceUSD : p.balanceUSD
+          balanceUSD: (bal === 1.25 || bal === 1.45) ? 0.49 : bal
         };
       }
       return p;
@@ -215,7 +225,7 @@ export const getStoredProviderSettings = () => {
     // Active provider object
     const activeObj = provList.find(p => p.id === merged.activeProvider) || provList[0];
     merged.apiKey = activeObj.apiKey || merged.apiKey;
-    merged.balanceUSD = activeObj.balanceUSD !== undefined ? activeObj.balanceUSD : merged.balanceUSD;
+    merged.balanceUSD = activeObj.balanceUSD !== undefined ? Number(activeObj.balanceUSD) : Number(merged.balanceUSD ?? 0.49);
 
     // Ensure fazerCardsTokens keyring exists and contains at least default token
     if (!merged.fazerCardsTokens || !Array.isArray(merged.fazerCardsTokens) || merged.fazerCardsTokens.length === 0) {
@@ -334,6 +344,21 @@ export const saveStoredProviderSettings = async (settings) => {
     ActiveProvider: activeNormalized,
     updatedAt: new Date().toISOString()
   };
+
+  // Keep FazerCards and KhmerTopUp in providers list strictly aligned with top-level balances
+  if (Array.isArray(merged.providers)) {
+    merged.providers = merged.providers.map(p => {
+      if (p.id === 'FazerCards') {
+        const fc = merged.fazerCardsBalanceUSD !== undefined ? Number(merged.fazerCardsBalanceUSD) : p.balanceUSD;
+        return { ...p, balanceUSD: fc };
+      }
+      if (p.id === 'KhmerTopUp') {
+        const kt = merged.khmerTopUpBalanceUSD !== undefined ? Number(merged.khmerTopUpBalanceUSD) : p.balanceUSD;
+        return { ...p, balanceUSD: kt };
+      }
+      return p;
+    });
+  }
 
   try {
     localStorage.setItem(STORAGE_ACTIVE_KEY, activeNormalized);
@@ -563,12 +588,33 @@ export const fetchStoredProviderSettings = async () => {
           };
 
           // Merge providers from cloud and local
+          let finalProviders = Array.isArray(merged.providers) && merged.providers.length > 0 ? [...merged.providers] : [...DEFAULT_PROVIDERS];
           if (Array.isArray(incoming.providers) && incoming.providers.length > 0) {
             const map = new Map();
             (local.providers || []).forEach(p => map.set(p.id, p));
             incoming.providers.forEach(p => map.set(p.id, { ...(map.get(p.id) || {}), ...p }));
-            merged.providers = Array.from(map.values());
+            finalProviders = Array.from(map.values());
           }
+
+          // Keep FazerCards and KhmerTopUp balances synchronized with incoming live balances
+          finalProviders = finalProviders.map(p => {
+            if (p.id === 'FazerCards') {
+              const fc = incoming.fazerCardsBalanceUSD !== undefined ? Number(incoming.fazerCardsBalanceUSD) : (merged.fazerCardsBalanceUSD !== undefined ? Number(merged.fazerCardsBalanceUSD) : 0.01);
+              return { ...p, balanceUSD: fc, apiKey: incoming.fazerCardsApiKey || merged.fazerCardsApiKey || p.apiKey };
+            }
+            if (p.id === 'KhmerTopUp') {
+              const kt = incoming.khmerTopUpBalanceUSD !== undefined ? Number(incoming.khmerTopUpBalanceUSD) : (merged.khmerTopUpBalanceUSD !== undefined ? Number(merged.khmerTopUpBalanceUSD) : 0.49);
+              return { ...p, balanceUSD: kt, apiKey: incoming.khmerTopUpApiKey || merged.khmerTopUpApiKey || p.apiKey };
+            }
+            return p;
+          });
+          merged.providers = finalProviders;
+
+          if (incoming.khmerTopUpBalanceUSD !== undefined) merged.khmerTopUpBalanceUSD = Number(incoming.khmerTopUpBalanceUSD);
+          if (incoming.fazerCardsBalanceUSD !== undefined) merged.fazerCardsBalanceUSD = Number(incoming.fazerCardsBalanceUSD);
+
+          const activeItem = finalProviders.find(p => p.id === merged.activeProvider) || finalProviders[0];
+          merged.balanceUSD = activeItem ? Number(activeItem.balanceUSD) : Number(merged.balanceUSD ?? 0.49);
 
           try {
             localStorage.setItem(STORAGE_SETTINGS_KEY, JSON.stringify(merged));

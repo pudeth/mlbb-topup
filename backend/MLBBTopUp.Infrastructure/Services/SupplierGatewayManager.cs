@@ -95,7 +95,7 @@ public class SupplierGatewayManager : ISupplierGatewayManager
                     Token = fzrKey,
                     Name = "Primary Token (Default)",
                     IsActive = true,
-                    BalanceUSD = 18.50m,
+                    BalanceUSD = 0.01m,
                     CreatedAt = DateTime.UtcNow
                 }
             },
@@ -103,9 +103,9 @@ public class SupplierGatewayManager : ISupplierGatewayManager
             FazerCardsApiUrl = "https://api.fzr.cards/api/v2",
             KhmerTopUpApiUrl = "https://khmer-topup.com/api/v1/orders",
             WebhookUrl = "https://mlbb-backend-api.onrender.com/api/supplier/webhook",
-            BalanceUSD = 18.50m,
-            FazerCardsBalanceUSD = 18.50m,
-            KhmerTopUpBalanceUSD = 1.45m,
+            BalanceUSD = 0.49m,
+            FazerCardsBalanceUSD = 0.01m,
+            KhmerTopUpBalanceUSD = 0.49m,
             Status = "Connected & Active",
             UpdatedAt = DateTime.UtcNow
         };
@@ -334,7 +334,16 @@ public class SupplierGatewayManager : ISupplierGatewayManager
                 _settings.ApiKey = _settings.ActiveProvider == "KhmerTopUp" ? _settings.KhmerTopUpApiKey : _settings.FazerCardsApiKey;
             }
 
-            if (incoming.BalanceUSD > 0)
+            if (incoming.KhmerTopUpBalanceUSD >= 0)
+            {
+                _settings.KhmerTopUpBalanceUSD = incoming.KhmerTopUpBalanceUSD;
+            }
+            if (incoming.FazerCardsBalanceUSD >= 0)
+            {
+                _settings.FazerCardsBalanceUSD = incoming.FazerCardsBalanceUSD;
+            }
+
+            if (incoming.BalanceUSD >= 0)
             {
                 _settings.BalanceUSD = incoming.BalanceUSD;
             }

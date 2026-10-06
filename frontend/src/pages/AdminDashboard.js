@@ -271,6 +271,7 @@ const PRICING_GAMES = [
   const [navSearchQuery, setNavSearchQuery] = useState('');
   const [navDropdownOpen, setNavDropdownOpen] = useState(false);
   const navDropdownRef = useRef(null);
+  const navSearchInputRef = useRef(null);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [autoRefresh, setAutoRefresh] = useState(false);
@@ -641,11 +642,18 @@ const PRICING_GAMES = [
     if (typeof providerOrName === 'object' && providerOrName !== null) {
       setEditingProviderId(providerOrName.id);
       setEditingProviderName(providerOrName.name);
-      setNewBalanceInput(String(providerOrName.balanceUSD ?? currentBal ?? 0));
+      const isKhmer = providerOrName.id === 'KhmerTopUp' || String(providerOrName.id).toLowerCase().includes('khmer');
+      const isFazer = providerOrName.id === 'FazerCards' || String(providerOrName.id).toLowerCase().includes('fazer');
+      const liveBal = isKhmer
+        ? (providerSettings.khmerTopUpBalanceUSD !== undefined ? Number(providerSettings.khmerTopUpBalanceUSD) : Number(providerOrName.balanceUSD ?? 0.49))
+        : isFazer
+          ? (providerSettings.fazerCardsBalanceUSD !== undefined ? Number(providerSettings.fazerCardsBalanceUSD) : Number(providerOrName.balanceUSD ?? 0.01))
+          : Number(providerOrName.balanceUSD ?? currentBal ?? 0);
+      setNewBalanceInput(String(liveBal.toFixed(2)));
     } else {
       setEditingProviderId(providerOrName);
       setEditingProviderName(providerOrName);
-      setNewBalanceInput(String(currentBal ?? 0));
+      setNewBalanceInput(String(Number(currentBal ?? 0).toFixed(2)));
     }
     setBalanceEditModalOpen(true);
   };
@@ -966,12 +974,28 @@ const PRICING_GAMES = [
           const pinned = localStorage.getItem('admin_active_provider_pinned');
           const serverActive = provRes.data.activeProvider || provRes.data.ActiveProvider;
           const finalActive = pinned || (serverActive ? (String(serverActive).toLowerCase().includes('khmer') ? 'KhmerTopUp' : 'FazerCards') : 'FazerCards');
+          const currentLocal = getStoredProviderSettings();
+          const ktBal = provRes.data.khmerTopUpBalanceUSD !== undefined ? Number(provRes.data.khmerTopUpBalanceUSD) : Number(currentLocal.khmerTopUpBalanceUSD ?? 0.49);
+          const fcBal = provRes.data.fazerCardsBalanceUSD !== undefined ? Number(provRes.data.fazerCardsBalanceUSD) : Number(currentLocal.fazerCardsBalanceUSD ?? 0.01);
+          const activeBal = finalActive === 'KhmerTopUp' ? ktBal : fcBal;
+
+          const updatedProviders = (currentLocal.providers || DEFAULT_PROVIDERS).map(p => {
+            if (p.id === 'KhmerTopUp') return { ...p, balanceUSD: ktBal, apiKey: provRes.data.khmerTopUpApiKey || p.apiKey };
+            if (p.id === 'FazerCards') return { ...p, balanceUSD: fcBal, apiKey: provRes.data.fazerCardsApiKey || p.apiKey };
+            return p;
+          });
+
           const merged = {
-            ...getStoredProviderSettings(),
+            ...currentLocal,
             ...provRes.data,
             activeProvider: finalActive,
-            ActiveProvider: finalActive
+            ActiveProvider: finalActive,
+            khmerTopUpBalanceUSD: ktBal,
+            fazerCardsBalanceUSD: fcBal,
+            balanceUSD: activeBal,
+            providers: updatedProviders
           };
+          saveStoredProviderSettings(merged);
           setProviderSettings(merged);
         }
         setPendingBalanceOrders(balRes.data?.orders || []);
@@ -987,12 +1011,28 @@ const PRICING_GAMES = [
           const pinned = localStorage.getItem('admin_active_provider_pinned');
           const serverActive = provRes.data.activeProvider || provRes.data.ActiveProvider;
           const finalActive = pinned || (serverActive ? (String(serverActive).toLowerCase().includes('khmer') ? 'KhmerTopUp' : 'FazerCards') : 'FazerCards');
+          const currentLocal = getStoredProviderSettings();
+          const ktBal = provRes.data.khmerTopUpBalanceUSD !== undefined ? Number(provRes.data.khmerTopUpBalanceUSD) : Number(currentLocal.khmerTopUpBalanceUSD ?? 0.49);
+          const fcBal = provRes.data.fazerCardsBalanceUSD !== undefined ? Number(provRes.data.fazerCardsBalanceUSD) : Number(currentLocal.fazerCardsBalanceUSD ?? 0.01);
+          const activeBal = finalActive === 'KhmerTopUp' ? ktBal : fcBal;
+
+          const updatedProviders = (currentLocal.providers || DEFAULT_PROVIDERS).map(p => {
+            if (p.id === 'KhmerTopUp') return { ...p, balanceUSD: ktBal, apiKey: provRes.data.khmerTopUpApiKey || p.apiKey };
+            if (p.id === 'FazerCards') return { ...p, balanceUSD: fcBal, apiKey: provRes.data.fazerCardsApiKey || p.apiKey };
+            return p;
+          });
+
           const merged = {
-            ...getStoredProviderSettings(),
+            ...currentLocal,
             ...provRes.data,
             activeProvider: finalActive,
-            ActiveProvider: finalActive
+            ActiveProvider: finalActive,
+            khmerTopUpBalanceUSD: ktBal,
+            fazerCardsBalanceUSD: fcBal,
+            balanceUSD: activeBal,
+            providers: updatedProviders
           };
+          saveStoredProviderSettings(merged);
           setProviderSettings(merged);
         }
         if (suppRes.data) setSupplierBalanceData(suppRes.data);
@@ -1084,6 +1124,28 @@ const PRICING_GAMES = [
       window.removeEventListener('keydown', handleKeyDown);
     };
   }, [navDropdownOpen]);
+
+  // Global Shortcut: Press '/' or 'Ctrl+K' / 'Cmd+K' to quick-focus module search
+  useEffect(() => {
+    const handleGlobalSearchKey = (e) => {
+      const activeEl = document.activeElement;
+      const targetTag = activeEl?.tagName?.toLowerCase();
+      const isInput = activeEl?.isContentEditable || targetTag === 'input' || targetTag === 'textarea' || targetTag === 'select';
+
+      if (!isInput && (e.key === '/' || ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'k'))) {
+        e.preventDefault();
+        if (sidebarCollapsed) {
+          setSidebarCollapsed(false);
+        }
+        setTimeout(() => {
+          navSearchInputRef.current?.focus();
+          navSearchInputRef.current?.select();
+        }, 60);
+      }
+    };
+    window.addEventListener('keydown', handleGlobalSearchKey);
+    return () => window.removeEventListener('keydown', handleGlobalSearchKey);
+  }, [sidebarCollapsed]);
 
   // ==================== TOP-UP & ORDER HANDLERS ====================
 
@@ -1678,16 +1740,43 @@ const PRICING_GAMES = [
     }
   };
 
-  const handleTestProviderConnection = async () => {
+  const handleTestProviderConnection = async (specificProvider = null) => {
     setProviderTesting(true);
+    const targetProv = specificProvider || (providerSettings.providers || DEFAULT_PROVIDERS).find(p => p.id === providerSettings.activeProvider) || { id: providerSettings.activeProvider, apiKey: providerSettings.apiKey };
+    const targetProvId = targetProv.id || providerSettings.activeProvider;
+    const targetKey = targetProv.apiKey || providerSettings.apiKey;
+
     try {
       const res = await adminAPI.testProviderConnection({
-        activeProvider: providerSettings.activeProvider,
-        apiKey: providerSettings.apiKey,
+        activeProvider: targetProvId,
+        apiKey: targetKey,
       });
-      showToast('success', res.data?.message || 'Provider connection verified!');
-      if (res.data?.balanceUSD !== undefined) {
-        setProviderSettings((prev) => ({ ...prev, balanceUSD: res.data.balanceUSD }));
+
+      const rawBal = res.data?.balanceUSD !== undefined ? res.data.balanceUSD : res.data?.availableBalanceUSD;
+      const bal = rawBal !== undefined && rawBal !== null ? Number(rawBal) : null;
+
+      if (bal !== null) {
+        const isKhmer = targetProvId === 'KhmerTopUp' || String(targetProvId).toLowerCase().includes('khmer');
+        const isFazer = targetProvId === 'FazerCards' || String(targetProvId).toLowerCase().includes('fazer');
+
+        const updated = {
+          ...providerSettings,
+          ...(isKhmer ? { khmerTopUpBalanceUSD: bal } : {}),
+          ...(isFazer ? { fazerCardsBalanceUSD: bal } : {}),
+          ...(providerSettings.activeProvider === targetProvId ? { balanceUSD: bal } : {}),
+          providers: (providerSettings.providers || DEFAULT_PROVIDERS).map(p => {
+            if (p.id === targetProvId) return { ...p, balanceUSD: bal };
+            if (isKhmer && p.id === 'KhmerTopUp') return { ...p, balanceUSD: bal };
+            if (isFazer && p.id === 'FazerCards') return { ...p, balanceUSD: bal };
+            return p;
+          })
+        };
+
+        await saveStoredProviderSettings(updated);
+        setProviderSettings(updated);
+        showToast('success', `✅ ${targetProv.name || targetProvId} Live Wallet Connected! Real Balance: $${bal.toFixed(2)} USD (~${Math.round(bal * 4100).toLocaleString()} ៛ KHR)`);
+      } else {
+        showToast('success', res.data?.message || 'Provider connection verified!');
       }
     } catch (err) {
       showToast('error', err.response?.data?.message || 'Provider test connection failed');
@@ -1700,8 +1789,8 @@ const PRICING_GAMES = [
     e.preventDefault();
     try {
       const activeBal = providerSettings.activeProvider === 'FazerCards'
-        ? (providerSettings.fazerCardsBalanceUSD || 18.50)
-        : (providerSettings.khmerTopUpBalanceUSD || 1.45);
+        ? (providerSettings.fazerCardsBalanceUSD !== undefined ? Number(providerSettings.fazerCardsBalanceUSD) : 0.01)
+        : (providerSettings.khmerTopUpBalanceUSD !== undefined ? Number(providerSettings.khmerTopUpBalanceUSD) : 0.49);
 
       // If user typed a new FazerCards token in the input box, ensure it is added to keyring and old tokens are KEPT!
       let tokens = Array.isArray(providerSettings.fazerCardsTokens) ? [...providerSettings.fazerCardsTokens] : [];
@@ -2351,121 +2440,182 @@ const PRICING_GAMES = [
         }`}
       >
         {/* Brand & Collapse Header */}
-        <div className="h-16 border-b border-slate-800/80 px-3.5 flex items-center justify-between shrink-0 bg-[#0B0F19]">
+        <div
+          className={`h-16 border-b border-slate-800/80 shrink-0 bg-[#0B0F19] relative transition-all ${
+            sidebarCollapsed ? 'flex items-center justify-center px-2' : 'px-3.5 flex items-center justify-between'
+          }`}
+        >
           {!sidebarCollapsed ? (
-            <div
-              onClick={handleOpenStoreLogoModal}
-              className="flex items-center gap-2.5 group cursor-pointer min-w-0"
-              title="Click to Change Store Logo & Branding"
-            >
-              <div className="w-9 h-9 rounded-xl bg-gradient-to-tr from-amber-500 to-yellow-300 p-[2px] shadow-glow-gold group-hover:scale-105 transition-all shrink-0 overflow-hidden relative">
-                <div className="w-full h-full bg-slate-950 rounded-[10px] flex items-center justify-center overflow-hidden">
-                  {branding.logoType === 'image' && branding.logoImage ? (
-                    <img
-                      src={branding.logoImage}
-                      alt={branding.storeName || 'Store Logo'}
-                      className="w-full h-full object-cover rounded-[10px]"
-                      onError={(e) => {
-                        e.target.style.display = 'none';
-                      }}
-                    />
-                  ) : (
-                    <span className="text-base">{branding.logoEmoji || '💎'}</span>
-                  )}
+            <>
+              <div
+                onClick={handleOpenStoreLogoModal}
+                className="flex items-center gap-3 group cursor-pointer min-w-0 flex-1 mr-2"
+                title="Click to Change Store Logo & Branding"
+              >
+                <div className="w-10 h-10 rounded-2xl bg-gradient-to-tr from-amber-500 via-yellow-400 to-amber-600 p-[2px] shadow-[0_0_15px_rgba(251,191,36,0.25)] group-hover:scale-105 transition-all shrink-0 overflow-hidden relative">
+                  <div className="w-full h-full bg-slate-950 rounded-[14px] flex items-center justify-center overflow-hidden">
+                    {branding.logoType === 'image' && branding.logoImage ? (
+                      <img
+                        src={branding.logoImage}
+                        alt={branding.storeName || 'Store Logo'}
+                        className="w-full h-full object-cover rounded-[14px]"
+                        onError={(e) => {
+                          e.target.style.display = 'none';
+                        }}
+                      />
+                    ) : (
+                      <span className="text-xl select-none">{branding.logoEmoji || '💎'}</span>
+                    )}
+                  </div>
+                </div>
+                <div className="flex flex-col min-w-0">
+                  <div className="flex items-center gap-1.5">
+                    <span className="text-sm font-black tracking-wide text-white truncate group-hover:text-amber-300 transition-colors">
+                      {branding.storeName || 'MLBB TOPUP'}
+                    </span>
+                    <span className="bg-gradient-to-r from-amber-400 via-amber-500 to-orange-500 text-black text-[9px] font-black px-1.5 py-0.5 rounded-md uppercase tracking-wider shadow-sm">
+                      {branding.badgeText || 'PRO'}
+                    </span>
+                  </div>
+                  <div className="flex items-center gap-1.5 text-[10px] text-slate-400 font-medium truncate mt-0.5">
+                    <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse shrink-0" />
+                    <span className="truncate">Admin System Hub</span>
+                  </div>
                 </div>
               </div>
-              <div className="flex flex-col min-w-0">
-                <div className="flex items-center gap-1.5">
-                  <span className="text-sm font-black tracking-wider text-white truncate group-hover:text-amber-400 transition-colors">
-                    {branding.storeName || 'MLBB TOPUP'}
-                  </span>
-                  <span className="bg-gradient-to-r from-amber-400 to-amber-600 text-black text-[8px] font-black px-1 py-0.5 rounded uppercase">
-                    PRO
-                  </span>
-                </div>
-                <span className="text-[10px] text-slate-400 font-medium truncate">
-                  Admin System Hub
-                </span>
-              </div>
-            </div>
-          ) : (
-            <div
-              onClick={handleOpenStoreLogoModal}
-              className="mx-auto cursor-pointer group"
-              title={branding.storeName || 'Admin Hub'}
-            >
-              <div className="w-10 h-10 rounded-xl bg-gradient-to-tr from-amber-500 to-yellow-300 p-[2px] shadow-glow-gold group-hover:scale-105 transition-all flex items-center justify-center">
-                <div className="w-full h-full bg-slate-950 rounded-[10px] flex items-center justify-center overflow-hidden text-base">
-                  {branding.logoType === 'image' && branding.logoImage ? (
-                    <img
-                      src={branding.logoImage}
-                      alt="Logo"
-                      className="w-full h-full object-cover"
-                    />
-                  ) : (
-                    branding.logoEmoji || '💎'
-                  )}
-                </div>
-              </div>
-            </div>
-          )}
 
-          {/* Sidebar Toggle Button */}
-          <button
-            type="button"
-            onClick={() => setSidebarCollapsed(!sidebarCollapsed)}
-            className={`p-1.5 rounded-lg border text-slate-400 hover:text-white transition-all cursor-pointer ${
-              sidebarCollapsed
-                ? 'mx-auto mt-2 bg-slate-800/80 border-slate-700 hover:bg-slate-700'
-                : 'bg-slate-900 border-slate-800 hover:bg-slate-800'
-            }`}
-            title={sidebarCollapsed ? 'Expand Sidebar' : 'Collapse Sidebar'}
-          >
-            <span className="text-xs font-bold block transition-transform">
-              {sidebarCollapsed ? '▶' : '◀'}
-            </span>
-          </button>
+              {/* Sidebar Collapse Button (When Expanded) */}
+              <button
+                type="button"
+                onClick={() => setSidebarCollapsed(true)}
+                className="w-7 h-7 rounded-xl bg-slate-900 border border-slate-800 hover:bg-slate-800 hover:border-slate-700 text-slate-400 hover:text-white transition-all cursor-pointer flex items-center justify-center shadow-sm shrink-0 active:scale-95"
+                title="Collapse Sidebar"
+              >
+                <span className="text-[11px] font-bold block">◀</span>
+              </button>
+            </>
+          ) : (
+            <>
+              {/* Perfectly Centered Logo (When Collapsed) */}
+              <div
+                onClick={handleOpenStoreLogoModal}
+                className="cursor-pointer group flex items-center justify-center"
+                title={`${branding.storeName || 'Admin Hub'} (Click to change branding)`}
+              >
+                <div className="w-10 h-10 rounded-2xl bg-gradient-to-tr from-amber-500 via-yellow-400 to-amber-600 p-[2px] shadow-[0_0_15px_rgba(251,191,36,0.25)] group-hover:scale-105 transition-all flex items-center justify-center">
+                  <div className="w-full h-full bg-slate-950 rounded-[14px] flex items-center justify-center overflow-hidden text-lg">
+                    {branding.logoType === 'image' && branding.logoImage ? (
+                      <img
+                        src={branding.logoImage}
+                        alt="Logo"
+                        className="w-full h-full object-cover rounded-[14px]"
+                      />
+                    ) : (
+                      <span className="select-none">{branding.logoEmoji || '💎'}</span>
+                    )}
+                  </div>
+                </div>
+              </div>
+
+              {/* Floating Rail Expand Toggle on Outer Border */}
+              <button
+                type="button"
+                onClick={() => setSidebarCollapsed(false)}
+                className="absolute -right-3 top-1/2 -translate-y-1/2 z-40 w-6 h-6 rounded-full bg-[#0D1220] border border-slate-700 hover:border-amber-400/90 text-slate-400 hover:text-amber-300 shadow-[0_2px_10px_rgba(0,0,0,0.6)] flex items-center justify-center text-[10px] font-black cursor-pointer transition-all hover:scale-110 active:scale-95 group"
+                title="Expand Sidebar"
+              >
+                <span className="group-hover:translate-x-0.5 transition-transform">▶</span>
+              </button>
+            </>
+          )}
         </div>
 
-        {/* Quick Search Filter (When Expanded) */}
-        {!sidebarCollapsed && (
-          <div className="p-3 border-b border-slate-800/60 bg-[#080B12]">
-            <div className="relative">
-              <span className="absolute inset-y-0 left-0 pl-2.5 flex items-center pointer-events-none text-xs text-slate-500">
-                🔍
-              </span>
-              <input
-                type="text"
-                value={navSearchQuery}
-                onChange={(e) => setNavSearchQuery(e.target.value)}
-                placeholder="Search modules..."
-                className="w-full pl-8 pr-7 py-1.5 rounded-xl bg-slate-900/90 border border-slate-800 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-amber-400/80 transition-all"
-              />
-              {navSearchQuery && (
-                <button
-                  type="button"
-                  onClick={() => setNavSearchQuery('')}
-                  className="absolute inset-y-0 right-0 pr-2.5 flex items-center text-xs text-slate-400 hover:text-white cursor-pointer"
-                >
-                  ✕
-                </button>
-              )}
+        {/* Quick Search Filter (When Expanded & Collapsed) */}
+        {!sidebarCollapsed ? (
+          <div className="px-3 py-2.5 border-b border-slate-800/70 bg-gradient-to-b from-[#080B12] to-[#0A0E17]">
+            <div className="relative group">
+              <div className="flex items-center gap-2 px-2.5 py-1.5 rounded-xl bg-slate-900/90 border border-slate-800 hover:border-slate-700/80 focus-within:border-amber-400/80 focus-within:ring-2 focus-within:ring-amber-500/20 focus-within:bg-[#0C1220] transition-all duration-200 shadow-inner">
+                {/* 3D Glass Emoji Icon Tile */}
+                <div className="w-6 h-6 rounded-lg bg-amber-500/10 border border-amber-500/25 flex items-center justify-center shrink-0 shadow-sm group-focus-within:bg-amber-500/20 group-focus-within:border-amber-400/50 group-focus-within:shadow-[0_0_10px_rgba(245,158,11,0.25)] transition-all">
+                  <span className="text-[11px] select-none leading-none drop-shadow-[0_1px_2px_rgba(0,0,0,0.5)]">
+                    🔍
+                  </span>
+                </div>
+
+                {/* Search Text Input */}
+                <input
+                  ref={navSearchInputRef}
+                  type="text"
+                  value={navSearchQuery}
+                  onChange={(e) => setNavSearchQuery(e.target.value)}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Escape') {
+                      setNavSearchQuery('');
+                      navSearchInputRef.current?.blur();
+                    }
+                  }}
+                  placeholder="Search modules..."
+                  className="w-full bg-transparent text-xs text-white placeholder-slate-500 focus:outline-none font-medium selection:bg-amber-500/30 selection:text-amber-200"
+                />
+
+                {/* Right Action: Clear or Shortcut Badge */}
+                {navSearchQuery ? (
+                  <div className="flex items-center gap-1.5 shrink-0">
+                    <span className="px-1.5 py-0.5 rounded-md bg-amber-500/15 border border-amber-500/30 text-[9px] font-bold text-amber-300 font-mono select-none">
+                      {filteredNavTabs.length}
+                    </span>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setNavSearchQuery('');
+                        navSearchInputRef.current?.focus();
+                      }}
+                      className="w-5 h-5 rounded-md bg-slate-800 hover:bg-rose-950/80 hover:text-rose-300 text-slate-400 flex items-center justify-center text-[10px] font-black transition-colors cursor-pointer border border-transparent hover:border-rose-500/30"
+                      title="Clear search (Esc)"
+                    >
+                      ✕
+                    </button>
+                  </div>
+                ) : (
+                  <kbd
+                    onClick={() => navSearchInputRef.current?.focus()}
+                    className="cursor-pointer px-1.5 py-0.5 rounded-md bg-slate-800/80 border border-slate-700/70 text-[10px] font-mono text-slate-400 group-focus-within:text-amber-300 group-focus-within:border-amber-400/40 select-none shadow-sm transition-colors shrink-0"
+                    title="Press / to search"
+                  >
+                    /
+                  </kbd>
+                )}
+              </div>
             </div>
+          </div>
+        ) : (
+          <div className="py-2.5 border-b border-slate-800/70 flex justify-center bg-[#080B12]">
+            <button
+              type="button"
+              onClick={() => {
+                setSidebarCollapsed(false);
+                setTimeout(() => navSearchInputRef.current?.focus(), 80);
+              }}
+              className="w-8 h-8 rounded-xl bg-slate-900/90 hover:bg-slate-800 border border-slate-800 hover:border-amber-400/50 flex items-center justify-center text-xs text-slate-400 hover:text-amber-300 transition-all cursor-pointer shadow-sm group"
+              title="Search modules (/)"
+            >
+              <span className="group-hover:scale-110 transition-transform">🔍</span>
+            </button>
           </div>
         )}
 
         {/* Navigation Categories & Items */}
-        <div className="flex-1 overflow-y-auto min-h-0 px-2.5 py-3 space-y-4 scrollbar-thin scrollbar-thumb-slate-800 scrollbar-track-transparent">
-          {menuCategories.map((cat) => {
+        <div className="flex-1 overflow-y-auto overflow-x-hidden min-h-0 px-2.5 py-3 space-y-4 scrollbar-thin scrollbar-thumb-slate-800 scrollbar-track-transparent">
+          {menuCategories.map((cat, idx) => {
             const tabsInCat = filteredNavTabs.filter((t) => t.categoryId === cat.id);
             if (tabsInCat.length === 0) return null;
 
             return (
               <div key={cat.id} className="space-y-1">
                 {!sidebarCollapsed ? (
-                  <div className="px-2.5 py-1 text-[10px] font-black uppercase tracking-wider text-slate-500 flex items-center justify-between">
+                  <div className={`px-2.5 pb-1.5 flex items-center gap-1.5 text-[10px] font-black uppercase tracking-widest text-slate-400 select-none ${idx > 0 ? 'pt-3 border-t border-slate-800/40' : 'pt-0.5'}`}>
+                    <span className="text-xs opacity-75">{cat.icon}</span>
                     <span>{cat.label}</span>
-                    <span className="text-[9px] text-slate-600 font-bold">{cat.icon}</span>
                   </div>
                 ) : (
                   <div className="my-2 border-t border-slate-800/80 mx-2" />
@@ -2479,35 +2629,44 @@ const PRICING_GAMES = [
                         key={tab.id}
                         type="button"
                         onClick={() => setActiveTab(tab.id)}
-                        className={`w-full text-left transition-all duration-200 cursor-pointer flex items-center rounded-xl ${
+                        className={`w-full text-left transition-all duration-200 cursor-pointer flex items-center rounded-xl relative group ${
                           sidebarCollapsed
-                            ? 'justify-center p-2.5 relative group'
-                            : 'px-3 py-2.5 gap-2.5'
+                            ? 'justify-center p-2.5 my-1'
+                            : 'px-3 py-2.5 gap-3 my-0.5'
                         } ${
                           isSelected
-                            ? 'bg-gradient-to-r from-amber-500/20 via-amber-500/10 to-transparent text-white font-black border-l-4 border-amber-400 shadow-sm'
-                            : 'text-slate-400 hover:text-slate-200 hover:bg-slate-900/70 font-semibold border-l-4 border-transparent'
+                            ? 'bg-gradient-to-r from-amber-500/15 via-amber-500/5 to-transparent text-white font-black border border-amber-500/30 shadow-[0_0_20px_rgba(245,158,11,0.06)]'
+                            : 'text-slate-400 hover:text-slate-100 hover:bg-slate-900/70 border border-transparent font-bold'
                         }`}
                         title={sidebarCollapsed ? tab.label : undefined}
                       >
-                        {/* Icon */}
+                        {/* Active Left Neon Glow Accent Bar */}
+                        {isSelected && !sidebarCollapsed && (
+                          <span className="absolute left-0 top-2 bottom-2 w-1 rounded-r-full bg-gradient-to-b from-amber-300 via-amber-400 to-amber-500 shadow-[0_0_10px_#f59e0b]" />
+                        )}
+
+                        {/* Professional 3D Emoji Icon Tile */}
                         <div
-                          className={`w-7 h-7 rounded-lg flex items-center justify-center text-sm shrink-0 transition-all ${
+                          className={`w-8 h-8 rounded-xl flex items-center justify-center shrink-0 transition-all duration-300 relative ${
                             isSelected
-                              ? 'bg-amber-400 text-black font-black shadow-glow-gold'
-                              : 'bg-slate-900/90 border border-slate-800 text-slate-300'
+                              ? 'bg-gradient-to-br from-amber-400/25 via-amber-500/15 to-amber-950/40 border border-amber-400/50 shadow-[0_0_15px_rgba(245,158,11,0.25)] ring-1 ring-amber-400/30'
+                              : 'bg-gradient-to-br from-slate-800/60 to-slate-900/90 border border-slate-800/90 text-slate-300 group-hover:bg-slate-800 group-hover:border-slate-700 group-hover:shadow-[0_2px_8px_rgba(0,0,0,0.4)] group-hover:scale-105'
                           }`}
                         >
-                          {tab.icon}
+                          <span className="text-base select-none transform transition-transform duration-200 group-hover:scale-115 drop-shadow-[0_2px_4px_rgba(0,0,0,0.6)]">
+                            {tab.icon}
+                          </span>
                         </div>
 
                         {/* Label & live badge (Expanded) */}
                         {!sidebarCollapsed && (
                           <div className="flex-1 min-w-0 flex items-center justify-between gap-1.5">
-                            <span className="text-xs truncate">{tab.label}</span>
+                            <span className={`text-xs truncate transition-colors ${isSelected ? 'text-amber-200 font-black' : 'group-hover:text-white'}`}>
+                              {tab.label}
+                            </span>
                             {tab.count !== undefined && tab.count > 0 && (
                               <span
-                                className={`px-1.5 py-0.5 rounded-full text-[9px] font-black shrink-0 ${tab.badgeColor}`}
+                                className={`px-2 py-0.5 rounded-full text-[9px] font-black shrink-0 shadow-sm ${tab.badgeColor}`}
                               >
                                 {tab.count}
                               </span>
@@ -2517,14 +2676,19 @@ const PRICING_GAMES = [
 
                         {/* Collapsed dot badge */}
                         {sidebarCollapsed && tab.count !== undefined && tab.count > 0 && (
-                          <span className="absolute top-1 right-1 w-2.5 h-2.5 rounded-full bg-amber-500 border-2 border-slate-950 animate-pulse" />
+                          <span className="absolute top-1 right-1 w-2.5 h-2.5 rounded-full bg-amber-500 border-2 border-slate-950 animate-pulse shadow-glow-gold" />
                         )}
 
                         {/* Collapsed Tooltip on hover */}
                         {sidebarCollapsed && (
-                          <div className="absolute left-full ml-3 px-2.5 py-1.5 rounded-lg bg-slate-900 text-white text-xs font-bold whitespace-nowrap shadow-2xl border border-slate-700 opacity-0 group-hover:opacity-100 pointer-events-none transition-opacity z-50">
-                            {tab.label}
-                            {tab.count !== undefined && tab.count > 0 && ` (${tab.count})`}
+                          <div className="absolute left-full ml-3 px-3 py-1.5 rounded-xl bg-slate-900 text-white text-xs font-bold whitespace-nowrap shadow-2xl border border-slate-700 opacity-0 group-hover:opacity-100 pointer-events-none transition-opacity z-50 flex items-center gap-2">
+                            <span>{tab.icon}</span>
+                            <span>{tab.label}</span>
+                            {tab.count !== undefined && tab.count > 0 && (
+                              <span className="px-1.5 py-0.2 rounded-full text-[9px] font-black bg-amber-500 text-black">
+                                {tab.count}
+                              </span>
+                            )}
                           </div>
                         )}
                       </button>
@@ -2534,66 +2698,60 @@ const PRICING_GAMES = [
               </div>
             );
           })}
+
+          {/* Empty Search Result State */}
+          {filteredNavTabs.length === 0 && !sidebarCollapsed && (
+            <div className="py-8 px-4 text-center">
+              <div className="w-10 h-10 rounded-2xl bg-slate-900 border border-slate-800 mx-auto flex items-center justify-center text-sm mb-2 shadow-inner">
+                🔍
+              </div>
+              <p className="text-xs font-bold text-slate-300">No modules found</p>
+              <p className="text-[11px] text-slate-500 mt-1 max-w-[170px] mx-auto truncate">
+                No match for &ldquo;{navSearchQuery}&rdquo;
+              </p>
+              <button
+                type="button"
+                onClick={() => setNavSearchQuery('')}
+                className="mt-3 px-3 py-1 rounded-xl bg-amber-500/15 hover:bg-amber-500/25 border border-amber-500/30 text-amber-300 text-[11px] font-bold cursor-pointer transition-all active:scale-95 shadow-sm"
+              >
+                Clear Search
+              </button>
+            </div>
+          )}
         </div>
 
-        {/* Sidebar Footer: Gateway status & user profile */}
-        <div className="p-2.5 border-t border-slate-800/80 bg-[#090C14] shrink-0 space-y-2">
+        {/* Sidebar Footer: User profile & Logout */}
+        <div className="p-3 border-t border-slate-800/80 bg-[#090C14] shrink-0">
           {!sidebarCollapsed ? (
-            <>
-              {/* Mini Gateway Balance Card */}
-              <div className="p-2.5 rounded-xl bg-slate-900/90 border border-slate-800/90 text-xs space-y-1">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-1.5">
-                    <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
-                    <span className="text-[10px] text-slate-400 font-bold uppercase tracking-wider">
-                      {providerSettings.activeProvider === 'FazerCards' ? 'FazerCards API' : 'KhmerTopUp API'}
-                    </span>
-                  </div>
-                  <span className="text-[10px] text-emerald-400 font-mono font-bold">LIVE</span>
-                </div>
-                <div className="flex items-baseline justify-between pt-0.5">
-                  <span className="text-xs text-slate-400">Balance</span>
-                  <span className="text-sm font-black text-amber-300 font-mono">
-                    ${(providerSettings.balanceUSD !== undefined ? Number(providerSettings.balanceUSD) : 18.50).toFixed(2)}
-                  </span>
-                </div>
-              </div>
-
-              {/* Admin Profile & Logout Row */}
-              <div className="flex items-center justify-between pt-1">
-                <div className="flex items-center gap-2 min-w-0">
-                  <div className="w-7 h-7 rounded-full bg-gradient-to-tr from-amber-500 to-amber-300 text-black font-black flex items-center justify-center text-xs shrink-0">
-                    👤
-                  </div>
-                  <div className="min-w-0">
-                    <div className="text-xs font-bold text-white truncate">
-                      {user?.name || user?.email?.split('@')[0] || 'Admin Master'}
-                    </div>
-                    <span className="text-[10px] text-amber-400 font-semibold block">Administrator</span>
+            <div className="flex items-center justify-between p-1.5 rounded-2xl bg-slate-900/70 border border-slate-800/90">
+              <div className="flex items-center gap-2.5 min-w-0 pl-1">
+                <div className="w-8 h-8 rounded-xl bg-gradient-to-tr from-amber-500 via-yellow-400 to-amber-600 p-[1.5px] shadow-glow-gold shrink-0">
+                  <div className="w-full h-full bg-slate-950 rounded-[10px] flex items-center justify-center text-xs">
+                    👑
                   </div>
                 </div>
-                <button
-                  type="button"
-                  onClick={handleLogout}
-                  className="p-1.5 rounded-lg bg-rose-950/40 hover:bg-rose-900/60 text-rose-300 border border-rose-500/30 text-xs font-bold transition-all cursor-pointer"
-                  title="Sign Out"
-                >
-                  🚪
-                </button>
-              </div>
-            </>
-          ) : (
-            <div className="flex flex-col items-center gap-2 py-1">
-              <div
-                className="w-8 h-8 rounded-xl bg-slate-900 border border-slate-800 flex items-center justify-center text-xs text-amber-300 font-mono font-black cursor-pointer"
-                title={`Gateway Balance: $${(providerSettings.balanceUSD !== undefined ? Number(providerSettings.balanceUSD) : 18.50).toFixed(2)}`}
-              >
-                💰
+                <div className="min-w-0">
+                  <div className="text-xs font-black text-white truncate leading-tight">
+                    {user?.name || user?.email?.split('@')[0] || 'Admin Master'}
+                  </div>
+                  <span className="text-[10px] text-amber-400 font-bold block leading-tight">Administrator</span>
+                </div>
               </div>
               <button
                 type="button"
                 onClick={handleLogout}
-                className="w-8 h-8 rounded-xl bg-rose-950/50 hover:bg-rose-900 text-rose-300 border border-rose-500/30 flex items-center justify-center text-xs cursor-pointer"
+                className="w-8 h-8 rounded-xl bg-rose-950/40 hover:bg-rose-900/70 text-rose-300 hover:text-white border border-rose-500/30 hover:border-rose-500/60 text-xs font-bold transition-all flex items-center justify-center cursor-pointer shadow-sm active:scale-95 shrink-0"
+                title="Sign Out"
+              >
+                🚪
+              </button>
+            </div>
+          ) : (
+            <div className="flex flex-col items-center py-1">
+              <button
+                type="button"
+                onClick={handleLogout}
+                className="w-9 h-9 rounded-xl bg-rose-950/50 hover:bg-rose-900 text-rose-300 hover:text-white border border-rose-500/30 flex items-center justify-center text-xs cursor-pointer shadow-sm transition-all"
                 title="Sign Out"
               >
                 🚪
@@ -2638,18 +2796,49 @@ const PRICING_GAMES = [
               </button>
             </div>
 
+            {/* Mobile Quick Search Input */}
+            <div className="py-2.5 border-b border-slate-800/80 shrink-0">
+              <div className="flex items-center gap-2 px-2.5 py-1.5 rounded-xl bg-slate-900/90 border border-slate-800 focus-within:border-amber-400/80 focus-within:ring-2 focus-within:ring-amber-500/20 focus-within:bg-[#0C1220] transition-all">
+                <div className="w-6 h-6 rounded-lg bg-amber-500/10 border border-amber-500/25 flex items-center justify-center shrink-0">
+                  <span className="text-[11px] select-none">🔍</span>
+                </div>
+                <input
+                  type="text"
+                  value={navSearchQuery}
+                  onChange={(e) => setNavSearchQuery(e.target.value)}
+                  placeholder="Search modules..."
+                  className="w-full bg-transparent text-xs text-white placeholder-slate-500 focus:outline-none font-medium"
+                />
+                {navSearchQuery ? (
+                  <div className="flex items-center gap-1 shrink-0">
+                    <span className="px-1.5 py-0.5 rounded-md bg-amber-500/15 border border-amber-500/30 text-[9px] font-bold text-amber-300 font-mono">
+                      {filteredNavTabs.length}
+                    </span>
+                    <button
+                      type="button"
+                      onClick={() => setNavSearchQuery('')}
+                      className="w-5 h-5 rounded-md bg-slate-800 text-slate-400 hover:text-white flex items-center justify-center text-[10px] font-bold cursor-pointer"
+                    >
+                      ✕
+                    </button>
+                  </div>
+                ) : null}
+              </div>
+            </div>
+
             {/* Mobile Categories & Module Links */}
             <div className="flex-1 overflow-y-auto py-3 space-y-4 scrollbar-thin scrollbar-thumb-slate-800">
-              {menuCategories.map((cat) => (
-                <div key={cat.id} className="space-y-1">
-                  <div className="text-[10px] font-black uppercase tracking-wider text-slate-500 px-2 flex items-center justify-between">
-                    <span>{cat.label}</span>
-                    <span>{cat.icon}</span>
-                  </div>
-                  <div className="space-y-1">
-                    {menuTabs
-                      .filter((t) => t.categoryId === cat.id)
-                      .map((tab) => {
+              {menuCategories.map((cat, idx) => {
+                const tabsInCat = filteredNavTabs.filter((t) => t.categoryId === cat.id);
+                if (tabsInCat.length === 0) return null;
+                return (
+                  <div key={cat.id} className="space-y-1">
+                    <div className={`text-[10px] font-black uppercase tracking-widest text-slate-400 px-2 flex items-center gap-1.5 ${idx > 0 ? 'pt-2.5 border-t border-slate-800/40' : ''}`}>
+                      <span className="text-xs opacity-75">{cat.icon}</span>
+                      <span>{cat.label}</span>
+                    </div>
+                    <div className="space-y-1">
+                      {tabsInCat.map((tab) => {
                         const isSelected = activeTab === tab.id;
                         return (
                           <button
@@ -2659,20 +2848,32 @@ const PRICING_GAMES = [
                               setActiveTab(tab.id);
                               setMobileMenuOpen(false);
                             }}
-                            className={`w-full text-left p-2.5 rounded-xl transition-all flex items-center justify-between border cursor-pointer ${
+                            className={`w-full text-left p-2.5 rounded-2xl transition-all flex items-center justify-between border cursor-pointer ${
                               isSelected
-                                ? 'bg-amber-500 text-black border-amber-400 font-black shadow-glow-gold'
-                                : 'bg-slate-900/80 border-slate-800/80 text-slate-200 hover:bg-slate-800'
+                                ? 'bg-gradient-to-r from-amber-500/20 via-amber-500/10 to-transparent border-amber-400/60 text-white font-black shadow-[0_0_15px_rgba(245,158,11,0.15)] ring-1 ring-amber-400/30'
+                                : 'bg-slate-900/80 border-slate-800/80 text-slate-300 hover:bg-slate-800 hover:text-white'
                             }`}
                           >
-                            <div className="flex items-center gap-2.5">
-                              <span className="text-base">{tab.icon}</span>
-                              <span className="text-xs font-bold">{tab.label}</span>
+                            <div className="flex items-center gap-3">
+                              <div
+                                className={`w-8 h-8 rounded-xl flex items-center justify-center shrink-0 border ${
+                                  isSelected
+                                    ? 'bg-gradient-to-br from-amber-400/25 via-amber-500/15 to-amber-950/40 border-amber-400/50 shadow-sm'
+                                    : 'bg-slate-800/70 border-slate-700/70'
+                                }`}
+                              >
+                                <span className="text-base select-none drop-shadow-[0_2px_4px_rgba(0,0,0,0.5)]">
+                                  {tab.icon}
+                                </span>
+                              </div>
+                              <span className={`text-xs ${isSelected ? 'font-black text-amber-200' : 'font-bold'}`}>
+                                {tab.label}
+                              </span>
                             </div>
                             {tab.count !== undefined && tab.count > 0 && (
                               <span
-                                className={`px-1.5 py-0.5 rounded-full text-[9px] font-black ${
-                                  isSelected ? 'bg-black text-amber-300' : tab.badgeColor
+                                className={`px-2 py-0.5 rounded-full text-[9px] font-black shadow-sm ${
+                                  isSelected ? 'bg-amber-400 text-black font-black' : tab.badgeColor
                                 }`}
                               >
                                 {tab.count}
@@ -2681,20 +2882,35 @@ const PRICING_GAMES = [
                           </button>
                         );
                       })}
+                    </div>
                   </div>
+                );
+              })}
+
+              {/* Mobile Empty Search Result State */}
+              {filteredNavTabs.length === 0 && (
+                <div className="py-8 px-4 text-center">
+                  <div className="w-10 h-10 rounded-2xl bg-slate-900 border border-slate-800 mx-auto flex items-center justify-center text-sm mb-2 shadow-inner">
+                    🔍
+                  </div>
+                  <p className="text-xs font-bold text-slate-300">No modules found</p>
+                  <p className="text-[11px] text-slate-500 mt-1 max-w-[170px] mx-auto truncate">
+                    No match for &ldquo;{navSearchQuery}&rdquo;
+                  </p>
+                  <button
+                    type="button"
+                    onClick={() => setNavSearchQuery('')}
+                    className="mt-3 px-3 py-1 rounded-xl bg-amber-500/15 hover:bg-amber-500/25 border border-amber-500/30 text-amber-300 text-[11px] font-bold cursor-pointer transition-all active:scale-95 shadow-sm"
+                  >
+                    Clear Search
+                  </button>
                 </div>
-              ))}
+              )}
             </div>
 
             {/* Mobile Drawer Footer */}
-            <div className="pt-3 border-t border-slate-800 shrink-0 space-y-2">
-              <div className="flex items-center justify-between text-xs text-slate-400">
-                <span>Gateway Balance:</span>
-                <span className="font-mono font-bold text-amber-300">
-                  ${(providerSettings.balanceUSD !== undefined ? Number(providerSettings.balanceUSD) : 18.50).toFixed(2)}
-                </span>
-              </div>
-              <div className="flex items-center justify-between gap-2 pt-1">
+            <div className="pt-3 border-t border-slate-800 shrink-0">
+              <div className="flex items-center justify-between gap-2">
                 <Link
                   to="/"
                   target="_blank"
@@ -2738,8 +2954,10 @@ const PRICING_GAMES = [
               <span className="text-slate-600 hidden sm:inline">/</span>
               <span className="text-slate-400 font-semibold hidden md:inline">{currentTabInfo.category}</span>
               <span className="text-slate-600 hidden md:inline">/</span>
-              <div className="flex items-center gap-1.5 font-black text-white text-xs sm:text-sm truncate">
-                <span className="text-base">{currentTabInfo.icon}</span>
+              <div className="flex items-center gap-2 font-black text-white text-xs sm:text-sm truncate">
+                <div className="w-6 h-6 rounded-lg bg-amber-500/15 border border-amber-500/30 flex items-center justify-center text-xs shadow-sm shrink-0">
+                  <span className="select-none">{currentTabInfo.icon}</span>
+                </div>
                 <span className="text-amber-300 font-extrabold truncate">{currentTabInfo.label}</span>
               </div>
             </div>
@@ -2756,7 +2974,7 @@ const PRICING_GAMES = [
               </span>
               <span className="text-slate-700">|</span>
               <span className="font-black text-amber-300 text-[11px] font-mono">
-                ${(providerSettings.balanceUSD !== undefined ? Number(providerSettings.balanceUSD) : 18.50).toFixed(2)}
+                ${(providerSettings.balanceUSD !== undefined ? Number(providerSettings.balanceUSD) : 0.49).toFixed(2)}
               </span>
             </div>
 
@@ -4513,7 +4731,17 @@ const PRICING_GAMES = [
         {/* TAB 5: SUPPLIER & API GATEWAYS */}
         {/* ========================================================= */}
         {!loading && activeTab === 'provider' && (() => {
-          const allProvidersList = providerSettings.providers || DEFAULT_PROVIDERS;
+          const allProvidersList = (providerSettings.providers || DEFAULT_PROVIDERS).map(p => {
+            if (p.id === 'KhmerTopUp') {
+              const liveBal = providerSettings.khmerTopUpBalanceUSD !== undefined ? Number(providerSettings.khmerTopUpBalanceUSD) : Number(p.balanceUSD ?? 0.49);
+              return { ...p, balanceUSD: liveBal };
+            }
+            if (p.id === 'FazerCards') {
+              const liveBal = providerSettings.fazerCardsBalanceUSD !== undefined ? Number(providerSettings.fazerCardsBalanceUSD) : Number(p.balanceUSD ?? 0.01);
+              return { ...p, balanceUSD: liveBal };
+            }
+            return p;
+          });
           const activeProvObj = allProvidersList.find(p => p.id === providerSettings.activeProvider || p.name === providerSettings.activeProvider) || allProvidersList[0];
           const activeFzrToken = (providerSettings.fazerCardsTokens || []).find(t => t.isActive) || (providerSettings.fazerCardsTokens || [])[0];
           const standbyFzrTokens = (providerSettings.fazerCardsTokens || []).filter(t => t.id !== activeFzrToken?.id && t.token !== activeFzrToken?.token);
@@ -4734,7 +4962,7 @@ const PRICING_GAMES = [
                             <span className="text-[11px] font-mono font-bold px-2 py-0.5 rounded-lg bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 shrink-0">
                               {activeFzrToken?.balanceUSD !== null && activeFzrToken?.balanceUSD !== undefined
                                 ? `$${activeFzrToken.balanceUSD.toFixed(2)} USD`
-                                : `$${(providerSettings.fazerCardsBalanceUSD || 18.50).toFixed(2)} USD`}
+                                : `$${(providerSettings.fazerCardsBalanceUSD !== undefined ? Number(providerSettings.fazerCardsBalanceUSD) : 0.01).toFixed(2)} USD`}
                             </span>
                           </div>
 
@@ -4961,6 +5189,16 @@ const PRICING_GAMES = [
                       </button>
                       <button
                         type="button"
+                        onClick={() => handleTestProviderConnection(activeProvObj)}
+                        disabled={providerTesting}
+                        className="px-4 py-2.5 rounded-xl bg-gradient-to-r from-emerald-600/30 to-teal-600/20 hover:from-emerald-600/40 hover:to-teal-600/30 text-emerald-300 font-bold text-xs border border-emerald-500/40 flex items-center gap-2 transition-all cursor-pointer shadow-md"
+                        title="Query live real wallet balance directly from provider API"
+                      >
+                        <span>{providerTesting ? '⏳' : '🔄'}</span>
+                        <span>{providerTesting ? 'Syncing...' : 'Sync Live Wallet'}</span>
+                      </button>
+                      <button
+                        type="button"
                         onClick={handleTestProviderConnection}
                         disabled={providerTesting}
                         className="px-4 py-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 font-bold text-xs border border-slate-700 flex items-center gap-2 transition-all cursor-pointer"
@@ -5049,6 +5287,16 @@ const PRICING_GAMES = [
                           <div className="flex items-center justify-between p-3 rounded-2xl bg-black/50 border border-slate-800/80">
                             <div className="flex items-center gap-2">
                               <span className="text-slate-400 text-xs font-semibold">Available Credit:</span>
+                              <button
+                                type="button"
+                                onClick={() => handleTestProviderConnection(prov)}
+                                disabled={providerTesting}
+                                className="px-2 py-0.5 rounded-lg bg-cyan-500/10 hover:bg-cyan-500/20 text-cyan-300 border border-cyan-500/30 text-[10px] font-bold transition-all cursor-pointer flex items-center gap-1"
+                                title="Sync live real wallet balance from provider API"
+                              >
+                                <span>{providerTesting ? '⏳' : '🔄'}</span>
+                                <span>Sync</span>
+                              </button>
                               <button
                                 type="button"
                                 onClick={() => handleOpenBalanceEdit(prov)}
@@ -6253,11 +6501,11 @@ const PRICING_GAMES = [
                   </div>
                   <div className="flex justify-between items-center p-2 rounded-xl bg-dark-input/60">
                     <span className="text-slate-400">FazerCards Balance:</span>
-                    <span className="font-mono font-bold text-purple-300">${(providerSettings.fazerCardsBalanceUSD || 18.50).toFixed(2)}</span>
+                    <span className="font-mono font-bold text-purple-300">${(providerSettings.fazerCardsBalanceUSD !== undefined ? Number(providerSettings.fazerCardsBalanceUSD) : 0.01).toFixed(2)}</span>
                   </div>
                   <div className="flex justify-between items-center p-2 rounded-xl bg-dark-input/60">
                     <span className="text-slate-400">KhmerTopUp Balance:</span>
-                    <span className="font-mono font-bold text-cyan-300">${(providerSettings.khmerTopUpBalanceUSD || 1.45).toFixed(2)}</span>
+                    <span className="font-mono font-bold text-cyan-300">${(providerSettings.khmerTopUpBalanceUSD !== undefined ? Number(providerSettings.khmerTopUpBalanceUSD) : 0.49).toFixed(2)}</span>
                   </div>
                 </div>
               </div>
