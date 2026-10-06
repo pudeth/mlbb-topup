@@ -149,6 +149,57 @@ const parseMlbbId = (input) => {
   return { playerID: raw, serverID: '', detected: false };
 };
 
+// Bulletproof resolver for real player in-game names across all games
+export const resolveRealPlayerName = (pId, fallbackRealName, user, playerAccount) => {
+  if (!pId) return '';
+  const sPId = String(pId).trim();
+
+  // 1. Check custom player names in localStorage
+  try {
+    const customNames = JSON.parse(localStorage.getItem('custom_player_names') || '{}');
+    if (customNames[sPId] && customNames[sPId].trim()) {
+      return customNames[sPId].trim();
+    }
+  } catch (e) {}
+
+  // 2. Check if verified realName exists and is not generic
+  if (fallbackRealName &&
+      !fallbackRealName.startsWith('Player_') &&
+      !fallbackRealName.startsWith('FF Player #') &&
+      !fallbackRealName.startsWith('FREE FIRE KH Player #') &&
+      !fallbackRealName.includes('Player #')) {
+    return fallbackRealName.trim();
+  }
+
+  // 3. Check active player account
+  if (playerAccount?.realName &&
+      !playerAccount.realName.startsWith('Player_') &&
+      !playerAccount.realName.includes('#') &&
+      String(playerAccount.playerId).trim() === sPId) {
+    return playerAccount.realName.trim();
+  }
+
+  // 4. Check user profile name if logged in (e.g. Pu Deth)
+  if (user?.name &&
+      !user.name.startsWith('Player_') &&
+      !user.name.includes('#')) {
+    return user.name.trim();
+  }
+
+  // 5. Check if user is known in localStorage
+  try {
+    const userStr = localStorage.getItem('user');
+    if (userStr) {
+      const u = JSON.parse(userStr);
+      if (u?.name && !u.name.startsWith('Player_') && !u.name.includes('#')) {
+        return u.name.trim();
+      }
+    }
+  } catch (e) {}
+
+  return fallbackRealName || `Player_${sPId}`;
+};
+
 // Play audio chime on success
 const playSuccessSound = () => {
   try {
@@ -495,20 +546,58 @@ const TopUp = () => {
     paymentMethod: 'abapayway',
   });
 
+  const [editingPlayerName, setEditingPlayerName] = useState(false);
+  const [customNameInput, setCustomNameInput] = useState('');
+
+  const handleSaveRealPlayerName = (newName) => {
+    if (!newName || !newName.trim()) return;
+    const trimmed = newName.trim();
+    const curPlayerId = formData.playerID.trim();
+
+    try {
+      const customNames = JSON.parse(localStorage.getItem('custom_player_names') || '{}');
+      customNames[curPlayerId] = trimmed;
+      localStorage.setItem('custom_player_names', JSON.stringify(customNames));
+    } catch (e) {}
+
+    setVerifiedAccount(prev => prev ? { ...prev, name: trimmed } : {
+      valid: true,
+      name: trimmed,
+      id: curPlayerId,
+      server: formData.serverID
+    });
+
+    try {
+      const pAcc = JSON.parse(localStorage.getItem('player_account') || '{}');
+      pAcc.realName = trimmed;
+      pAcc.playerId = curPlayerId;
+      localStorage.setItem('player_account', JSON.stringify(pAcc));
+
+      const uObj = JSON.parse(localStorage.getItem('user') || '{}');
+      if (uObj) {
+        uObj.name = trimmed;
+        localStorage.setItem('user', JSON.stringify(uObj));
+      }
+    } catch (e) {}
+
+    setEditingPlayerName(false);
+  };
+
   // Auto-fill and synchronize with active player account or user
   useEffect(() => {
     const activePlayerId = playerAccount?.playerId || user?.playerId || '';
     const activeServerId = playerAccount?.serverId || user?.serverId || '';
     if (activePlayerId) {
+      const resolvedName = resolveRealPlayerName(activePlayerId, playerAccount?.realName || user?.name, user, playerAccount);
       setFormData(prev => ({
         ...prev,
         playerID: prev.playerID || activePlayerId,
         serverID: (prev.serverID === 'Global' && activeServerId) ? activeServerId : (prev.serverID || activeServerId || 'Global')
       }));
-      if (playerAccount?.realName || user?.name) {
+      if (resolvedName) {
         setVerifiedAccount(prev => prev || {
           valid: true,
-          name: playerAccount?.realName || user?.name,
+          name: resolvedName,
           id: activePlayerId,
           server: activeServerId
         });
@@ -1060,7 +1149,8 @@ const TopUp = () => {
           }
 
           if (accountConfirmed) {
-            const displayName = realName || `FF Player #${pId}`;
+            const resolvedRealName = resolveRealPlayerName(pId, realName, user, playerAccount);
+            const displayName = resolvedRealName || `FF Player #${pId}`;
             setVerifiedAccount({
               valid: true,
               name: displayName,
@@ -1095,9 +1185,10 @@ const TopUp = () => {
             }
           } catch (e) {}
 
+          const resolvedRealName = resolveRealPlayerName(pId, realName, user, playerAccount);
           setVerifiedAccount({
             valid: true,
-            name: realName || `${selectedGame.name} Player #${pId}`,
+            name: resolvedRealName || `${selectedGame.name} Player #${pId}`,
             country: 'Global',
             id: pId,
             server: sId
@@ -2276,9 +2367,60 @@ const TopUp = () => {
                   <span className={`absolute -bottom-0.5 -right-0.5 w-3 h-3 rounded-full border-2 border-[#050b20] ${verifiedAccount?.valid ? 'bg-emerald-400' : 'bg-slate-500'}`} />
                 </div>
                 <div className="min-w-0 flex-1">
-                  <div className="text-[11px] sm:text-sm font-extrabold text-white truncate leading-tight">
-                    {verifiedAccount?.valid ? verifiedAccount.name : (language === 'km' ? 'មិនទាន់ផ្ទៀងផ្ទាត់' : 'Guest Player')}
-                  </div>
+                  {editingPlayerName ? (
+                    <div className="flex items-center gap-1.5 py-0.5">
+                      <input
+                        type="text"
+                        value={customNameInput}
+                        onChange={(e) => setCustomNameInput(e.target.value)}
+                        placeholder={language === 'km' ? 'បញ្ចូលឈ្មោះពិតក្នុងហ្គេម...' : 'Enter In-Game Nickname...'}
+                        className="h-7 px-2.5 bg-slate-900 border border-sky-400 rounded-lg text-xs font-bold text-white focus:outline-none focus:ring-1 focus:ring-sky-400 min-w-0 flex-1"
+                        autoFocus
+                        onKeyDown={(e) => {
+                          if (e.key === 'Enter') handleSaveRealPlayerName(customNameInput);
+                          if (e.key === 'Escape') setEditingPlayerName(false);
+                        }}
+                      />
+                      <button
+                        type="button"
+                        onClick={() => handleSaveRealPlayerName(customNameInput)}
+                        className="h-7 px-2.5 bg-gradient-to-r from-emerald-500 to-teal-500 text-slate-950 text-[11px] font-black rounded-lg hover:brightness-110 active:scale-95 cursor-pointer shrink-0"
+                      >
+                        ✓ {language === 'km' ? 'រក្សាទុក' : 'Save'}
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setEditingPlayerName(false)}
+                        className="h-7 px-2 bg-slate-800 text-slate-400 text-xs rounded-lg hover:text-white cursor-pointer shrink-0"
+                      >
+                        ✕
+                      </button>
+                    </div>
+                  ) : (
+                    <div className="flex items-center gap-1.5 flex-wrap">
+                      <div className="text-[11px] sm:text-sm font-extrabold text-white truncate leading-tight">
+                        {verifiedAccount?.valid ? verifiedAccount.name : (language === 'km' ? 'មិនទាន់ផ្ទៀងផ្ទាត់' : 'Guest Player')}
+                      </div>
+                      {verifiedAccount?.valid && (
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setCustomNameInput(
+                              verifiedAccount.name && !verifiedAccount.name.includes('#') && !verifiedAccount.name.startsWith('Player_')
+                                ? verifiedAccount.name
+                                : (user?.name && !user.name.startsWith('Player_') ? user.name : '')
+                            );
+                            setEditingPlayerName(true);
+                          }}
+                          className="px-2 py-0.5 rounded-md bg-sky-500/20 hover:bg-sky-500/35 text-sky-300 hover:text-white text-[10px] font-bold border border-sky-400/40 flex items-center gap-1 transition-all cursor-pointer shadow-sm"
+                          title={language === 'km' ? 'កែប្រែឈ្មោះពិតប្រាកដក្នុងហ្គេម' : 'Set real in-game nickname'}
+                        >
+                          <span>✏️</span>
+                          <span>{language === 'km' ? 'កែឈ្មោះ' : 'Set Real Name'}</span>
+                        </button>
+                      )}
+                    </div>
+                  )}
                   <div className={`text-[9px] sm:text-[11px] truncate mt-0.5 font-medium ${verifiedAccount?.valid ? 'text-emerald-400' : verifiedAccount && !verifiedAccount.valid ? 'text-rose-400' : 'text-slate-400'}`}>
                     {verifiedAccount?.valid
                       ? `✓ ${verifiedAccount.id} (${verifiedAccount.server}) • ${verifiedAccount.country || 'Cambodia'}`
@@ -2297,15 +2439,16 @@ const TopUp = () => {
                     onClick={() => {
                       const pId = playerAccount?.playerId || user?.playerId || '';
                       const sId = playerAccount?.serverId || user?.serverId || '';
+                      const resolved = resolveRealPlayerName(pId, playerAccount?.realName || user?.name, user, playerAccount);
                       setFormData(prev => ({
                         ...prev,
                         playerID: pId,
                         serverID: sId || prev.serverID
                       }));
-                      if (playerAccount?.realName || user?.name) {
+                      if (resolved) {
                         setVerifiedAccount({
                           valid: true,
-                          name: playerAccount?.realName || user?.name,
+                          name: resolved,
                           id: pId,
                           server: sId
                         });
@@ -2319,7 +2462,7 @@ const TopUp = () => {
                   >
                     <span>⚡</span>
                     <span>{language === 'km' ? 'គណនីរក្សាទុក' : 'Saved'}:</span>
-                    <span className="text-white font-extrabold">{playerAccount?.realName || user?.name || 'Player'}</span>
+                    <span className="text-white font-extrabold">{resolveRealPlayerName(playerAccount?.playerId || user?.playerId, playerAccount?.realName || user?.name, user, playerAccount)}</span>
                     <span className="font-mono text-cyan-300">({playerAccount?.playerId || user?.playerId})</span>
                     {formData.playerID === (playerAccount?.playerId || user?.playerId) && (
                       <span className="text-emerald-400 font-black">✓ Active</span>
