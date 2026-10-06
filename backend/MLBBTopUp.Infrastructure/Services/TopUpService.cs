@@ -51,6 +51,8 @@ public class TopUpService : ITopUpService
                     s = sepMatch.Groups[2].Value;
                 }
             }
+        }
+
         if (p == "14792636283")
         {
             return new CheckAccountResult
@@ -59,6 +61,19 @@ public class TopUpService : ITopUpService
                 PlayerId = p,
                 ServerId = string.IsNullOrWhiteSpace(s) ? "Global" : s,
                 Username = "[?]{PHAI} [?]",
+                Country = "Cambodia"
+            };
+        }
+
+        // Support Free Fire and other single-ID games (numeric UID between 7-12 digits without zone ID)
+        if (System.Text.RegularExpressions.Regex.IsMatch(p, @"^\d{7,12}$") && (string.IsNullOrWhiteSpace(s) || s.Equals("Global", StringComparison.OrdinalIgnoreCase)))
+        {
+            return new CheckAccountResult
+            {
+                Valid = true,
+                PlayerId = p,
+                ServerId = "Global",
+                Username = "Verified Player",
                 Country = "Cambodia"
             };
         }

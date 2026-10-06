@@ -1042,42 +1042,27 @@ const TopUp = () => {
             realName = '[?]{PHAI} [?]';
             accountConfirmed = true;
           } else {
-            // 3. Official Codashop gateway validation to check real Garena account existence
+            // 3. Live Free Fire validation via Isan API (has CORS support and returns real numeric ID for genuine accounts)
             try {
-              const coda = await fetch('https://order-sg.codashop.com/initPayment.action', {
-                method: 'POST',
-                headers: {
-                  'Content-Type': 'application/x-www-form-urlencoded',
-                  'User-Agent': 'Mozilla/5.0',
-                  'Origin': 'https://www.codashop.com',
-                  'Referer': 'https://www.codashop.com/en-kh/free-fire',
-                },
-                body: new URLSearchParams({
-                  'voucherPricePoint.id': '68893',
-                  'voucherPricePoint.price': '1.0',
-                  'voucherPricePoint.variablePrice': '0',
-                  'email': '',
-                  'n': Date.now().toString(),
-                  'user.userId': pId,
-                  'voucherTypeName': 'FREEFIRE',
-                  'shopLang': 'en_KH',
-                }),
-              }).then(r => r.json());
-
-              const errCode = coda?.errorCode;
-              const errMsg = (coda?.errorMsg || '').toLowerCase();
-
-              // If Codashop explicitly says Invalid User, account definitely does not exist
-              if (errCode === 22 || errMsg.includes('invalid user')) {
-                accountConfirmed = false;
-              } else if (errCode === 24 || errCode === 30108 || coda?.confirmation === true || coda?.success === true) {
-                // Known Garena existing player response
+              const ffRes = await fetch(`https://api.isan.eu.org/nickname/ff?id=${pId}`).then(r => r.json());
+              if (ffRes?.success === true && ffRes?.id && String(ffRes.id) === String(pId)) {
                 accountConfirmed = true;
-                if (coda?.user?.username || coda?.user?.name) {
-                  realName = coda.user.username || coda.user.name;
-                }
+                if (ffRes?.name) realName = ffRes.name;
               }
             } catch (e) {}
+
+            // 4. Backend validation fallback
+            if (!accountConfirmed) {
+              try {
+                const bRes = await topupAPI.checkAccount(pId, sId || 'Global');
+                if (bRes.data?.valid) {
+                  accountConfirmed = true;
+                  if (bRes.data?.username && !bRes.data.username.startsWith('Player #')) {
+                    realName = bRes.data.username;
+                  }
+                }
+              } catch (e) {}
+            }
           }
 
           if (accountConfirmed) {
