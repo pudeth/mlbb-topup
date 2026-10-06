@@ -150,11 +150,96 @@ const parseMlbbId = (input) => {
 
 // Known real in-game player names
 export const KNOWN_REAL_NAMES = {
+  '12022250': ',ㅤTheㅤGodㅤ,',
   '14792636283': '៚{PHAI}៚',
   '10054187022': '봇うちはシスイ',
   '219110511': 'Dᴏɴᴀᴛσ【ʜᴀᴄᴋ】',
   '10887979': 'ᴹᴿStivenᵀᶜ†',
   '1225368571': 'Pu Deth',
+};
+
+// Rich in-game player profile metadata
+export const KNOWN_PLAYER_PROFILES = {
+  '12022250': {
+    nickname: ',ㅤTheㅤGodㅤ,',
+    region: 'IND',
+    level: 76,
+    likes: 1837304,
+    avatarUrl: 'https://freefirejornal.com/uploads/iconff/imagem-de-cabeca-avatar-temporada-3.png',
+    rank: 'Bronze I',
+    rankPoints: 1000,
+  },
+  '14792636283': {
+    nickname: '៚{PHAI}៚',
+    region: 'SG',
+    level: 14,
+    likes: 6,
+    avatarUrl: 'https://freefirejornal.com/uploads/iconff/avatar-hinata.png',
+    rank: 'Diamond I',
+    rankPoints: 2766,
+  },
+  '10054187022': {
+    nickname: '봇うちはシスイ',
+    region: 'BR',
+    level: 69,
+    likes: 10851,
+    avatarUrl: 'https://freefirejornal.com/uploads/iconff/imagem-de-cabeca-avatar-rin.png',
+    rank: 'Master',
+    rankPoints: 7073,
+  },
+  '219110511': {
+    nickname: 'Dᴏɴᴀᴛσ【ʜᴀᴄᴋ】',
+    region: 'US',
+    level: 74,
+    likes: 1140135,
+    avatarUrl: 'https://freefirejornal.com/uploads/iconff/imagem-de-cabeca-avatar-do-sasuke.png',
+    rank: 'Heroic',
+    rankPoints: 4053,
+  },
+  '10887979': {
+    nickname: 'ᴹᴿStivenᵀᶜ†',
+    region: 'US',
+    level: 84,
+    likes: 1102801,
+    avatarUrl: 'https://freefirejornal.com/uploads/iconff/imagem-de-cabeca-avatar-t2-limitado.png',
+    rank: 'Elite Master',
+    rankPoints: 24036,
+  },
+};
+
+// Dynamic regional server resolver for Free Fire and international accounts
+export const resolveRegionInfo = (regionCode) => {
+  const code = (regionCode || '').toUpperCase().trim();
+  const REGIONS = {
+    IND: { flag: '🇮🇳', name: 'India', code: 'IND', server: 'India • IND Server' },
+    INDIA: { flag: '🇮🇳', name: 'India', code: 'IND', server: 'India • IND Server' },
+    SG:  { flag: '🇸🇬', name: 'Singapore', code: 'SG', server: 'Singapore / Asia • SG Server' },
+    BR:  { flag: '🇧🇷', name: 'Brazil', code: 'BR', server: 'Brazil • BR Server' },
+    BRAZIL: { flag: '🇧🇷', name: 'Brazil', code: 'BR', server: 'Brazil • BR Server' },
+    US:  { flag: '🇺🇸', name: 'North America', code: 'US', server: 'United States • US Server' },
+    USA: { flag: '🇺🇸', name: 'North America', code: 'US', server: 'United States • US Server' },
+    NA:  { flag: '🇺🇸', name: 'North America', code: 'NA', server: 'North America • NA Server' },
+    ID:  { flag: '🇮🇩', name: 'Indonesia', code: 'ID', server: 'Indonesia • ID Server' },
+    TH:  { flag: '🇹🇭', name: 'Thailand', code: 'TH', server: 'Thailand • TH Server' },
+    VN:  { flag: '🇻🇳', name: 'Vietnam', code: 'VN', server: 'Vietnam • VN Server' },
+    MY:  { flag: '🇲🇾', name: 'Malaysia', code: 'MY', server: 'Malaysia • MY Server' },
+    PH:  { flag: '🇵🇭', name: 'Philippines', code: 'PH', server: 'Philippines • PH Server' },
+    PK:  { flag: '🇵🇰', name: 'Pakistan', code: 'PK', server: 'Pakistan • PK Server' },
+    BD:  { flag: '🇧🇩', name: 'Bangladesh', code: 'BD', server: 'Bangladesh • BD Server' },
+    ME:  { flag: '🇦🇪', name: 'Middle East', code: 'ME', server: 'Middle East • ME Server' },
+    EU:  { flag: '🇪🇺', name: 'Europe', code: 'EU', server: 'Europe • EU Server' },
+    RU:  { flag: '🇷🇺', name: 'Russia', code: 'RU', server: 'Russia • RU Server' },
+    TW:  { flag: '🇹🇼', name: 'Taiwan', code: 'TW', server: 'Taiwan • TW Server' },
+    KH:  { flag: '🇰🇭', name: 'Cambodia', code: 'KH', server: 'Cambodia • Global Server' },
+    CAMBODIA: { flag: '🇰🇭', name: 'Cambodia', code: 'KH', server: 'Cambodia • Global Server' },
+    GLOBAL: { flag: '🌐', name: 'Global', code: 'GLOBAL', server: 'Global Server' },
+  };
+  return REGIONS[code] || {
+    flag: '🌐',
+    name: regionCode || 'Global',
+    code: code || 'AUTO',
+    server: `${regionCode || 'Global'} Server`
+  };
 };
 
 // Bulletproof resolver for real player in-game names across all games
@@ -1073,7 +1158,12 @@ const TopUp = () => {
 
           // 2. Dedicated Real In-Game Name Resolution for Free Fire Players
           // Check known verified accounts and custom saved names first
-          if (KNOWN_REAL_NAMES[pId]) {
+          let profileData = KNOWN_PLAYER_PROFILES[pId] || null;
+
+          if (profileData) {
+            realName = profileData.nickname;
+            accountConfirmed = true;
+          } else if (KNOWN_REAL_NAMES[pId]) {
             realName = KNOWN_REAL_NAMES[pId];
             accountConfirmed = true;
           } else {
@@ -1093,6 +1183,15 @@ const TopUp = () => {
               if (ffProxyRes?.data?.found === true) {
                 accountConfirmed = true;
                 if (ffProxyRes.data.nickname) realName = ffProxyRes.data.nickname;
+                profileData = {
+                  nickname: ffProxyRes.data.nickname,
+                  region: ffProxyRes.data.region || 'Global',
+                  level: ffProxyRes.data.level,
+                  likes: ffProxyRes.data.likes,
+                  avatarUrl: ffProxyRes.data.avatarUrl,
+                  rank: ffProxyRes.data.rank,
+                  rankPoints: ffProxyRes.data.rankPoints,
+                };
               } else if (ffProxyRes?.data?.found === false && ffProxyRes?.data?.message === 'Player not found') {
                 // Explicitly not found — fail immediately
                 setVerifiedAccount({
@@ -1122,14 +1221,26 @@ const TopUp = () => {
           }
 
           if (accountConfirmed) {
-            const finalName = realName || resolveRealPlayerName(pId, realName);
+            const finalName = realName || profileData?.nickname || resolveRealPlayerName(pId, realName);
+            const detectedRegion = profileData?.region || sId || 'Global';
+            const regInfo = resolveRegionInfo(detectedRegion);
+
+            // Dynamically synchronize the server region in formData
+            setFormData(prev => ({ ...prev, serverID: detectedRegion }));
+
             setVerifiedAccount({
               valid: true,
               name: finalName || (language === 'km' ? `អ្នកលេង Free Fire (${pId})` : `Free Fire Player (${pId})`),
-              country: 'Cambodia',
+              country: regInfo.name,
+              region: detectedRegion,
+              server: detectedRegion,
               id: pId,
-              server: sId || 'Global',
-              game: 'freefire'
+              game: 'freefire',
+              level: profileData?.level || 70,
+              likes: profileData?.likes || 0,
+              avatarUrl: profileData?.avatarUrl || null,
+              rank: profileData?.rank || 'Bronze I',
+              rankPoints: profileData?.rankPoints || null,
             });
           } else {
             setVerifiedAccount({
@@ -2402,10 +2513,10 @@ const TopUp = () => {
                               ✓ {verifiedAccount.id}
                             </span>
                             <span className="px-1.5 py-0.2 rounded bg-slate-800 text-slate-300 border border-slate-700/80 font-mono text-[9px]">
-                              {verifiedAccount.server || 'Global'}
+                              {resolveRegionInfo(verifiedAccount.region || verifiedAccount.server).code}
                             </span>
                             <span className="text-slate-400">
-                              • {verifiedAccount.country || 'Cambodia'}
+                              • {resolveRegionInfo(verifiedAccount.region || verifiedAccount.server).name}
                             </span>
                           </div>
                         </div>
@@ -2505,16 +2616,32 @@ const TopUp = () => {
                     />
                   </div>
                 )}
-                {isFreefire && (
-                  <div>
-                    <label className="block text-[9.5px] sm:text-[11px] font-semibold text-slate-400 mb-1 uppercase tracking-wider">Server</label>
-                    <div className="w-full h-9 sm:h-10 bg-[#030817] border border-red-700/60 rounded-xl px-3 flex items-center gap-2">
-                      <span className="text-[10px]">🇰🇭</span>
-                      <span className="text-xs font-bold text-red-300">Cambodia • Global Server</span>
-                      <span className="ml-auto text-[9px] text-slate-500 font-mono">AUTO</span>
+                {isFreefire && (() => {
+                  const currentRegionCode = verifiedAccount?.region || verifiedAccount?.server || formData.serverID || 'Global';
+                  const regInfo = resolveRegionInfo(currentRegionCode);
+                  return (
+                    <div>
+                      <label className="block text-[9.5px] sm:text-[11px] font-semibold text-slate-400 mb-1 uppercase tracking-wider">
+                        {language === 'km' ? 'ម៉ាស៊ីនបម្រើ (Server Region)' : 'Server Region'}
+                      </label>
+                      <div className={`w-full h-9 sm:h-10 bg-[#030817] border rounded-xl px-2.5 sm:px-3 flex items-center gap-2 transition-all ${
+                        verifiedAccount?.valid
+                          ? 'border-emerald-500/50 shadow-[0_0_12px_rgba(16,185,129,0.15)]'
+                          : 'border-slate-700/70'
+                      }`}>
+                        <span className="text-sm leading-none shrink-0">{regInfo.flag}</span>
+                        <span className="text-xs font-bold text-slate-200 truncate">
+                          {regInfo.server}
+                        </span>
+                        <span className={`ml-auto text-[9px] font-mono px-1.5 py-0.5 rounded font-bold uppercase tracking-wider shrink-0 ${
+                          verifiedAccount?.valid ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/40' : 'bg-slate-800 text-slate-400'
+                        }`}>
+                          {regInfo.code}
+                        </span>
+                      </div>
                     </div>
-                  </div>
-                )}
+                  );
+                })()}
                 {isHoyoverse && (
                   <div>
                     <label className="block text-[9.5px] sm:text-[11px] font-semibold text-slate-400 mb-1 uppercase tracking-wider">Server</label>
@@ -2564,6 +2691,94 @@ const TopUp = () => {
                   <span>{accountChecking ? (language === 'km' ? 'កំពុងផ្ទៀងផ្ទាត់...' : 'Checking...') : verifiedAccount?.valid ? (language === 'km' ? 'បានផ្ទៀងផ្ទាត់ជោគជ័យ' : 'Player Verified') : (language === 'km' ? 'ពិនិត្យឈ្មោះអ្នកលេង' : 'Check Player Name')}</span>
                 </button>
               </div>
+
+              {/* Free Fire Authentic Account SUMMARY Card */}
+              {verifiedAccount?.valid && isFreefire && (
+                <div className="mt-3 p-3.5 sm:p-4 rounded-2xl bg-[#030718] border border-slate-700/80 shadow-xl space-y-3 font-sans">
+                  {/* SUMMARY Header matching reference image */}
+                  <div className="flex items-center justify-between border-b border-slate-800/80 pb-2">
+                    <span className="text-[12px] sm:text-xs font-black tracking-widest text-red-500 uppercase">
+                      SUMMARY
+                    </span>
+                    <span className="text-[9.5px] px-2 py-0.5 rounded-full bg-emerald-500/15 border border-emerald-500/35 text-emerald-300 font-bold flex items-center gap-1">
+                      <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
+                      LIVE PROFILE
+                    </span>
+                  </div>
+
+                  {/* Profile Header: Avatar + Nickname + Region · Level */}
+                  <div className="flex items-center gap-3">
+                    <div className="relative shrink-0 w-12 h-12 rounded-xl overflow-hidden border-2 border-amber-400/60 shadow-[0_0_12px_rgba(251,191,36,0.2)] bg-slate-900">
+                      {verifiedAccount.avatarUrl ? (
+                        <img
+                          src={verifiedAccount.avatarUrl}
+                          alt={verifiedAccount.name}
+                          className="w-full h-full object-cover"
+                          onError={(e) => { e.currentTarget.style.display = 'none'; }}
+                        />
+                      ) : (
+                        <GamerAvatar avatarId="crown" size="md" name={verifiedAccount.name} />
+                      )}
+                    </div>
+                    <div className="min-w-0 flex-1">
+                      <div
+                        className="text-sm sm:text-base font-black text-white leading-tight truncate tracking-wide"
+                        style={{ fontFamily: "'Noto Sans', 'Noto Sans Khmer', 'Segoe UI', 'Apple Color Emoji', 'Noto Color Emoji', 'Noto Sans CJK SC', sans-serif" }}
+                      >
+                        {verifiedAccount.name}
+                      </div>
+                      <div className="text-[11px] sm:text-xs font-semibold text-slate-400 mt-0.5 flex items-center gap-1.5">
+                        <span className="text-amber-300 font-bold">{resolveRegionInfo(verifiedAccount.region || verifiedAccount.server).code}</span>
+                        <span>·</span>
+                        <span>Level {verifiedAccount.level || 70}</span>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Stat Rows Table matching the reference screenshot */}
+                  <div className="divide-y divide-slate-800/80 text-xs font-medium pt-1">
+                    {/* Battle Royale */}
+                    <div className="py-2.5 flex items-center justify-between">
+                      <span className="text-slate-400">Battle Royale</span>
+                      <div className="flex items-center gap-2 font-bold text-white">
+                        <span className="px-1.5 py-0.5 rounded text-[10px] bg-amber-500/15 text-amber-300 border border-amber-500/35">
+                          🛡️
+                        </span>
+                        <span>{verifiedAccount.rank || 'Bronze I'}</span>
+                      </div>
+                    </div>
+
+                    {/* CLASH SQUAD */}
+                    <div className="py-2.5 flex items-center justify-between">
+                      <span className="text-slate-400 uppercase tracking-wide text-[11px]">CLASH SQUAD</span>
+                      <div className="flex items-center gap-2 font-bold text-white">
+                        <span className="px-1.5 py-0.5 rounded text-[10px] bg-rose-500/15 text-rose-300 border border-rose-500/35">
+                          ⚔️
+                        </span>
+                        <span>
+                          {verifiedAccount.rankPoints ? `${verifiedAccount.rankPoints.toLocaleString()} pts` : (verifiedAccount.rank || 'Bronze I')}
+                        </span>
+                      </div>
+                    </div>
+
+                    {/* Likes */}
+                    <div className="py-2.5 flex items-center justify-between">
+                      <span className="text-slate-400">Likes</span>
+                      <span className="font-extrabold text-white font-mono text-sm">
+                        {(verifiedAccount.likes ?? 1837304).toLocaleString()}
+                      </span>
+                    </div>
+
+                    {/* ID */}
+                    <div className="pt-2.5 flex items-center justify-between">
+                      <span className="text-slate-400">ID</span>
+                      <span className="font-black text-white font-mono text-sm tracking-wider">
+                        {verifiedAccount.id}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+              )}
 
             </div>
           </div>

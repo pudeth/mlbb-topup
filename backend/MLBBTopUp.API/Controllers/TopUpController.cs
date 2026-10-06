@@ -42,11 +42,16 @@ public class TopUpController : BaseController
 
         return Ok(new
         {
-            found    = result.Found,
-            uid      = uid.Trim(),
-            nickname = result.Nickname,
-            region   = result.Region,
-            message  = result.Message
+            found      = result.Found,
+            uid        = uid.Trim(),
+            nickname   = result.Nickname,
+            region     = result.Region,
+            level      = result.Level,
+            likes      = result.Likes,
+            avatarUrl  = result.AvatarUrl,
+            rank       = result.Rank,
+            rankPoints = result.RankPoints,
+            message    = result.Message
         });
     }
 

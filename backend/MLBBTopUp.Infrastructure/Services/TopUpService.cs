@@ -53,15 +53,27 @@ public class TopUpService : ITopUpService
             }
         }
 
+        if (p == "12022250")
+        {
+            return new CheckAccountResult
+            {
+                Valid = true,
+                PlayerId = p,
+                ServerId = "IND",
+                Username = ",ㅤTheㅤGodㅤ,",
+                Country = "India"
+            };
+        }
+
         if (p == "14792636283")
         {
             return new CheckAccountResult
             {
                 Valid = true,
                 PlayerId = p,
-                ServerId = string.IsNullOrWhiteSpace(s) ? "Global" : s,
+                ServerId = "SG",
                 Username = "៚{PHAI}៚",
-                Country = "Cambodia"
+                Country = "Singapore"
             };
         }
 
@@ -71,9 +83,9 @@ public class TopUpService : ITopUpService
             {
                 Valid = true,
                 PlayerId = p,
-                ServerId = "Global",
+                ServerId = "BR",
                 Username = "봇うちはシスイ",
-                Country = "Cambodia"
+                Country = "Brazil"
             };
         }
 
@@ -83,9 +95,9 @@ public class TopUpService : ITopUpService
             {
                 Valid = true,
                 PlayerId = p,
-                ServerId = "Global",
+                ServerId = "US",
                 Username = "Dᴏɴᴀᴛσ【ʜᴀᴄᴋ】",
-                Country = "Cambodia"
+                Country = "United States"
             };
         }
 
@@ -95,9 +107,9 @@ public class TopUpService : ITopUpService
             {
                 Valid = true,
                 PlayerId = p,
-                ServerId = "Global",
+                ServerId = "US",
                 Username = "ᴹᴿStivenᵀᶜ†",
-                Country = "Cambodia"
+                Country = "United States"
             };
         }
 
