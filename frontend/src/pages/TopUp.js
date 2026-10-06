@@ -1,7 +1,6 @@
 import React, { useState, useEffect, useCallback, useRef, useTransition } from 'react';
 import { useSearchParams, useNavigate, Link } from 'react-router-dom';
 import { useLanguage } from '../context/LanguageContext';
-import { useAuth } from '../context/AuthContext';
 import { ordersAPI, topupAPI, paywayAPI, productsAPI, authAPI } from '../services/api';
 import { saveLocalOrder, updateLocalOrderStatus } from '../utils/orderStorage';
 import { getStoredGames, getMasterTopupStatus, fetchStoredGames, fetchMasterTopupStatus } from '../services/gamesConfig';
@@ -280,7 +279,6 @@ const MLBB_BANNERS = [
 
 const TopUp = () => {
   const { t, language } = useLanguage();
-  const { user, playerAccount } = useAuth();
   const [searchParams, setSearchParams] = useSearchParams();
   const navigate = useNavigate();
 
@@ -520,27 +518,13 @@ const TopUp = () => {
   const [verifiedAccount, setVerifiedAccount] = useState(null);
   const [accountChecking, setAccountChecking] = useState(false);
 
-  // Form data
+  // Form data starts clean and empty by default
   const [formData, setFormData] = useState({
     playerID: '',
     serverID: 'Global',
     productId: products[0]?.productId || 100,
     paymentMethod: 'abapayway',
   });
-
-  // Auto-fill and synchronize with active player account or user
-  useEffect(() => {
-    const activePlayerId = playerAccount?.playerId || user?.playerId || '';
-    const activeServerId = playerAccount?.serverId || user?.serverId || '';
-    if (activePlayerId && !formData.playerID) {
-      setFormData(prev => ({
-        ...prev,
-        playerID: activePlayerId,
-        serverID: (prev.serverID === 'Global' && activeServerId) ? activeServerId : (prev.serverID || activeServerId || 'Global')
-      }));
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [playerAccount, user]);
 
   const handlePastePlayerId = async () => {
     try {
