@@ -56,6 +56,12 @@ public class FreefireNicknameService
 
         if (uid == "14792636283")
             return new NicknameResult(true, "៚{PHAI}៚", "Cambodia", null);
+        if (uid == "10054187022")
+            return new NicknameResult(true, "봇うちはシスイ", "BR", null);
+        if (uid == "219110511")
+            return new NicknameResult(true, "Dᴏɴᴀᴛσ【ʜᴀᴄᴋ】", "US", null);
+        if (uid == "10887979")
+            return new NicknameResult(true, "ᴹᴿStivenᵀᶜ†", "US", null);
 
         // Return from cache if fresh
         if (_cache.TryGetValue(uid, out var cached) && DateTimeOffset.UtcNow - cached.FetchedAt < CacheTtl)

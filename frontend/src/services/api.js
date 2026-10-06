@@ -88,6 +88,7 @@ export const topupAPI = {
     const sId = data?.serverID || data?.serverId || data?.zoneId;
     return api.get('/topup/check-account', { params: { playerId: pId, serverId: sId } });
   },
+  getFreefireNickname: (uid) => api.get(`/topup/ff-nickname/${uid}`),
 };
 
 // Payments API

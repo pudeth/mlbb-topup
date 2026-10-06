@@ -65,6 +65,42 @@ public class TopUpService : ITopUpService
             };
         }
 
+        if (p == "10054187022")
+        {
+            return new CheckAccountResult
+            {
+                Valid = true,
+                PlayerId = p,
+                ServerId = "Global",
+                Username = "봇うちはシスイ",
+                Country = "Cambodia"
+            };
+        }
+
+        if (p == "219110511")
+        {
+            return new CheckAccountResult
+            {
+                Valid = true,
+                PlayerId = p,
+                ServerId = "Global",
+                Username = "Dᴏɴᴀᴛσ【ʜᴀᴄᴋ】",
+                Country = "Cambodia"
+            };
+        }
+
+        if (p == "10887979")
+        {
+            return new CheckAccountResult
+            {
+                Valid = true,
+                PlayerId = p,
+                ServerId = "Global",
+                Username = "ᴹᴿStivenᵀᶜ†",
+                Country = "Cambodia"
+            };
+        }
+
         // Support Free Fire and other single-ID games (numeric UID between 7-12 digits without zone ID)
         if (System.Text.RegularExpressions.Regex.IsMatch(p, @"^\d{7,12}$") && (string.IsNullOrWhiteSpace(s) || s.Equals("Global", StringComparison.OrdinalIgnoreCase)))
         {
@@ -73,7 +109,7 @@ public class TopUpService : ITopUpService
                 Valid = true,
                 PlayerId = p,
                 ServerId = "Global",
-                Username = "Verified Player",
+                Username = $"Free Fire Player ({p})",
                 Country = "Cambodia"
             };
         }

@@ -151,6 +151,7 @@ const parseMlbbId = (input) => {
 // Known real in-game player names
 export const KNOWN_REAL_NAMES = {
   '14792636283': '៚{PHAI}៚',
+  '10054187022': '봇うちはシスイ',
   '219110511': 'Dᴏɴᴀᴛσ【ʜᴀᴄᴋ】',
   '10887979': 'ᴹᴿStivenᵀᶜ†',
   '1225368571': 'Pu Deth',
@@ -1085,17 +1086,14 @@ const TopUp = () => {
             } catch (e) {}
           }
 
-          // If not cached locally, query backend proxy (freefirejornal.com)
+          // If not cached locally, query backend proxy (freefirejornal.com via topupAPI)
           if (!accountConfirmed) {
             try {
-              const ffProxyRes = await fetch(
-                `${process.env.REACT_APP_API_URL || 'https://mlbb-backend-api.onrender.com'}/api/topup/ff-nickname/${pId}`
-              ).then(r => r.json());
-
-              if (ffProxyRes?.found === true) {
+              const ffProxyRes = await topupAPI.getFreefireNickname(pId);
+              if (ffProxyRes?.data?.found === true) {
                 accountConfirmed = true;
-                if (ffProxyRes?.nickname) realName = ffProxyRes.nickname;
-              } else if (ffProxyRes?.found === false && ffProxyRes?.message === 'Player not found') {
+                if (ffProxyRes.data.nickname) realName = ffProxyRes.data.nickname;
+              } else if (ffProxyRes?.data?.found === false && ffProxyRes?.data?.message === 'Player not found') {
                 // Explicitly not found — fail immediately
                 setVerifiedAccount({
                   valid: false,
@@ -1127,7 +1125,7 @@ const TopUp = () => {
             const finalName = realName || resolveRealPlayerName(pId, realName);
             setVerifiedAccount({
               valid: true,
-              name: finalName || (language === 'km' ? 'គណនីបានផ្ទៀងផ្ទាត់' : 'Verified Player'),
+              name: finalName || (language === 'km' ? `អ្នកលេង Free Fire (${pId})` : `Free Fire Player (${pId})`),
               country: 'Cambodia',
               id: pId,
               server: sId || 'Global',
@@ -2373,9 +2371,9 @@ const TopUp = () => {
                               className="text-xs sm:text-[15px] font-black text-white leading-tight tracking-wide drop-shadow-[0_1px_3px_rgba(0,0,0,0.8)]"
                               style={{ wordBreak: 'break-word', fontFamily: "'Noto Sans', 'Noto Sans Khmer', 'Segoe UI', 'Apple Color Emoji', 'Noto Color Emoji', 'Noto Sans CJK SC', sans-serif" }}
                             >
-                              {verifiedAccount.name && !verifiedAccount.name.startsWith('Player_') && !verifiedAccount.name.includes('Player #')
+                              {verifiedAccount.name && !verifiedAccount.name.startsWith('Player_') && !verifiedAccount.name.includes('Player #') && verifiedAccount.name !== 'Verified Player'
                                 ? verifiedAccount.name
-                                : (KNOWN_REAL_NAMES[verifiedAccount.id] || (language === 'km' ? 'គណនីបានផ្ទៀងផ្ទាត់' : 'Verified Player'))}
+                                : (KNOWN_REAL_NAMES[verifiedAccount.id] || (language === 'km' ? `អ្នកលេង Free Fire (${verifiedAccount.id})` : `Free Fire Player (${verifiedAccount.id})`))}
                             </span>
                             <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[8.5px] sm:text-[9px] font-black uppercase tracking-wider bg-emerald-500/20 text-emerald-300 border border-emerald-500/40 shadow-[0_0_8px_rgba(16,185,129,0.25)]">
                               <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
