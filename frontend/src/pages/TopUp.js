@@ -1012,38 +1012,103 @@ const TopUp = () => {
           });
         }
       } else {
-        // Other games live nickname check
-        try {
-          let checkUrl = '';
-          if (selectedGame.id.includes('freefire') || selectedGame.id.includes('ff')) {
-            checkUrl = `https://api.isan.eu.org/nickname/ff?id=${pId}`;
-          } else if (selectedGame.id.includes('genshin')) {
-            checkUrl = `https://api.isan.eu.org/nickname/genshin?id=${pId}&server=${sId}`;
-          } else if (selectedGame.id.includes('pubg')) {
-            checkUrl = `https://api.isan.eu.org/nickname/pubg?id=${pId}`;
-          }
+        // Non-MLBB games — smart per-game verification
+        let accountConfirmed = false;
 
-          if (checkUrl) {
-            const gCheck = await fetch(checkUrl).then(r => r.json());
-            if (gCheck?.name) {
-              realName = gCheck.name;
+        if (selectedGame.id.includes('freefire') || selectedGame.id.includes('ff')) {
+          // ----- FREE FIRE Verification -----
+          // Step 1: Codashop validation — fastest and confirms account existence + may return username
+          try {
+            const coda = await fetch('https://order-sg.codashop.com/initPayment.action', {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/x-www-form-urlencoded',
+                'User-Agent': 'Mozilla/5.0',
+                'Origin': 'https://www.codashop.com',
+                'Referer': 'https://www.codashop.com/en-kh/free-fire',
+              },
+              body: new URLSearchParams({
+                'voucherPricePoint.id': '68893',
+                'voucherPricePoint.price': '1.0',
+                'voucherPricePoint.variablePrice': '0',
+                'email': '',
+                'n': Date.now().toString(),
+                'user.userId': pId,
+                'voucherTypeName': 'FREEFIRE',
+                'shopLang': 'en_KH',
+              }),
+            }).then(r => r.json());
+
+            if (coda?.user?.userId && (coda?.user?.username || coda?.user?.name)) {
+              realName = coda.user.username || coda.user.name;
+              accountConfirmed = true;
+            } else if (coda?.user?.userId) {
+              // Account confirmed even without a name
+              accountConfirmed = true;
             }
-          }
-        } catch (e) {}
+          } catch (e) {}
 
-        setVerifiedAccount({
-          valid: true,
-          name: realName || `${selectedGame.name} Player #${pId}`,
-          country: 'Global',
-          id: pId,
-          server: sId
-        });
+          // Step 2: isan.eu.org — confirms account exists in Garena Free Fire
+          if (!accountConfirmed) {
+            try {
+              const ffCheck = await fetch(`https://api.isan.eu.org/nickname/ff?id=${pId}`).then(r => r.json());
+              if (ffCheck?.success === true || ffCheck?.id) {
+                accountConfirmed = true;
+                if (ffCheck?.name) realName = ffCheck.name;
+              }
+            } catch (e) {}
+          }
+
+          if (accountConfirmed) {
+            const displayName = realName || `FF Player #${pId}`;
+            setVerifiedAccount({
+              valid: true,
+              name: displayName,
+              country: 'Cambodia',
+              id: pId,
+              server: sId || 'Global',
+              game: 'freefire'
+            });
+          } else {
+            setVerifiedAccount({
+              valid: false,
+              error: 'Free Fire account not found. Please verify your UID.',
+              id: pId,
+              server: sId || 'Global'
+            });
+          }
+        } else {
+          // Other games (Genshin, PUBG, HOK, etc.)
+          try {
+            let checkUrl = '';
+            if (selectedGame.id.includes('genshin')) {
+              checkUrl = `https://api.isan.eu.org/nickname/genshin?id=${pId}&server=${sId}`;
+            } else if (selectedGame.id.includes('pubg')) {
+              checkUrl = `https://api.isan.eu.org/nickname/pubg?id=${pId}`;
+            }
+
+            if (checkUrl) {
+              const gCheck = await fetch(checkUrl).then(r => r.json());
+              if (gCheck?.name) {
+                realName = gCheck.name;
+              }
+            }
+          } catch (e) {}
+
+          setVerifiedAccount({
+            valid: true,
+            name: realName || `${selectedGame.name} Player #${pId}`,
+            country: 'Global',
+            id: pId,
+            server: sId
+          });
+        }
       }
     } catch (err) {
       console.error('Verification error:', err);
       setVerifiedAccount({
         valid: false,
-        error: 'Connection notice: Could not reach verification server. Please check Player ID and Server Zone.',
+        error: 'Connection notice: Could not reach verification server. Please check Player ID.',
         id: pId,
         server: sId
       });
@@ -1427,6 +1492,8 @@ const TopUp = () => {
   const isTelegram = selectedGame.id === 'telegram_stars';
   const isSteam = selectedGame.id.startsWith('steam');
   const isGiftCard = selectedGame.id === 'giftcards' || selectedGame.category === 'Gift cards';
+  const isFreefire = selectedGame.id.startsWith('freefire') || selectedGame.id.includes('free_fire') || selectedGame.id === 'ff';
+
 
   return (
     <div className="max-w-6xl mx-auto px-3 sm:px-6 py-6 animate-fadeIn pb-28">
@@ -2262,7 +2329,7 @@ const TopUp = () => {
               )}
 
               {/* Inputs */}
-              <div className={`grid gap-2 ${isMlbb || isHoyoverse ? 'grid-cols-1 sm:grid-cols-[1fr_0.75fr]' : 'grid-cols-1'}`}>
+              <div className={`grid gap-2 ${isMlbb || isHoyoverse || isFreefire ? 'grid-cols-1 sm:grid-cols-[1fr_0.75fr]' : 'grid-cols-1'}`}>
                 {/* Player ID with inline paste & clear */}
                 <div>
                   <label htmlFor="player_id_input" className="block text-[9.5px] sm:text-[11px] font-semibold text-slate-400 mb-1 uppercase tracking-wider">
@@ -2332,6 +2399,16 @@ const TopUp = () => {
                       placeholder="11446"
                       className="w-full h-9 sm:h-10 bg-[#030817] border border-slate-700/70 rounded-xl px-3 text-xs sm:text-sm font-mono text-white placeholder-slate-600 focus:outline-none focus:border-sky-400 focus:ring-2 focus:ring-sky-400/25 transition-all"
                     />
+                  </div>
+                )}
+                {isFreefire && (
+                  <div>
+                    <label className="block text-[9.5px] sm:text-[11px] font-semibold text-slate-400 mb-1 uppercase tracking-wider">Server</label>
+                    <div className="w-full h-9 sm:h-10 bg-[#030817] border border-red-700/60 rounded-xl px-3 flex items-center gap-2">
+                      <span className="text-[10px]">🇰🇭</span>
+                      <span className="text-xs font-bold text-red-300">Cambodia • Global Server</span>
+                      <span className="ml-auto text-[9px] text-slate-500 font-mono">AUTO</span>
+                    </div>
                   </div>
                 )}
                 {isHoyoverse && (
