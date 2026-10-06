@@ -267,6 +267,8 @@ const PRICING_GAMES = [
     else if (p.includes('/bakong')) setActiveTab('bakong');
   }, [location.pathname]);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
+  const [navSearchQuery, setNavSearchQuery] = useState('');
   const [navDropdownOpen, setNavDropdownOpen] = useState(false);
   const navDropdownRef = useRef(null);
   const [loading, setLoading] = useState(true);
@@ -2171,87 +2173,31 @@ const PRICING_GAMES = [
     currentPage * pageSize
   );
 
+  const menuCategories = [
+    { id: 'operations', label: 'Operations', icon: '⚡' },
+    { id: 'catalog', label: 'Store & Catalog', icon: '🎮' },
+    { id: 'finance', label: 'Gateways & Finance', icon: '🏦' },
+    { id: 'analytics', label: 'Analytics & Access', icon: '📊' },
+  ];
+
   const menuTabs = [
     {
       id: 'pending',
       label: 'Top-Up Queue',
       icon: '⚡',
-      count: pendingOrders.length,
+      count: pendingOrders.length + (pendingBalanceOrders?.length || 0),
       badgeColor: 'bg-amber-500 text-black',
+      categoryId: 'operations',
       category: 'Operations',
       desc: 'Live queue of verified paid orders ready for diamond top-up delivery',
-    },
-    {
-      id: 'games',
-      label: 'Games & Logos',
-      icon: '🎮',
-      category: 'Store & Catalog',
-      desc: 'Change game images, upload 5v5 logos, manage customer selection',
-    },
-    {
-      id: 'banners',
-      label: 'Banners & Events',
-      icon: '🎨',
-      count: eventBanners.filter(b => b.status === 'Active').length,
-      badgeColor: 'bg-amber-400 text-black',
-      category: 'Store & Catalog',
-      desc: 'Customize homepage & topup event banners, promotions & seasonal artworks',
-    },
-    {
-      id: 'pricing',
-      label: 'Diamond Packages',
-      icon: '💎',
-      category: 'Store & Catalog',
-      desc: 'Configure wholesale costs, reseller pricing & retail package rates',
     },
     {
       id: 'orders',
       label: 'Orders Ledger',
       icon: '📦',
+      categoryId: 'operations',
       category: 'Operations',
       desc: 'Complete transaction history, audit records & CSV financial exports',
-    },
-    {
-      id: 'financials',
-      label: 'Profits & Sales',
-      icon: '💰',
-      category: 'Finance & B2B',
-      desc: 'Gross revenue, net profit margin, payout summaries & revenue analytics',
-    },
-    {
-      id: 'overview',
-      label: 'Overview & KPIs',
-      icon: '📊',
-      category: 'Analytics',
-      desc: 'Real-time sales velocity, peak top-up hours & customer conversion KPIs',
-    },
-    {
-      id: 'resellers',
-      label: 'Resellers & B2B',
-      icon: '🏢',
-      category: 'Finance & B2B',
-      desc: 'Wholesale partner accounts, credit balances, discounts & API keys',
-    },
-    {
-      id: 'provider',
-      label: 'Supplier API',
-      icon: '🎮',
-      category: 'Infrastructure',
-      desc: 'Auto-dispatch provider credentials, supplier balance & webhooks',
-    },
-    {
-      id: 'bakong',
-      label: 'Bakong KHQR',
-      icon: '🏦',
-      category: 'Infrastructure',
-      desc: 'National Bank of Cambodia KHQR gateway, merchant IDs & live tokens',
-    },
-    {
-      id: 'payway',
-      label: 'ABA PayWay',
-      icon: '💳',
-      category: 'Infrastructure',
-      desc: 'ABA PayWay merchant transactions, exchange rates & real-time payment status',
     },
     {
       id: 'failed',
@@ -2259,29 +2205,116 @@ const PRICING_GAMES = [
       icon: '⚠️',
       count: failedTransactions.length,
       badgeColor: 'bg-rose-500 text-white',
+      categoryId: 'operations',
       category: 'Operations',
       desc: 'Auto-detected failed transactions with 1-click retry engine',
+    },
+    {
+      id: 'games',
+      label: 'Games & Logos',
+      icon: '🎮',
+      categoryId: 'catalog',
+      category: 'Store & Catalog',
+      desc: 'Change game images, upload 5v5 logos, manage customer selection',
+    },
+    {
+      id: 'pricing',
+      label: 'Diamond Packages',
+      icon: '💎',
+      categoryId: 'catalog',
+      category: 'Store & Catalog',
+      desc: 'Configure wholesale costs, reseller pricing & retail package rates',
+    },
+    {
+      id: 'banners',
+      label: 'Banners & Events',
+      icon: '🎨',
+      count: eventBanners.filter(b => b.status === 'Active').length,
+      badgeColor: 'bg-amber-400 text-black',
+      categoryId: 'catalog',
+      category: 'Store & Catalog',
+      desc: 'Customize homepage & topup event banners, promotions & seasonal artworks',
+    },
+    {
+      id: 'provider',
+      label: 'Supplier API',
+      icon: '🔌',
+      categoryId: 'finance',
+      category: 'Gateways & Finance',
+      desc: 'Auto-dispatch provider credentials, supplier balance & webhooks',
+    },
+    {
+      id: 'bakong',
+      label: 'Bakong KHQR',
+      icon: '🇰🇭',
+      categoryId: 'finance',
+      category: 'Gateways & Finance',
+      desc: 'National Bank of Cambodia KHQR gateway, merchant IDs & live tokens',
+    },
+    {
+      id: 'payway',
+      label: 'ABA PayWay',
+      icon: '💳',
+      categoryId: 'finance',
+      category: 'Gateways & Finance',
+      desc: 'ABA PayWay merchant transactions, exchange rates & real-time payment status',
+    },
+    {
+      id: 'financials',
+      label: 'Profits & Sales',
+      icon: '💰',
+      categoryId: 'finance',
+      category: 'Gateways & Finance',
+      desc: 'Gross revenue, net profit margin, payout summaries & revenue analytics',
+    },
+    {
+      id: 'overview',
+      label: 'Overview & KPIs',
+      icon: '📊',
+      categoryId: 'analytics',
+      category: 'Analytics & Access',
+      desc: 'Real-time sales velocity, peak top-up hours & customer conversion KPIs',
+    },
+    {
+      id: 'resellers',
+      label: 'Resellers & B2B',
+      icon: '🏢',
+      categoryId: 'analytics',
+      category: 'Analytics & Access',
+      desc: 'Wholesale partner accounts, credit balances, discounts & API keys',
     },
     {
       id: 'users',
       label: 'Users & Roles',
       icon: '👥',
-      category: 'Infrastructure',
+      categoryId: 'analytics',
+      category: 'Analytics & Access',
       desc: 'Admin permissions, registered accounts and security management',
     },
     {
       id: 'diagnostics',
       label: 'Diagnostics',
       icon: '🛠️',
-      category: 'Infrastructure',
+      categoryId: 'analytics',
+      category: 'Analytics & Access',
       desc: 'Live server health check, database latency & memory diagnostics',
     },
   ];
 
   const currentTabInfo = menuTabs.find((t) => t.id === activeTab) || menuTabs[0];
 
+  const filteredNavTabs = menuTabs.filter((t) => {
+    if (!navSearchQuery || !navSearchQuery.trim()) return true;
+    const q = navSearchQuery.toLowerCase().trim();
+    return (
+      t.label.toLowerCase().includes(q) ||
+      t.desc.toLowerCase().includes(q) ||
+      t.category.toLowerCase().includes(q)
+    );
+  });
+
   return (
-    <div className="min-h-screen bg-[#07090E] text-slate-100 font-sans pb-24 selection:bg-amber-500 selection:text-black relative overflow-x-hidden">
+    <div className="min-h-screen bg-[#07090E] text-slate-100 font-sans selection:bg-amber-500 selection:text-black relative flex flex-row overflow-x-hidden">
       {/* Ambient background glows */}
       <div className="fixed top-0 left-1/4 w-[500px] h-[500px] bg-amber-500/[0.04] rounded-full blur-[140px] pointer-events-none" />
       <div className="fixed top-1/3 right-10 w-[500px] h-[500px] bg-cyan-500/[0.04] rounded-full blur-[140px] pointer-events-none" />
@@ -2316,373 +2349,465 @@ const PRICING_GAMES = [
       )}
 
       {/* ========================================================= */}
-      {/* ENTERPRISE MASTER NAVBAR HEADER */}
+      {/* ENTERPRISE DASHBOARD SYSTEM SIDEBAR (DESKTOP) */}
       {/* ========================================================= */}
-      <header className="sticky top-0 z-40 bg-[#0B0F19] border-b border-slate-800 shadow-[0_10px_30px_rgba(0,0,0,0.8)] relative">
-        <div className="max-w-7xl mx-auto px-2.5 sm:px-6 lg:px-8">
-          <div className="flex items-center justify-between h-16 sm:h-20 gap-1.5 sm:gap-4">
-            
-            {/* Left: Brand & Title */}
-            <div className="flex items-center gap-1.5 sm:gap-3 shrink-0">
-              <div
-                onClick={handleOpenStoreLogoModal}
-                className="flex items-center gap-1.5 sm:gap-2.5 group cursor-pointer"
-                title="Click to Change Store Logo & Branding"
-              >
-                <div className="w-8 h-8 sm:w-11 sm:h-11 rounded-xl bg-gradient-to-tr from-amber-500 to-yellow-300 p-[2px] shadow-glow-gold group-hover:scale-105 transition-all shrink-0 overflow-hidden relative">
-                  <div className="w-full h-full bg-slate-950 rounded-[10px] flex items-center justify-center overflow-hidden">
-                    {branding.logoType === 'image' && branding.logoImage ? (
-                      <img
-                        src={branding.logoImage}
-                        alt={branding.storeName || 'Store Logo'}
-                        className="w-full h-full object-cover rounded-[10px]"
-                        onError={(e) => {
-                          e.target.style.display = 'none';
-                        }}
-                      />
-                    ) : (
-                      <span className="text-sm sm:text-xl">
-                        {branding.logoEmoji || '💎'}
-                      </span>
-                    )}
-                  </div>
-                  <div className="absolute inset-0 bg-amber-500/30 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center text-[10px] font-black text-black">
-                    ✏️
-                  </div>
+      <aside
+        className={`hidden md:flex flex-col shrink-0 bg-[#0A0E17] border-r border-slate-800/80 transition-all duration-300 sticky top-0 h-screen select-none z-30 ${
+          sidebarCollapsed ? 'w-20' : 'w-64 xl:w-72'
+        }`}
+      >
+        {/* Brand & Collapse Header */}
+        <div className="h-16 border-b border-slate-800/80 px-3.5 flex items-center justify-between shrink-0 bg-[#0B0F19]">
+          {!sidebarCollapsed ? (
+            <div
+              onClick={handleOpenStoreLogoModal}
+              className="flex items-center gap-2.5 group cursor-pointer min-w-0"
+              title="Click to Change Store Logo & Branding"
+            >
+              <div className="w-9 h-9 rounded-xl bg-gradient-to-tr from-amber-500 to-yellow-300 p-[2px] shadow-glow-gold group-hover:scale-105 transition-all shrink-0 overflow-hidden relative">
+                <div className="w-full h-full bg-slate-950 rounded-[10px] flex items-center justify-center overflow-hidden">
+                  {branding.logoType === 'image' && branding.logoImage ? (
+                    <img
+                      src={branding.logoImage}
+                      alt={branding.storeName || 'Store Logo'}
+                      className="w-full h-full object-cover rounded-[10px]"
+                      onError={(e) => {
+                        e.target.style.display = 'none';
+                      }}
+                    />
+                  ) : (
+                    <span className="text-base">{branding.logoEmoji || '💎'}</span>
+                  )}
                 </div>
-                <div className="flex flex-col">
-                  <div className="flex items-center gap-1 sm:gap-1.5">
-                    <span className="text-xs sm:text-lg font-black tracking-wider text-white group-hover:text-amber-400 transition-colors">
-                      {branding.storeName || 'MLBB TOPUP'}
-                    </span>
-                    <span className="bg-gradient-to-r from-amber-400 to-amber-600 text-black text-[8px] sm:text-[10px] font-black px-1 sm:px-1.5 py-0.5 rounded tracking-widest uppercase hidden xs:inline">
-                      {branding.adminBadgeText || 'ADMIN'}
-                    </span>
-                  </div>
-                  <div className="hidden md:flex items-center gap-1.5 text-[10px] text-slate-400 font-semibold">
-                    <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
-                    <span>{branding.versionText || 'Enterprise Hub v2.5'}</span>
-                  </div>
+              </div>
+              <div className="flex flex-col min-w-0">
+                <div className="flex items-center gap-1.5">
+                  <span className="text-sm font-black tracking-wider text-white truncate group-hover:text-amber-400 transition-colors">
+                    {branding.storeName || 'MLBB TOPUP'}
+                  </span>
+                  <span className="bg-gradient-to-r from-amber-400 to-amber-600 text-black text-[8px] font-black px-1 py-0.5 rounded uppercase">
+                    PRO
+                  </span>
+                </div>
+                <span className="text-[10px] text-slate-400 font-medium truncate">
+                  Admin System Hub
+                </span>
+              </div>
+            </div>
+          ) : (
+            <div
+              onClick={handleOpenStoreLogoModal}
+              className="mx-auto cursor-pointer group"
+              title={branding.storeName || 'Admin Hub'}
+            >
+              <div className="w-10 h-10 rounded-xl bg-gradient-to-tr from-amber-500 to-yellow-300 p-[2px] shadow-glow-gold group-hover:scale-105 transition-all flex items-center justify-center">
+                <div className="w-full h-full bg-slate-950 rounded-[10px] flex items-center justify-center overflow-hidden text-base">
+                  {branding.logoType === 'image' && branding.logoImage ? (
+                    <img
+                      src={branding.logoImage}
+                      alt="Logo"
+                      className="w-full h-full object-cover"
+                    />
+                  ) : (
+                    branding.logoEmoji || '💎'
+                  )}
                 </div>
               </div>
             </div>
+          )}
 
-            {/* Center: Sleek Responsive Dropdown Button */}
-            <div className="relative shrink min-w-0" ref={navDropdownRef}>
-              <button
-                type="button"
-                onClick={() => setNavDropdownOpen(!navDropdownOpen)}
-                className={`flex items-center gap-1 sm:gap-2 px-2 sm:px-3.5 py-1.5 sm:py-2.5 rounded-xl sm:rounded-2xl border transition-all duration-300 shadow-md cursor-pointer ${
-                  navDropdownOpen
-                    ? 'bg-gradient-to-r from-amber-500 to-yellow-400 text-black border-amber-300 font-black shadow-glow-gold scale-[1.02]'
-                    : 'bg-[#111728] hover:bg-[#182035] text-white border-slate-700/80 hover:border-amber-400/60'
-                }`}
-                title="Select admin module"
-              >
-                <div className="w-6 h-6 sm:w-8 sm:h-8 rounded-lg sm:rounded-xl bg-slate-950/40 flex items-center justify-center text-xs sm:text-lg shrink-0">
-                  {currentTabInfo.icon}
-                </div>
-
-                <div className="text-left leading-tight hidden lg:block">
-                  <span
-                    className={`text-[9px] font-bold uppercase tracking-wider block ${
-                      navDropdownOpen ? 'text-slate-900 font-black' : 'text-amber-400'
-                    }`}
-                  >
-                    Active Module
-                  </span>
-                  <span className="text-xs sm:text-sm font-extrabold truncate max-w-[130px] xl:max-w-[180px] block">
-                    {currentTabInfo.label}
-                  </span>
-                </div>
-
-                {/* Mobile / Tablet Compact Title */}
-                <span className="text-xs font-bold lg:hidden max-w-[85px] xs:max-w-[120px] sm:max-w-[160px] truncate">
-                  {currentTabInfo.label}
-                </span>
-
-                {currentTabInfo.count !== undefined && currentTabInfo.count > 0 && (
-                  <span
-                    className={`px-1.5 py-0.2 rounded-full text-[9px] font-black ${
-                      navDropdownOpen ? 'bg-black text-amber-300' : 'bg-amber-500 text-black'
-                    }`}
-                  >
-                    {currentTabInfo.count}
-                  </span>
-                )}
-
-                <span
-                  className={`text-[9px] sm:text-[10px] transition-transform duration-300 ${
-                    navDropdownOpen ? 'rotate-180 text-black' : 'text-slate-400'
-                  }`}
-                >
-                  ▼
-                </span>
-              </button>
-
-              {/* Unified Centered Responsive Admin Navigation Modal */}
-              {navDropdownOpen && (
-                <div className="fixed inset-0 z-50 flex items-center justify-center p-3 pb-24 sm:p-5 sm:pb-28 xl:pb-6 animate-fadeIn">
-                  {/* Backdrop Overlay */}
-                  <div
-                    className="fixed inset-0 bg-black/80 backdrop-blur-md transition-opacity"
-                    onClick={() => setNavDropdownOpen(false)}
-                  />
-
-                  {/* Centered Modal Content Card - Positioned comfortably above the bottom navigation bar */}
-                  <div className="relative w-full max-w-lg sm:max-w-xl md:max-w-2xl bg-[#0B0F19] border-2 border-slate-700/90 rounded-2xl sm:rounded-3xl p-3.5 sm:p-5 shadow-[0_25px_70px_rgba(0,0,0,0.95)] z-10 animate-scaleUp max-h-[calc(100vh-170px)] xl:max-h-[85vh] flex flex-col my-auto">
-                    {/* Header */}
-                    <div className="flex items-center justify-between pb-3 mb-3 border-b border-slate-800 shrink-0">
-                      <div className="flex items-center gap-2.5">
-                        <span className="text-xl">🗂️</span>
-                        <div>
-                          <div className="flex items-center gap-2">
-                            <span className="text-xs sm:text-sm font-black text-white uppercase tracking-wider block">
-                              Admin Navigation Menu
-                            </span>
-                            <span className="text-[10px] text-amber-300 font-bold bg-amber-500/10 border border-amber-500/30 px-2 py-0.5 rounded-full">
-                              13 Modules
-                            </span>
-                          </div>
-                          <span className="text-[10px] text-slate-400 font-medium hidden xs:block">
-                            Select an administration module to navigate
-                          </span>
-                        </div>
-                      </div>
-
-                      <button
-                        type="button"
-                        onClick={() => setNavDropdownOpen(false)}
-                        className="w-8 h-8 rounded-xl bg-slate-800 hover:bg-slate-700 border border-slate-700 text-slate-300 hover:text-white flex items-center justify-center text-sm font-bold transition-all cursor-pointer shadow-sm active:scale-95"
-                        aria-label="Close menu"
-                      >
-                        ✕
-                      </button>
-                    </div>
-
-                    {/* Scrollable 2-Column Responsive Grid */}
-                    <div className="overflow-y-auto pr-1 space-y-2 max-h-[calc(100vh-260px)] xl:max-h-[calc(85vh-85px)] scrollbar-thin scrollbar-thumb-slate-700">
-                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 sm:gap-2.5">
-                        {menuTabs.map((tab) => {
-                          const isSelected = activeTab === tab.id;
-
-                          return (
-                            <button
-                              key={tab.id}
-                              type="button"
-                              onClick={() => {
-                                setActiveTab(tab.id);
-                                setNavDropdownOpen(false);
-                              }}
-                              className={`p-2.5 sm:p-3 rounded-2xl text-left transition-all duration-200 flex items-center sm:items-start gap-2.5 sm:gap-3 border cursor-pointer active:scale-[0.98] ${
-                                isSelected
-                                  ? 'bg-[#182236] border-2 border-amber-400 text-white shadow-lg ring-1 ring-amber-400/40'
-                                  : 'bg-[#111728] hover:bg-[#192238] border-slate-800 hover:border-slate-600 text-slate-300 hover:text-white'
-                              }`}
-                            >
-                              {/* Icon Tile */}
-                              <div
-                                className={`w-9 h-9 sm:w-10 sm:h-10 rounded-xl flex items-center justify-center text-base sm:text-lg shrink-0 transition-all ${
-                                  isSelected
-                                    ? 'bg-amber-400 text-black font-black shadow-glow-gold'
-                                    : 'bg-[#0B0F19] border border-slate-700 text-white'
-                                }`}
-                              >
-                                {tab.icon}
-                              </div>
-
-                              {/* Content */}
-                              <div className="flex-1 min-w-0">
-                                <div className="flex items-center justify-between gap-1 mb-0.5">
-                                  <span
-                                    className={`text-xs sm:text-[13px] font-bold truncate ${
-                                      isSelected ? 'text-amber-300 font-black' : 'text-white'
-                                    }`}
-                                  >
-                                    {tab.label}
-                                  </span>
-
-                                  <div className="flex items-center gap-1 shrink-0">
-                                    {tab.count !== undefined && tab.count > 0 && (
-                                      <span
-                                        className={`px-1.5 py-0.2 rounded-full text-[9px] font-black ${tab.badgeColor}`}
-                                      >
-                                        {tab.count}
-                                      </span>
-                                    )}
-                                    {isSelected && (
-                                      <span className="text-amber-400 text-xs font-black">✓</span>
-                                    )}
-                                  </div>
-                                </div>
-
-                                <p className="text-[10px] text-slate-400 leading-snug line-clamp-1">
-                                  {tab.desc}
-                                </p>
-                              </div>
-                            </button>
-                          );
-                        })}
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              )}
-            </div>
-
-            {/* Right: Actions, Balance Pill & Mobile Menu Toggle */}
-            <div className="flex items-center gap-1 sm:gap-2.5 shrink-0">
-              
-              {/* Responsive Gateway & Balance Pill (Desktop: Full, Mobile: Balance Only) */}
-              <div className="flex items-center gap-1 sm:gap-1.5 px-2 sm:px-3 py-1.5 rounded-xl bg-[#111728] border border-slate-700/80 text-xs shadow-sm shrink-0">
-                <span className="text-xs sm:text-sm flex items-center">
-                  {providerSettings.activeProvider === 'FazerCards' ? '🎮' : <span className="fi fi-kh rounded-xs shadow-xs" />}
-                </span>
-                <div className="flex items-center gap-1 sm:gap-1.5">
-                  {/* Full Gateway info on Large Desktop */}
-                  <span className="text-slate-400 font-semibold hidden xl:inline">Gateway:</span>
-                  <span className="font-bold text-cyan-300 text-xs hidden lg:inline">
-                    {providerSettings.activeProvider === 'FazerCards' ? 'FazerCards Reseller' : 'KhmerTopUp API'}
-                  </span>
-                  <span className="text-slate-600 hidden lg:inline">|</span>
-
-                  {/* Balance label */}
-                  <span className="text-slate-400 font-semibold text-[10px] sm:text-xs hidden xs:inline">Balance:</span>
-                  <span className="font-black text-amber-300 text-[11px] sm:text-xs">
-                    ${(providerSettings.balanceUSD !== undefined ? Number(providerSettings.balanceUSD) : 18.50).toFixed(2)}
-                  </span>
-                  <span className="text-[10px] text-emerald-400 font-bold hidden sm:inline">
-                    (~{Math.round((Number(providerSettings.balanceUSD) || 18.50) * 4100).toLocaleString()} ៛)
-                  </span>
-                  <span className="w-1.5 h-1.5 sm:w-2 sm:h-2 rounded-full bg-emerald-400 animate-pulse ml-0.5" title="Connected & Live" />
-                </div>
-              </div>
-
-              {/* Button: View Home Page / Storefront (Desktop / Tablet) */}
-              <Link
-                to="/"
-                target="_blank"
-                rel="noreferrer"
-                className="hidden md:flex px-3 py-2 rounded-xl bg-cyan-950/60 hover:bg-cyan-900/80 text-cyan-300 border border-cyan-500/40 text-xs font-bold transition-all items-center gap-1.5 shadow-md hover:scale-105"
-                title="Open client store home page in new tab"
-              >
-                <span>🌐</span>
-                <span>View Store</span>
-              </Link>
-
-              {/* User Profile Pill (Desktop) */}
-              <div className="hidden lg:flex items-center gap-2 px-3 py-1.5 rounded-xl bg-dark-input border border-dark-border text-xs">
-                <div className="w-6 h-6 rounded-full bg-gradient-to-tr from-amber-500 to-amber-300 text-black font-black flex items-center justify-center text-[10px]">
-                  👤
-                </div>
-                <div className="text-left">
-                  <div className="font-bold text-white leading-tight truncate max-w-[110px]">
-                    {user?.name || user?.email?.split('@')[0] || 'Admin'}
-                  </div>
-                  <span className="text-[10px] text-amber-400 font-bold block">Administrator</span>
-                </div>
-              </div>
-
-              {/* Logout Button (Desktop / Tablet) */}
-              <button
-                onClick={handleLogout}
-                className="hidden md:flex px-3 py-2 rounded-xl bg-rose-950/60 hover:bg-rose-900/80 text-rose-300 border border-rose-500/40 text-xs font-bold transition-all items-center gap-1.5 shadow-md"
-                title="Log out of Admin Panel"
-              >
-                <span>🚪</span>
-                <span>Logout</span>
-              </button>
-
-              {/* Mobile Drawer Menu Toggle (Hamburger) */}
-              <button
-                onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-                className="p-2 sm:p-2.5 rounded-xl bg-slate-800 text-slate-200 border border-slate-700 text-xs sm:text-base flex md:hidden items-center justify-center hover:bg-slate-700 active:scale-95 transition-all shrink-0"
-                aria-label="Toggle navigation menu"
-              >
-                {mobileMenuOpen ? '✕' : '☰'}
-              </button>
-            </div>
-          </div>
+          {/* Sidebar Toggle Button */}
+          <button
+            type="button"
+            onClick={() => setSidebarCollapsed(!sidebarCollapsed)}
+            className={`p-1.5 rounded-lg border text-slate-400 hover:text-white transition-all cursor-pointer ${
+              sidebarCollapsed
+                ? 'mx-auto mt-2 bg-slate-800/80 border-slate-700 hover:bg-slate-700'
+                : 'bg-slate-900 border-slate-800 hover:bg-slate-800'
+            }`}
+            title={sidebarCollapsed ? 'Expand Sidebar' : 'Collapse Sidebar'}
+          >
+            <span className="text-xs font-bold block transition-transform">
+              {sidebarCollapsed ? '▶' : '◀'}
+            </span>
+          </button>
         </div>
 
-        {/* Mobile Sliding Navigation Drawer */}
-        {mobileMenuOpen && (
-          <div className="xl:hidden bg-dark-bg/95 border-b border-dark-border p-4 space-y-4 animate-slideDown backdrop-blur-2xl">
-            {/* User Profile Bar on Mobile */}
-            <div className="p-3 bg-dark-card rounded-2xl border border-dark-border flex items-center justify-between">
-              <div className="flex items-center gap-3">
-                <div className="w-9 h-9 rounded-full bg-gradient-to-tr from-amber-500 to-amber-300 text-black font-black flex items-center justify-center text-sm">
-                  👑
-                </div>
-                <div>
-                  <div className="font-bold text-white text-sm">
-                    {user?.name || user?.email || 'Admin Master'}
-                  </div>
-                  <span className="text-xs text-amber-400 font-semibold">Logged in as Administrator</span>
-                </div>
-              </div>
-
-              <Link
-                to="/"
-                target="_blank"
-                onClick={() => setMobileMenuOpen(false)}
-                className="px-2.5 py-1.5 rounded-lg bg-cyan-950 text-cyan-300 border border-cyan-500/40 text-xs font-bold"
-              >
-                🌐 Store
-              </Link>
-            </div>
-
-            {/* Menu Grid */}
-            <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
-              {menuTabs.map((tab) => (
-                <button
-                  key={tab.id}
-                  onClick={() => {
-                    setActiveTab(tab.id);
-                    setMobileMenuOpen(false);
-                  }}
-                  className={`flex items-center justify-between p-3 rounded-xl text-xs font-bold border transition-all ${
-                    activeTab === tab.id
-                      ? 'bg-gradient-to-r from-amber-500 to-amber-600 text-black border-amber-400 font-black shadow-lg shadow-amber-500/20'
-                      : 'bg-dark-card/90 text-slate-200 border-dark-border hover:bg-slate-800'
-                  }`}
-                >
-                  <div className="flex items-center gap-2">
-                    <span className="text-base">{tab.icon}</span>
-                    <span className="truncate">{tab.label}</span>
-                  </div>
-                  {tab.count !== undefined && tab.count > 0 && (
-                    <span
-                      className={`px-2 py-0.5 rounded-full text-[10px] font-black ${
-                        activeTab === tab.id ? 'bg-black text-amber-300' : tab.badgeColor
-                      }`}
-                    >
-                      {tab.count}
-                    </span>
-                  )}
-                </button>
-              ))}
-            </div>
-
-            {/* Drawer Footer Actions */}
-            <div className="pt-2 border-t border-slate-800 flex items-center justify-between text-xs">
-              <span className="text-slate-400">
-                Last updated: {lastUpdated.toLocaleTimeString()}
+        {/* Quick Search Filter (When Expanded) */}
+        {!sidebarCollapsed && (
+          <div className="p-3 border-b border-slate-800/60 bg-[#080B12]">
+            <div className="relative">
+              <span className="absolute inset-y-0 left-0 pl-2.5 flex items-center pointer-events-none text-xs text-slate-500">
+                🔍
               </span>
-              <button
-                onClick={handleLogout}
-                className="text-rose-400 hover:underline font-bold flex items-center gap-1"
-              >
-                <span>🚪</span>
-                <span>Sign Out</span>
-              </button>
+              <input
+                type="text"
+                value={navSearchQuery}
+                onChange={(e) => setNavSearchQuery(e.target.value)}
+                placeholder="Search modules..."
+                className="w-full pl-8 pr-7 py-1.5 rounded-xl bg-slate-900/90 border border-slate-800 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-amber-400/80 transition-all"
+              />
+              {navSearchQuery && (
+                <button
+                  type="button"
+                  onClick={() => setNavSearchQuery('')}
+                  className="absolute inset-y-0 right-0 pr-2.5 flex items-center text-xs text-slate-400 hover:text-white cursor-pointer"
+                >
+                  ✕
+                </button>
+              )}
             </div>
           </div>
         )}
-      </header>
 
-      {/* Main Workspace Container */}
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 space-y-6">
+        {/* Navigation Categories & Items */}
+        <div className="flex-1 overflow-y-auto px-2.5 py-3 space-y-4 scrollbar-thin scrollbar-thumb-slate-800 scrollbar-track-transparent">
+          {menuCategories.map((cat) => {
+            const tabsInCat = filteredNavTabs.filter((t) => t.categoryId === cat.id);
+            if (tabsInCat.length === 0) return null;
+
+            return (
+              <div key={cat.id} className="space-y-1">
+                {!sidebarCollapsed ? (
+                  <div className="px-2.5 py-1 text-[10px] font-black uppercase tracking-wider text-slate-500 flex items-center justify-between">
+                    <span>{cat.label}</span>
+                    <span className="text-[9px] text-slate-600 font-bold">{cat.icon}</span>
+                  </div>
+                ) : (
+                  <div className="my-2 border-t border-slate-800/80 mx-2" />
+                )}
+
+                <div className="space-y-0.5">
+                  {tabsInCat.map((tab) => {
+                    const isSelected = activeTab === tab.id;
+                    return (
+                      <button
+                        key={tab.id}
+                        type="button"
+                        onClick={() => setActiveTab(tab.id)}
+                        className={`w-full text-left transition-all duration-200 cursor-pointer flex items-center rounded-xl ${
+                          sidebarCollapsed
+                            ? 'justify-center p-2.5 relative group'
+                            : 'px-3 py-2.5 gap-2.5'
+                        } ${
+                          isSelected
+                            ? 'bg-gradient-to-r from-amber-500/20 via-amber-500/10 to-transparent text-white font-black border-l-4 border-amber-400 shadow-sm'
+                            : 'text-slate-400 hover:text-slate-200 hover:bg-slate-900/70 font-semibold border-l-4 border-transparent'
+                        }`}
+                        title={sidebarCollapsed ? tab.label : undefined}
+                      >
+                        {/* Icon */}
+                        <div
+                          className={`w-7 h-7 rounded-lg flex items-center justify-center text-sm shrink-0 transition-all ${
+                            isSelected
+                              ? 'bg-amber-400 text-black font-black shadow-glow-gold'
+                              : 'bg-slate-900/90 border border-slate-800 text-slate-300'
+                          }`}
+                        >
+                          {tab.icon}
+                        </div>
+
+                        {/* Label & live badge (Expanded) */}
+                        {!sidebarCollapsed && (
+                          <div className="flex-1 min-w-0 flex items-center justify-between gap-1.5">
+                            <span className="text-xs truncate">{tab.label}</span>
+                            {tab.count !== undefined && tab.count > 0 && (
+                              <span
+                                className={`px-1.5 py-0.5 rounded-full text-[9px] font-black shrink-0 ${tab.badgeColor}`}
+                              >
+                                {tab.count}
+                              </span>
+                            )}
+                          </div>
+                        )}
+
+                        {/* Collapsed dot badge */}
+                        {sidebarCollapsed && tab.count !== undefined && tab.count > 0 && (
+                          <span className="absolute top-1 right-1 w-2.5 h-2.5 rounded-full bg-amber-500 border-2 border-slate-950 animate-pulse" />
+                        )}
+
+                        {/* Collapsed Tooltip on hover */}
+                        {sidebarCollapsed && (
+                          <div className="absolute left-full ml-3 px-2.5 py-1.5 rounded-lg bg-slate-900 text-white text-xs font-bold whitespace-nowrap shadow-2xl border border-slate-700 opacity-0 group-hover:opacity-100 pointer-events-none transition-opacity z-50">
+                            {tab.label}
+                            {tab.count !== undefined && tab.count > 0 && ` (${tab.count})`}
+                          </div>
+                        )}
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+            );
+          })}
+        </div>
+
+        {/* Sidebar Footer: Gateway status & user profile */}
+        <div className="p-2.5 border-t border-slate-800/80 bg-[#090C14] shrink-0 space-y-2">
+          {!sidebarCollapsed ? (
+            <>
+              {/* Mini Gateway Balance Card */}
+              <div className="p-2.5 rounded-xl bg-slate-900/90 border border-slate-800/90 text-xs space-y-1">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-1.5">
+                    <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
+                    <span className="text-[10px] text-slate-400 font-bold uppercase tracking-wider">
+                      {providerSettings.activeProvider === 'FazerCards' ? 'FazerCards API' : 'KhmerTopUp API'}
+                    </span>
+                  </div>
+                  <span className="text-[10px] text-emerald-400 font-mono font-bold">LIVE</span>
+                </div>
+                <div className="flex items-baseline justify-between pt-0.5">
+                  <span className="text-xs text-slate-400">Balance</span>
+                  <span className="text-sm font-black text-amber-300 font-mono">
+                    ${(providerSettings.balanceUSD !== undefined ? Number(providerSettings.balanceUSD) : 18.50).toFixed(2)}
+                  </span>
+                </div>
+              </div>
+
+              {/* Admin Profile & Logout Row */}
+              <div className="flex items-center justify-between pt-1">
+                <div className="flex items-center gap-2 min-w-0">
+                  <div className="w-7 h-7 rounded-full bg-gradient-to-tr from-amber-500 to-amber-300 text-black font-black flex items-center justify-center text-xs shrink-0">
+                    👤
+                  </div>
+                  <div className="min-w-0">
+                    <div className="text-xs font-bold text-white truncate">
+                      {user?.name || user?.email?.split('@')[0] || 'Admin Master'}
+                    </div>
+                    <span className="text-[10px] text-amber-400 font-semibold block">Administrator</span>
+                  </div>
+                </div>
+                <button
+                  type="button"
+                  onClick={handleLogout}
+                  className="p-1.5 rounded-lg bg-rose-950/40 hover:bg-rose-900/60 text-rose-300 border border-rose-500/30 text-xs font-bold transition-all cursor-pointer"
+                  title="Sign Out"
+                >
+                  🚪
+                </button>
+              </div>
+            </>
+          ) : (
+            <div className="flex flex-col items-center gap-2 py-1">
+              <div
+                className="w-8 h-8 rounded-xl bg-slate-900 border border-slate-800 flex items-center justify-center text-xs text-amber-300 font-mono font-black cursor-pointer"
+                title={`Gateway Balance: $${(providerSettings.balanceUSD !== undefined ? Number(providerSettings.balanceUSD) : 18.50).toFixed(2)}`}
+              >
+                💰
+              </div>
+              <button
+                type="button"
+                onClick={handleLogout}
+                className="w-8 h-8 rounded-xl bg-rose-950/50 hover:bg-rose-900 text-rose-300 border border-rose-500/30 flex items-center justify-center text-xs cursor-pointer"
+                title="Sign Out"
+              >
+                🚪
+              </button>
+            </div>
+          )}
+        </div>
+      </aside>
+
+      {/* ========================================================= */}
+      {/* MOBILE SLIDING DRAWER NAVIGATION OVERLAY */}
+      {/* ========================================================= */}
+      {mobileMenuOpen && (
+        <div className="fixed inset-0 z-50 flex md:hidden animate-fadeIn">
+          {/* Backdrop Overlay */}
+          <div
+            className="fixed inset-0 bg-black/80 backdrop-blur-sm"
+            onClick={() => setMobileMenuOpen(false)}
+          />
+
+          {/* Drawer Content */}
+          <div className="relative w-80 max-w-[85vw] h-full bg-[#0A0E17] border-r border-slate-800 p-4 flex flex-col z-10 animate-slideRight">
+            {/* Drawer Header */}
+            <div className="flex items-center justify-between pb-3 border-b border-slate-800 shrink-0">
+              <div className="flex items-center gap-2.5">
+                <div className="w-8 h-8 rounded-xl bg-gradient-to-tr from-amber-500 to-yellow-300 p-[2px] shadow-glow-gold flex items-center justify-center">
+                  <div className="w-full h-full bg-slate-950 rounded-[10px] flex items-center justify-center text-xs">
+                    💎
+                  </div>
+                </div>
+                <div>
+                  <span className="text-sm font-black text-white block">ADMIN HUB</span>
+                  <span className="text-[10px] text-amber-400 font-bold">14 SYSTEM MODULES</span>
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={() => setMobileMenuOpen(false)}
+                className="w-8 h-8 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 flex items-center justify-center text-sm font-bold cursor-pointer"
+              >
+                ✕
+              </button>
+            </div>
+
+            {/* Mobile Categories & Module Links */}
+            <div className="flex-1 overflow-y-auto py-3 space-y-4 scrollbar-thin scrollbar-thumb-slate-800">
+              {menuCategories.map((cat) => (
+                <div key={cat.id} className="space-y-1">
+                  <div className="text-[10px] font-black uppercase tracking-wider text-slate-500 px-2 flex items-center justify-between">
+                    <span>{cat.label}</span>
+                    <span>{cat.icon}</span>
+                  </div>
+                  <div className="space-y-1">
+                    {menuTabs
+                      .filter((t) => t.categoryId === cat.id)
+                      .map((tab) => {
+                        const isSelected = activeTab === tab.id;
+                        return (
+                          <button
+                            key={tab.id}
+                            type="button"
+                            onClick={() => {
+                              setActiveTab(tab.id);
+                              setMobileMenuOpen(false);
+                            }}
+                            className={`w-full text-left p-2.5 rounded-xl transition-all flex items-center justify-between border cursor-pointer ${
+                              isSelected
+                                ? 'bg-amber-500 text-black border-amber-400 font-black shadow-glow-gold'
+                                : 'bg-slate-900/80 border-slate-800/80 text-slate-200 hover:bg-slate-800'
+                            }`}
+                          >
+                            <div className="flex items-center gap-2.5">
+                              <span className="text-base">{tab.icon}</span>
+                              <span className="text-xs font-bold">{tab.label}</span>
+                            </div>
+                            {tab.count !== undefined && tab.count > 0 && (
+                              <span
+                                className={`px-1.5 py-0.5 rounded-full text-[9px] font-black ${
+                                  isSelected ? 'bg-black text-amber-300' : tab.badgeColor
+                                }`}
+                              >
+                                {tab.count}
+                              </span>
+                            )}
+                          </button>
+                        );
+                      })}
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            {/* Mobile Drawer Footer */}
+            <div className="pt-3 border-t border-slate-800 shrink-0 space-y-2">
+              <div className="flex items-center justify-between text-xs text-slate-400">
+                <span>Gateway Balance:</span>
+                <span className="font-mono font-bold text-amber-300">
+                  ${(providerSettings.balanceUSD !== undefined ? Number(providerSettings.balanceUSD) : 18.50).toFixed(2)}
+                </span>
+              </div>
+              <div className="flex items-center justify-between gap-2 pt-1">
+                <Link
+                  to="/"
+                  target="_blank"
+                  className="flex-1 py-2 text-center rounded-xl bg-cyan-950/80 text-cyan-300 border border-cyan-500/40 text-xs font-bold"
+                >
+                  🌐 Storefront
+                </Link>
+                <button
+                  type="button"
+                  onClick={handleLogout}
+                  className="flex-1 py-2 text-center rounded-xl bg-rose-950/80 text-rose-300 border border-rose-500/40 text-xs font-bold cursor-pointer"
+                >
+                  🚪 Sign Out
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ========================================================= */}
+      {/* WORKSPACE COLUMN (HEADER + MAIN CONTENT) */}
+      {/* ========================================================= */}
+      <div className="flex-1 flex flex-col min-w-0 min-h-screen">
+        {/* Workspace Top Header Bar */}
+        <header className="sticky top-0 z-20 bg-[#0B0F19]/90 backdrop-blur-xl border-b border-slate-800/90 px-3.5 sm:px-6 py-2.5 sm:py-3.5 flex items-center justify-between gap-2 sm:gap-4 shadow-sm">
+          {/* Left: Mobile hamburger & breadcrumbs */}
+          <div className="flex items-center gap-2 sm:gap-3.5 min-w-0">
+            <button
+              type="button"
+              onClick={() => setMobileMenuOpen(true)}
+              className="md:hidden p-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 active:scale-95 transition-all shrink-0 cursor-pointer"
+              aria-label="Open navigation menu"
+            >
+              ☰
+            </button>
+
+            {/* Breadcrumb Path */}
+            <div className="flex items-center gap-1.5 sm:gap-2 text-xs truncate">
+              <span className="text-slate-500 font-semibold hidden sm:inline">Admin Hub</span>
+              <span className="text-slate-600 hidden sm:inline">/</span>
+              <span className="text-slate-400 font-semibold hidden md:inline">{currentTabInfo.category}</span>
+              <span className="text-slate-600 hidden md:inline">/</span>
+              <div className="flex items-center gap-1.5 font-black text-white text-xs sm:text-sm truncate">
+                <span className="text-base">{currentTabInfo.icon}</span>
+                <span className="text-amber-300 font-extrabold truncate">{currentTabInfo.label}</span>
+              </div>
+            </div>
+          </div>
+
+          {/* Right: Balance, Storefront & Refresh actions */}
+          <div className="flex items-center gap-1.5 sm:gap-2.5 shrink-0">
+            {/* Live Gateway Pill (Desktop) */}
+            <div className="hidden sm:flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl bg-slate-900/90 border border-slate-800 text-xs">
+              <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
+              <span className="text-slate-400 font-medium text-[11px]">API:</span>
+              <span className="font-bold text-cyan-300 text-[11px] truncate max-w-[95px] xl:max-w-none">
+                {providerSettings.activeProvider === 'FazerCards' ? 'FazerCards' : 'KhmerTopUp'}
+              </span>
+              <span className="text-slate-700">|</span>
+              <span className="font-black text-amber-300 text-[11px] font-mono">
+                ${(providerSettings.balanceUSD !== undefined ? Number(providerSettings.balanceUSD) : 18.50).toFixed(2)}
+              </span>
+            </div>
+
+            {/* Storefront Link */}
+            <Link
+              to="/"
+              target="_blank"
+              rel="noreferrer"
+              className="px-2.5 py-1.5 rounded-xl bg-cyan-950/50 hover:bg-cyan-900/70 text-cyan-300 border border-cyan-500/30 text-[11px] font-bold transition-all flex items-center gap-1 shadow-sm active:scale-95"
+              title="View live customer storefront in new tab"
+            >
+              <span>🌐</span>
+              <span className="hidden md:inline">Storefront</span>
+            </Link>
+
+            {/* Refresh Button */}
+            <button
+              type="button"
+              onClick={() => {
+                loadData(false);
+                showToast('info', '🔄 Syncing live admin data...');
+              }}
+              disabled={refreshing}
+              className="px-2.5 py-1.5 rounded-xl bg-slate-800/80 hover:bg-slate-700 text-slate-300 hover:text-white border border-slate-700/80 text-[11px] font-bold transition-all flex items-center gap-1 active:scale-95 cursor-pointer disabled:opacity-50"
+              title="Refresh live data"
+            >
+              <span className={refreshing ? 'animate-spin' : ''}>🔄</span>
+              <span className="hidden lg:inline">{refreshing ? 'Syncing...' : 'Refresh'}</span>
+            </button>
+
+            {/* Logout button (Desktop) */}
+            <button
+              type="button"
+              onClick={handleLogout}
+              className="hidden sm:flex px-2.5 py-1.5 rounded-xl bg-rose-950/40 hover:bg-rose-900/60 text-rose-300 border border-rose-500/30 text-[11px] font-bold transition-all items-center gap-1 active:scale-95 cursor-pointer"
+              title="Sign Out"
+            >
+              <span>🚪</span>
+              <span className="hidden md:inline">Sign Out</span>
+            </button>
+          </div>
+        </header>
+
+        {/* Main Workspace Container */}
+        <main className="flex-1 max-w-7xl w-full mx-auto px-3.5 sm:px-6 lg:px-8 py-6 space-y-6 pb-28">
         {/* Loading Spinner & Indicator */}
         {loading && (
           <div className="py-24 flex flex-col items-center justify-center space-y-4 animate-fadeIn">
@@ -6074,25 +6199,27 @@ const PRICING_GAMES = [
           </div>
         )}
       </main>
+    </div>
 
       {/* ========================================================= */}
-      {/* MOBILE BOTTOM STICKY QUICK TAB BAR - ELEVATED (z-[60]) TO NEVER BE BLOCKED */}
+      {/* MOBILE BOTTOM STICKY QUICK TAB BAR (md:hidden) */}
       {/* ========================================================= */}
-      <div className="xl:hidden fixed bottom-0 left-0 right-0 z-[60] bg-dark-card/95 backdrop-blur-xl border-t border-dark-border px-3 py-2 flex items-center justify-around shadow-2xl">
+      <div className="md:hidden fixed bottom-0 left-0 right-0 z-[60] bg-[#0A0E17]/95 backdrop-blur-xl border-t border-slate-800 px-3 py-2 flex items-center justify-around shadow-2xl">
         <button
+          type="button"
           onClick={() => {
             setActiveTab('pending');
-            setNavDropdownOpen(false);
+            setMobileMenuOpen(false);
           }}
           className={`flex flex-col items-center gap-1 p-1.5 rounded-xl text-[10px] font-bold cursor-pointer transition-colors ${
-            activeTab === 'pending' ? 'text-amber-400' : 'text-slate-400 hover:text-white'
+            activeTab === 'pending' ? 'text-amber-400 font-black' : 'text-slate-400 hover:text-white'
           }`}
         >
           <span className="text-lg relative">
             ⚡
-            {(pendingOrders.length + pendingBalanceOrders.length) > 0 && (
+            {(pendingOrders.length + (pendingBalanceOrders?.length || 0)) > 0 && (
               <span className="absolute -top-1 -right-2 px-1 py-0.2 rounded-full text-[8px] font-black bg-amber-500 text-black">
-                {pendingOrders.length + pendingBalanceOrders.length}
+                {pendingOrders.length + (pendingBalanceOrders?.length || 0)}
               </span>
             )}
           </span>
@@ -6100,12 +6227,13 @@ const PRICING_GAMES = [
         </button>
 
         <button
+          type="button"
           onClick={() => {
             setActiveTab('pricing');
-            setNavDropdownOpen(false);
+            setMobileMenuOpen(false);
           }}
           className={`flex flex-col items-center gap-1 p-1.5 rounded-xl text-[10px] font-bold cursor-pointer transition-colors ${
-            activeTab === 'pricing' ? 'text-amber-400' : 'text-slate-400 hover:text-white'
+            activeTab === 'pricing' ? 'text-amber-400 font-black' : 'text-slate-400 hover:text-white'
           }`}
         >
           <span className="text-lg">💎</span>
@@ -6113,12 +6241,13 @@ const PRICING_GAMES = [
         </button>
 
         <button
+          type="button"
           onClick={() => {
             setActiveTab('orders');
-            setNavDropdownOpen(false);
+            setMobileMenuOpen(false);
           }}
           className={`flex flex-col items-center gap-1 p-1.5 rounded-xl text-[10px] font-bold cursor-pointer transition-colors ${
-            activeTab === 'orders' ? 'text-amber-400' : 'text-slate-400 hover:text-white'
+            activeTab === 'orders' ? 'text-amber-400 font-black' : 'text-slate-400 hover:text-white'
           }`}
         >
           <span className="text-lg">📦</span>
@@ -6126,12 +6255,13 @@ const PRICING_GAMES = [
         </button>
 
         <button
+          type="button"
           onClick={() => {
             setActiveTab('financials');
-            setNavDropdownOpen(false);
+            setMobileMenuOpen(false);
           }}
           className={`flex flex-col items-center gap-1 p-1.5 rounded-xl text-[10px] font-bold cursor-pointer transition-colors ${
-            activeTab === 'financials' ? 'text-amber-400' : 'text-slate-400 hover:text-white'
+            activeTab === 'financials' ? 'text-amber-400 font-black' : 'text-slate-400 hover:text-white'
           }`}
         >
           <span className="text-lg">💰</span>
@@ -6139,13 +6269,14 @@ const PRICING_GAMES = [
         </button>
 
         <button
-          onClick={() => setNavDropdownOpen(!navDropdownOpen)}
+          type="button"
+          onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
           className={`flex flex-col items-center gap-1 p-1.5 rounded-xl text-[10px] font-bold cursor-pointer transition-all ${
-            navDropdownOpen ? 'text-amber-300 font-black' : 'text-slate-400 hover:text-white'
+            mobileMenuOpen ? 'text-amber-300 font-black' : 'text-slate-400 hover:text-white'
           }`}
         >
-          <span className="text-lg">{navDropdownOpen ? '✕' : '☰'}</span>
-          <span>{navDropdownOpen ? 'Close' : 'More'}</span>
+          <span className="text-lg">{mobileMenuOpen ? '✕' : '☰'}</span>
+          <span>{mobileMenuOpen ? 'Close' : 'Modules'}</span>
         </button>
       </div>
 
