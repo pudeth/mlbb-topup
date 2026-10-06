@@ -1026,60 +1026,64 @@ const TopUp = () => {
         let accountConfirmed = false;
 
         if (selectedGame.id.includes('freefire') || selectedGame.id.includes('ff')) {
-          // Dedicated Real In-Game Name Resolution for Free Fire Players
+          // 1. Strict numeric format check: Free Fire UID must be 7 to 12 digits
+          if (!/^\d{7,12}$/.test(pId)) {
+            setVerifiedAccount({
+              valid: false,
+              error: language === 'km' ? 'រកមិនឃើញគណនី Free Fire ទេ។ UID ត្រូវតែជាលេខ 7-12 ខ្ទង់។' : 'Free Fire account not found. UID must be 7-12 digits.',
+              id: pId,
+              server: sId || 'Global'
+            });
+            return;
+          }
+
+          // 2. Dedicated Real In-Game Name Resolution for Free Fire Players
           if (pId === '14792636283') {
             realName = '[?]{PHAI} [?]';
             accountConfirmed = true;
-          }
-
-          // Step 1: Codashop validation — fastest and confirms account existence + may return username
-          if (!accountConfirmed) {
+          } else {
+            // 3. Official Codashop gateway validation to check real Garena account existence
             try {
-            const coda = await fetch('https://order-sg.codashop.com/initPayment.action', {
-              method: 'POST',
-              headers: {
-                'Content-Type': 'application/x-www-form-urlencoded',
-                'User-Agent': 'Mozilla/5.0',
-                'Origin': 'https://www.codashop.com',
-                'Referer': 'https://www.codashop.com/en-kh/free-fire',
-              },
-              body: new URLSearchParams({
-                'voucherPricePoint.id': '68893',
-                'voucherPricePoint.price': '1.0',
-                'voucherPricePoint.variablePrice': '0',
-                'email': '',
-                'n': Date.now().toString(),
-                'user.userId': pId,
-                'voucherTypeName': 'FREEFIRE',
-                'shopLang': 'en_KH',
-              }),
-            }).then(r => r.json());
+              const coda = await fetch('https://order-sg.codashop.com/initPayment.action', {
+                method: 'POST',
+                headers: {
+                  'Content-Type': 'application/x-www-form-urlencoded',
+                  'User-Agent': 'Mozilla/5.0',
+                  'Origin': 'https://www.codashop.com',
+                  'Referer': 'https://www.codashop.com/en-kh/free-fire',
+                },
+                body: new URLSearchParams({
+                  'voucherPricePoint.id': '68893',
+                  'voucherPricePoint.price': '1.0',
+                  'voucherPricePoint.variablePrice': '0',
+                  'email': '',
+                  'n': Date.now().toString(),
+                  'user.userId': pId,
+                  'voucherTypeName': 'FREEFIRE',
+                  'shopLang': 'en_KH',
+                }),
+              }).then(r => r.json());
 
-            if (coda?.user?.userId && (coda?.user?.username || coda?.user?.name)) {
-              realName = coda.user.username || coda.user.name;
-              accountConfirmed = true;
-            } else if (coda?.user?.userId) {
-              // Account confirmed even without a name
-              accountConfirmed = true;
-            }
-          } catch (e) {}
+              const errCode = coda?.errorCode;
+              const errMsg = (coda?.errorMsg || '').toLowerCase();
 
-          // Step 2: isan.eu.org — confirms account exists in Garena Free Fire
-          if (!accountConfirmed) {
-            try {
-              const ffCheck = await fetch(`https://api.isan.eu.org/nickname/ff?id=${pId}`).then(r => r.json());
-              if (ffCheck?.success === true || ffCheck?.id) {
+              // If Codashop explicitly says Invalid User, account definitely does not exist
+              if (errCode === 22 || errMsg.includes('invalid user')) {
+                accountConfirmed = false;
+              } else if (errCode === 24 || errCode === 30108 || coda?.confirmation === true || coda?.success === true) {
+                // Known Garena existing player response
                 accountConfirmed = true;
-                if (ffCheck?.name) realName = ffCheck.name;
+                if (coda?.user?.username || coda?.user?.name) {
+                  realName = coda.user.username || coda.user.name;
+                }
               }
             } catch (e) {}
-          }
           }
 
           if (accountConfirmed) {
             setVerifiedAccount({
               valid: true,
-              name: realName || '',
+              name: realName || (language === 'km' ? 'គណនីបានផ្ទៀងផ្ទាត់' : 'Verified Player'),
               country: 'Cambodia',
               id: pId,
               server: sId || 'Global',
@@ -1088,7 +1092,7 @@ const TopUp = () => {
           } else {
             setVerifiedAccount({
               valid: false,
-              error: 'Free Fire account not found. Please verify your UID.',
+              error: language === 'km' ? 'រកមិនឃើញគណនី Free Fire ទេ។ សូមពិនិត្យលេខ UID ឡើងវិញ។' : 'Free Fire account not found. Please verify your UID.',
               id: pId,
               server: sId || 'Global'
             });
