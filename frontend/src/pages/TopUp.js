@@ -1038,31 +1038,42 @@ const TopUp = () => {
           }
 
           // 2. Dedicated Real In-Game Name Resolution for Free Fire Players
-          if (pId === '14792636283') {
-            realName = '[?]{PHAI} [?]';
-            accountConfirmed = true;
-          } else {
-            // 3. Live Free Fire validation via Isan API (has CORS support and returns real numeric ID for genuine accounts)
+          // Call our backend proxy → which calls freefirejornal.com server-side
+          // This can take ~15s due to the mandatory delay in the upstream API
+          try {
+            const ffProxyRes = await fetch(
+              `${process.env.REACT_APP_API_URL || 'https://mlbb-backend-api.onrender.com'}/api/topup/ff-nickname/${pId}`
+            ).then(r => r.json());
+
+            if (ffProxyRes?.found === true) {
+              accountConfirmed = true;
+              if (ffProxyRes?.nickname) realName = ffProxyRes.nickname;
+            } else if (ffProxyRes?.found === false && ffProxyRes?.message === 'Player not found') {
+              // Explicitly not found — fail immediately
+              setVerifiedAccount({
+                valid: false,
+                error: language === 'km' ? 'រកមិនឃើញគណនី Free Fire ទេ។ សូមពិនិត្យ UID ឡើងវិញ។' : 'Free Fire account not found. Please verify your UID.',
+                id: pId,
+                server: sId || 'Global'
+              });
+              setCheckingAccount(false);
+              return;
+            } else {
+              // Proxy failed/timed out — fall back to Isan API existence check only
+              const ffRes = await fetch(`https://api.isan.eu.org/nickname/ff?id=${pId}`).then(r => r.json()).catch(() => null);
+              if (ffRes?.success === true && ffRes?.id && String(ffRes.id) === String(pId)) {
+                accountConfirmed = true;
+                // No nickname available from Isan
+              }
+            }
+          } catch (e) {
+            // Network error — fall back to Isan
             try {
               const ffRes = await fetch(`https://api.isan.eu.org/nickname/ff?id=${pId}`).then(r => r.json());
               if (ffRes?.success === true && ffRes?.id && String(ffRes.id) === String(pId)) {
                 accountConfirmed = true;
-                if (ffRes?.name) realName = ffRes.name;
               }
-            } catch (e) {}
-
-            // 4. Backend validation fallback
-            if (!accountConfirmed) {
-              try {
-                const bRes = await topupAPI.checkAccount(pId, sId || 'Global');
-                if (bRes.data?.valid) {
-                  accountConfirmed = true;
-                  if (bRes.data?.username && !bRes.data.username.startsWith('Player #')) {
-                    realName = bRes.data.username;
-                  }
-                }
-              } catch (e) {}
-            }
+            } catch (e2) {}
           }
 
           if (accountConfirmed) {

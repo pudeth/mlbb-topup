@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using MLBBTopUp.Core.Interfaces;
+using MLBBTopUp.Infrastructure.Services;
 
 namespace MLBBTopUp.API.Controllers;
 
@@ -11,15 +12,42 @@ public class TopUpController : BaseController
     private readonly ITopUpService _topUpService;
     private readonly IOrderService _orderService;
     private readonly ILogger<TopUpController> _logger;
+    private readonly FreefireNicknameService _ffNickname;
 
     public TopUpController(
         ITopUpService topUpService,
         IOrderService orderService,
-        ILogger<TopUpController> logger)
+        ILogger<TopUpController> logger,
+        FreefireNicknameService ffNickname)
     {
         _topUpService = topUpService;
         _orderService = orderService;
         _logger = logger;
+        _ffNickname = ffNickname;
+    }
+
+    /// <summary>
+    /// Lookup a Free Fire player's real in-game nickname by UID.
+    /// Proxies freefirejornal.com server-side to avoid CORS issues.
+    /// </summary>
+    [HttpGet("ff-nickname/{uid}")]
+    [AllowAnonymous]
+    public async Task<IActionResult> GetFreefireNickname(string uid)
+    {
+        if (string.IsNullOrWhiteSpace(uid) || !System.Text.RegularExpressions.Regex.IsMatch(uid.Trim(), @"^\d{7,20}$"))
+            return BadRequest(new { found = false, message = "Invalid UID — must be 7–20 digits" });
+
+        using var cts = new CancellationTokenSource(TimeSpan.FromSeconds(55));
+        var result = await _ffNickname.GetNicknameAsync(uid.Trim(), cts.Token);
+
+        return Ok(new
+        {
+            found    = result.Found,
+            uid      = uid.Trim(),
+            nickname = result.Nickname,
+            region   = result.Region,
+            message  = result.Message
+        });
     }
 
     /// <summary>
@@ -37,6 +65,7 @@ public class TopUpController : BaseController
         var result = await _topUpService.CheckAccountAsync(playerId, serverId ?? string.Empty);
         return Ok(result);
     }
+
 
     /// <summary>
     /// POST /api/player/validate endpoint (Standard Reseller Specification)

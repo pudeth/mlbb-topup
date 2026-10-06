@@ -129,6 +129,10 @@ builder.Services.AddScoped<IAbaPayWayService, AbaPayWayService>();
 // Register supplier gateway manager (singleton across entire app)
 builder.Services.AddSingleton<MLBBTopUp.Core.Interfaces.ISupplierGatewayManager, MLBBTopUp.Infrastructure.Services.SupplierGatewayManager>();
 
+// Register Free Fire nickname proxy service (singleton — shared HttpClient + cache)
+builder.Services.AddSingleton<MLBBTopUp.Infrastructure.Services.FreefireNicknameService>();
+
+
 // Register payment gateway and top-up provider
 builder.Services.AddScoped<MLBBTopUp.Infrastructure.PaymentGateways.IPaymentGatewayClient, 
     MLBBTopUp.Infrastructure.PaymentGateways.MockPaymentGateway>();
