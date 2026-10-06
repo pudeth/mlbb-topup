@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import { adminAPI, bakongAPI } from '../services/api';
+import { adminAPI, bakongAPI, paywayAPI } from '../services/api';
 import { getStoredGames, saveStoredGames, resetToDefaultGames, getMasterTopupStatus, saveMasterTopupStatus, fetchStoredGames, fetchMasterTopupStatus } from '../services/gamesConfig';
 import { useStoreBranding } from '../services/storeBranding';
 import { DEFAULT_EVENT_BANNERS, getAllStoredBanners, fetchStoredBanners, saveStoredBanners } from '../services/eventBanners';
@@ -734,6 +734,17 @@ const PRICING_GAMES = [
     isActive: true,
   });
 
+  // ABA PayWay Dashboard State
+  const [paywayTransactions, setPaywayTransactions] = useState([]);
+  const [paywayExchangeRate, setPaywayExchangeRate] = useState(null);
+  const [paywayLoading, setPaywayLoading] = useState(false);
+  const [paywayError, setPaywayError] = useState(null);
+  const [paywayFilter, setPaywayFilter] = useState({ status: '', fromDate: '', toDate: '', fromAmount: '', toAmount: '', page: '1', pagination: '40' });
+  const [paywaySelectedTran, setPaywaySelectedTran] = useState(null);
+  const [paywayTranDetailOpen, setPaywayTranDetailOpen] = useState(false);
+  const [paywayTranDetail, setPaywayTranDetail] = useState(null);
+  const [paywayTranDetailLoading, setPaywayTranDetailLoading] = useState(false);
+
   // Game & Logo Management State
   const [gamesList, setGamesList] = useState(() => getStoredGames());
   const [masterTopupStatus, setMasterTopupStatus] = useState(() => getMasterTopupStatus());
@@ -858,6 +869,34 @@ const PRICING_GAMES = [
           if (bakRes.data.activeAccount && bakRes.data.activeAccount.bakongToken) {
             setQuickTokenInput(bakRes.data.activeAccount.bakongToken);
           }
+        }
+      } else if (activeTab === 'payway') {
+        setPaywayLoading(true);
+        setPaywayError(null);
+        try {
+          const [txRes, rateRes] = await Promise.all([
+            paywayAPI.getTransactionList({ page: '1', pagination: '40' }).catch(() => ({ data: null })),
+            paywayAPI.getExchangeRate().catch(() => ({ data: null })),
+          ]);
+          // Backend returns raw JSON string as content; axios might return it as-is or parsed
+          const parseTxData = (res) => {
+            try {
+              const raw = typeof res?.data === 'string' ? JSON.parse(res.data) : res?.data;
+              return raw?.data?.transactions || raw?.transactions || raw?.data || [];
+            } catch { return []; }
+          };
+          const parseRateData = (res) => {
+            try {
+              const raw = typeof res?.data === 'string' ? JSON.parse(res.data) : res?.data;
+              return raw?.data || raw || null;
+            } catch { return null; }
+          };
+          setPaywayTransactions(parseTxData(txRes));
+          setPaywayExchangeRate(parseRateData(rateRes));
+        } catch (err) {
+          setPaywayError('Failed to load ABA PayWay data: ' + (err?.message || String(err)));
+        } finally {
+          setPaywayLoading(false);
         }
       } else if (activeTab === 'diagnostics') {
         const sysRes = await adminAPI.getSystemStatus().catch(() => ({ data: null }));
@@ -2062,6 +2101,13 @@ const PRICING_GAMES = [
       desc: 'National Bank of Cambodia KHQR gateway, merchant IDs & live tokens',
     },
     {
+      id: 'payway',
+      label: 'ABA PayWay',
+      icon: '💳',
+      category: 'Infrastructure',
+      desc: 'ABA PayWay merchant transactions, exchange rates & real-time payment status',
+    },
+    {
       id: 'failed',
       label: 'Failed Orders',
       icon: '⚠️',
@@ -2249,7 +2295,7 @@ const PRICING_GAMES = [
                               Admin Navigation Menu
                             </span>
                             <span className="text-[10px] text-amber-300 font-bold bg-amber-500/10 border border-amber-500/30 px-2 py-0.5 rounded-full">
-                              12 Modules
+                              13 Modules
                             </span>
                           </div>
                           <span className="text-[10px] text-slate-400 font-medium hidden xs:block">
@@ -5040,6 +5086,372 @@ const PRICING_GAMES = [
                       })}
                     </tbody>
                   </table>
+                </div>
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* ========================================================= */}
+        {/* TAB: ABA PAYWAY DASHBOARD */}
+        {/* ========================================================= */}
+        {!loading && activeTab === 'payway' && (
+          <div className="space-y-6 animate-fadeIn">
+            {/* Header */}
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+              <div>
+                <h2 className="text-2xl sm:text-3xl font-black text-white flex items-center gap-2">
+                  <span>💳</span> ABA PayWay Dashboard
+                </h2>
+                <p className="text-xs sm:text-sm text-slate-400 mt-1">
+                  Merchant ID: <span className="text-amber-300 font-bold">tintopup</span> — Live transaction list, exchange rates &amp; payment status from ABA PayWay gateway.
+                </p>
+              </div>
+              <div className="flex items-center gap-2 flex-wrap">
+                <a
+                  href="https://merchant.payway.com.kh/transactions"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="btn btn-gold text-xs py-2 px-4 font-black shadow-glow-gold flex items-center gap-1.5"
+                >
+                  <span>🌐</span>
+                  <span>Open PayWay Portal</span>
+                </a>
+                <button
+                  type="button"
+                  onClick={() => loadData(false)}
+                  disabled={refreshing || paywayLoading}
+                  className="btn btn-secondary text-xs py-2 px-3 flex items-center gap-1.5"
+                >
+                  <span className={(refreshing || paywayLoading) ? 'animate-spin' : ''}>🔄</span>
+                  <span>{(refreshing || paywayLoading) ? 'Loading...' : 'Refresh'}</span>
+                </button>
+              </div>
+            </div>
+
+            {/* Error Banner */}
+            {paywayError && (
+              <div className="p-4 rounded-2xl bg-rose-950/40 border border-rose-500/50 text-rose-300 text-sm font-medium flex items-center gap-2">
+                <span>⚠️</span> {paywayError}
+              </div>
+            )}
+
+            {/* Info Cards Row */}
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+              {/* Merchant Info */}
+              <div className="p-4 sm:p-5 rounded-3xl bg-gradient-to-br from-[#0E1A2E] to-[#111728] border border-amber-500/30 shadow-xl">
+                <div className="flex items-center gap-3 mb-3">
+                  <div className="w-10 h-10 rounded-2xl bg-amber-500/20 border border-amber-500/40 flex items-center justify-center text-xl">💳</div>
+                  <div>
+                    <p className="text-[10px] text-slate-400 uppercase tracking-widest font-bold">Merchant Account</p>
+                    <p className="text-sm font-black text-amber-300">tintopup</p>
+                  </div>
+                </div>
+                <div className="space-y-1 text-xs text-slate-400">
+                  <div className="flex justify-between"><span>Name:</span><span className="text-white font-bold">PHEAK DETH</span></div>
+                  <div className="flex justify-between"><span>Outlet:</span><span className="text-white font-bold">Tin TopUp</span></div>
+                  <div className="flex justify-between"><span>Portal:</span><a href="https://merchant.payway.com.kh" target="_blank" rel="noopener noreferrer" className="text-cyan-400 hover:underline">merchant.payway.com.kh</a></div>
+                </div>
+              </div>
+
+              {/* Exchange Rate */}
+              <div className="p-4 sm:p-5 rounded-3xl bg-gradient-to-br from-[#0E1A2E] to-[#111728] border border-cyan-500/30 shadow-xl">
+                <div className="flex items-center gap-3 mb-3">
+                  <div className="w-10 h-10 rounded-2xl bg-cyan-500/20 border border-cyan-500/40 flex items-center justify-center text-xl">💱</div>
+                  <div>
+                    <p className="text-[10px] text-slate-400 uppercase tracking-widest font-bold">USD → KHR Rate</p>
+                    <p className="text-sm font-black text-cyan-300">
+                      {paywayExchangeRate
+                        ? `1 USD = ${Number(paywayExchangeRate?.usd_to_khr || paywayExchangeRate?.rate || paywayExchangeRate?.usdToKhr || 4100).toLocaleString()} ៛`
+                        : paywayLoading ? 'Loading...' : '~4,100 ៛'}
+                    </p>
+                  </div>
+                </div>
+                <p className="text-[10px] text-slate-500">Live rate from ABA PayWay API</p>
+                {paywayExchangeRate && (
+                  <pre className="text-[9px] text-slate-600 mt-2 overflow-hidden line-clamp-3">{JSON.stringify(paywayExchangeRate, null, 2)}</pre>
+                )}
+              </div>
+
+              {/* Transaction Count */}
+              <div className="p-4 sm:p-5 rounded-3xl bg-gradient-to-br from-[#0E1A2E] to-[#111728] border border-emerald-500/30 shadow-xl">
+                <div className="flex items-center gap-3 mb-3">
+                  <div className="w-10 h-10 rounded-2xl bg-emerald-500/20 border border-emerald-500/40 flex items-center justify-center text-xl">📊</div>
+                  <div>
+                    <p className="text-[10px] text-slate-400 uppercase tracking-widest font-bold">Transactions Loaded</p>
+                    <p className="text-2xl font-black text-emerald-300">{Array.isArray(paywayTransactions) ? paywayTransactions.length : 0}</p>
+                  </div>
+                </div>
+                <p className="text-[10px] text-slate-500">Last 40 transactions from ABA PayWay</p>
+              </div>
+            </div>
+
+            {/* Filters */}
+            <div className="p-4 rounded-2xl bg-[#111728] border border-slate-700 space-y-3">
+              <p className="text-xs font-bold text-slate-400 uppercase tracking-widest">🔍 Filter Transactions</p>
+              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
+                <div>
+                  <label className="text-[10px] text-slate-500 font-bold uppercase block mb-1">Status</label>
+                  <select
+                    value={paywayFilter.status}
+                    onChange={(e) => setPaywayFilter(f => ({ ...f, status: e.target.value }))}
+                    className="w-full bg-[#0B0F19] border border-slate-700 rounded-xl text-xs text-white px-3 py-2 focus:border-amber-500 outline-none cursor-pointer"
+                  >
+                    <option value="">All Status</option>
+                    <option value="APPROVED">✅ Approved</option>
+                    <option value="PENDING">⏳ Pending</option>
+                    <option value="DECLINED">❌ Declined</option>
+                    <option value="EXPIRED">⏰ Expired</option>
+                  </select>
+                </div>
+                <div>
+                  <label className="text-[10px] text-slate-500 font-bold uppercase block mb-1">From Date</label>
+                  <input
+                    type="date"
+                    value={paywayFilter.fromDate}
+                    onChange={(e) => setPaywayFilter(f => ({ ...f, fromDate: e.target.value }))}
+                    className="w-full bg-[#0B0F19] border border-slate-700 rounded-xl text-xs text-white px-3 py-2 focus:border-amber-500 outline-none"
+                  />
+                </div>
+                <div>
+                  <label className="text-[10px] text-slate-500 font-bold uppercase block mb-1">To Date</label>
+                  <input
+                    type="date"
+                    value={paywayFilter.toDate}
+                    onChange={(e) => setPaywayFilter(f => ({ ...f, toDate: e.target.value }))}
+                    className="w-full bg-[#0B0F19] border border-slate-700 rounded-xl text-xs text-white px-3 py-2 focus:border-amber-500 outline-none"
+                  />
+                </div>
+                <div className="flex items-end gap-2">
+                  <button
+                    type="button"
+                    onClick={async () => {
+                      setPaywayLoading(true);
+                      setPaywayError(null);
+                      try {
+                        const txRes = await paywayAPI.getTransactionList({
+                          status: paywayFilter.status,
+                          fromDate: paywayFilter.fromDate,
+                          toDate: paywayFilter.toDate,
+                          fromAmount: paywayFilter.fromAmount,
+                          toAmount: paywayFilter.toAmount,
+                          page: paywayFilter.page,
+                          pagination: paywayFilter.pagination,
+                        }).catch(() => ({ data: null }));
+                        const raw = typeof txRes?.data === 'string' ? JSON.parse(txRes.data) : txRes?.data;
+                        setPaywayTransactions(raw?.data?.transactions || raw?.transactions || raw?.data || []);
+                      } catch (err) {
+                        setPaywayError('Filter error: ' + (err?.message || String(err)));
+                      } finally {
+                        setPaywayLoading(false);
+                      }
+                    }}
+                    disabled={paywayLoading}
+                    className="btn btn-gold text-xs py-2 px-4 font-black flex items-center gap-1.5 flex-1"
+                  >
+                    <span>{paywayLoading ? '⏳' : '🔍'}</span>
+                    <span>{paywayLoading ? 'Searching...' : 'Apply Filter'}</span>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setPaywayFilter({ status: '', fromDate: '', toDate: '', fromAmount: '', toAmount: '', page: '1', pagination: '40' })}
+                    className="btn btn-secondary text-xs py-2 px-3"
+                  >
+                    ✕
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            {/* Transactions Table */}
+            <div className="rounded-3xl bg-[#0B0F19] border border-slate-800 overflow-hidden shadow-xl">
+              <div className="px-4 sm:px-5 py-3.5 border-b border-slate-800 flex items-center justify-between">
+                <p className="text-sm font-black text-white flex items-center gap-2">
+                  <span>📋</span> Transaction List
+                </p>
+                <span className="text-[10px] text-slate-500 bg-slate-800 px-2 py-1 rounded-lg">
+                  {Array.isArray(paywayTransactions) ? paywayTransactions.length : 0} records
+                </span>
+              </div>
+
+              {paywayLoading ? (
+                <div className="flex items-center justify-center py-16 gap-3">
+                  <span className="text-2xl animate-spin">⏳</span>
+                  <span className="text-slate-400 text-sm">Fetching from ABA PayWay...</span>
+                </div>
+              ) : !Array.isArray(paywayTransactions) || paywayTransactions.length === 0 ? (
+                <div className="flex flex-col items-center justify-center py-16 gap-3 text-center">
+                  <div className="w-16 h-16 rounded-3xl bg-slate-800/60 border border-slate-700 flex items-center justify-center text-3xl">💳</div>
+                  <p className="text-white font-bold text-sm">No Transactions Found</p>
+                  <p className="text-slate-500 text-xs max-w-xs">
+                    No transactions are recorded in ABA PayWay yet. Make a test payment or check your date range filter.
+                  </p>
+                  <a
+                    href="https://merchant.payway.com.kh/transactions"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="btn btn-gold text-xs py-2 px-5 font-black flex items-center gap-1.5 mt-1"
+                  >
+                    <span>🌐</span> View in PayWay Portal
+                  </a>
+                </div>
+              ) : (
+                <div className="overflow-x-auto">
+                  <table className="w-full text-xs">
+                    <thead>
+                      <tr className="border-b border-slate-800 bg-[#0d121e]">
+                        <th className="text-left py-3 px-4 text-[10px] font-bold text-slate-400 uppercase tracking-widest">Tran ID</th>
+                        <th className="text-left py-3 px-3 text-[10px] font-bold text-slate-400 uppercase tracking-widest">Amount</th>
+                        <th className="text-left py-3 px-3 text-[10px] font-bold text-slate-400 uppercase tracking-widest">Currency</th>
+                        <th className="text-left py-3 px-3 text-[10px] font-bold text-slate-400 uppercase tracking-widest">Status</th>
+                        <th className="text-left py-3 px-3 text-[10px] font-bold text-slate-400 uppercase tracking-widest">Method</th>
+                        <th className="text-left py-3 px-3 text-[10px] font-bold text-slate-400 uppercase tracking-widest">Date / Time</th>
+                        <th className="text-right py-3 px-4 text-[10px] font-bold text-slate-400 uppercase tracking-widest">Actions</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {paywayTransactions.map((tx, idx) => {
+                        const tranId = tx.tran_id || tx.tranId || tx.id || String(idx);
+                        const amount = tx.amount || tx.total_amount || '—';
+                        const currency = tx.currency || 'USD';
+                        const rawStatus = (tx.payment_status || tx.status || 'UNKNOWN').toString().toUpperCase();
+                        const isPaid = rawStatus === 'APPROVED' || rawStatus === 'PAID' || rawStatus === 'SUCCESS';
+                        const isPending = rawStatus === 'PENDING';
+                        const statusColor = isPaid
+                          ? 'bg-emerald-500/20 text-emerald-300 border-emerald-500/30'
+                          : isPending
+                            ? 'bg-amber-500/20 text-amber-300 border-amber-500/30'
+                            : 'bg-rose-500/20 text-rose-300 border-rose-500/30';
+                        const statusIcon = isPaid ? '✅' : isPending ? '⏳' : '❌';
+                        const payMethod = tx.payment_option || tx.channel || tx.payment_method || '—';
+                        const dateRaw = tx.created_at || tx.createdAt || tx.request_time || tx.req_time || '';
+                        const dateStr = dateRaw ? new Date(dateRaw).toLocaleString('en-KH', { timeZone: 'Asia/Phnom_Penh' }) : '—';
+
+                        return (
+                          <tr
+                            key={tranId}
+                            className="border-b border-slate-800/60 hover:bg-slate-800/30 transition-colors cursor-pointer"
+                            onClick={() => {
+                              setPaywaySelectedTran(tx);
+                              setPaywayTranDetailOpen(true);
+                              setPaywayTranDetail(null);
+                              setPaywayTranDetailLoading(true);
+                              paywayAPI.getDetails(tranId)
+                                .then((res) => {
+                                  const raw = typeof res?.data === 'string' ? JSON.parse(res.data) : res?.data;
+                                  setPaywayTranDetail(raw);
+                                })
+                                .catch(() => setPaywayTranDetail({ error: 'Could not load details' }))
+                                .finally(() => setPaywayTranDetailLoading(false));
+                            }}
+                          >
+                            <td className="py-3 px-4 text-white font-mono font-bold text-[10px]">{tranId}</td>
+                            <td className="py-3 px-3 text-white font-bold">{amount}</td>
+                            <td className="py-3 px-3 text-slate-300">{currency}</td>
+                            <td className="py-3 px-3">
+                              <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold border ${statusColor}`}>
+                                {statusIcon} {rawStatus}
+                              </span>
+                            </td>
+                            <td className="py-3 px-3 text-slate-400 text-[10px]">{payMethod}</td>
+                            <td className="py-3 px-3 text-slate-400 text-[10px]">{dateStr}</td>
+                            <td className="py-3 px-4 text-right">
+                              <button
+                                type="button"
+                                className="text-[10px] text-cyan-400 hover:text-cyan-300 font-bold px-2 py-1 rounded-lg hover:bg-cyan-500/10 transition-colors"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  navigator.clipboard?.writeText(tranId);
+                                  showToast('success', `Tran ID "${tranId}" copied!`);
+                                }}
+                              >
+                                Copy ID
+                              </button>
+                            </td>
+                          </tr>
+                        );
+                      })}
+                    </tbody>
+                  </table>
+                </div>
+              )}
+            </div>
+
+            {/* Transaction Detail Modal */}
+            {paywayTranDetailOpen && paywaySelectedTran && (
+              <div className="fixed inset-0 z-50 flex items-center justify-center p-4 animate-fadeIn">
+                <div className="fixed inset-0 bg-black/80 backdrop-blur-md" onClick={() => setPaywayTranDetailOpen(false)} />
+                <div className="relative w-full max-w-lg bg-[#0B0F19] border border-slate-700 rounded-3xl p-5 shadow-2xl z-10 max-h-[85vh] overflow-y-auto">
+                  <div className="flex items-center justify-between mb-4">
+                    <h3 className="text-sm font-black text-white flex items-center gap-2">
+                      <span>💳</span> Transaction Details
+                    </h3>
+                    <button
+                      type="button"
+                      onClick={() => setPaywayTranDetailOpen(false)}
+                      className="w-8 h-8 rounded-xl bg-slate-800 hover:bg-slate-700 border border-slate-700 text-slate-300 hover:text-white flex items-center justify-center text-sm font-bold transition-all cursor-pointer"
+                    >
+                      ✕
+                    </button>
+                  </div>
+
+                  <div className="space-y-3">
+                    {/* Summary */}
+                    <div className="grid grid-cols-2 gap-2">
+                      {[
+                        ['Tran ID', paywaySelectedTran.tran_id || paywaySelectedTran.tranId || paywaySelectedTran.id],
+                        ['Amount', paywaySelectedTran.amount || paywaySelectedTran.total_amount],
+                        ['Currency', paywaySelectedTran.currency],
+                        ['Status', paywaySelectedTran.payment_status || paywaySelectedTran.status],
+                        ['Channel', paywaySelectedTran.payment_option || paywaySelectedTran.channel || paywaySelectedTran.payment_method],
+                        ['Date', paywaySelectedTran.created_at || paywaySelectedTran.createdAt || paywaySelectedTran.request_time],
+                      ].map(([label, val]) => val !== undefined && val !== null && val !== '' && (
+                        <div key={label} className="p-2.5 rounded-xl bg-slate-800/60 border border-slate-700">
+                          <p className="text-[9px] text-slate-500 uppercase font-bold mb-0.5">{label}</p>
+                          <p className="text-xs text-white font-bold break-all">{String(val)}</p>
+                        </div>
+                      ))}
+                    </div>
+
+                    {/* Full Detail from API */}
+                    <div className="p-3 rounded-2xl bg-[#060A14] border border-slate-800">
+                      <p className="text-[10px] text-slate-500 uppercase font-bold mb-2">Full API Response</p>
+                      {paywayTranDetailLoading ? (
+                        <p className="text-slate-500 text-xs animate-pulse">Loading details from ABA PayWay API...</p>
+                      ) : paywayTranDetail ? (
+                        <pre className="text-[10px] text-slate-400 whitespace-pre-wrap break-all leading-relaxed max-h-60 overflow-y-auto">
+                          {JSON.stringify(paywayTranDetail, null, 2)}
+                        </pre>
+                      ) : (
+                        <p className="text-slate-600 text-xs">No additional detail available.</p>
+                      )}
+                    </div>
+
+                    {/* Actions */}
+                    <div className="flex gap-2 pt-1">
+                      <button
+                        type="button"
+                        onClick={() => {
+                          const tranId = paywaySelectedTran.tran_id || paywaySelectedTran.tranId || paywaySelectedTran.id;
+                          if (tranId) {
+                            navigator.clipboard?.writeText(tranId);
+                            showToast('success', `Tran ID "${tranId}" copied!`);
+                          }
+                        }}
+                        className="btn btn-secondary text-xs py-2 px-4 flex-1"
+                      >
+                        📋 Copy Tran ID
+                      </button>
+                      <a
+                        href="https://merchant.payway.com.kh/transactions"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="btn btn-gold text-xs py-2 px-4 font-black flex-1 text-center flex items-center justify-center gap-1"
+                      >
+                        🌐 PayWay Portal
+                      </a>
+                    </div>
+                  </div>
                 </div>
               </div>
             )}

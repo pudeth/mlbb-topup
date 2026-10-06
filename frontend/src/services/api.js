@@ -115,6 +115,19 @@ export const paywayAPI = {
   callback: (data) => api.post('/payway/callback', data),
   close: (tranId) => api.post(`/payway/close/${tranId}`),
   getDetails: (tranId) => api.get(`/payway/details/${tranId}`),
+  getTransactionList: (params = {}) => {
+    const q = new URLSearchParams();
+    if (params.fromDate) q.set('fromDate', params.fromDate);
+    if (params.toDate) q.set('toDate', params.toDate);
+    if (params.fromAmount) q.set('fromAmount', params.fromAmount);
+    if (params.toAmount) q.set('toAmount', params.toAmount);
+    if (params.status) q.set('status', params.status);
+    if (params.page) q.set('page', params.page);
+    if (params.pagination) q.set('pagination', params.pagination);
+    return api.get(`/payway/list?${q.toString()}`);
+  },
+  getExchangeRate: () => api.get('/payway/exchange-rate'),
+  getPollingLog: (tranId) => api.get(`/payway/polling-log/${tranId}`),
 };
 
 // Bakong Gateway API
