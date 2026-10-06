@@ -2294,10 +2294,10 @@ const TopUp = () => {
                 <div className="min-w-0 flex-1">
                   <div
                     className="text-[11px] sm:text-sm font-extrabold text-white leading-tight"
-                    style={{ wordBreak: 'break-word', fontFamily: "'Noto Sans', 'Segoe UI', 'Apple Color Emoji', sans-serif" }}
+                    style={{ wordBreak: 'break-word', fontFamily: "'Noto Sans', 'Noto Sans Khmer', 'Segoe UI', 'Apple Color Emoji', 'Noto Color Emoji', 'Noto Sans CJK SC', sans-serif" }}
                   >
                     {verifiedAccount?.valid
-                      ? (verifiedAccount.name && !verifiedAccount.name.startsWith('Player_') && !verifiedAccount.name.includes('#')
+                      ? (verifiedAccount.name && !verifiedAccount.name.startsWith('Player_') && !verifiedAccount.name.includes('Player #')
                           ? verifiedAccount.name
                           : (language === 'km' ? 'គណនីបានផ្ទៀងផ្ទាត់' : 'Verified Player'))
                       : (language === 'km' ? 'មិនទាន់ផ្ទៀងផ្ទាត់' : 'Guest Player')}

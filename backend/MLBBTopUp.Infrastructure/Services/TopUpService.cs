@@ -60,7 +60,7 @@ public class TopUpService : ITopUpService
                 Valid = true,
                 PlayerId = p,
                 ServerId = string.IsNullOrWhiteSpace(s) ? "Global" : s,
-                Username = "[?]{PHAI} [?]",
+                Username = "៚{PHAI}៚",
                 Country = "Cambodia"
             };
         }
