@@ -2292,7 +2292,10 @@ const TopUp = () => {
                   <span className={`absolute -bottom-0.5 -right-0.5 w-3 h-3 rounded-full border-2 border-[#050b20] ${verifiedAccount?.valid ? 'bg-emerald-400' : 'bg-slate-500'}`} />
                 </div>
                 <div className="min-w-0 flex-1">
-                  <div className="text-[11px] sm:text-sm font-extrabold text-white truncate leading-tight">
+                  <div
+                    className="text-[11px] sm:text-sm font-extrabold text-white leading-tight"
+                    style={{ wordBreak: 'break-word', fontFamily: "'Noto Sans', 'Segoe UI', 'Apple Color Emoji', sans-serif" }}
+                  >
                     {verifiedAccount?.valid
                       ? (verifiedAccount.name && !verifiedAccount.name.startsWith('Player_') && !verifiedAccount.name.includes('#')
                           ? verifiedAccount.name
