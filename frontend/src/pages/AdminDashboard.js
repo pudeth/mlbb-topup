@@ -2314,7 +2314,7 @@ const PRICING_GAMES = [
   });
 
   return (
-    <div className="min-h-screen bg-[#07090E] text-slate-100 font-sans selection:bg-amber-500 selection:text-black relative flex flex-row overflow-x-hidden">
+    <div className="h-screen bg-[#07090E] text-slate-100 font-sans selection:bg-amber-500 selection:text-black relative flex flex-row overflow-hidden">
       {/* Ambient background glows */}
       <div className="fixed top-0 left-1/4 w-[500px] h-[500px] bg-amber-500/[0.04] rounded-full blur-[140px] pointer-events-none" />
       <div className="fixed top-1/3 right-10 w-[500px] h-[500px] bg-cyan-500/[0.04] rounded-full blur-[140px] pointer-events-none" />
@@ -2352,7 +2352,7 @@ const PRICING_GAMES = [
       {/* ENTERPRISE DASHBOARD SYSTEM SIDEBAR (DESKTOP) */}
       {/* ========================================================= */}
       <aside
-        className={`hidden md:flex flex-col shrink-0 bg-[#0A0E17] border-r border-slate-800/80 transition-all duration-300 sticky top-0 h-screen select-none z-30 ${
+        className={`hidden md:flex flex-col shrink-0 bg-[#0A0E17] border-r border-slate-800/80 transition-all duration-300 h-full select-none z-30 ${
           sidebarCollapsed ? 'w-20' : 'w-64 xl:w-72'
         }`}
       >
@@ -2461,7 +2461,7 @@ const PRICING_GAMES = [
         )}
 
         {/* Navigation Categories & Items */}
-        <div className="flex-1 overflow-y-auto px-2.5 py-3 space-y-4 scrollbar-thin scrollbar-thumb-slate-800 scrollbar-track-transparent">
+        <div className="flex-1 overflow-y-auto min-h-0 px-2.5 py-3 space-y-4 scrollbar-thin scrollbar-thumb-slate-800 scrollbar-track-transparent">
           {menuCategories.map((cat) => {
             const tabsInCat = filteredNavTabs.filter((t) => t.categoryId === cat.id);
             if (tabsInCat.length === 0) return null;
@@ -2724,9 +2724,9 @@ const PRICING_GAMES = [
       {/* ========================================================= */}
       {/* WORKSPACE COLUMN (HEADER + MAIN CONTENT) */}
       {/* ========================================================= */}
-      <div className="flex-1 flex flex-col min-w-0 min-h-screen">
+      <div className="flex-1 flex flex-col h-full min-w-0 overflow-hidden">
         {/* Workspace Top Header Bar */}
-        <header className="sticky top-0 z-20 bg-[#0B0F19]/90 backdrop-blur-xl border-b border-slate-800/90 px-3.5 sm:px-6 py-2.5 sm:py-3.5 flex items-center justify-between gap-2 sm:gap-4 shadow-sm">
+        <header className="shrink-0 z-20 bg-[#0B0F19] border-b border-slate-800/90 px-3.5 sm:px-6 py-2.5 sm:py-3.5 flex items-center justify-between gap-2 sm:gap-4 shadow-md">
           {/* Left: Mobile hamburger & breadcrumbs */}
           <div className="flex items-center gap-2 sm:gap-3.5 min-w-0">
             <button
@@ -2807,7 +2807,8 @@ const PRICING_GAMES = [
         </header>
 
         {/* Main Workspace Container */}
-        <main className="flex-1 max-w-7xl w-full mx-auto px-3.5 sm:px-6 lg:px-8 py-6 space-y-6 pb-28">
+        <main className="flex-1 overflow-y-auto min-h-0 px-3.5 sm:px-6 lg:px-8 py-6 pb-28 scrollbar-thin scrollbar-thumb-slate-800">
+          <div className="max-w-7xl mx-auto w-full space-y-6">
         {/* Loading Spinner & Indicator */}
         {loading && (
           <div className="py-24 flex flex-col items-center justify-center space-y-4 animate-fadeIn">
@@ -6198,8 +6199,9 @@ const PRICING_GAMES = [
             </div>
           </div>
         )}
-      </main>
-    </div>
+          </div>
+        </main>
+      </div>
 
       {/* ========================================================= */}
       {/* MOBILE BOTTOM STICKY QUICK TAB BAR (md:hidden) */}
