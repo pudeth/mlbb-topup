@@ -179,25 +179,7 @@ export const resolveRealPlayerName = (pId, fallbackRealName, user, playerAccount
     return playerAccount.realName.trim();
   }
 
-  // 4. Check user profile name if logged in (e.g. Pu Deth)
-  if (user?.name &&
-      !user.name.startsWith('Player_') &&
-      !user.name.includes('#')) {
-    return user.name.trim();
-  }
-
-  // 5. Check if user is known in localStorage
-  try {
-    const userStr = localStorage.getItem('user');
-    if (userStr) {
-      const u = JSON.parse(userStr);
-      if (u?.name && !u.name.startsWith('Player_') && !u.name.includes('#')) {
-        return u.name.trim();
-      }
-    }
-  } catch (e) {}
-
-  return fallbackRealName || `Player_${sPId}`;
+  return '';
 };
 
 // Play audio chime on success
@@ -546,63 +528,18 @@ const TopUp = () => {
     paymentMethod: 'abapayway',
   });
 
-  const [editingPlayerName, setEditingPlayerName] = useState(false);
-  const [customNameInput, setCustomNameInput] = useState('');
-
-  const handleSaveRealPlayerName = (newName) => {
-    if (!newName || !newName.trim()) return;
-    const trimmed = newName.trim();
-    const curPlayerId = formData.playerID.trim();
-
-    try {
-      const customNames = JSON.parse(localStorage.getItem('custom_player_names') || '{}');
-      customNames[curPlayerId] = trimmed;
-      localStorage.setItem('custom_player_names', JSON.stringify(customNames));
-    } catch (e) {}
-
-    setVerifiedAccount(prev => prev ? { ...prev, name: trimmed } : {
-      valid: true,
-      name: trimmed,
-      id: curPlayerId,
-      server: formData.serverID
-    });
-
-    try {
-      const pAcc = JSON.parse(localStorage.getItem('player_account') || '{}');
-      pAcc.realName = trimmed;
-      pAcc.playerId = curPlayerId;
-      localStorage.setItem('player_account', JSON.stringify(pAcc));
-
-      const uObj = JSON.parse(localStorage.getItem('user') || '{}');
-      if (uObj) {
-        uObj.name = trimmed;
-        localStorage.setItem('user', JSON.stringify(uObj));
-      }
-    } catch (e) {}
-
-    setEditingPlayerName(false);
-  };
-
   // Auto-fill and synchronize with active player account or user
   useEffect(() => {
     const activePlayerId = playerAccount?.playerId || user?.playerId || '';
     const activeServerId = playerAccount?.serverId || user?.serverId || '';
-    if (activePlayerId) {
-      const resolvedName = resolveRealPlayerName(activePlayerId, playerAccount?.realName || user?.name, user, playerAccount);
+    if (activePlayerId && !formData.playerID) {
       setFormData(prev => ({
         ...prev,
-        playerID: prev.playerID || activePlayerId,
+        playerID: activePlayerId,
         serverID: (prev.serverID === 'Global' && activeServerId) ? activeServerId : (prev.serverID || activeServerId || 'Global')
       }));
-      if (resolvedName) {
-        setVerifiedAccount(prev => prev || {
-          valid: true,
-          name: resolvedName,
-          id: activePlayerId,
-          server: activeServerId
-        });
-      }
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [playerAccount, user]);
 
   const handlePastePlayerId = async () => {
@@ -1149,11 +1086,9 @@ const TopUp = () => {
           }
 
           if (accountConfirmed) {
-            const resolvedRealName = resolveRealPlayerName(pId, realName, user, playerAccount);
-            const displayName = resolvedRealName || `FF Player #${pId}`;
             setVerifiedAccount({
               valid: true,
-              name: displayName,
+              name: realName || '',
               country: 'Cambodia',
               id: pId,
               server: sId || 'Global',
@@ -1185,10 +1120,9 @@ const TopUp = () => {
             }
           } catch (e) {}
 
-          const resolvedRealName = resolveRealPlayerName(pId, realName, user, playerAccount);
           setVerifiedAccount({
             valid: true,
-            name: resolvedRealName || `${selectedGame.name} Player #${pId}`,
+            name: realName || '',
             country: 'Global',
             id: pId,
             server: sId
@@ -1460,7 +1394,7 @@ const TopUp = () => {
           const pAccount = {
             playerId: pId,
             serverId: sId,
-            realName: playerAccName || `Player_${pId}`
+            realName: playerAccName || ''
           };
           localStorage.setItem('player_account', JSON.stringify(pAccount));
 
@@ -2367,109 +2301,22 @@ const TopUp = () => {
                   <span className={`absolute -bottom-0.5 -right-0.5 w-3 h-3 rounded-full border-2 border-[#050b20] ${verifiedAccount?.valid ? 'bg-emerald-400' : 'bg-slate-500'}`} />
                 </div>
                 <div className="min-w-0 flex-1">
-                  {editingPlayerName ? (
-                    <div className="flex items-center gap-1.5 py-0.5">
-                      <input
-                        type="text"
-                        value={customNameInput}
-                        onChange={(e) => setCustomNameInput(e.target.value)}
-                        placeholder={language === 'km' ? 'បញ្ចូលឈ្មោះពិតក្នុងហ្គេម...' : 'Enter In-Game Nickname...'}
-                        className="h-7 px-2.5 bg-slate-900 border border-sky-400 rounded-lg text-xs font-bold text-white focus:outline-none focus:ring-1 focus:ring-sky-400 min-w-0 flex-1"
-                        autoFocus
-                        onKeyDown={(e) => {
-                          if (e.key === 'Enter') handleSaveRealPlayerName(customNameInput);
-                          if (e.key === 'Escape') setEditingPlayerName(false);
-                        }}
-                      />
-                      <button
-                        type="button"
-                        onClick={() => handleSaveRealPlayerName(customNameInput)}
-                        className="h-7 px-2.5 bg-gradient-to-r from-emerald-500 to-teal-500 text-slate-950 text-[11px] font-black rounded-lg hover:brightness-110 active:scale-95 cursor-pointer shrink-0"
-                      >
-                        ✓ {language === 'km' ? 'រក្សាទុក' : 'Save'}
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => setEditingPlayerName(false)}
-                        className="h-7 px-2 bg-slate-800 text-slate-400 text-xs rounded-lg hover:text-white cursor-pointer shrink-0"
-                      >
-                        ✕
-                      </button>
-                    </div>
-                  ) : (
-                    <div className="flex items-center gap-1.5 flex-wrap">
-                      <div className="text-[11px] sm:text-sm font-extrabold text-white truncate leading-tight">
-                        {verifiedAccount?.valid ? verifiedAccount.name : (language === 'km' ? 'មិនទាន់ផ្ទៀងផ្ទាត់' : 'Guest Player')}
-                      </div>
-                      {verifiedAccount?.valid && (
-                        <button
-                          type="button"
-                          onClick={() => {
-                            setCustomNameInput(
-                              verifiedAccount.name && !verifiedAccount.name.includes('#') && !verifiedAccount.name.startsWith('Player_')
-                                ? verifiedAccount.name
-                                : (user?.name && !user.name.startsWith('Player_') ? user.name : '')
-                            );
-                            setEditingPlayerName(true);
-                          }}
-                          className="px-2 py-0.5 rounded-md bg-sky-500/20 hover:bg-sky-500/35 text-sky-300 hover:text-white text-[10px] font-bold border border-sky-400/40 flex items-center gap-1 transition-all cursor-pointer shadow-sm"
-                          title={language === 'km' ? 'កែប្រែឈ្មោះពិតប្រាកដក្នុងហ្គេម' : 'Set real in-game nickname'}
-                        >
-                          <span>✏️</span>
-                          <span>{language === 'km' ? 'កែឈ្មោះ' : 'Set Real Name'}</span>
-                        </button>
-                      )}
-                    </div>
-                  )}
+                  <div className="text-[11px] sm:text-sm font-extrabold text-white truncate leading-tight">
+                    {verifiedAccount?.valid
+                      ? (verifiedAccount.name && !verifiedAccount.name.startsWith('Player_') && !verifiedAccount.name.includes('#')
+                          ? verifiedAccount.name
+                          : (language === 'km' ? 'គណនីបានផ្ទៀងផ្ទាត់' : 'Verified Player'))
+                      : (language === 'km' ? 'មិនទាន់ផ្ទៀងផ្ទាត់' : 'Guest Player')}
+                  </div>
                   <div className={`text-[9px] sm:text-[11px] truncate mt-0.5 font-medium ${verifiedAccount?.valid ? 'text-emerald-400' : verifiedAccount && !verifiedAccount.valid ? 'text-rose-400' : 'text-slate-400'}`}>
                     {verifiedAccount?.valid
-                      ? `✓ ${verifiedAccount.id} (${verifiedAccount.server}) • ${verifiedAccount.country || 'Cambodia'}`
+                      ? `✓ ${verifiedAccount.id} (${verifiedAccount.server || 'Global'}) • ${verifiedAccount.country || 'Cambodia'}`
                       : verifiedAccount && !verifiedAccount.valid
                         ? (verifiedAccount.error || 'Player account not found.')
                         : (language === 'km' ? 'បញ្ចូល UID ដើម្បីផ្ទៀងផ្ទាត់' : 'Enter UID to verify account')}
                   </div>
                 </div>
               </div>
-
-              {/* Saved Account Quick Selector */}
-              {(playerAccount?.playerId || user?.playerId) && (
-                <div className="flex items-center gap-2 mb-2">
-                  <button
-                    type="button"
-                    onClick={() => {
-                      const pId = playerAccount?.playerId || user?.playerId || '';
-                      const sId = playerAccount?.serverId || user?.serverId || '';
-                      const resolved = resolveRealPlayerName(pId, playerAccount?.realName || user?.name, user, playerAccount);
-                      setFormData(prev => ({
-                        ...prev,
-                        playerID: pId,
-                        serverID: sId || prev.serverID
-                      }));
-                      if (resolved) {
-                        setVerifiedAccount({
-                          valid: true,
-                          name: resolved,
-                          id: pId,
-                          server: sId
-                        });
-                      }
-                    }}
-                    className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold border transition-all cursor-pointer ${
-                      formData.playerID === (playerAccount?.playerId || user?.playerId)
-                        ? 'bg-sky-500/20 text-sky-300 border-sky-400/50 shadow-[0_0_12px_rgba(56,189,248,0.25)]'
-                        : 'bg-slate-900/90 text-slate-400 border-slate-700/80 hover:text-white hover:border-slate-500'
-                    }`}
-                  >
-                    <span>⚡</span>
-                    <span>{language === 'km' ? 'គណនីរក្សាទុក' : 'Saved'}:</span>
-                    <span className="text-white font-extrabold">{resolveRealPlayerName(playerAccount?.playerId || user?.playerId, playerAccount?.realName || user?.name, user, playerAccount)}</span>
-                    <span className="font-mono text-cyan-300">({playerAccount?.playerId || user?.playerId})</span>
-                    {formData.playerID === (playerAccount?.playerId || user?.playerId) && (
-                      <span className="text-emerald-400 font-black">✓ Active</span>
-                    )}
-                  </button>
-                </div>
-              )}
 
               {/* Inputs */}
               <div className={`grid gap-2 ${isMlbb || isHoyoverse || isFreefire ? 'grid-cols-1 sm:grid-cols-[1fr_0.75fr]' : 'grid-cols-1'}`}>
