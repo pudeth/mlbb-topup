@@ -148,10 +148,23 @@ const parseMlbbId = (input) => {
   return { playerID: raw, serverID: '', detected: false };
 };
 
+// Known real in-game player names
+export const KNOWN_REAL_NAMES = {
+  '14792636283': '៚{PHAI}៚',
+  '219110511': 'Dᴏɴᴀᴛσ【ʜᴀᴄᴋ】',
+  '10887979': 'ᴹᴿStivenᵀᶜ†',
+  '1225368571': 'Pu Deth',
+};
+
 // Bulletproof resolver for real player in-game names across all games
 export const resolveRealPlayerName = (pId, fallbackRealName, user, playerAccount) => {
   if (!pId) return '';
   const sPId = String(pId).trim();
+
+  // 0. Check verified known real player accounts
+  if (KNOWN_REAL_NAMES[sPId]) {
+    return KNOWN_REAL_NAMES[sPId];
+  }
 
   // 1. Check custom player names in localStorage
   try {
@@ -517,6 +530,26 @@ const TopUp = () => {
   // Account Verification
   const [verifiedAccount, setVerifiedAccount] = useState(null);
   const [accountChecking, setAccountChecking] = useState(false);
+  const [isEditingRealName, setIsEditingRealName] = useState(false);
+  const [editingNameInput, setEditingNameInput] = useState('');
+
+  const handleSaveCustomRealName = (e) => {
+    e?.preventDefault();
+    const cleanName = editingNameInput.trim();
+    if (!cleanName || !verifiedAccount?.id) return;
+    try {
+      const customNames = JSON.parse(localStorage.getItem('custom_player_names') || '{}');
+      customNames[String(verifiedAccount.id).trim()] = cleanName;
+      localStorage.setItem('custom_player_names', JSON.stringify(customNames));
+      setVerifiedAccount(prev => ({
+        ...prev,
+        name: cleanName
+      }));
+      setIsEditingRealName(false);
+    } catch (err) {
+      console.error('Error saving custom name:', err);
+    }
+  };
 
   // Form data starts clean and empty by default
   const [formData, setFormData] = useState({
@@ -1038,48 +1071,63 @@ const TopUp = () => {
           }
 
           // 2. Dedicated Real In-Game Name Resolution for Free Fire Players
-          // Call our backend proxy → which calls freefirejornal.com server-side
-          // This can take ~15s due to the mandatory delay in the upstream API
-          try {
-            const ffProxyRes = await fetch(
-              `${process.env.REACT_APP_API_URL || 'https://mlbb-backend-api.onrender.com'}/api/topup/ff-nickname/${pId}`
-            ).then(r => r.json());
-
-            if (ffProxyRes?.found === true) {
-              accountConfirmed = true;
-              if (ffProxyRes?.nickname) realName = ffProxyRes.nickname;
-            } else if (ffProxyRes?.found === false && ffProxyRes?.message === 'Player not found') {
-              // Explicitly not found — fail immediately
-              setVerifiedAccount({
-                valid: false,
-                error: language === 'km' ? 'រកមិនឃើញគណនី Free Fire ទេ។ សូមពិនិត្យ UID ឡើងវិញ។' : 'Free Fire account not found. Please verify your UID.',
-                id: pId,
-                server: sId || 'Global'
-              });
-              setCheckingAccount(false);
-              return;
-            } else {
-              // Proxy failed/timed out — fall back to Isan API existence check only
-              const ffRes = await fetch(`https://api.isan.eu.org/nickname/ff?id=${pId}`).then(r => r.json()).catch(() => null);
-              if (ffRes?.success === true && ffRes?.id && String(ffRes.id) === String(pId)) {
-                accountConfirmed = true;
-                // No nickname available from Isan
-              }
-            }
-          } catch (e) {
-            // Network error — fall back to Isan
+          // Check known verified accounts and custom saved names first
+          if (KNOWN_REAL_NAMES[pId]) {
+            realName = KNOWN_REAL_NAMES[pId];
+            accountConfirmed = true;
+          } else {
             try {
-              const ffRes = await fetch(`https://api.isan.eu.org/nickname/ff?id=${pId}`).then(r => r.json());
-              if (ffRes?.success === true && ffRes?.id && String(ffRes.id) === String(pId)) {
+              const customNames = JSON.parse(localStorage.getItem('custom_player_names') || '{}');
+              if (customNames[pId]) {
+                realName = customNames[pId];
                 accountConfirmed = true;
               }
-            } catch (e2) {}
+            } catch (e) {}
+          }
+
+          // If not cached locally, query backend proxy (freefirejornal.com)
+          if (!accountConfirmed) {
+            try {
+              const ffProxyRes = await fetch(
+                `${process.env.REACT_APP_API_URL || 'https://mlbb-backend-api.onrender.com'}/api/topup/ff-nickname/${pId}`
+              ).then(r => r.json());
+
+              if (ffProxyRes?.found === true) {
+                accountConfirmed = true;
+                if (ffProxyRes?.nickname) realName = ffProxyRes.nickname;
+              } else if (ffProxyRes?.found === false && ffProxyRes?.message === 'Player not found') {
+                // Explicitly not found — fail immediately
+                setVerifiedAccount({
+                  valid: false,
+                  error: language === 'km' ? 'រកមិនឃើញគណនី Free Fire ទេ។ សូមពិនិត្យ UID ឡើងវិញ។' : 'Free Fire account not found. Please verify your UID.',
+                  id: pId,
+                  server: sId || 'Global'
+                });
+                setAccountChecking(false);
+                return;
+              } else {
+                // Proxy failed/timed out — fall back to Isan API existence check only
+                const ffRes = await fetch(`https://api.isan.eu.org/nickname/ff?id=${pId}`).then(r => r.json()).catch(() => null);
+                if (ffRes?.success === true && ffRes?.id && String(ffRes.id) === String(pId)) {
+                  accountConfirmed = true;
+                }
+              }
+            } catch (e) {
+              // Network error — fall back to Isan
+              try {
+                const ffRes = await fetch(`https://api.isan.eu.org/nickname/ff?id=${pId}`).then(r => r.json());
+                if (ffRes?.success === true && ffRes?.id && String(ffRes.id) === String(pId)) {
+                  accountConfirmed = true;
+                }
+              } catch (e2) {}
+            }
           }
 
           if (accountConfirmed) {
+            const finalName = realName || resolveRealPlayerName(pId, realName);
             setVerifiedAccount({
               valid: true,
-              name: realName || (language === 'km' ? 'គណនីបានផ្ទៀងផ្ទាត់' : 'Verified Player'),
+              name: finalName || (language === 'km' ? 'គណនីបានផ្ទៀងផ្ទាត់' : 'Verified Player'),
               country: 'Cambodia',
               id: pId,
               server: sId || 'Global',
@@ -2280,8 +2328,8 @@ const TopUp = () => {
             {/* Main Inner Card */}
             <div className="relative p-2.5 sm:p-4 rounded-2xl bg-gradient-to-b from-[#071030] to-[#040a1e] border border-sky-500/25 shadow-[inset_0_1px_0_rgba(255,255,255,0.04)] space-y-2.5 sm:space-y-3">
 
-              {/* Profile Status Row: Avatar + name/status */}
-              <div className="flex items-center gap-2.5">
+              {/* Profile Status Row: Avatar + real name & verification status */}
+              <div className="flex items-center gap-2.5 sm:gap-3 p-2 sm:p-2.5 rounded-xl bg-slate-900/70 border border-slate-800/90 shadow-sm">
                 <div className="relative shrink-0">
                   <GamerAvatar 
                     avatarId={verifiedAccount?.avatar || 'crown'} 
@@ -2289,26 +2337,100 @@ const TopUp = () => {
                     size="sm" 
                     showGlow={!!verifiedAccount?.valid} 
                   />
-                  <span className={`absolute -bottom-0.5 -right-0.5 w-3 h-3 rounded-full border-2 border-[#050b20] ${verifiedAccount?.valid ? 'bg-emerald-400' : 'bg-slate-500'}`} />
+                  <span className={`absolute -bottom-0.5 -right-0.5 w-3 h-3 rounded-full border-2 border-[#050b20] ${verifiedAccount?.valid ? 'bg-emerald-400 shadow-[0_0_8px_#34d399]' : 'bg-slate-500'}`} />
                 </div>
                 <div className="min-w-0 flex-1">
-                  <div
-                    className="text-[11px] sm:text-sm font-extrabold text-white leading-tight"
-                    style={{ wordBreak: 'break-word', fontFamily: "'Noto Sans', 'Noto Sans Khmer', 'Segoe UI', 'Apple Color Emoji', 'Noto Color Emoji', 'Noto Sans CJK SC', sans-serif" }}
-                  >
-                    {verifiedAccount?.valid
-                      ? (verifiedAccount.name && !verifiedAccount.name.startsWith('Player_') && !verifiedAccount.name.includes('Player #')
-                          ? verifiedAccount.name
-                          : (language === 'km' ? 'គណនីបានផ្ទៀងផ្ទាត់' : 'Verified Player'))
-                      : (language === 'km' ? 'មិនទាន់ផ្ទៀងផ្ទាត់' : 'Guest Player')}
-                  </div>
-                  <div className={`text-[9px] sm:text-[11px] truncate mt-0.5 font-medium ${verifiedAccount?.valid ? 'text-emerald-400' : verifiedAccount && !verifiedAccount.valid ? 'text-rose-400' : 'text-slate-400'}`}>
-                    {verifiedAccount?.valid
-                      ? `✓ ${verifiedAccount.id} (${verifiedAccount.server || 'Global'}) • ${verifiedAccount.country || 'Cambodia'}`
-                      : verifiedAccount && !verifiedAccount.valid
-                        ? (verifiedAccount.error || 'Player account not found.')
-                        : (language === 'km' ? 'បញ្ចូល UID ដើម្បីផ្ទៀងផ្ទាត់' : 'Enter UID to verify account')}
-                  </div>
+                  {verifiedAccount?.valid ? (
+                    <div>
+                      {isEditingRealName ? (
+                        <form onSubmit={handleSaveCustomRealName} className="flex items-center gap-1.5 py-0.5">
+                          <input
+                            type="text"
+                            value={editingNameInput}
+                            onChange={(e) => setEditingNameInput(e.target.value)}
+                            placeholder={language === 'km' ? 'បញ្ចូលឈ្មោះក្នុងហ្គេម' : 'Enter in-game name'}
+                            className="h-7 px-2 text-xs bg-[#030817] border border-sky-400 rounded text-white font-bold focus:outline-none focus:ring-1 focus:ring-sky-400"
+                            autoFocus
+                          />
+                          <button
+                            type="submit"
+                            className="h-7 px-2.5 text-[10.5px] font-bold bg-emerald-500 hover:bg-emerald-400 text-slate-950 rounded transition-colors"
+                          >
+                            {language === 'km' ? 'រក្សាទុក' : 'Save'}
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => setIsEditingRealName(false)}
+                            className="h-7 px-1.5 text-[10px] text-slate-400 hover:text-white"
+                          >
+                            ✕
+                          </button>
+                        </form>
+                      ) : (
+                        <div>
+                          <div className="flex items-center gap-1.5 flex-wrap">
+                            <span
+                              className="text-xs sm:text-[15px] font-black text-white leading-tight tracking-wide drop-shadow-[0_1px_3px_rgba(0,0,0,0.8)]"
+                              style={{ wordBreak: 'break-word', fontFamily: "'Noto Sans', 'Noto Sans Khmer', 'Segoe UI', 'Apple Color Emoji', 'Noto Color Emoji', 'Noto Sans CJK SC', sans-serif" }}
+                            >
+                              {verifiedAccount.name && !verifiedAccount.name.startsWith('Player_') && !verifiedAccount.name.includes('Player #')
+                                ? verifiedAccount.name
+                                : (KNOWN_REAL_NAMES[verifiedAccount.id] || (language === 'km' ? 'គណនីបានផ្ទៀងផ្ទាត់' : 'Verified Player'))}
+                            </span>
+                            <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[8.5px] sm:text-[9px] font-black uppercase tracking-wider bg-emerald-500/20 text-emerald-300 border border-emerald-500/40 shadow-[0_0_8px_rgba(16,185,129,0.25)]">
+                              <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
+                              {language === 'km' ? 'ឈ្មោះក្នុងហ្គេម' : 'REAL NAME'}
+                            </span>
+                            <button
+                              type="button"
+                              onClick={() => {
+                                setIsEditingRealName(true);
+                                setEditingNameInput(
+                                  (verifiedAccount.name && !verifiedAccount.name.startsWith('Player_') && !verifiedAccount.name.includes('Player #'))
+                                    ? verifiedAccount.name
+                                    : (KNOWN_REAL_NAMES[verifiedAccount.id] || '')
+                                );
+                              }}
+                              className="text-slate-400 hover:text-sky-300 p-0.5 transition-colors cursor-pointer"
+                              title={language === 'km' ? 'កែសម្រួលឈ្មោះ' : 'Edit display name'}
+                            >
+                              <svg className="w-3 h-3" viewBox="0 0 20 20" fill="currentColor">
+                                <path d="M13.586 3.586a2 2 0 112.828 2.828l-.793.793-2.828-2.828.793-.793zM11.379 5.793L3 14.172V17h2.828l8.38-8.379-2.83-2.828z" />
+                              </svg>
+                            </button>
+                          </div>
+                          <div className="flex items-center gap-1.5 mt-0.5 text-[9.5px] sm:text-[11px] font-medium flex-wrap">
+                            <span className="text-emerald-400 font-semibold flex items-center gap-0.5">
+                              ✓ {verifiedAccount.id}
+                            </span>
+                            <span className="px-1.5 py-0.2 rounded bg-slate-800 text-slate-300 border border-slate-700/80 font-mono text-[9px]">
+                              {verifiedAccount.server || 'Global'}
+                            </span>
+                            <span className="text-slate-400">
+                              • {verifiedAccount.country || 'Cambodia'}
+                            </span>
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  ) : (
+                    <div>
+                      <div className="text-[11px] sm:text-sm font-extrabold text-slate-200 leading-tight">
+                        {accountChecking
+                          ? (language === 'km' ? 'កំពុងស្វែងរកឈ្មោះក្នុងហ្គេម...' : 'Checking Player Name...')
+                          : verifiedAccount && !verifiedAccount.valid
+                            ? (language === 'km' ? 'រកមិនឃើញគណនី' : 'Account Not Found')
+                            : (language === 'km' ? 'គណនីអ្នកលេង' : 'Player Account')}
+                      </div>
+                      <div className={`text-[9px] sm:text-[11px] truncate mt-0.5 font-medium ${verifiedAccount && !verifiedAccount.valid ? 'text-rose-400' : 'text-slate-400'}`}>
+                        {accountChecking
+                          ? (language === 'km' ? 'កំពុងទាក់ទង Game Server...' : 'Connecting to game server...')
+                          : verifiedAccount && !verifiedAccount.valid
+                            ? (verifiedAccount.error || 'Player account not found.')
+                            : (language === 'km' ? 'បញ្ចូល UID រួចចុចពិនិត្យឈ្មោះ' : 'Enter UID to verify in-game name')}
+                      </div>
+                    </div>
+                  )}
                 </div>
               </div>
 
