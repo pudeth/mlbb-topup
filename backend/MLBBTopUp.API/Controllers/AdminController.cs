@@ -78,7 +78,18 @@ public class AdminController : BaseController
         return Ok(new { success = true, branding = _storeBranding });
     }
 
-    private static readonly string _gamesFilePath = System.IO.Path.Combine(AppContext.BaseDirectory, "games_config.json");
+    private static readonly string[] _gamesCandidatePaths = new[]
+    {
+        "/app/data/games_config.json",
+        System.IO.Path.Combine(Directory.GetCurrentDirectory(), "games_config.json"),
+        System.IO.Path.Combine(AppContext.BaseDirectory, "games_config.json")
+    };
+    private static readonly string[] _masterStatusCandidatePaths = new[]
+    {
+        "/app/data/master_status_config.json",
+        System.IO.Path.Combine(Directory.GetCurrentDirectory(), "master_status_config.json"),
+        System.IO.Path.Combine(AppContext.BaseDirectory, "master_status_config.json")
+    };
     private static readonly string _bannersFilePath = System.IO.Path.Combine(AppContext.BaseDirectory, "banners_config.json");
     private static object? _gamesConfig = null;
     private static object _masterTopupStatus = new
@@ -88,6 +99,251 @@ public class AdminController : BaseController
         updatedAt = DateTime.UtcNow.ToString("o")
     };
 
+    private static object GetDefaultGamesList()
+    {
+        return new object[]
+        {
+            new {
+                id = "freefire_kh",
+                name = "FREE FIRE KH",
+                publisher = "Garena",
+                category = "Service top-up",
+                providerCategory = "Service top-up",
+                currency = "Diamonds",
+                image = "https://res.cloudinary.com/dpz7vpmf8/image/upload/v1790944937/logo-game/srnteatj2ns0e2dswfwq.webp",
+                localFallbackImage = "/images/freefire-banner.webp",
+                badge = "SEVER ខ្មែរ 🇰🇭",
+                badgeColor = "cyan",
+                rating = "4.9 ⭐",
+                deliveryTime = "10 - 30s",
+                route = "/topup?game=freefire",
+                status = "Active",
+                isPopular = true,
+                description = "Direct Garena Free Fire Cambodia server UID top-up with automated level-up pass."
+            },
+            new {
+                id = "mlbb",
+                name = "MOBILE LEGEND",
+                publisher = "Moonton",
+                category = "Service top-up",
+                providerCategory = "Service top-up",
+                currency = "Diamonds & Passes",
+                image = "/mlbb-logo.png",
+                localFallbackImage = "/mlbb-logo.png",
+                badge = "សេវើខ្មែរ 5v5",
+                badgeColor = "gold",
+                flagType = "kh",
+                flagTitle = "សេវើខ្មែរ 5v5",
+                flagSubtitle = "5V5",
+                flagServerText = "SERVER",
+                flagFrameStyle = "gold_cyber",
+                rating = "5.0 ⭐",
+                deliveryTime = "10 - 30s",
+                route = "/topup",
+                status = "Active",
+                isPopular = true,
+                description = "Instant Mobile Legends Diamonds, Weekly Diamond Pass & Twilight Pass via automated Moonton gateway."
+            },
+            new {
+                id = "mlbb_tickets",
+                name = "កក់ TICKETS",
+                publisher = "Moonton",
+                category = "Service top-up",
+                providerCategory = "Service top-up",
+                currency = "Event Tickets",
+                image = "https://images.unsplash.com/photo-1538481199705-c710c4e965fc?w=500&auto=format&fit=crop&q=80",
+                localFallbackImage = "/mlbb-logo.png",
+                badge = "UPGRADED 🔥",
+                badgeColor = "purple",
+                rating = "4.9 ⭐",
+                deliveryTime = "Instant 10s",
+                route = "/topup?game=mlbb&tab=pass",
+                status = "Active",
+                isPopular = true,
+                description = "MLBB 515 ALLSTAR & Jujutsu Kaisen 29 Tickets Vouchers & Pre-Orders."
+            },
+            new {
+                id = "level_up_pass",
+                name = "LEVEL UP PASS",
+                publisher = "Garena / Moonton",
+                category = "Service top-up",
+                providerCategory = "Service top-up",
+                currency = "Passes & Packs",
+                image = "https://images.unsplash.com/photo-1550745165-9bc0b252726f?w=500&auto=format&fit=crop&q=80",
+                localFallbackImage = "/mlbb-logo.png",
+                badge = "BEST DEAL 🌟",
+                badgeColor = "gold",
+                rating = "5.0 ⭐",
+                deliveryTime = "10 - 30s",
+                route = "/topup?game=mlbb&tab=pass",
+                status = "Active",
+                isPopular = true,
+                description = "Level Up Pass and Super Value Diamond Growth Bundles."
+            },
+            new {
+                id = "pubgm_auto",
+                name = "PUBG MOBILE",
+                publisher = "Level Infinite",
+                category = "Service top-up",
+                providerCategory = "Service top-up",
+                currency = "Unknown Cash (UC)",
+                image = "https://res.cloudinary.com/dpz7vpmf8/image/upload/v1790944800/logo-game/ovdfdmru7jnhmwjvy6vy.jpg",
+                localFallbackImage = "/images/pubgm-banner.jpg",
+                badge = "GLOBAL UC ⚡",
+                badgeColor = "emerald",
+                rating = "4.9 ⭐",
+                deliveryTime = "10s - 1m",
+                route = "/topup?game=pubgm",
+                status = "Active",
+                isPopular = true,
+                description = "Automated PUBG Mobile Global Unknown Cash (UC) and Royale Pass vouchers."
+            },
+            new {
+                id = "magic_chess",
+                name = "MAGIC CHESS GOGO",
+                publisher = "Moonton",
+                category = "Service top-up",
+                providerCategory = "Service top-up",
+                currency = "Chess Diamonds",
+                image = "https://images.unsplash.com/photo-1566577739112-5180d4bf9390?w=500&auto=format&fit=crop&q=80",
+                localFallbackImage = "/mlbb-logo.png",
+                badge = "CHIBI HERO ♟️",
+                badgeColor = "purple",
+                rating = "4.8 ⭐",
+                deliveryTime = "10 - 30s",
+                route = "/topup?game=magic_chess",
+                status = "Paused",
+                isPopular = true,
+                description = "Magic Chess Go Go Little Commander Skins and Battle Pass."
+            },
+            new {
+                id = "blood_strike",
+                name = "BLOOD STRIKE",
+                publisher = "NetEase Games",
+                category = "Service top-up",
+                providerCategory = "Service top-up",
+                currency = "Gold & Strike Pass",
+                image = "https://images.unsplash.com/photo-1579373903781-fd5c0c30c4cd?w=500&auto=format&fit=crop&q=80",
+                badge = "HOT FPS 🔥",
+                badgeColor = "purple",
+                rating = "4.9 ⭐",
+                deliveryTime = "10 - 30s",
+                route = "/topup?game=blood_strike",
+                status = "Closed",
+                isPopular = true,
+                description = "NetEase Blood Strike Global Gold recharge and Strike Pass unlock."
+            },
+            new {
+                id = "rov",
+                name = "ROV / AOV",
+                publisher = "Garena",
+                category = "Service top-up",
+                providerCategory = "Service top-up",
+                currency = "Coupons",
+                image = "https://images.unsplash.com/photo-1542751371-adc38448a05e?w=500&auto=format&fit=crop&q=80",
+                localFallbackImage = "/mlbb-logo.png",
+                badge = "HOT 🔥",
+                badgeColor = "purple",
+                rating = "4.9 ⭐",
+                deliveryTime = "10 - 30s",
+                route = "/topup?game=rov",
+                status = "Active",
+                isPopular = true,
+                description = "Realm of Valor (ROV / Arena of Valor) coupons and elite pass top-up."
+            },
+            new {
+                id = "steam_games",
+                name = "STEAM GAMES",
+                publisher = "Valve",
+                category = "Service top-up",
+                providerCategory = "Service top-up",
+                currency = "Wallet USD",
+                image = "https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?w=500&auto=format&fit=crop&q=80",
+                localFallbackImage = "/images/banner_steam_wallet.jpg",
+                badge = "SALE ⚡",
+                badgeColor = "gold",
+                rating = "5.0 ⭐",
+                deliveryTime = "Instant 10s",
+                route = "/topup?game=steam",
+                status = "Active",
+                isPopular = true,
+                description = "Steam Wallet USD global activation codes and direct store top-up."
+            },
+            new {
+                id = "minecraft",
+                name = "MINECRAFT",
+                publisher = "Mojang / Microsoft",
+                category = "Service top-up",
+                providerCategory = "Service top-up",
+                currency = "Minecoins",
+                image = "https://images.unsplash.com/photo-1627856013091-fed6e4e30025?w=500&auto=format&fit=crop&q=80",
+                localFallbackImage = "/images/banner_pubg.jpg",
+                badge = "NEW 🌟",
+                badgeColor = "emerald",
+                rating = "4.9 ⭐",
+                deliveryTime = "10 - 30s",
+                route = "/topup?game=minecraft",
+                status = "Active",
+                isPopular = true,
+                description = "Official Minecraft Minecoins and Realm subscriptions."
+            },
+            new {
+                id = "roblox",
+                name = "Roblox",
+                publisher = "Roblox Corporation",
+                category = "Service top-up",
+                providerCategory = "Service top-up",
+                currency = "Robux",
+                image = "https://images.unsplash.com/photo-1563089145-599997674d42?w=500&auto=format&fit=crop&q=80",
+                localFallbackImage = "/mlbb-logo.png",
+                badge = "HOT",
+                badgeColor = "gold",
+                rating = "5.0 ⭐",
+                deliveryTime = "10 - 30s",
+                route = "/topup?game=roblox",
+                status = "Active",
+                isPopular = true,
+                description = "Roblox Robux and Premium Membership packages."
+            },
+            new {
+                id = "one_piece",
+                name = "ONE PIECE",
+                publisher = "Bandai Namco",
+                category = "Service top-up",
+                providerCategory = "Service top-up",
+                currency = "Rainbow Diamonds",
+                image = "https://images.unsplash.com/photo-1578632767115-351597cf2477?w=500&auto=format&fit=crop&q=80",
+                localFallbackImage = "/images/banner_mlbb_aldous.jpg",
+                badge = "PAUSED ⏸️",
+                badgeColor = "cyan",
+                rating = "4.8 ⭐",
+                deliveryTime = "10 - 30s",
+                route = "/topup?game=onepiece",
+                status = "Paused",
+                isPopular = true,
+                description = "One Piece Bounty Rush Rainbow Diamonds instant direct recharge."
+            },
+            new {
+                id = "valorant",
+                name = "VALORANT",
+                publisher = "Riot Games",
+                category = "Service top-up",
+                providerCategory = "Service top-up",
+                currency = "Valorant Points (VP)",
+                image = "https://images.unsplash.com/photo-1538481199705-c710c4e965fc?w=500&auto=format&fit=crop&q=80",
+                localFallbackImage = "/images/banner_pubg_tactical.jpg",
+                badge = "CLOSED 🚫",
+                badgeColor = "purple",
+                rating = "4.9 ⭐",
+                deliveryTime = "10 - 30s",
+                route = "/topup?game=valorant",
+                status = "Closed",
+                isPopular = true,
+                description = "Riot Games Valorant Points (VP) official prepaid gift codes."
+            }
+        };
+    }
+
     /// <summary>
     /// Get Store Games Catalog & Status (Public)
     /// </summary>
@@ -96,12 +352,43 @@ public class AdminController : BaseController
     [AllowAnonymous]
     public IActionResult GetGames()
     {
-        if (_gamesConfig == null && System.IO.File.Exists(_gamesFilePath))
+        if (_gamesConfig == null)
         {
+            foreach (var path in _gamesCandidatePaths)
+            {
+                if (System.IO.File.Exists(path))
+                {
+                    try
+                    {
+                        var json = System.IO.File.ReadAllText(path);
+                        if (!string.IsNullOrWhiteSpace(json) && json.Length > 10)
+                        {
+                            _gamesConfig = System.Text.Json.JsonSerializer.Deserialize<object>(json);
+                            break;
+                        }
+                    }
+                    catch {}
+                }
+            }
+        }
+
+        if (_gamesConfig == null)
+        {
+            _gamesConfig = GetDefaultGamesList();
             try
             {
-                var json = System.IO.File.ReadAllText(_gamesFilePath);
-                _gamesConfig = System.Text.Json.JsonSerializer.Deserialize<object>(json);
+                var json = System.Text.Json.JsonSerializer.Serialize(_gamesConfig);
+                foreach (var path in _gamesCandidatePaths)
+                {
+                    try
+                    {
+                        var dir = System.IO.Path.GetDirectoryName(path);
+                        if (!string.IsNullOrEmpty(dir) && !System.IO.Directory.Exists(dir))
+                            System.IO.Directory.CreateDirectory(dir);
+                        System.IO.File.WriteAllText(path, json);
+                    }
+                    catch {}
+                }
             }
             catch {}
         }
@@ -133,7 +420,18 @@ public class AdminController : BaseController
             _gamesConfig = data;
             try
             {
-                System.IO.File.WriteAllText(_gamesFilePath, System.Text.Json.JsonSerializer.Serialize(data));
+                var json = System.Text.Json.JsonSerializer.Serialize(data);
+                foreach (var path in _gamesCandidatePaths)
+                {
+                    try
+                    {
+                        var dir = System.IO.Path.GetDirectoryName(path);
+                        if (!string.IsNullOrEmpty(dir) && !System.IO.Directory.Exists(dir))
+                            System.IO.Directory.CreateDirectory(dir);
+                        System.IO.File.WriteAllText(path, json);
+                    }
+                    catch {}
+                }
             }
             catch {}
         }
@@ -202,6 +500,34 @@ public class AdminController : BaseController
     [AllowAnonymous]
     public IActionResult GetMasterStatus()
     {
+        if (_masterTopupStatus == null)
+        {
+            foreach (var path in _masterStatusCandidatePaths)
+            {
+                if (System.IO.File.Exists(path))
+                {
+                    try
+                    {
+                        var json = System.IO.File.ReadAllText(path);
+                        if (!string.IsNullOrWhiteSpace(json))
+                        {
+                            _masterTopupStatus = System.Text.Json.JsonSerializer.Deserialize<object>(json)!;
+                            break;
+                        }
+                    }
+                    catch {}
+                }
+            }
+        }
+        if (_masterTopupStatus == null)
+        {
+            _masterTopupStatus = new
+            {
+                status = "Active",
+                notice = "Top-Ups are temporarily paused by Admin for maintenance. Please check back shortly!",
+                updatedAt = DateTime.UtcNow.ToString("o")
+            };
+        }
         return Ok(new { success = true, masterStatus = _masterTopupStatus });
     }
 
@@ -218,6 +544,22 @@ public class AdminController : BaseController
         if (data != null)
         {
             _masterTopupStatus = data;
+            try
+            {
+                var json = System.Text.Json.JsonSerializer.Serialize(data);
+                foreach (var path in _masterStatusCandidatePaths)
+                {
+                    try
+                    {
+                        var dir = System.IO.Path.GetDirectoryName(path);
+                        if (!string.IsNullOrEmpty(dir) && !System.IO.Directory.Exists(dir))
+                            System.IO.Directory.CreateDirectory(dir);
+                        System.IO.File.WriteAllText(path, json);
+                    }
+                    catch {}
+                }
+            }
+            catch {}
         }
         return Ok(new { success = true, masterStatus = _masterTopupStatus });
     }

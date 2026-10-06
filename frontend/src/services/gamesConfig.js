@@ -17,7 +17,7 @@ export const DEFAULT_GAMES = [
     rating: '4.9 ⭐',
     deliveryTime: '10 - 30s',
     route: '/topup?game=freefire',
-    status: 'Paused',
+    status: 'Active',
     isPopular: true,
     description: 'Direct Garena Free Fire Cambodia server UID top-up with automated level-up pass.'
   },
@@ -76,7 +76,7 @@ export const DEFAULT_GAMES = [
     rating: '5.0 ⭐',
     deliveryTime: '10 - 30s',
     route: '/topup?game=mlbb&tab=pass',
-    status: 'Closed',
+    status: 'Active',
     isPopular: true,
     description: 'Level Up Pass and Super Value Diamond Growth Bundles.'
   },
@@ -117,7 +117,7 @@ export const DEFAULT_GAMES = [
     rating: '4.8 ⭐',
     deliveryTime: '10 - 30s',
     route: '/topup?game=magic_chess',
-    status: 'Closed',
+    status: 'Paused',
     isPopular: true,
     description: 'Magic Chess Go Go Little Commander Skins and Battle Pass.'
   },
@@ -158,7 +158,7 @@ export const DEFAULT_GAMES = [
     rating: '4.9 ⭐',
     deliveryTime: '10s - 1m',
     route: '/topup?game=pubgm',
-    status: 'Closed',
+    status: 'Active',
     isPopular: true,
     description: 'Automated PUBG Mobile Global Unknown Cash (UC) and Royale Pass vouchers.'
   },
@@ -178,6 +178,96 @@ export const DEFAULT_GAMES = [
     status: 'Closed',
     isPopular: true,
     description: 'NetEase Blood Strike Global Gold recharge and Strike Pass unlock.'
+  },
+  {
+    id: 'rov',
+    name: 'ROV / AOV',
+    publisher: 'Garena',
+    category: 'Service top-up',
+    providerCategory: 'Service top-up',
+    currency: 'Coupons',
+    image: 'https://images.unsplash.com/photo-1542751371-adc38448a05e?w=500&auto=format&fit=crop&q=80',
+    localFallbackImage: '/mlbb-logo.png',
+    badge: 'HOT 🔥',
+    badgeColor: 'purple',
+    rating: '4.9 ⭐',
+    deliveryTime: '10 - 30s',
+    route: '/topup?game=rov',
+    status: 'Active',
+    isPopular: true,
+    description: 'Realm of Valor (ROV / Arena of Valor) coupons and elite pass top-up.'
+  },
+  {
+    id: 'steam_games',
+    name: 'STEAM GAMES',
+    publisher: 'Valve',
+    category: 'Service top-up',
+    providerCategory: 'Service top-up',
+    currency: 'Wallet USD',
+    image: 'https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?w=500&auto=format&fit=crop&q=80',
+    localFallbackImage: '/images/banner_steam_wallet.jpg',
+    badge: 'SALE ⚡',
+    badgeColor: 'gold',
+    rating: '5.0 ⭐',
+    deliveryTime: 'Instant 10s',
+    route: '/topup?game=steam',
+    status: 'Active',
+    isPopular: true,
+    description: 'Steam Wallet USD global activation codes and direct store top-up.'
+  },
+  {
+    id: 'minecraft',
+    name: 'MINECRAFT',
+    publisher: 'Mojang / Microsoft',
+    category: 'Service top-up',
+    providerCategory: 'Service top-up',
+    currency: 'Minecoins',
+    image: 'https://images.unsplash.com/photo-1627856013091-fed6e4e30025?w=500&auto=format&fit=crop&q=80',
+    localFallbackImage: '/images/banner_pubg.jpg',
+    badge: 'NEW 🌟',
+    badgeColor: 'emerald',
+    rating: '4.9 ⭐',
+    deliveryTime: '10 - 30s',
+    route: '/topup?game=minecraft',
+    status: 'Active',
+    isPopular: true,
+    description: 'Official Minecraft Minecoins and Realm subscriptions.'
+  },
+  {
+    id: 'one_piece',
+    name: 'ONE PIECE',
+    publisher: 'Bandai Namco',
+    category: 'Service top-up',
+    providerCategory: 'Service top-up',
+    currency: 'Rainbow Diamonds',
+    image: 'https://images.unsplash.com/photo-1578632767115-351597cf2477?w=500&auto=format&fit=crop&q=80',
+    localFallbackImage: '/images/banner_mlbb_aldous.jpg',
+    badge: 'PAUSED ⏸️',
+    badgeColor: 'cyan',
+    rating: '4.8 ⭐',
+    deliveryTime: '10 - 30s',
+    route: '/topup?game=onepiece',
+    status: 'Paused',
+    isPopular: true,
+    description: 'One Piece Bounty Rush Rainbow Diamonds instant direct recharge.'
+  },
+  {
+    id: 'valorant',
+    name: 'VALORANT',
+    publisher: 'Riot Games',
+    category: 'Service top-up',
+    providerCategory: 'Service top-up',
+    currency: 'Valorant Points (VP)',
+    image: 'https://images.unsplash.com/photo-1538481199705-c710c4e965fc?w=500&auto=format&fit=crop&q=80',
+    localFallbackImage: '/images/banner_pubg_tactical.jpg',
+    badge: 'CLOSED 🚫',
+    badgeColor: 'purple',
+    rating: '4.9 ⭐',
+    deliveryTime: '10 - 30s',
+    route: '/topup?game=valorant',
+    status: 'Closed',
+    isPopular: true,
+    description: 'Riot Games Valorant Points (VP) official prepaid gift codes.'
   },
   {
     id: 'freefire_mena',
@@ -473,8 +563,8 @@ export const DEFAULT_GAMES = [
   }
 ];
 
-const STORAGE_KEY = 'mlbb_topup_custom_games_v6';
-const LEGACY_STORAGE_KEY = 'mlbb_topup_custom_games_v5';
+const STORAGE_KEY = 'mlbb_topup_custom_games_v7';
+const LEGACY_STORAGE_KEY = 'mlbb_topup_custom_games_v6';
 
 const getApiUrls = () => {
   const isLocal = typeof window !== 'undefined' && (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1');
@@ -593,7 +683,13 @@ export const fetchStoredGames = async () => {
   const urls = getApiUrls();
   for (const base of urls) {
     try {
-      const res = await fetch(`${base}/games?_t=${Date.now()}`);
+      const res = await fetch(`${base}/games?_t=${Date.now()}`, {
+        cache: 'no-store',
+        headers: {
+          'Cache-Control': 'no-cache, no-store, must-revalidate',
+          'Pragma': 'no-cache'
+        }
+      });
       if (res.ok) {
         const data = await res.json();
         const rawGames = Array.isArray(data?.games)
@@ -605,6 +701,7 @@ export const fetchStoredGames = async () => {
           localStorage.setItem(STORAGE_KEY, JSON.stringify(normalized));
           if (typeof window !== 'undefined') {
             window.dispatchEvent(new Event('gamesConfigUpdated'));
+            window.dispatchEvent(new CustomEvent('gamesConfigUpdated', { detail: normalized }));
           }
           return normalized;
         }
@@ -620,14 +717,19 @@ export const saveStoredGames = async (games) => {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(normalized));
     if (typeof window !== 'undefined') {
       window.dispatchEvent(new Event('gamesConfigUpdated'));
+      window.dispatchEvent(new CustomEvent('gamesConfigUpdated', { detail: normalized }));
     }
     // Broadcast to backend APIs
     const urls = getApiUrls();
+    const token = typeof window !== 'undefined' ? localStorage.getItem('token') : null;
+    const headers = { 'Content-Type': 'application/json' };
+    if (token) headers['Authorization'] = `Bearer ${token}`;
+
     await Promise.allSettled(
       urls.map((base) =>
         fetch(`${base}/games`, {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
+          headers,
           body: JSON.stringify({ games: normalized, list: normalized }),
         })
       )
@@ -676,7 +778,13 @@ export const fetchMasterTopupStatus = async () => {
   const urls = getApiUrls();
   for (const base of urls) {
     try {
-      const res = await fetch(`${base}/master-status?_t=${Date.now()}`);
+      const res = await fetch(`${base}/master-status?_t=${Date.now()}`, {
+        cache: 'no-store',
+        headers: {
+          'Cache-Control': 'no-cache, no-store, must-revalidate',
+          'Pragma': 'no-cache'
+        }
+      });
       if (res.ok) {
         const data = await res.json();
         if (data?.success && data.masterStatus) {
@@ -703,13 +811,17 @@ export const saveMasterTopupStatus = async (statusData) => {
       window.dispatchEvent(new Event('gamesConfigUpdated'));
       window.dispatchEvent(new CustomEvent('masterTopupStatusUpdated', { detail: data }));
     }
-    // Immediately broadcast to all MongoDB Atlas API backends
+    // Immediately broadcast to all API backends
     const urls = getApiUrls();
+    const token = typeof window !== 'undefined' ? localStorage.getItem('token') : null;
+    const headers = { 'Content-Type': 'application/json' };
+    if (token) headers['Authorization'] = `Bearer ${token}`;
+
     await Promise.allSettled(
       urls.map((base) =>
         fetch(`${base}/master-status`, {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
+          headers,
           body: JSON.stringify(data),
         })
       )

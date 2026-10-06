@@ -253,6 +253,14 @@ const GameSelection = () => {
     syncCloudData();
     const interval = setInterval(syncCloudData, 3000);
 
+    const handleVisibility = () => {
+      if (document.visibilityState === 'visible') {
+        syncCloudData();
+      }
+    };
+    document.addEventListener('visibilitychange', handleVisibility);
+    window.addEventListener('focus', syncCloudData);
+
     const handleStorageChange = () => {
       const stored = getStoredGames();
       if (stored && stored.length > 0) {
@@ -267,6 +275,8 @@ const GameSelection = () => {
 
     return () => {
       clearInterval(interval);
+      document.removeEventListener('visibilitychange', handleVisibility);
+      window.removeEventListener('focus', syncCloudData);
       window.removeEventListener('storage', handleStorageChange);
       window.removeEventListener('gamesConfigUpdated', handleStorageChange);
       window.removeEventListener('masterTopupStatusUpdated', handleStorageChange);
