@@ -251,6 +251,7 @@ const PRICING_GAMES = [
     if (p.includes('/setup') || p.includes('/provider')) return 'provider';
     if (p.includes('/pricing')) return 'pricing';
     if (p.includes('/games')) return 'games';
+    if (p.includes('/profile') || p.includes('/brand')) return 'profile';
     if (p.includes('/financials')) return 'financials';
     return 'pending';
   };
@@ -262,6 +263,7 @@ const PRICING_GAMES = [
     else if (p.includes('/setup') || p.includes('/provider')) setActiveTab('provider');
     else if (p.includes('/pricing')) setActiveTab('pricing');
     else if (p.includes('/games')) setActiveTab('games');
+    else if (p.includes('/profile') || p.includes('/brand')) setActiveTab('profile');
     else if (p.includes('/financials')) setActiveTab('financials');
   }, [location.pathname]);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
@@ -271,7 +273,7 @@ const PRICING_GAMES = [
   const navDropdownRef = useRef(null);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
-  const [autoRefresh, setAutoRefresh] = useState(true);
+  const [autoRefresh, setAutoRefresh] = useState(false);
   const [lastUpdated, setLastUpdated] = useState(new Date());
 
   // Data Store
@@ -1052,13 +1054,14 @@ const PRICING_GAMES = [
     });
   }, [loadData]);
 
-  // Real-Time Auto-Refresh interval (4s live background polling)
+  // Real-Time Auto-Refresh disabled: only refreshes when admin clicks the Refresh button
   useEffect(() => {
+    if (!autoRefresh) return;
     const interval = setInterval(() => {
       loadData(true);
-    }, 4000);
+    }, 10000);
     return () => clearInterval(interval);
-  }, [loadData]);
+  }, [autoRefresh, loadData]);
 
   // Click outside & Escape key listener for Navigation Dropdown
   useEffect(() => {
@@ -2209,6 +2212,14 @@ const PRICING_GAMES = [
       desc: 'Change game images, upload 5v5 logos, manage customer selection',
     },
     {
+      id: 'profile',
+      label: 'Profile Information',
+      icon: '🏪',
+      categoryId: 'catalog',
+      category: 'Store & Catalog',
+      desc: 'Store brand identity, logo, tagline, store badges and profile information',
+    },
+    {
       id: 'pricing',
       label: 'Diamond Packages',
       icon: '💎',
@@ -2615,7 +2626,7 @@ const PRICING_GAMES = [
                 </div>
                 <div>
                   <span className="text-sm font-black text-white block">ADMIN HUB</span>
-                  <span className="text-[10px] text-amber-400 font-bold">14 SYSTEM MODULES</span>
+                  <span className="text-[10px] text-amber-400 font-bold">{menuTabs.length} SYSTEM MODULES</span>
                 </div>
               </div>
               <button
@@ -2769,11 +2780,11 @@ const PRICING_GAMES = [
                 showToast('info', '🔄 Syncing live admin data...');
               }}
               disabled={refreshing}
-              className="px-2.5 py-1.5 rounded-xl bg-slate-800/80 hover:bg-slate-700 text-slate-300 hover:text-white border border-slate-700/80 text-[11px] font-bold transition-all flex items-center gap-1 active:scale-95 cursor-pointer disabled:opacity-50"
-              title="Refresh live data"
+              className="px-2.5 py-1.5 rounded-xl bg-slate-800/80 hover:bg-slate-700 text-slate-300 hover:text-white border border-slate-700/80 text-[11px] font-bold transition-all flex items-center gap-1.5 active:scale-95 cursor-pointer disabled:opacity-50"
+              title="Click to refresh live data"
             >
               <span className={refreshing ? 'animate-spin' : ''}>🔄</span>
-              <span className="hidden lg:inline">{refreshing ? 'Syncing...' : 'Refresh'}</span>
+              <span>{refreshing ? 'Syncing...' : 'Refresh'}</span>
             </button>
 
             {/* Logout button (Desktop) */}
@@ -2816,19 +2827,11 @@ const PRICING_GAMES = [
                   <span>🎮</span> Games & Logos Customizer
                 </h2>
                 <p className="text-xs sm:text-sm text-slate-400 mt-1">
-                  Change store logo, game icons, manage store game selection, and configure customer routes.
+                  Change game icons, manage store game selection, and configure customer routes.
                 </p>
               </div>
 
               <div className="flex items-center gap-2 sm:gap-3 flex-wrap">
-                <button
-                  type="button"
-                  onClick={handleOpenStoreLogoModal}
-                  className="px-4 py-2.5 rounded-xl bg-gradient-to-r from-amber-500 to-yellow-400 text-slate-950 font-black text-xs sm:text-sm shadow-glow-gold hover:scale-105 transition-all flex items-center gap-2"
-                >
-                  <span>🎨</span>
-                  <span>Change Store Logo</span>
-                </button>
                 <button
                   type="button"
                   onClick={handleResetGames}
@@ -2844,55 +2847,6 @@ const PRICING_GAMES = [
                 >
                   <span>➕</span>
                   <span>Add New Game</span>
-                </button>
-              </div>
-            </div>
-
-            {/* Store Branding Banner Card */}
-            <div className="p-4 sm:p-5 rounded-2xl bg-gradient-to-r from-dark-card via-dark-card to-slate-900 border border-amber-500/30 flex flex-col md:flex-row md:items-center justify-between gap-4 shadow-xl">
-              <div className="flex items-center gap-3.5">
-                <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-amber-400 to-yellow-300 p-[2px] shadow-glow-gold shrink-0 overflow-hidden">
-                  <div className="w-full h-full bg-slate-950 rounded-[14px] flex items-center justify-center overflow-hidden">
-                    {branding.logoType === 'image' && branding.logoImage ? (
-                      <img
-                        src={branding.logoImage}
-                        alt={branding.storeName}
-                        className="w-full h-full object-cover"
-                      />
-                    ) : (
-                      <span className="text-2xl">{branding.logoEmoji || '💎'}</span>
-                    )}
-                  </div>
-                </div>
-                <div>
-                  <div className="flex items-center gap-2 flex-wrap">
-                    <span className="text-xs text-amber-400 font-bold uppercase tracking-wider">
-                      Active Store Brand:
-                    </span>
-                    <span className="font-black text-white text-base sm:text-lg">
-                      {branding.storeName || 'MLBB TOPUP'}
-                    </span>
-                    {branding.badgeText && (
-                      <span className="bg-cyan-500/20 text-cyan-300 border border-cyan-500/40 text-[10px] font-black px-2 py-0.5 rounded-full uppercase">
-                        {branding.badgeText}
-                      </span>
-                    )}
-                  </div>
-                  <p className="text-xs text-slate-400 mt-0.5">
-                    Tagline: <strong className="text-slate-200">{branding.tagline || 'Official Diamond Hub'}</strong>
-                    {' '}• Displays on Customer Storefront & Admin Navbar.
-                  </p>
-                </div>
-              </div>
-
-              <div className="flex items-center gap-2 shrink-0">
-                <button
-                  type="button"
-                  onClick={handleOpenStoreLogoModal}
-                  className="px-4 py-2 rounded-xl bg-amber-500/20 hover:bg-amber-500/30 text-amber-300 border border-amber-500/40 text-xs font-bold transition-all flex items-center gap-1.5"
-                >
-                  <span>✏️</span>
-                  <span>Edit Logo & Brand</span>
                 </button>
               </div>
             </div>
@@ -3662,6 +3616,414 @@ const PRICING_GAMES = [
         )}
 
         {/* ========================================================= */}
+        {/* TAB: PROFILE INFORMATION & STORE BRANDING */}
+        {/* ========================================================= */}
+        {!loading && activeTab === 'profile' && (
+          <div className="space-y-6 animate-fadeIn">
+            {/* Header */}
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+              <div>
+                <h2 className="text-2xl sm:text-3xl font-black text-white flex items-center gap-2">
+                  <span>🏪</span> Profile Information & Store Brand
+                </h2>
+                <p className="text-xs sm:text-sm text-slate-400 mt-1">
+                  Manage your store brand identity, logo, tagline, trust badges, and administrator contact credentials.
+                </p>
+              </div>
+
+              <div className="flex items-center gap-2 sm:gap-3 flex-wrap">
+                <button
+                  type="button"
+                  onClick={handleResetStoreBranding}
+                  className="btn btn-secondary text-xs sm:text-sm py-2.5 px-3.5 flex items-center gap-2"
+                >
+                  <span>🔄</span>
+                  <span>Reset Defaults</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={handleOpenStoreLogoModal}
+                  className="btn btn-gold text-xs sm:text-sm py-2.5 px-4 font-black flex items-center gap-2 shadow-lg shadow-amber-500/20"
+                >
+                  <span>✏️</span>
+                  <span>Edit in Modal</span>
+                </button>
+              </div>
+            </div>
+
+            {/* Active Store Brand Live Hero Card */}
+            <div className="p-5 sm:p-6 rounded-3xl bg-gradient-to-r from-dark-card via-slate-900 to-[#0A101D] border border-amber-500/40 flex flex-col lg:flex-row items-start lg:items-center justify-between gap-6 shadow-2xl relative overflow-hidden">
+              <div className="absolute top-0 right-0 w-80 h-80 bg-amber-500/5 rounded-full blur-3xl pointer-events-none" />
+              <div className="flex items-center gap-4 sm:gap-5 relative z-10">
+                <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-3xl bg-gradient-to-br from-amber-400 via-yellow-300 to-amber-600 p-[2px] shadow-glow-gold shrink-0 overflow-hidden">
+                  <div className="w-full h-full bg-slate-950 rounded-[22px] flex items-center justify-center overflow-hidden">
+                    {branding.logoType === 'image' && branding.logoImage ? (
+                      <img
+                        src={branding.logoImage}
+                        alt={branding.storeName}
+                        className="w-full h-full object-cover"
+                      />
+                    ) : (
+                      <span className="text-3xl sm:text-4xl">{branding.logoEmoji || '💎'}</span>
+                    )}
+                  </div>
+                </div>
+
+                <div className="space-y-1">
+                  <div className="flex items-center gap-2.5 flex-wrap">
+                    <span className="text-[11px] font-black text-amber-400 uppercase tracking-widest bg-amber-500/10 border border-amber-500/30 px-2.5 py-0.5 rounded-full">
+                      ACTIVE STORE BRAND
+                    </span>
+                    <span className="text-xl sm:text-2xl font-black text-white">
+                      {branding.storeName || 'MLBB TOPUP'}
+                    </span>
+                    {branding.badgeText && (
+                      <span className="bg-gradient-to-r from-cyan-500 to-blue-500 text-black text-[10px] font-black px-2.5 py-0.5 rounded-full uppercase shadow-sm">
+                        {branding.badgeText}
+                      </span>
+                    )}
+                  </div>
+                  <p className="text-xs sm:text-sm text-slate-300 font-medium">
+                    Tagline: <strong className="text-amber-200">{branding.tagline || 'Official Diamond Hub'}</strong>
+                  </p>
+                  <p className="text-[11px] text-slate-400 flex items-center gap-2 pt-0.5">
+                    <span className="inline-block w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
+                    <span>Synchronized across Customer Storefront, Mobile App, and Admin Navigation Bar.</span>
+                  </p>
+                </div>
+              </div>
+
+              <div className="flex items-center gap-2.5 shrink-0 relative z-10 w-full sm:w-auto">
+                <button
+                  type="button"
+                  onClick={handleOpenStoreLogoModal}
+                  className="w-full sm:w-auto px-4 py-2.5 rounded-2xl bg-amber-500/20 hover:bg-amber-500/30 text-amber-300 border border-amber-500/40 text-xs font-bold transition-all flex items-center justify-center gap-2 shadow-sm"
+                >
+                  <span>🎨</span>
+                  <span>Change Logo / Preset</span>
+                </button>
+              </div>
+            </div>
+
+            {/* Profile Information Configuration & Preview Grid */}
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+              {/* Left 2 Columns: Editable Brand Information Form */}
+              <div className="lg:col-span-2 space-y-6">
+                <div className="p-5 sm:p-6 rounded-3xl bg-[#0B0F19] border border-slate-800 shadow-xl space-y-5">
+                  <div className="border-b border-slate-800 pb-3 flex items-center justify-between">
+                    <h3 className="text-base font-black text-white flex items-center gap-2">
+                      <span>🏷️</span> Store Identity & Details
+                    </h3>
+                    <span className="text-[10px] text-slate-400 bg-slate-800 px-2.5 py-1 rounded-full font-bold">
+                      Public Identity
+                    </span>
+                  </div>
+
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    {/* Store Name */}
+                    <div className="space-y-1.5">
+                      <label className="text-[11px] font-bold text-slate-400 uppercase tracking-wider block">
+                        Store Name
+                      </label>
+                      <input
+                        type="text"
+                        value={storeBrandingForm.storeName}
+                        onChange={(e) => setStoreBrandingForm(prev => ({ ...prev, storeName: e.target.value }))}
+                        placeholder="e.g. Tin-Topup"
+                        className="w-full px-3.5 py-2.5 rounded-xl bg-slate-900 border border-slate-700 text-white font-bold text-sm focus:border-amber-400 focus:outline-none transition-all"
+                      />
+                      <span className="text-[10px] text-slate-500 block">Primary brand name shown on header &amp; invoices</span>
+                    </div>
+
+                    {/* Badge / Highlight Tag */}
+                    <div className="space-y-1.5">
+                      <label className="text-[11px] font-bold text-slate-400 uppercase tracking-wider block">
+                        Trust Badge Tag
+                      </label>
+                      <input
+                        type="text"
+                        value={storeBrandingForm.badgeText}
+                        onChange={(e) => setStoreBrandingForm(prev => ({ ...prev, badgeText: e.target.value }))}
+                        placeholder="e.g. PRO, VIP, OFFICIAL"
+                        className="w-full px-3.5 py-2.5 rounded-xl bg-slate-900 border border-slate-700 text-white font-bold text-sm focus:border-amber-400 focus:outline-none transition-all"
+                      />
+                      <span className="text-[10px] text-slate-500 block">Small badge next to store name (e.g. PRO)</span>
+                    </div>
+
+                    {/* Tagline */}
+                    <div className="sm:col-span-2 space-y-1.5">
+                      <label className="text-[11px] font-bold text-slate-400 uppercase tracking-wider block">
+                        Brand Tagline / Slogan
+                      </label>
+                      <input
+                        type="text"
+                        value={storeBrandingForm.tagline}
+                        onChange={(e) => setStoreBrandingForm(prev => ({ ...prev, tagline: e.target.value }))}
+                        placeholder="e.g. Official Diamond Hub"
+                        className="w-full px-3.5 py-2.5 rounded-xl bg-slate-900 border border-slate-700 text-white text-sm focus:border-amber-400 focus:outline-none transition-all"
+                      />
+                      <span className="text-[10px] text-slate-500 block">Sub-headline displayed underneath the logo</span>
+                    </div>
+
+                    {/* Facebook Page */}
+                    <div className="space-y-1.5">
+                      <label className="text-[11px] font-bold text-slate-400 uppercase tracking-wider block flex items-center gap-1.5">
+                        <span>📘</span> Facebook Support Page
+                      </label>
+                      <input
+                        type="text"
+                        value={storeBrandingForm.facebookPage || ''}
+                        onChange={(e) => setStoreBrandingForm(prev => ({ ...prev, facebookPage: e.target.value }))}
+                        placeholder="https://facebook.com/..."
+                        className="w-full px-3.5 py-2.5 rounded-xl bg-slate-900 border border-slate-700 text-white text-xs focus:border-blue-400 focus:outline-none transition-all"
+                      />
+                    </div>
+
+                    {/* Telegram Username */}
+                    <div className="space-y-1.5">
+                      <label className="text-[11px] font-bold text-slate-400 uppercase tracking-wider block flex items-center gap-1.5">
+                        <span>✈️</span> Telegram Channel / Support
+                      </label>
+                      <input
+                        type="text"
+                        value={storeBrandingForm.telegramUsername || ''}
+                        onChange={(e) => setStoreBrandingForm(prev => ({ ...prev, telegramUsername: e.target.value, telegramUrl: e.target.value.startsWith('http') ? e.target.value : `https://t.me/${e.target.value.replace('@', '')}` }))}
+                        placeholder="@Peak_Deth"
+                        className="w-full px-3.5 py-2.5 rounded-xl bg-slate-900 border border-slate-700 text-white text-xs focus:border-cyan-400 focus:outline-none transition-all"
+                      />
+                    </div>
+                  </div>
+
+                  {/* Logo Source Type Toggle */}
+                  <div className="pt-2 border-t border-slate-800/80 space-y-3">
+                    <label className="text-[11px] font-bold text-slate-400 uppercase tracking-wider block">
+                      Logo Format Selection
+                    </label>
+                    <div className="grid grid-cols-2 gap-3">
+                      <button
+                        type="button"
+                        onClick={() => setStoreBrandingForm(prev => ({ ...prev, logoType: 'image' }))}
+                        className={`p-3 rounded-2xl border text-left flex items-center gap-3 transition-all cursor-pointer ${
+                          storeBrandingForm.logoType === 'image'
+                            ? 'bg-amber-500/15 border-amber-500/60 text-white ring-1 ring-amber-500/30'
+                            : 'bg-slate-900/60 border-slate-800 text-slate-400 hover:text-white'
+                        }`}
+                      >
+                        <span className="text-2xl">🖼️</span>
+                        <div>
+                          <p className="text-xs font-black">Image Artwork</p>
+                          <p className="text-[10px] text-slate-500">Upload or URL file</p>
+                        </div>
+                      </button>
+
+                      <button
+                        type="button"
+                        onClick={() => setStoreBrandingForm(prev => ({ ...prev, logoType: 'emoji' }))}
+                        className={`p-3 rounded-2xl border text-left flex items-center gap-3 transition-all cursor-pointer ${
+                          storeBrandingForm.logoType === 'emoji'
+                            ? 'bg-amber-500/15 border-amber-500/60 text-white ring-1 ring-amber-500/30'
+                            : 'bg-slate-900/60 border-slate-800 text-slate-400 hover:text-white'
+                        }`}
+                      >
+                        <span className="text-2xl">💎</span>
+                        <div>
+                          <p className="text-xs font-black">Gaming Emoji</p>
+                          <p className="text-[10px] text-slate-500">Pick from presets</p>
+                        </div>
+                      </button>
+                    </div>
+
+                    {storeBrandingForm.logoType === 'image' ? (
+                      <div className="p-3.5 rounded-2xl bg-slate-900/80 border border-slate-800 space-y-3">
+                        <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">
+                          Logo Image URL / Upload
+                        </label>
+                        <div className="flex gap-2">
+                          <input
+                            type="text"
+                            value={storeBrandingForm.logoImage || ''}
+                            onChange={(e) => setStoreBrandingForm(prev => ({ ...prev, logoImage: e.target.value }))}
+                            placeholder="/tin-logo.png or https://..."
+                            className="flex-1 px-3.5 py-2 rounded-xl bg-slate-950 border border-slate-700 text-white text-xs font-mono focus:border-amber-400 focus:outline-none"
+                          />
+                          <button
+                            type="button"
+                            onClick={() => logoFileInputRef.current?.click()}
+                            disabled={isUploadingLogo}
+                            className="px-3.5 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 border border-slate-700 text-white text-xs font-bold transition-all flex items-center gap-1.5 shrink-0 cursor-pointer disabled:opacity-50"
+                          >
+                            <span>{isUploadingLogo ? '⏳' : '📤'}</span>
+                            <span>{isUploadingLogo ? 'Uploading...' : 'Upload'}</span>
+                          </button>
+                        </div>
+
+                        {/* Presets */}
+                        <div className="flex items-center gap-2 pt-1 flex-wrap">
+                          <span className="text-[10px] text-slate-500 font-bold">Quick Presets:</span>
+                          {[
+                            ['/tin-logo.png', 'Tin Logo'],
+                            ['/Logo-Website.PNG', 'Website Logo'],
+                            ['/logo.png', 'Default Logo']
+                          ].map(([url, label]) => (
+                            <button
+                              key={url}
+                              type="button"
+                              onClick={() => setStoreBrandingForm(prev => ({ ...prev, logoImage: url, logoType: 'image' }))}
+                              className={`text-[10px] px-2 py-0.5 rounded-lg border font-bold transition-all ${
+                                storeBrandingForm.logoImage === url
+                                  ? 'bg-amber-500/20 border-amber-500/40 text-amber-300'
+                                  : 'bg-slate-800/60 border-slate-700 text-slate-400 hover:text-white'
+                              }`}
+                            >
+                              {label}
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+                    ) : (
+                      <div className="p-3.5 rounded-2xl bg-slate-900/80 border border-slate-800 space-y-2">
+                        <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">
+                          Pick Gaming Emoji Preset
+                        </label>
+                        <div className="flex items-center gap-2 flex-wrap">
+                          {['💎', '👑', '⚡', '🎮', '🏆', '🔥', '⭐', '🚀', '🗡️', '🛡️'].map((em) => (
+                            <button
+                              key={em}
+                              type="button"
+                              onClick={() => setStoreBrandingForm(prev => ({ ...prev, logoEmoji: em, logoType: 'emoji' }))}
+                              className={`w-10 h-10 rounded-xl text-xl flex items-center justify-center transition-all cursor-pointer border ${
+                                storeBrandingForm.logoEmoji === em
+                                  ? 'bg-amber-400 text-black border-amber-300 scale-110 shadow-glow-gold'
+                                  : 'bg-slate-800/60 border-slate-700 text-white hover:bg-slate-700'
+                              }`}
+                            >
+                              {em}
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Save Action */}
+                  <div className="pt-3 border-t border-slate-800 flex items-center justify-between gap-3">
+                    <p className="text-[11px] text-slate-500">Changes apply immediately across all client pages.</p>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        const updated = updateBranding(storeBrandingForm);
+                        showToast('success', `✅ Profile updated to "${updated.storeName}"!`);
+                      }}
+                      className="btn btn-gold text-xs py-2.5 px-6 font-black flex items-center gap-2 shadow-glow-gold"
+                    >
+                      <span>💾</span>
+                      <span>Save Profile Changes</span>
+                    </button>
+                  </div>
+                </div>
+              </div>
+
+              {/* Right Column: Live Storefront Preview & Admin Account Card */}
+              <div className="space-y-6">
+                {/* Live Navbar Preview */}
+                <div className="p-5 rounded-3xl bg-[#0B0F19] border border-slate-800 shadow-xl space-y-3.5">
+                  <div className="flex items-center justify-between border-b border-slate-800 pb-2.5">
+                    <span className="text-xs font-black text-white flex items-center gap-2">
+                      <span>👁️</span> Live Storefront Preview
+                    </span>
+                    <span className="text-[9px] text-emerald-400 font-bold bg-emerald-500/10 border border-emerald-500/20 px-2 py-0.5 rounded-full">
+                      Real-Time
+                    </span>
+                  </div>
+
+                  <p className="text-[11px] text-slate-400">
+                    Here is how customers see your brand in the storefront navigation bar:
+                  </p>
+
+                  {/* Simulated Navbar Brand */}
+                  <div className="p-4 rounded-2xl bg-slate-950 border border-slate-800/90 shadow-inner flex items-center gap-3">
+                    <div className="w-12 h-12 rounded-2xl bg-gradient-to-tr from-amber-500 to-yellow-300 p-[2px] shadow-glow-gold shrink-0 overflow-hidden">
+                      <div className="w-full h-full bg-slate-950 rounded-[14px] flex items-center justify-center overflow-hidden">
+                        {storeBrandingForm.logoType === 'image' && storeBrandingForm.logoImage ? (
+                          <img
+                            src={storeBrandingForm.logoImage}
+                            alt="Logo"
+                            className="w-full h-full object-cover"
+                          />
+                        ) : (
+                          <span className="text-xl">{storeBrandingForm.logoEmoji || '💎'}</span>
+                        )}
+                      </div>
+                    </div>
+                    <div className="min-w-0">
+                      <div className="flex items-center gap-1.5 flex-wrap">
+                        <span className="font-black text-white text-sm tracking-tight truncate">
+                          {storeBrandingForm.storeName || 'MLBB TOPUP'}
+                        </span>
+                        {storeBrandingForm.badgeText && (
+                          <span className="px-1.5 py-0.2 rounded-full text-[9px] font-black bg-cyan-500/20 text-cyan-300 border border-cyan-500/30">
+                            {storeBrandingForm.badgeText}
+                          </span>
+                        )}
+                      </div>
+                      <span className="text-[10px] text-slate-400 truncate block">
+                        {storeBrandingForm.tagline || 'Official Diamond Hub'}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Logged-In Administrator Profile Card */}
+                <div className="p-5 rounded-3xl bg-[#0B0F19] border border-slate-800 shadow-xl space-y-4">
+                  <div className="flex items-center justify-between border-b border-slate-800 pb-2.5">
+                    <span className="text-xs font-black text-white flex items-center gap-2">
+                      <span>👤</span> Administrator Profile
+                    </span>
+                    <span className="text-[9px] text-amber-300 font-bold bg-amber-500/10 border border-amber-500/30 px-2 py-0.5 rounded-full">
+                      Super Admin
+                    </span>
+                  </div>
+
+                  <div className="flex items-center gap-3.5">
+                    <div className="w-12 h-12 rounded-2xl bg-gradient-to-tr from-cyan-500 to-blue-600 p-[2px] shadow-md shrink-0">
+                      <div className="w-full h-full bg-slate-950 rounded-[14px] flex items-center justify-center text-xl">
+                        👑
+                      </div>
+                    </div>
+                    <div className="min-w-0">
+                      <p className="text-sm font-black text-white truncate">
+                        {user?.name || 'Peak Deth'}
+                      </p>
+                      <p className="text-[11px] text-slate-400 font-mono truncate">
+                        {user?.email || 'pudeth@example.com'}
+                      </p>
+                      <span className="inline-block px-2 py-0.5 mt-1 rounded-md text-[9px] font-bold bg-emerald-500/10 border border-emerald-500/20 text-emerald-300">
+                        ● Authorized Administrator
+                      </span>
+                    </div>
+                  </div>
+
+                  <div className="space-y-1.5 pt-2 border-t border-slate-800 text-[11px]">
+                    <div className="flex justify-between text-slate-400">
+                      <span>Account Role:</span>
+                      <span className="text-white font-bold">{user?.role || 'Admin'}</span>
+                    </div>
+                    <div className="flex justify-between text-slate-400">
+                      <span>Merchant Code:</span>
+                      <span className="text-amber-300 font-mono font-bold">tintopup</span>
+                    </div>
+                    <div className="flex justify-between text-slate-400">
+                      <span>Platform Version:</span>
+                      <span className="text-slate-300 font-mono">v2.5 (Enterprise)</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* ========================================================= */}
         {/* TAB 2: DIAMOND PACKAGES & MULTI-TIER PRICING (WITH GAME & EVENT SELECTOR) */}
         {/* ========================================================= */}
         {!loading && activeTab === 'pricing' && (
@@ -4189,39 +4551,16 @@ const PRICING_GAMES = [
 
           return (
             <div className="space-y-6 animate-fadeIn">
-              {/* Header Ribbon */}
-              <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4 p-5 sm:p-6 rounded-3xl bg-gradient-to-r from-slate-900/90 via-slate-900/60 to-dark-card/90 border border-slate-800/80 shadow-2xl backdrop-blur-xl relative overflow-hidden">
-                <div className="absolute top-0 right-0 w-96 h-96 bg-cyan-500/5 rounded-full blur-3xl pointer-events-none" />
-                <div className="space-y-1 relative z-10">
-                  <div className="flex items-center gap-2.5 flex-wrap">
-                    <span className="p-2 rounded-2xl bg-cyan-500/10 border border-cyan-500/20 text-cyan-400 text-xl shadow-inner">
-                      🏦
-                    </span>
-                    <h2 className="text-xl sm:text-2xl lg:text-3xl font-black text-white tracking-tight">
-                      Supplier API Gateways & Wholesale Cockpit
-                    </h2>
-                    <span className="px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider bg-cyan-500/15 text-cyan-300 border border-cyan-500/30">
-                      LIVE ROUTING
-                    </span>
-                  </div>
-                  <p className="text-xs sm:text-sm text-slate-400 max-w-3xl leading-relaxed">
-                    Automate order fulfillment with 1-click gateway switching across <span className="text-slate-200 font-semibold">Khmer TopUp, FazerCards, Smile One, LapakGaming, UniPin, and Custom REST</span> APIs.
-                  </p>
-                </div>
-
-                <div className="flex items-center gap-2.5 shrink-0 relative z-10">
-                  <button
-                    type="button"
-                    onClick={handleOpenAddProviderModal}
-                    className="px-4 py-2.5 rounded-2xl bg-gradient-to-r from-emerald-500 via-teal-400 to-cyan-500 hover:from-emerald-400 hover:via-teal-300 hover:to-cyan-400 text-slate-950 font-black text-xs shadow-lg shadow-emerald-500/25 flex items-center gap-2 transition-all transform hover:scale-105 cursor-pointer"
-                  >
-                    <span className="text-sm">➕</span>
-                    <span>Add New Provider</span>
-                    <span className="px-2 py-0.5 rounded-full bg-black/25 text-slate-900 font-black text-[10px]">
-                      {allProvidersList.length} Active
-                    </span>
-                  </button>
-                </div>
+              {/* Header Action Button */}
+              <div className="flex items-center justify-end">
+                <button
+                  type="button"
+                  onClick={handleOpenAddProviderModal}
+                  className="px-4 py-2.5 rounded-2xl bg-gradient-to-r from-emerald-500 via-teal-400 to-cyan-500 hover:from-emerald-400 hover:via-teal-300 hover:to-cyan-400 text-slate-950 font-black text-xs shadow-lg shadow-emerald-500/25 flex items-center gap-2 transition-all transform hover:scale-105 cursor-pointer"
+                >
+                  <span className="text-sm">➕</span>
+                  <span>Add New Provider</span>
+                </button>
               </div>
 
               {/* Quick Telemetry & Liquidity Ribbon */}
