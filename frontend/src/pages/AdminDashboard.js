@@ -2683,10 +2683,10 @@ const PRICING_GAMES = [
                         key={tab.id}
                         type="button"
                         onClick={() => setActiveTab(tab.id)}
-                        className={`w-full text-left transition-all duration-200 cursor-pointer flex items-center rounded-xl relative group ${
+                        className={`w-full text-left transition-all duration-200 ease-out cursor-pointer flex items-center rounded-xl relative group active:scale-[0.98] ${
                           sidebarCollapsed
-                            ? 'justify-center p-2.5 my-1'
-                            : 'px-3 py-2.5 gap-3 my-0.5'
+                            ? 'justify-center p-2.5 my-1 hover:scale-105'
+                            : 'px-3 py-2.5 gap-3 my-0.5 hover:translate-x-1'
                         } ${
                           isSelected
                             ? 'bg-gradient-to-r from-amber-500/15 via-amber-500/5 to-transparent text-white font-black border border-amber-500/30 shadow-[0_0_20px_rgba(245,158,11,0.06)]'
@@ -2818,195 +2818,209 @@ const PRICING_GAMES = [
       {/* ========================================================= */}
       {/* MOBILE SLIDING DRAWER NAVIGATION OVERLAY */}
       {/* ========================================================= */}
-      {mobileMenuOpen && (
-        <div className="fixed inset-0 z-[70] flex md:hidden animate-fadeIn">
-          {/* Backdrop Overlay */}
-          <div
-            className="fixed inset-0 bg-black/80 backdrop-blur-sm"
-            onClick={() => setMobileMenuOpen(false)}
-          />
+      <div
+        className={`fixed inset-0 z-[70] flex md:hidden transition-all duration-300 ease-in-out ${
+          mobileMenuOpen ? 'opacity-100 pointer-events-auto visible' : 'opacity-0 pointer-events-none invisible'
+        }`}
+      >
+        {/* Backdrop Overlay with smooth blur and fade */}
+        <div
+          className={`fixed inset-0 bg-black/80 backdrop-blur-sm transition-opacity duration-300 ease-in-out ${
+            mobileMenuOpen ? 'opacity-100' : 'opacity-0'
+          }`}
+          onClick={() => setMobileMenuOpen(false)}
+        />
 
-          {/* Drawer Content */}
-          <div className="relative w-80 max-w-[85vw] h-full bg-[#0A0E17] border-r border-slate-800 p-4 pb-6 flex flex-col z-10 animate-slideRight">
-            {/* Drawer Header */}
-            <div className="flex items-center justify-between pb-3 border-b border-slate-800 shrink-0">
-              <div className="flex items-center gap-2.5 min-w-0">
-                <div className="w-9 h-9 rounded-xl bg-gradient-to-tr from-amber-500 to-yellow-300 p-[2px] shadow-glow-gold flex items-center justify-center shrink-0">
-                  <div className="w-full h-full bg-slate-950 rounded-[10px] flex items-center justify-center overflow-hidden">
-                    {branding.logoType === 'image' && branding.logoImage ? (
-                      <img src={branding.logoImage} alt="Logo" className="w-full h-full object-cover" />
-                    ) : (
-                      <span className="text-base select-none">{branding.logoEmoji || '💎'}</span>
-                    )}
-                  </div>
-                </div>
-                <div className="min-w-0">
-                  <div className="flex items-center gap-1.5">
-                    <span className="text-sm font-black text-white truncate">{branding.storeName || 'MLBB TOPUP'}</span>
-                    <span className="bg-amber-400 text-black text-[9px] font-black px-1.5 py-0.5 rounded-md uppercase shrink-0">
-                      {branding.badgeText || 'PRO'}
-                    </span>
-                  </div>
-                  <span className="text-[10px] text-amber-400 font-bold block truncate">{menuTabs.length} SYSTEM MODULES</span>
+        {/* Drawer Content with smooth slide-in / slide-out spring easing */}
+        <div
+          className={`relative w-80 max-w-[85vw] h-full bg-[#0A0E17]/95 backdrop-blur-2xl border-r border-amber-500/20 p-4 pb-6 flex flex-col z-10 shadow-[25px_0_60px_rgba(0,0,0,0.9)] transition-transform duration-300 ease-[cubic-bezier(0.16,1,0.3,1)] ${
+            mobileMenuOpen ? 'translate-x-0' : '-translate-x-full'
+          }`}
+        >
+          {/* Drawer Header */}
+          <div className="flex items-center justify-between pb-3 border-b border-slate-800 shrink-0">
+            <div className="flex items-center gap-2.5 min-w-0">
+              <div className="w-9 h-9 rounded-xl bg-gradient-to-tr from-amber-500 to-yellow-300 p-[2px] shadow-glow-gold flex items-center justify-center shrink-0">
+                <div className="w-full h-full bg-slate-950 rounded-[10px] flex items-center justify-center overflow-hidden">
+                  {branding.logoType === 'image' && branding.logoImage ? (
+                    <img src={branding.logoImage} alt="Logo" className="w-full h-full object-cover" />
+                  ) : (
+                    <span className="text-base select-none">{branding.logoEmoji || '💎'}</span>
+                  )}
                 </div>
               </div>
-              <button
-                type="button"
-                onClick={() => setMobileMenuOpen(false)}
-                className="w-8 h-8 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 flex items-center justify-center text-sm font-bold cursor-pointer shrink-0 ml-2"
-              >
-                ✕
-              </button>
+              <div className="min-w-0">
+                <div className="flex items-center gap-1.5">
+                  <span className="text-sm font-black text-white truncate">{branding.storeName || 'MLBB TOPUP'}</span>
+                  <span className="bg-amber-400 text-black text-[9px] font-black px-1.5 py-0.5 rounded-md uppercase shrink-0">
+                    {branding.badgeText || 'PRO'}
+                  </span>
+                </div>
+                <span className="text-[10px] text-amber-400 font-bold block truncate">{menuTabs.length} SYSTEM MODULES</span>
+              </div>
             </div>
+            <button
+              type="button"
+              onClick={() => setMobileMenuOpen(false)}
+              className="w-8 h-8 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white flex items-center justify-center text-sm font-bold cursor-pointer shrink-0 ml-2 transition-all duration-200 active:scale-90 hover:rotate-90 shadow-sm"
+              aria-label="Close navigation"
+            >
+              ✕
+            </button>
+          </div>
 
-            {/* Mobile Provider Status Ribbon */}
-            <div className="mt-2.5 p-2 rounded-xl bg-slate-900/90 border border-slate-800 flex items-center justify-between shrink-0">
-              <div className="flex items-center gap-1.5 min-w-0">
-                <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse shrink-0" />
-                <span className="text-[11px] text-slate-400 font-medium">API:</span>
-                <span className="text-[11px] font-bold text-cyan-300 truncate">
-                  {providerSettings.activeProvider === 'FazerCards' ? 'FazerCards' : 'KhmerTopUp'}
-                </span>
-              </div>
-              <span className="text-xs font-black text-amber-300 font-mono">
-                ${(providerSettings.balanceUSD !== undefined ? Number(providerSettings.balanceUSD) : 0.49).toFixed(2)}
+          {/* Mobile Provider Status Ribbon */}
+          <div className="mt-2.5 p-2 rounded-xl bg-slate-900/90 border border-slate-800 flex items-center justify-between shrink-0">
+            <div className="flex items-center gap-1.5 min-w-0">
+              <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse shrink-0" />
+              <span className="text-[11px] text-slate-400 font-medium">API:</span>
+              <span className="text-[11px] font-bold text-cyan-300 truncate">
+                {providerSettings.activeProvider === 'FazerCards' ? 'FazerCards' : 'KhmerTopUp'}
               </span>
             </div>
+            <span className="text-xs font-black text-amber-300 font-mono">
+              ${(providerSettings.balanceUSD !== undefined ? Number(providerSettings.balanceUSD) : 0.49).toFixed(2)}
+            </span>
+          </div>
 
-            {/* Mobile Quick Search Input */}
-            <div className="py-2.5 border-b border-slate-800/80 shrink-0">
-              <div className="flex items-center gap-2 px-2.5 py-1.5 rounded-xl bg-slate-900/90 border border-slate-800 focus-within:border-amber-400/80 focus-within:ring-2 focus-within:ring-amber-500/20 focus-within:bg-[#0C1220] transition-all">
-                <div className="w-6 h-6 rounded-lg bg-amber-500/10 border border-amber-500/25 flex items-center justify-center shrink-0">
-                  <span className="text-[11px] select-none">🔍</span>
-                </div>
-                <input
-                  type="text"
-                  value={navSearchQuery}
-                  onChange={(e) => setNavSearchQuery(e.target.value)}
-                  placeholder="Search modules..."
-                  className="w-full bg-transparent text-xs text-white placeholder-slate-500 focus:outline-none font-medium"
-                />
-                {navSearchQuery ? (
-                  <div className="flex items-center gap-1 shrink-0">
-                    <span className="px-1.5 py-0.5 rounded-md bg-amber-500/15 border border-amber-500/30 text-[9px] font-bold text-amber-300 font-mono">
-                      {filteredNavTabs.length}
-                    </span>
-                    <button
-                      type="button"
-                      onClick={() => setNavSearchQuery('')}
-                      className="w-5 h-5 rounded-md bg-slate-800 text-slate-400 hover:text-white flex items-center justify-center text-[10px] font-bold cursor-pointer"
-                    >
-                      ✕
-                    </button>
-                  </div>
-                ) : null}
+          {/* Mobile Quick Search Input */}
+          <div className="py-2.5 border-b border-slate-800/80 shrink-0">
+            <div className="flex items-center gap-2 px-2.5 py-1.5 rounded-xl bg-slate-900/90 border border-slate-800 focus-within:border-amber-400/80 focus-within:ring-2 focus-within:ring-amber-500/20 focus-within:bg-[#0C1220] transition-all duration-200">
+              <div className="w-6 h-6 rounded-lg bg-amber-500/10 border border-amber-500/25 flex items-center justify-center shrink-0">
+                <span className="text-[11px] select-none">🔍</span>
               </div>
-            </div>
-
-            {/* Mobile Categories & Module Links */}
-            <div className="flex-1 overflow-y-auto overflow-x-hidden py-3 space-y-4 scrollbar-thin scrollbar-thumb-slate-800">
-              {menuCategories.map((cat, idx) => {
-                const tabsInCat = filteredNavTabs.filter((t) => t.categoryId === cat.id);
-                if (tabsInCat.length === 0) return null;
-                return (
-                  <div key={cat.id} className="space-y-1">
-                    <div className={`text-[10px] font-black uppercase tracking-widest text-slate-400 px-2 flex items-center gap-1.5 ${idx > 0 ? 'pt-2.5 border-t border-slate-800/40' : ''}`}>
-                      <span className="text-xs opacity-75">{cat.icon}</span>
-                      <span>{cat.label}</span>
-                    </div>
-                    <div className="space-y-1">
-                      {tabsInCat.map((tab) => {
-                        const isSelected = activeTab === tab.id;
-                        return (
-                          <button
-                            key={tab.id}
-                            type="button"
-                            onClick={() => {
-                              setActiveTab(tab.id);
-                              setMobileMenuOpen(false);
-                            }}
-                            className={`w-full text-left p-2.5 rounded-2xl transition-all flex items-center justify-between border cursor-pointer ${
-                              isSelected
-                                ? 'bg-gradient-to-r from-amber-500/20 via-amber-500/10 to-transparent border-amber-400/60 text-white font-black shadow-[0_0_15px_rgba(245,158,11,0.15)] ring-1 ring-amber-400/30'
-                                : 'bg-slate-900/80 border-slate-800/80 text-slate-300 hover:bg-slate-800 hover:text-white'
-                            }`}
-                          >
-                            <div className="flex items-center gap-3">
-                              <div
-                                className={`w-8 h-8 rounded-xl flex items-center justify-center shrink-0 border ${
-                                  isSelected
-                                    ? 'bg-gradient-to-br from-amber-400/25 via-amber-500/15 to-amber-950/40 border-amber-400/50 shadow-sm'
-                                    : 'bg-slate-800/70 border-slate-700/70'
-                                }`}
-                              >
-                                <span className="text-base select-none drop-shadow-[0_2px_4px_rgba(0,0,0,0.5)]">
-                                  {tab.icon}
-                                </span>
-                              </div>
-                              <span className={`text-xs ${isSelected ? 'font-black text-amber-200' : 'font-bold'}`}>
-                                {tab.label}
-                              </span>
-                            </div>
-                            {tab.count !== undefined && tab.count > 0 && (
-                              <span
-                                className={`px-2 py-0.5 rounded-full text-[9px] font-black shadow-sm ${
-                                  isSelected ? 'bg-amber-400 text-black font-black' : tab.badgeColor
-                                }`}
-                              >
-                                {tab.count}
-                              </span>
-                            )}
-                          </button>
-                        );
-                      })}
-                    </div>
-                  </div>
-                );
-              })}
-
-              {/* Mobile Empty Search Result State */}
-              {filteredNavTabs.length === 0 && (
-                <div className="py-8 px-4 text-center">
-                  <div className="w-10 h-10 rounded-2xl bg-slate-900 border border-slate-800 mx-auto flex items-center justify-center text-sm mb-2 shadow-inner">
-                    🔍
-                  </div>
-                  <p className="text-xs font-bold text-slate-300">No modules found</p>
-                  <p className="text-[11px] text-slate-500 mt-1 max-w-[170px] mx-auto truncate">
-                    No match for &ldquo;{navSearchQuery}&rdquo;
-                  </p>
+              <input
+                type="text"
+                value={navSearchQuery}
+                onChange={(e) => setNavSearchQuery(e.target.value)}
+                placeholder="Search modules..."
+                className="w-full bg-transparent text-xs text-white placeholder-slate-500 focus:outline-none font-medium"
+              />
+              {navSearchQuery ? (
+                <div className="flex items-center gap-1 shrink-0">
+                  <span className="px-1.5 py-0.5 rounded-md bg-amber-500/15 border border-amber-500/30 text-[9px] font-bold text-amber-300 font-mono">
+                    {filteredNavTabs.length}
+                  </span>
                   <button
                     type="button"
                     onClick={() => setNavSearchQuery('')}
-                    className="mt-3 px-3 py-1 rounded-xl bg-amber-500/15 hover:bg-amber-500/25 border border-amber-500/30 text-amber-300 text-[11px] font-bold cursor-pointer transition-all active:scale-95 shadow-sm"
+                    className="w-5 h-5 rounded-md bg-slate-800 text-slate-400 hover:text-white flex items-center justify-center text-[10px] font-bold cursor-pointer transition-all duration-150 active:scale-90"
                   >
-                    Clear Search
+                    ✕
                   </button>
                 </div>
-              )}
+              ) : null}
             </div>
+          </div>
 
-            {/* Mobile Drawer Footer */}
-            <div className="pt-3 border-t border-slate-800 shrink-0">
-              <div className="flex items-center justify-between gap-2">
-                <Link
-                  to="/"
-                  target="_blank"
-                  className="flex-1 py-2 text-center rounded-xl bg-cyan-950/80 text-cyan-300 border border-cyan-500/40 text-xs font-bold"
-                >
-                  🌐 Storefront
-                </Link>
+          {/* Mobile Categories & Module Links */}
+          <div className="flex-1 overflow-y-auto overflow-x-hidden py-3 space-y-4 scrollbar-thin scrollbar-thumb-slate-800">
+            {menuCategories.map((cat, idx) => {
+              const tabsInCat = filteredNavTabs.filter((t) => t.categoryId === cat.id);
+              if (tabsInCat.length === 0) return null;
+              return (
+                <div key={cat.id} className="space-y-1">
+                  <div className={`text-[10px] font-black uppercase tracking-widest text-slate-400 px-2 flex items-center gap-1.5 ${idx > 0 ? 'pt-2.5 border-t border-slate-800/40' : ''}`}>
+                    <span className="text-xs opacity-75">{cat.icon}</span>
+                    <span>{cat.label}</span>
+                  </div>
+                  <div className="space-y-1">
+                    {tabsInCat.map((tab) => {
+                      const isSelected = activeTab === tab.id;
+                      return (
+                        <button
+                          key={tab.id}
+                          type="button"
+                          onClick={() => {
+                            setActiveTab(tab.id);
+                            setMobileMenuOpen(false);
+                          }}
+                          className={`group w-full text-left p-2.5 rounded-2xl flex items-center justify-between border cursor-pointer relative overflow-hidden transition-all duration-200 ease-out active:scale-[0.97] hover:translate-x-1 ${
+                            isSelected
+                              ? 'bg-gradient-to-r from-amber-500/25 via-amber-500/10 to-transparent border-amber-400/60 text-white font-black shadow-[0_0_20px_rgba(245,158,11,0.2)] ring-1 ring-amber-400/40'
+                              : 'bg-slate-900/80 border-slate-800/80 text-slate-300 hover:bg-slate-800/90 hover:border-slate-700/80 hover:text-white'
+                          }`}
+                        >
+                          {/* Active Left Neon Glow Accent Bar */}
+                          {isSelected && (
+                            <span className="absolute left-0 top-2 bottom-2 w-1 rounded-r-full bg-gradient-to-b from-amber-300 via-amber-400 to-amber-500 shadow-[0_0_12px_#f59e0b]" />
+                          )}
+
+                          <div className="flex items-center gap-3">
+                            <div
+                              className={`w-8 h-8 rounded-xl flex items-center justify-center shrink-0 border transition-all duration-200 group-hover:scale-110 group-active:scale-95 ${
+                                isSelected
+                                  ? 'bg-gradient-to-br from-amber-400/25 via-amber-500/15 to-amber-950/40 border-amber-400/50 shadow-sm'
+                                  : 'bg-slate-800/70 border-slate-700/70 group-hover:border-slate-600'
+                              }`}
+                            >
+                              <span className="text-base select-none drop-shadow-[0_2px_4px_rgba(0,0,0,0.5)] transform transition-transform duration-200 group-hover:rotate-6">
+                                {tab.icon}
+                              </span>
+                            </div>
+                            <span className={`text-xs transition-colors duration-200 ${isSelected ? 'font-black text-amber-200' : 'font-bold group-hover:text-amber-100'}`}>
+                              {tab.label}
+                            </span>
+                          </div>
+                          {tab.count !== undefined && tab.count > 0 && (
+                            <span
+                              className={`px-2 py-0.5 rounded-full text-[9px] font-black shadow-sm transition-transform duration-200 group-hover:scale-105 ${
+                                isSelected ? 'bg-amber-400 text-black font-black' : tab.badgeColor
+                              }`}
+                            >
+                              {tab.count}
+                            </span>
+                          )}
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+              );
+            })}
+
+            {/* Mobile Empty Search Result State */}
+            {filteredNavTabs.length === 0 && (
+              <div className="py-8 px-4 text-center">
+                <div className="w-10 h-10 rounded-2xl bg-slate-900 border border-slate-800 mx-auto flex items-center justify-center text-sm mb-2 shadow-inner">
+                  🔍
+                </div>
+                <p className="text-xs font-bold text-slate-300">No modules found</p>
+                <p className="text-[11px] text-slate-500 mt-1 max-w-[170px] mx-auto truncate">
+                  No match for &ldquo;{navSearchQuery}&rdquo;
+                </p>
                 <button
                   type="button"
-                  onClick={handleLogout}
-                  className="flex-1 py-2 text-center rounded-xl bg-rose-950/80 text-rose-300 border border-rose-500/40 text-xs font-bold cursor-pointer"
+                  onClick={() => setNavSearchQuery('')}
+                  className="mt-3 px-3 py-1 rounded-xl bg-amber-500/15 hover:bg-amber-500/25 border border-amber-500/30 text-amber-300 text-[11px] font-bold cursor-pointer transition-all duration-150 active:scale-95 shadow-sm"
                 >
-                  🚪 Sign Out
+                  Clear Search
                 </button>
               </div>
+            )}
+          </div>
+
+          {/* Mobile Drawer Footer */}
+          <div className="pt-3 border-t border-slate-800 shrink-0">
+            <div className="flex items-center justify-between gap-2">
+              <Link
+                to="/"
+                target="_blank"
+                className="flex-1 py-2 text-center rounded-xl bg-cyan-950/80 text-cyan-300 border border-cyan-500/40 text-xs font-bold transition-all duration-200 active:scale-95 hover:bg-cyan-900/90 hover:border-cyan-400/60 shadow-sm"
+              >
+                🌐 Storefront
+              </Link>
+              <button
+                type="button"
+                onClick={handleLogout}
+                className="flex-1 py-2 text-center rounded-xl bg-rose-950/80 text-rose-300 border border-rose-500/40 text-xs font-bold cursor-pointer transition-all duration-200 active:scale-95 hover:bg-rose-900/90 hover:border-rose-400/60 shadow-sm"
+              >
+                🚪 Sign Out
+              </button>
             </div>
           </div>
         </div>
-      )}
+      </div>
 
       {/* ========================================================= */}
       {/* WORKSPACE COLUMN (HEADER + MAIN CONTENT) */}
@@ -3019,7 +3033,7 @@ const PRICING_GAMES = [
             <button
               type="button"
               onClick={() => setMobileMenuOpen(true)}
-              className="md:hidden p-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 active:scale-95 transition-all shrink-0 cursor-pointer"
+              className="md:hidden p-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 active:scale-90 transition-all duration-200 shrink-0 cursor-pointer shadow-sm hover:border-amber-500/40"
               aria-label="Open navigation menu"
             >
               ☰
@@ -7084,7 +7098,7 @@ const PRICING_GAMES = [
           <button
             type="button"
             onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-            className="flex-1 flex flex-col items-center justify-center py-1 transition-all duration-200 group relative cursor-pointer"
+            className="flex-1 flex flex-col items-center justify-center py-1 transition-all duration-200 group relative cursor-pointer active:scale-90"
           >
             <div className={`transition-all duration-300 ${mobileMenuOpen ? 'scale-115 text-amber-400 drop-shadow-[0_0_10px_rgba(251,191,36,0.85)]' : 'text-slate-400 group-hover:text-slate-200'}`}>
               {mobileMenuOpen ? (
