@@ -81,15 +81,26 @@ const GAME_PACKAGES_MAP = {
     { productId: 388, diamondAmount: 600, name: 'Level Up Package - Level 25', price: 0.61, packageId: 388, tag: 'Level 25 🎖️', isPass: true, isLevelPass: true, category: 'Level Pass', customImage: '/images/weekly-pass.png' },
     { productId: 389, diamondAmount: 800, name: 'Level Up Package - Level 30', price: 0.90, packageId: 389, tag: 'Level 30 🎖️', isPass: true, isLevelPass: true, category: 'Level Pass', customImage: '/images/weekly-pass.png' },
 
-    // Standard Diamonds Top-Up
-    { productId: 374, diamondAmount: 25, name: '25 Diamonds', price: 0.25, packageId: 374, tag: 'Starter', customImage: '/images/diamond-chest-3d.png' },
-    { productId: 391, diamondAmount: 100, name: '100 Diamonds', price: 0.95, packageId: 391, tag: 'Popular', customImage: '/images/diamond-chest-3d.png' },
-    { productId: 376, diamondAmount: 310, name: '310 Diamonds', price: 2.85, packageId: 376, tag: 'HOT 🔥', customImage: '/images/diamond-chest-3d.png' },
-    { productId: 377, diamondAmount: 520, name: '520 Diamonds', price: 4.75, packageId: 377, tag: 'Best Value', customImage: '/images/diamond-chest-3d.png' },
-    { productId: 378, diamondAmount: 1060, name: '1060 Diamonds', price: 9.50, packageId: 378, tag: 'Pro Pack', customImage: '/images/diamond-chest-3d.png' },
-    { productId: 379, diamondAmount: 2180, name: '2180 Diamonds', price: 18.99, packageId: 379, tag: 'VIP', customImage: '/images/diamond-chest-3d.png' },
-    { productId: 380, diamondAmount: 5600, name: '5600 Diamonds', price: 46.50, packageId: 380, tag: 'Treasury', customImage: '/images/diamond-chest-3d.png' },
-    { productId: 381, diamondAmount: 11500, name: '11500 Diamonds', price: 95.00, packageId: 381, tag: 'ULTIMATE ⚡', customImage: '/images/diamond-chest-3d.png' },
+    // Other Packages (Standard Diamonds Top-Up & Evo Access - Reseller Prices)
+    { productId: 374, diamondAmount: 25, name: '25 Diamonds', price: 0.29, packageId: 374, category: 'Other Packages', customImage: '/images/diamond-chest-3d.png' },
+    { productId: 5293, diamondAmount: 50, name: '50 Diamonds', price: 0.55, packageId: 5293, tag: 'Discount 10%', category: 'Other Packages', customImage: '/images/diamond-chest-3d.png' },
+    { productId: 391, diamondAmount: 100, name: '100 Diamonds', price: 0.95, packageId: 391, tag: 'Discount 10%', category: 'Other Packages', customImage: '/images/diamond-chest-3d.png' },
+    { productId: 5295, diamondAmount: 200, name: '200 Diamonds', price: 1.90, packageId: 5295, tag: 'Discount 15%', category: 'Other Packages', customImage: '/images/diamond-chest-3d.png' },
+    { productId: 376, diamondAmount: 310, name: '310 Diamonds', price: 2.80, packageId: 376, category: 'Other Packages', customImage: '/images/diamond-chest-3d.png' },
+    { productId: 377, diamondAmount: 520, name: '520 Diamonds', price: 4.75, packageId: 377, category: 'Other Packages', customImage: '/images/diamond-chest-3d.png' },
+    { productId: 5299, diamondAmount: 830, name: '830 Diamonds', price: 7.55, packageId: 5299, tag: 'Discount 8%', category: 'Other Packages', customImage: '/images/diamond-chest-3d.png' },
+    { productId: 378, diamondAmount: 1060, name: '1060 Diamonds', price: 8.90, packageId: 378, category: 'Other Packages', customImage: '/images/diamond-chest-3d.png' },
+    { productId: 5146, diamondAmount: 1580, name: '1580 Diamonds', price: 13.65, packageId: 5146, tag: 'Discount 10%', category: 'Other Packages', customImage: '/images/diamond-chest-3d.png' },
+    { productId: 379, diamondAmount: 2180, name: '2180 Diamonds', price: 18.50, packageId: 379, category: 'Other Packages', customImage: '/images/diamond-chest-3d.png' },
+    { productId: 5147, diamondAmount: 3240, name: '3240 Diamonds', price: 27.50, packageId: 5147, tag: 'Discount 10%', category: 'Other Packages', customImage: '/images/diamond-chest-3d.png' },
+    { productId: 380, diamondAmount: 5600, name: '5600 Diamonds', price: 45.50, packageId: 380, category: 'Other Packages', customImage: '/images/diamond-chest-3d.png' },
+    { productId: 5148, diamondAmount: 7780, name: '7780 Diamonds', price: 74.88, packageId: 5148, category: 'Other Packages', customImage: '/images/diamond-chest-3d.png' },
+    { productId: 381, diamondAmount: 11500, name: '11500 Diamonds', price: 92.99, packageId: 381, category: 'Other Packages', customImage: '/images/diamond-chest-3d.png' },
+
+    // Evo Access Passes
+    { productId: 5301, diamondAmount: 0, name: 'Evo 3Days', price: 0.70, packageId: 5301, isPass: true, category: 'Other Packages', customImage: '/images/weekly-pass.png' },
+    { productId: 5302, diamondAmount: 0, name: 'Evo 7 Days', price: 0.99, packageId: 5302, isPass: true, category: 'Other Packages', customImage: '/images/weekly-pass.png' },
+    { productId: 5303, diamondAmount: 0, name: 'Evo 30 Days', price: 2.79, packageId: 5303, isPass: true, category: 'Other Packages', customImage: '/images/weekly-pass.png' },
   ],
   hok: [
     { productId: 407, diamondAmount: 100, name: 'Weekly Card Plus', price: 0.99, tag: 'PASS 🌟', isPass: true },
@@ -1822,9 +1833,9 @@ const TopUp = () => {
                 }`}
               >
                 <span>🔥</span>
-                <span className="truncate">{t('tab_pass_pkgs')}</span>
+                <span className="truncate">{isFreefire ? 'Beat seller' : t('tab_pass_pkgs')}</span>
                 <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-cyan-900/50 text-cyan-200 font-mono font-bold">
-                  {products.filter(p => !p.isLevelPass && (p.isPass || p.name?.toLowerCase().includes('pass') || p.name?.toLowerCase().includes('bundle') || [210, 440, 660, 880, 1100, 1320, 605, 500].includes(p.diamondAmount))).length}
+                  {products.filter(p => isFreefire ? (p.category === 'Beat seller') : (!p.isLevelPass && (p.isPass || p.name?.toLowerCase().includes('pass') || p.name?.toLowerCase().includes('bundle') || [210, 440, 660, 880, 1100, 1320, 605, 500].includes(p.diamondAmount)))).length}
                 </span>
               </button>
 
@@ -1856,9 +1867,9 @@ const TopUp = () => {
                 }`}
               >
                 <span>💎</span>
-                <span className="truncate">{t('tab_diamond_pkgs')}</span>
+                <span className="truncate">{isFreefire ? 'Other Packages' : t('tab_diamond_pkgs')}</span>
                 <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-purple-900/50 text-purple-200 font-mono font-bold">
-                  {products.filter(p => !p.isLevelPass && !(p.isPass || p.name?.toLowerCase().includes('pass') || p.name?.toLowerCase().includes('bundle') || [210, 440, 660, 880, 1100, 1320, 605, 500].includes(p.diamondAmount))).length}
+                  {products.filter(p => isFreefire ? (p.category === 'Other Packages') : (!p.isLevelPass && !(p.isPass || p.name?.toLowerCase().includes('pass') || p.name?.toLowerCase().includes('bundle') || [210, 440, 660, 880, 1100, 1320, 605, 500].includes(p.diamondAmount)))).length}
                 </span>
               </button>
             </div>
@@ -1929,8 +1940,8 @@ const TopUp = () => {
                     {products.filter(p => {
                       if (productCategoryTab === 'all') return true;
                       if (productCategoryTab === 'level_pass') return p.isLevelPass || p.name?.toLowerCase().includes('level up');
-                      if (productCategoryTab === 'passes') return !p.isLevelPass && (p.isPass || p.name?.toLowerCase().includes('pass') || p.name?.toLowerCase().includes('bundle') || [210, 440, 660, 880, 1100, 1320, 605, 500].includes(p.diamondAmount));
-                      return !p.isLevelPass && !(p.isPass || p.name?.toLowerCase().includes('pass') || p.name?.toLowerCase().includes('bundle') || [210, 440, 660, 880, 1100, 1320, 605, 500].includes(p.diamondAmount));
+                      if (productCategoryTab === 'passes') return isFreefire ? (p.category === 'Beat seller') : (!p.isLevelPass && (p.isPass || p.name?.toLowerCase().includes('pass') || p.name?.toLowerCase().includes('bundle') || [210, 440, 660, 880, 1100, 1320, 605, 500].includes(p.diamondAmount)));
+                      return isFreefire ? (p.category === 'Other Packages') : (!p.isLevelPass && !(p.isPass || p.name?.toLowerCase().includes('pass') || p.name?.toLowerCase().includes('bundle') || [210, 440, 660, 880, 1100, 1320, 605, 500].includes(p.diamondAmount)));
                     }).length}
                   </span>
                 </span>
@@ -1962,8 +1973,8 @@ const TopUp = () => {
 
                 const filtered = products.filter(pkg => {
                   if (productCategoryTab === 'level_pass') return pkg.isLevelPass || pkg.name?.toLowerCase().includes('level up');
-                  if (productCategoryTab === 'passes') return !pkg.isLevelPass && isPassItem(pkg);
-                  if (productCategoryTab === 'diamonds') return !pkg.isLevelPass && !isPassItem(pkg);
+                  if (productCategoryTab === 'passes') return isFreefire ? (pkg.category === 'Beat seller') : (!pkg.isLevelPass && isPassItem(pkg));
+                  if (productCategoryTab === 'diamonds') return isFreefire ? (pkg.category === 'Other Packages') : (!pkg.isLevelPass && !isPassItem(pkg));
                   return true;
                 });
 
@@ -1987,7 +1998,7 @@ const TopUp = () => {
                         const isPopular = pkg.productId === 2 || pkg.diamondAmount === 55 || tagLower.includes('popular') || tagLower.includes('starter');
                         const isRecommend = !isPopular && (pkg.productId === 3 || pkg.diamondAmount === 86 || tagLower.includes('bonus') || tagLower.includes('recommend') || tagLower.includes('best'));
                         const isLevelPassTag = pkg.isLevelPass || pkg.name?.toLowerCase().includes('level up');
-                        const isPurpleTag = isFreefire && (pkg.tag?.includes('ទទួលបាន') || pkg.tag?.includes('Discount') || pkg.isPass);
+                        const isPurpleTag = isFreefire && (pkg.tag?.includes('ទទួលបាន') || pkg.tag?.toLowerCase().includes('discount') || pkg.category === 'Beat seller' || (pkg.isPass && !pkg.isLevelPass));
                         const ribbon = isLevelPassTag
                           ? { text: pkg.tag || 'LEVEL PASS 🎖️', cls: 'from-emerald-500 to-teal-600 text-white shadow-sm' }
                           : isPurpleTag
@@ -2069,7 +2080,7 @@ const TopUp = () => {
                         const isPopular = pkg.productId === 2 || pkg.diamondAmount === 55 || tagLower.includes('popular') || tagLower.includes('starter');
                         const isRecommend = !isPopular && (pkg.productId === 3 || pkg.diamondAmount === 86 || tagLower.includes('bonus') || tagLower.includes('recommend') || tagLower.includes('best'));
                         const isLevelPassTag = pkg.isLevelPass || pkg.name?.toLowerCase().includes('level up');
-                        const isPurpleTag = isFreefire && (pkg.tag?.includes('ទទួលបាន') || pkg.tag?.includes('Discount') || pkg.isPass);
+                        const isPurpleTag = isFreefire && (pkg.tag?.includes('ទទួលបាន') || pkg.tag?.toLowerCase().includes('discount') || pkg.category === 'Beat seller' || (pkg.isPass && !pkg.isLevelPass));
                         const ribbon = isLevelPassTag
                           ? { text: pkg.tag || 'LEVEL PASS 🎖️', cls: 'from-emerald-500 to-teal-600 text-white shadow-sm' }
                           : isPurpleTag
@@ -2196,7 +2207,7 @@ const TopUp = () => {
                       const isPopular = pkg.productId === 2 || pkg.diamondAmount === 55 || tagLower.includes('popular') || tagLower.includes('starter');
                       const isRecommend = !isPopular && (pkg.productId === 3 || pkg.diamondAmount === 86 || tagLower.includes('bonus') || tagLower.includes('recommend') || tagLower.includes('best'));
                       const isLevelPassTag = pkg.isLevelPass || pkg.name?.toLowerCase().includes('level up');
-                      const isPurpleTag = isFreefire && (pkg.tag?.includes('ទទួលបាន') || pkg.tag?.includes('Discount') || pkg.isPass);
+                      const isPurpleTag = isFreefire && (pkg.tag?.includes('ទទួលបាន') || pkg.tag?.toLowerCase().includes('discount') || pkg.category === 'Beat seller' || (pkg.isPass && !pkg.isLevelPass));
                       const ribbon = isLevelPassTag
                         ? { text: pkg.tag || 'LEVEL PASS 🎖️', cls: 'from-emerald-500 to-teal-600 text-white' }
                         : isPurpleTag

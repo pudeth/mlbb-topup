@@ -381,6 +381,12 @@ public class RealTopUpProviderClient : ITopUpProviderClient
                 else if (sku.Contains("10")) packageId = 385; // Level 10 ($0.61)
                 else packageId = 390;                         // Level 6  ($0.29)
             }
+            else if (sku?.Contains("evo", StringComparison.OrdinalIgnoreCase) == true)
+            {
+                if (sku.Contains("30")) packageId = 5303;
+                else if (sku.Contains("7")) packageId = 5302;
+                else packageId = 5301;
+            }
             else if (sku?.Contains("weeklylite", StringComparison.OrdinalIgnoreCase) == true || sku?.Contains("lite", StringComparison.OrdinalIgnoreCase) == true)
             {
                 packageId = 384; // Weekly Lite ($0.32)
@@ -398,12 +404,18 @@ public class RealTopUpProviderClient : ITopUpProviderClient
                 packageId = diamondAmount switch
                 {
                     <= 25 => 374,   // 25 Diamonds ($0.24)
+                    <= 50 => 5293,  // 50 Diamonds ($0.36)
                     <= 100 => 391,  // 100 Diamonds ($0.90)
+                    <= 205 => 5295, // 200 Diamonds ($1.73)
                     <= 310 => 376,  // 310 Diamonds ($2.74)
                     <= 520 => 377,  // 520 Diamonds ($4.59)
+                    <= 830 => 5299, // 830 Diamonds
                     <= 1060 => 378, // 1060 Diamonds ($9.01)
+                    <= 1600 => 5146,// 1580 Diamonds
                     <= 2180 => 379, // 2180 Diamonds ($18.21)
+                    <= 3300 => 5147,// 3240 Diamonds
                     <= 5600 => 380, // 5600 Diamonds ($45.07)
+                    <= 8400 => 5148,// 7780 Diamonds
                     _ => 381        // 11500 Diamonds ($92.82)
                 };
             }

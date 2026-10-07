@@ -120,6 +120,29 @@ These prices match your store retail prices, with corresponding wholesale fulfil
 | 13 | **Weekly + monthly** | **$9.30** | $9.33 | Base Rate | `ទទួលបាន 2910 💎` |
 | 14 | **2Weekly+monthly** | **$18.60** | $18.15 | **+$0.45** | VIP Bundle |
 
+### 5.1.2 Store Retail Selling Prices & Profit Margin Breakdown (📦 Other Packages)
+These prices match your store retail prices for Standard Diamonds and Evo Access passes:
+
+| # | Package Name | Customer Retail Price | Wholesale API Cost | Reseller Net Profit | Promo Tag |
+| :-: | :--- | :-: | :-: | :-: | :--- |
+| 1 | **25 Diamonds** | **$0.29** | $0.24 | **+$0.05** | Standard |
+| 2 | **50 Diamonds** | **$0.55** | $0.48 | **+$0.07** | `Discount 10%` |
+| 3 | **100 Diamonds** | **$0.95** | $0.90 | **+$0.05** | `discounts 10%` |
+| 4 | **200 Diamonds** | **$1.90** | $1.73 | **+$0.17** | `Discount 15%` |
+| 5 | **310 Diamonds** | **$2.80** | $2.74 | **+$0.06** | Standard |
+| 6 | **520 Daiomd** | **$4.75** | $4.59 | **+$0.16** | Standard |
+| 7 | **830 Diamonds** | **$7.55** | $6.90 | **+$0.65** | `Discount 8%` |
+| 8 | **1060 Daiomd** | **$8.90** | $9.01 | Base Rate | Standard |
+| 9 | **1580 Diamonds** | **$13.65** | $12.50 | **+$1.15** | `Discount 10%` |
+| 10 | **2180 Diamonds** | **$18.50** | $18.21 | **+$0.29** | Standard |
+| 11 | **3240 Diamonds** | **$27.50** | $25.50 | **+$2.00** | `DISCOUNT 10%` |
+| 12 | **5600 Diamonds** | **$45.50** | $45.07 | **+$0.43** | Standard |
+| 13 | **7780 Diamonds** | **$74.88** | $71.00 | **+$3.88** | Standard |
+| 14 | **11500 Daiomd** | **$92.99** | $92.82 | **+$0.17** | Standard |
+| 15 | **Evo 3Days** | **$0.70** | $0.65 | **+$0.05** | Evo Access |
+| 16 | **Evo 7 Days** | **$0.99** | $0.90 | **+$0.09** | Evo Access |
+| 17 | **Evo 30 Days** | **$2.79** | $2.55 | **+$0.24** | Evo Access |
+
 ### 5.2 Primary Region Wholesale Catalogue: `freefire-sgmy` (Cambodia / SG / MY)
 
 | Package ID | Item Name | Quantity | Reseller Price (USD) | Category |

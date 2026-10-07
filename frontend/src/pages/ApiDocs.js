@@ -106,6 +106,26 @@ const LEVEL_UP_RETAIL_PACKAGES = [
   { id: 389, name: 'Level Up Package - Level 30', level: 'Level 30', price: 0.90, wholesaleCost: 0.90, badge: 'Level 30 🎖️', diamonds: 800, desc: 'Unlock Level 30 milestone rewards' },
 ];
 
+const OTHER_RETAIL_PACKAGES = [
+  { id: 374, name: '25 Diamonds', amount: '25 💎', price: 0.29, wholesaleCost: 0.24, badge: null, desc: 'Starter' },
+  { id: 5293, name: '50 Diamonds', amount: '50 💎', price: 0.55, wholesaleCost: 0.48, badge: 'Discount 10%', desc: 'Promo' },
+  { id: 391, name: '100 Diamonds', amount: '100 💎', price: 0.95, wholesaleCost: 0.90, badge: 'discounts 10%', desc: 'Popular' },
+  { id: 5295, name: '200 Diamonds', amount: '200 💎', price: 1.90, wholesaleCost: 1.73, badge: 'Discount 15%', desc: 'Special' },
+  { id: 376, name: '310 Diamonds', amount: '310 💎', price: 2.80, wholesaleCost: 2.74, badge: null, desc: 'Hot' },
+  { id: 377, name: '520 Daiomd', amount: '520 💎', price: 4.75, wholesaleCost: 4.59, badge: null, desc: 'Best Value' },
+  { id: 5299, name: '830 Diamonds', amount: '830 💎', price: 7.55, wholesaleCost: 6.90, badge: 'Discount 8%', desc: 'Value Pack' },
+  { id: 378, name: '1060 Daiomd', amount: '1060 💎', price: 8.90, wholesaleCost: 9.01, badge: null, desc: 'Pro Pack' },
+  { id: 5146, name: '1580 Diamonds', amount: '1580 💎', price: 13.65, wholesaleCost: 12.50, badge: 'Discount 10%', desc: 'Super Pack' },
+  { id: 379, name: '2180 Diamonds', amount: '2180 💎', price: 18.50, wholesaleCost: 18.21, badge: null, desc: 'VIP' },
+  { id: 5147, name: '3240 Diamonds', amount: '3240 💎', price: 27.50, wholesaleCost: 25.50, badge: 'DISCOUNT 10%', desc: 'Grand Pack' },
+  { id: 380, name: '5600 Diamonds', amount: '5600 💎', price: 45.50, wholesaleCost: 45.07, badge: null, desc: 'Treasury' },
+  { id: 5148, name: '7780 Diamonds', amount: '7780 💎', price: 74.88, wholesaleCost: 71.00, badge: null, desc: 'Mythic Pack' },
+  { id: 381, name: '11500 Daiomd', amount: '11500 💎', price: 92.99, wholesaleCost: 92.82, badge: null, desc: 'Ultimate' },
+  { id: 5301, name: 'Evo 3Days', amount: 'Evo Access', price: 0.70, wholesaleCost: 0.65, badge: null, desc: '3-Day Evo Pass' },
+  { id: 5302, name: 'Evo 7 Days', amount: 'Evo Access', price: 0.99, wholesaleCost: 0.90, badge: null, desc: '7-Day Evo Pass' },
+  { id: 5303, name: 'Evo 30 Days', amount: 'Evo Access', price: 2.79, wholesaleCost: 2.55, badge: null, desc: '30-Day Evo Pass' },
+];
+
 const CODE_EXAMPLES = {
   check: {
     curl: `curl "https://khmer-topup.com/api/v1/check?slug=freefire-sgmy&player_id=14792636283" \\
@@ -1083,6 +1103,91 @@ const ApiDocs = () => {
                           <div className="mt-3 pt-2 border-t border-slate-800/80 flex items-center justify-between text-[10px] font-mono text-slate-400">
                             <span className="text-slate-400 font-bold">ID: #{pkg.id}</span>
                             <span className="text-emerald-400 font-bold">Pass</span>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+
+                {/* ======================================================== */}
+                {/* 4. OTHER PACKAGES (DIAMONDS & EVO ACCESS)                */}
+                {/* ======================================================== */}
+                <div className="pt-8 border-t border-slate-800 space-y-5">
+                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                    <div>
+                      <div className="flex items-center gap-2.5 mb-1">
+                        <span className="w-6 h-6 rounded-lg bg-blue-500 text-white flex items-center justify-center font-black text-xs shadow-md">
+                          💎
+                        </span>
+                        <h3 className="text-xl font-black text-white tracking-tight">
+                          Other Packages
+                        </h3>
+                      </div>
+                      <div className="flex items-center gap-2 text-sm font-bold text-slate-300 ml-8">
+                        <span>📦</span>
+                        <span>Diamonds & Evo Access Packages</span>
+                        <span className="text-xs font-normal text-slate-400">
+                          (Customer Retail Selling Prices & Automated Reseller Margins)
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* 17 Cards Grid Matching Screenshot Exactly */}
+                  <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4 pt-2">
+                    {OTHER_RETAIL_PACKAGES.map((pkg) => {
+                      const isSelected = testPackageId === pkg.id;
+                      const profit = (pkg.price - pkg.wholesaleCost).toFixed(2);
+                      const isProfitPositive = Number(profit) > 0;
+                      return (
+                        <div
+                          key={pkg.id + pkg.name}
+                          onClick={() => {
+                            setTestPackageId(pkg.id);
+                            setActiveTab('sandbox');
+                          }}
+                          className={`relative group cursor-pointer rounded-2xl p-4 bg-[#0d101a] hover:bg-[#121624] border transition-all duration-200 flex flex-col justify-between ${
+                            isSelected
+                              ? 'border-blue-400 ring-2 ring-blue-400/30 shadow-[0_0_20px_rgba(59,130,246,0.25)]'
+                              : 'border-slate-800 hover:border-blue-500/60 shadow-lg'
+                          }`}
+                          style={{ minHeight: '120px' }}
+                        >
+                          {/* Top Floating Purple Badge */}
+                          {pkg.badge && (
+                            <div className="absolute -top-3 left-6 z-10">
+                              <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-[10px] font-black bg-gradient-to-r from-[#a855f7] to-[#8b5cf6] text-white shadow-md">
+                                {pkg.badge}
+                              </span>
+                            </div>
+                          )}
+
+                          <div className="flex items-center justify-between gap-3 mt-1">
+                            {/* Left: Title & Selling Price */}
+                            <div className="text-left">
+                              <div className="text-sm font-black text-white tracking-tight">
+                                {pkg.name}
+                              </div>
+                              <div className="text-base font-black text-[#60a5fa] mt-1 font-mono">
+                                ${pkg.price.toFixed(2)}
+                              </div>
+                            </div>
+
+                            {/* Right: Quantity Icon */}
+                            <div className="text-xs font-bold text-slate-400 font-mono">
+                              {pkg.amount}
+                            </div>
+                          </div>
+
+                          {/* Bottom Stats: Wholesale API Cost vs Profit Margin */}
+                          <div className="mt-3 pt-2 border-t border-slate-800/80 flex items-center justify-between text-[10px] font-mono text-slate-400">
+                            <div>
+                              Cost: <span className="text-slate-300 font-bold">${pkg.wholesaleCost.toFixed(2)}</span>
+                            </div>
+                            <div className={isProfitPositive ? 'text-emerald-400 font-bold' : 'text-slate-400'}>
+                              {isProfitPositive ? `+${profit} profit` : 'Break-even'}
+                            </div>
                           </div>
                         </div>
                       );
