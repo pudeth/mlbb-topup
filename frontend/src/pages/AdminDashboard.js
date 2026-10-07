@@ -267,7 +267,12 @@ const PRICING_GAMES = [
     else if (p.includes('/financials')) setActiveTab('financials');
   }, [location.pathname]);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-  const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(() => {
+    if (typeof window !== 'undefined') {
+      return window.innerWidth < 1100;
+    }
+    return false;
+  });
   const [navSearchQuery, setNavSearchQuery] = useState('');
   const [navDropdownOpen, setNavDropdownOpen] = useState(false);
   const navDropdownRef = useRef(null);
@@ -1164,6 +1169,17 @@ const PRICING_GAMES = [
     window.addEventListener('keydown', handleGlobalSearchKey);
     return () => window.removeEventListener('keydown', handleGlobalSearchKey);
   }, [sidebarCollapsed]);
+
+  // Auto-collapse sidebar on smaller tablet/laptop screens (< 1100px)
+  useEffect(() => {
+    const handleResize = () => {
+      if (window.innerWidth < 1100) {
+        setSidebarCollapsed(true);
+      }
+    };
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
 
   // ==================== TOP-UP & ORDER HANDLERS ====================
 
@@ -2435,7 +2451,7 @@ const PRICING_GAMES = [
   });
 
   return (
-    <div className="h-screen bg-[#07090E] text-slate-100 font-sans selection:bg-amber-500 selection:text-black relative flex flex-row overflow-hidden">
+    <div className="h-screen min-h-[100dvh] bg-[#07090E] text-slate-100 font-sans selection:bg-amber-500 selection:text-black relative flex flex-row overflow-hidden">
       {/* Ambient background glows */}
       <div className="fixed top-0 left-1/4 w-[500px] h-[500px] bg-amber-500/[0.04] rounded-full blur-[140px] pointer-events-none" />
       <div className="fixed top-1/3 right-10 w-[500px] h-[500px] bg-cyan-500/[0.04] rounded-full blur-[140px] pointer-events-none" />
@@ -2803,7 +2819,7 @@ const PRICING_GAMES = [
       {/* MOBILE SLIDING DRAWER NAVIGATION OVERLAY */}
       {/* ========================================================= */}
       {mobileMenuOpen && (
-        <div className="fixed inset-0 z-50 flex md:hidden animate-fadeIn">
+        <div className="fixed inset-0 z-[70] flex md:hidden animate-fadeIn">
           {/* Backdrop Overlay */}
           <div
             className="fixed inset-0 bg-black/80 backdrop-blur-sm"
@@ -2811,27 +2827,50 @@ const PRICING_GAMES = [
           />
 
           {/* Drawer Content */}
-          <div className="relative w-80 max-w-[85vw] h-full bg-[#0A0E17] border-r border-slate-800 p-4 flex flex-col z-10 animate-slideRight">
+          <div className="relative w-80 max-w-[85vw] h-full bg-[#0A0E17] border-r border-slate-800 p-4 pb-6 flex flex-col z-10 animate-slideRight">
             {/* Drawer Header */}
             <div className="flex items-center justify-between pb-3 border-b border-slate-800 shrink-0">
-              <div className="flex items-center gap-2.5">
-                <div className="w-8 h-8 rounded-xl bg-gradient-to-tr from-amber-500 to-yellow-300 p-[2px] shadow-glow-gold flex items-center justify-center">
-                  <div className="w-full h-full bg-slate-950 rounded-[10px] flex items-center justify-center text-xs">
-                    💎
+              <div className="flex items-center gap-2.5 min-w-0">
+                <div className="w-9 h-9 rounded-xl bg-gradient-to-tr from-amber-500 to-yellow-300 p-[2px] shadow-glow-gold flex items-center justify-center shrink-0">
+                  <div className="w-full h-full bg-slate-950 rounded-[10px] flex items-center justify-center overflow-hidden">
+                    {branding.logoType === 'image' && branding.logoImage ? (
+                      <img src={branding.logoImage} alt="Logo" className="w-full h-full object-cover" />
+                    ) : (
+                      <span className="text-base select-none">{branding.logoEmoji || '💎'}</span>
+                    )}
                   </div>
                 </div>
-                <div>
-                  <span className="text-sm font-black text-white block">ADMIN HUB</span>
-                  <span className="text-[10px] text-amber-400 font-bold">{menuTabs.length} SYSTEM MODULES</span>
+                <div className="min-w-0">
+                  <div className="flex items-center gap-1.5">
+                    <span className="text-sm font-black text-white truncate">{branding.storeName || 'MLBB TOPUP'}</span>
+                    <span className="bg-amber-400 text-black text-[9px] font-black px-1.5 py-0.5 rounded-md uppercase shrink-0">
+                      {branding.badgeText || 'PRO'}
+                    </span>
+                  </div>
+                  <span className="text-[10px] text-amber-400 font-bold block truncate">{menuTabs.length} SYSTEM MODULES</span>
                 </div>
               </div>
               <button
                 type="button"
                 onClick={() => setMobileMenuOpen(false)}
-                className="w-8 h-8 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 flex items-center justify-center text-sm font-bold cursor-pointer"
+                className="w-8 h-8 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 flex items-center justify-center text-sm font-bold cursor-pointer shrink-0 ml-2"
               >
                 ✕
               </button>
+            </div>
+
+            {/* Mobile Provider Status Ribbon */}
+            <div className="mt-2.5 p-2 rounded-xl bg-slate-900/90 border border-slate-800 flex items-center justify-between shrink-0">
+              <div className="flex items-center gap-1.5 min-w-0">
+                <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse shrink-0" />
+                <span className="text-[11px] text-slate-400 font-medium">API:</span>
+                <span className="text-[11px] font-bold text-cyan-300 truncate">
+                  {providerSettings.activeProvider === 'FazerCards' ? 'FazerCards' : 'KhmerTopUp'}
+                </span>
+              </div>
+              <span className="text-xs font-black text-amber-300 font-mono">
+                ${(providerSettings.balanceUSD !== undefined ? Number(providerSettings.balanceUSD) : 0.49).toFixed(2)}
+              </span>
             </div>
 
             {/* Mobile Quick Search Input */}
@@ -3003,11 +3042,19 @@ const PRICING_GAMES = [
 
           {/* Right: Balance, Storefront & Refresh actions */}
           <div className="flex items-center gap-1.5 sm:gap-2.5 shrink-0">
-            {/* Live Gateway Pill (Desktop) */}
-            <div className="hidden sm:flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl bg-slate-900/90 border border-slate-800 text-xs">
-              <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
+            {/* Live Gateway Pill (Mobile Compact) */}
+            <div className="flex sm:hidden items-center gap-1.5 px-2 py-1 rounded-xl bg-slate-900/90 border border-slate-800 text-[11px] shrink-0">
+              <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse shrink-0" />
+              <span className="font-black text-amber-300 font-mono text-[11px]">
+                ${(providerSettings.balanceUSD !== undefined ? Number(providerSettings.balanceUSD) : 0.49).toFixed(2)}
+              </span>
+            </div>
+
+            {/* Live Gateway Pill (Desktop & Tablet) */}
+            <div className="hidden sm:flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl bg-slate-900/90 border border-slate-800 text-xs shrink-0">
+              <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse shrink-0" />
               <span className="text-slate-400 font-medium text-[11px]">API:</span>
-              <span className="font-bold text-cyan-300 text-[11px] truncate max-w-[95px] xl:max-w-none">
+              <span className="font-bold text-cyan-300 text-[11px] truncate max-w-[85px] lg:max-w-none">
                 {providerSettings.activeProvider === 'FazerCards' ? 'FazerCards' : 'KhmerTopUp'}
               </span>
               <span className="text-slate-700">|</span>
@@ -3021,11 +3068,11 @@ const PRICING_GAMES = [
               to="/"
               target="_blank"
               rel="noreferrer"
-              className="px-2.5 py-1.5 rounded-xl bg-cyan-950/50 hover:bg-cyan-900/70 text-cyan-300 border border-cyan-500/30 text-[11px] font-bold transition-all flex items-center gap-1 shadow-sm active:scale-95"
+              className="px-2.5 py-1.5 rounded-xl bg-cyan-950/50 hover:bg-cyan-900/70 text-cyan-300 border border-cyan-500/30 text-[11px] font-bold transition-all flex items-center gap-1 shadow-sm active:scale-95 shrink-0"
               title="View live customer storefront in new tab"
             >
               <span>🌐</span>
-              <span className="hidden md:inline">Storefront</span>
+              <span className="hidden lg:inline">Storefront</span>
             </Link>
 
             {/* Refresh Button */}
@@ -3036,28 +3083,28 @@ const PRICING_GAMES = [
                 showToast('info', '🔄 Syncing live admin data...');
               }}
               disabled={refreshing}
-              className="px-2.5 py-1.5 rounded-xl bg-slate-800/80 hover:bg-slate-700 text-slate-300 hover:text-white border border-slate-700/80 text-[11px] font-bold transition-all flex items-center gap-1.5 active:scale-95 cursor-pointer disabled:opacity-50"
+              className="px-2.5 py-1.5 rounded-xl bg-slate-800/80 hover:bg-slate-700 text-slate-300 hover:text-white border border-slate-700/80 text-[11px] font-bold transition-all flex items-center gap-1.5 active:scale-95 cursor-pointer disabled:opacity-50 shrink-0"
               title="Click to refresh live data"
             >
               <span className={refreshing ? 'animate-spin' : ''}>🔄</span>
-              <span>{refreshing ? 'Syncing...' : 'Refresh'}</span>
+              <span className="hidden sm:inline">{refreshing ? 'Syncing...' : 'Refresh'}</span>
             </button>
 
-            {/* Logout button (Desktop) */}
+            {/* Logout button */}
             <button
               type="button"
               onClick={handleLogout}
-              className="hidden sm:flex px-2.5 py-1.5 rounded-xl bg-rose-950/40 hover:bg-rose-900/60 text-rose-300 border border-rose-500/30 text-[11px] font-bold transition-all items-center gap-1 active:scale-95 cursor-pointer"
+              className="hidden md:flex px-2.5 py-1.5 rounded-xl bg-rose-950/40 hover:bg-rose-900/60 text-rose-300 border border-rose-500/30 text-[11px] font-bold transition-all items-center gap-1 active:scale-95 cursor-pointer shrink-0"
               title="Sign Out"
             >
               <span>🚪</span>
-              <span className="hidden md:inline">Sign Out</span>
+              <span className="hidden lg:inline">Sign Out</span>
             </button>
           </div>
         </header>
 
         {/* Main Workspace Container */}
-        <main className="flex-1 overflow-y-auto overflow-x-hidden min-h-0 px-3.5 sm:px-6 lg:px-8 py-6 pb-28 scrollbar-thin scrollbar-thumb-slate-800">
+        <main className="flex-1 overflow-y-auto overflow-x-hidden min-h-0 px-3 sm:px-6 lg:px-8 py-4 sm:py-6 pb-24 md:pb-8 scrollbar-thin scrollbar-thumb-slate-800">
           <div className="max-w-7xl mx-auto w-full space-y-6">
         {/* Loading Spinner & Indicator */}
         {loading && (
@@ -3660,11 +3707,11 @@ const PRICING_GAMES = [
                 </p>
               </div>
 
-              <div className="flex items-center gap-3">
+              <div className="flex items-center gap-3 w-full sm:w-auto">
                 <button
                   onClick={handleBatchDeliverAll}
                   disabled={batchProcessing || pendingOrders.length === 0}
-                  className="btn btn-gold text-xs sm:text-sm py-2.5 px-4 flex items-center gap-2 shadow-lg shadow-amber-500/20 disabled:opacity-40"
+                  className="btn btn-gold text-xs sm:text-sm py-2.5 px-4 w-full sm:w-auto flex items-center justify-center gap-2 shadow-lg shadow-amber-500/20 disabled:opacity-40"
                 >
                   <span>🚀</span>
                   <span>
@@ -4830,9 +4877,9 @@ const PRICING_GAMES = [
               </div>
 
               {/* Quick Telemetry & Liquidity Ribbon */}
-              <div className="grid grid-cols-2 lg:grid-cols-4 gap-3.5">
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-3.5">
                 {/* KPI 1: Active Gateway */}
-                <div className="p-4 rounded-3xl bg-slate-900/60 border border-slate-800/80 backdrop-blur-md shadow-lg flex items-center gap-3.5 transition-all hover:border-slate-700">
+                <div className="p-3.5 sm:p-4 rounded-3xl bg-slate-900/60 border border-slate-800/80 backdrop-blur-md shadow-lg flex items-center gap-3.5 transition-all hover:border-slate-700">
                   {renderProviderAvatar(activeProvObj, "md")}
                   <div className="min-w-0">
                     <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Active Route</span>
@@ -4845,7 +4892,7 @@ const PRICING_GAMES = [
                 </div>
 
                 {/* KPI 2: Total Liquidity */}
-                <div className="p-4 rounded-3xl bg-slate-900/60 border border-slate-800/80 backdrop-blur-md shadow-lg flex items-center gap-3.5 transition-all hover:border-slate-700">
+                <div className="p-3.5 sm:p-4 rounded-3xl bg-slate-900/60 border border-slate-800/80 backdrop-blur-md shadow-lg flex items-center gap-3.5 transition-all hover:border-slate-700">
                   <div className="w-10 h-10 rounded-2xl bg-amber-500/10 border border-amber-500/30 text-amber-400 flex items-center justify-center text-xl shrink-0">
                     💰
                   </div>
@@ -4861,7 +4908,7 @@ const PRICING_GAMES = [
                 </div>
 
                 {/* KPI 3: Gateways Pool */}
-                <div className="p-4 rounded-3xl bg-slate-900/60 border border-slate-800/80 backdrop-blur-md shadow-lg flex items-center gap-3.5 transition-all hover:border-slate-700">
+                <div className="p-3.5 sm:p-4 rounded-3xl bg-slate-900/60 border border-slate-800/80 backdrop-blur-md shadow-lg flex items-center gap-3.5 transition-all hover:border-slate-700">
                   <div className="w-10 h-10 rounded-2xl bg-indigo-500/10 border border-indigo-500/30 text-indigo-400 flex items-center justify-center text-xl shrink-0">
                     ⚡
                   </div>
@@ -4877,7 +4924,7 @@ const PRICING_GAMES = [
                 </div>
 
                 {/* KPI 4: Failover Protection */}
-                <div className="p-4 rounded-3xl bg-slate-900/60 border border-slate-800/80 backdrop-blur-md shadow-lg flex items-center gap-3.5 transition-all hover:border-slate-700">
+                <div className="p-3.5 sm:p-4 rounded-3xl bg-slate-900/60 border border-slate-800/80 backdrop-blur-md shadow-lg flex items-center gap-3.5 transition-all hover:border-slate-700">
                   <div className="w-10 h-10 rounded-2xl bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 flex items-center justify-center text-xl shrink-0">
                     🛡️
                   </div>
@@ -5723,7 +5770,7 @@ const PRICING_GAMES = [
 
               {resellers.length > 0 ? (
                 <div className="overflow-x-auto">
-                  <table className="w-full text-left text-xs">
+                  <table className="w-full text-left text-xs min-w-[640px]">
                     <thead>
                       <tr className="border-b border-dark-border text-slate-400">
                         <th className="pb-3 font-bold">Agent / Company</th>
@@ -5868,7 +5915,7 @@ const PRICING_GAMES = [
             {failedTransactions.length > 0 && (
               <div className="card space-y-4 rounded-3xl shadow-xl">
                 <div className="overflow-x-auto">
-                  <table className="w-full text-left text-xs">
+                  <table className="w-full text-left text-xs min-w-[640px]">
                     <thead>
                       <tr className="border-b border-dark-border text-slate-400">
                         <th className="pb-3 font-bold">Order ID</th>
@@ -6163,7 +6210,7 @@ const PRICING_GAMES = [
                 </div>
               ) : (
                 <div className="overflow-x-auto">
-                  <table className="w-full text-xs">
+                  <table className="w-full text-xs min-w-[680px]">
                     <thead>
                       <tr className="border-b border-slate-800 bg-[#0d121e]">
                         <th className="text-left py-3 px-4 text-[10px] font-bold text-slate-400 uppercase tracking-widest">Tran ID</th>
@@ -6730,7 +6777,7 @@ const PRICING_GAMES = [
 
               {/* Users Table */}
               <div className="overflow-x-auto">
-                <table className="w-full text-left text-xs">
+                <table className="w-full text-left text-xs min-w-[640px]">
                   <thead>
                     <tr className="border-b border-dark-border text-slate-400">
                       <th className="pb-3 font-bold">User ID</th>
@@ -6937,7 +6984,7 @@ const PRICING_GAMES = [
       {/* ========================================================= */}
       {/* MOBILE BOTTOM STICKY QUICK TAB BAR (md:hidden) */}
       {/* ========================================================= */}
-      <div className="md:hidden fixed bottom-0 left-0 right-0 z-[60] bg-[#0A0E17]/95 backdrop-blur-xl border-t border-slate-800 px-3 py-2 flex items-center justify-around shadow-2xl">
+      <div className="md:hidden fixed bottom-0 left-0 right-0 z-40 bg-[#0A0E17]/95 backdrop-blur-xl border-t border-slate-800 px-3 py-1.5 pb-[max(0.5rem,env(safe-area-inset-bottom))] flex items-center justify-around shadow-2xl">
         <button
           type="button"
           onClick={() => {

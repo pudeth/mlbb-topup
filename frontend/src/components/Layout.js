@@ -50,8 +50,8 @@ const Layout = ({ children }) => {
 
   if (isAdminPath) {
     return (
-      <div className="min-h-screen bg-dark-bg text-slate-100 relative">
-        <main className="relative z-10">{children}</main>
+      <div className="h-screen min-h-[100dvh] bg-[#07090E] text-slate-100 relative overflow-hidden">
+        <main className="h-full relative z-10">{children}</main>
       </div>
     );
   }
