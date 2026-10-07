@@ -6982,82 +6982,129 @@ const PRICING_GAMES = [
       </div>
 
       {/* ========================================================= */}
-      {/* MOBILE BOTTOM STICKY QUICK TAB BAR (md:hidden) */}
+      {/* MOBILE BOTTOM FLOATING CAPSULE DOCK (md:hidden) */}
       {/* ========================================================= */}
-      <div className="md:hidden fixed bottom-0 left-0 right-0 z-40 bg-[#0A0E17]/95 backdrop-blur-xl border-t border-slate-800 px-3 py-1.5 pb-[max(0.5rem,env(safe-area-inset-bottom))] flex items-center justify-around shadow-2xl">
-        <button
-          type="button"
-          onClick={() => {
-            setActiveTab('pending');
-            setMobileMenuOpen(false);
-          }}
-          className={`flex flex-col items-center gap-1 p-1.5 rounded-xl text-[10px] font-bold cursor-pointer transition-colors ${
-            activeTab === 'pending' ? 'text-amber-400 font-black' : 'text-slate-400 hover:text-white'
-          }`}
-        >
-          <span className="text-lg relative">
-            ⚡
-            {(pendingOrders.length + (pendingBalanceOrders?.length || 0)) > 0 && (
-              <span className="absolute -top-1 -right-2 px-1 py-0.2 rounded-full text-[8px] font-black bg-amber-500 text-black">
-                {pendingOrders.length + (pendingBalanceOrders?.length || 0)}
-              </span>
+      <div className="md:hidden fixed bottom-2.5 sm:bottom-4 left-1/2 -translate-x-1/2 z-40 select-none w-[94%] max-w-md transition-all duration-300">
+        <nav className="relative flex items-center justify-around py-2 px-2 bg-[#090f1e]/92 backdrop-blur-2xl border border-amber-500/35 rounded-full shadow-[0_15px_40px_rgba(0,0,0,0.9),0_0_20px_rgba(245,158,11,0.2)] ring-1 ring-white/10">
+          
+          {/* 1. Queue */}
+          <button
+            type="button"
+            onClick={() => {
+              setActiveTab('pending');
+              setMobileMenuOpen(false);
+            }}
+            className="flex-1 flex flex-col items-center justify-center py-1 transition-all duration-200 group relative cursor-pointer"
+          >
+            <div className={`transition-all duration-300 relative ${activeTab === 'pending' ? 'scale-115 text-amber-400 drop-shadow-[0_0_10px_rgba(251,191,36,0.85)]' : 'text-slate-400 group-hover:text-slate-200'}`}>
+              <svg className="w-5 h-5 fill-current" viewBox="0 0 24 24">
+                <path d="M13 2L3 14h7v8l10-12h-7z" />
+              </svg>
+              {(pendingOrders.length + (pendingBalanceOrders?.length || 0)) > 0 && (
+                <span className="absolute -top-1.5 -right-2 px-1.5 py-0.2 rounded-full text-[8px] font-black bg-gradient-to-r from-amber-400 to-yellow-400 text-slate-950 shadow-md ring-1 ring-black/40">
+                  {pendingOrders.length + (pendingBalanceOrders?.length || 0)}
+                </span>
+              )}
+            </div>
+            <span className={`text-[10px] sm:text-[11px] mt-0.5 leading-tight tracking-tight transition-colors ${activeTab === 'pending' ? 'text-amber-400 font-black' : 'text-slate-400 font-semibold group-hover:text-slate-200'}`}>
+              Queue
+            </span>
+            {activeTab === 'pending' && (
+              <span className="absolute -bottom-1 w-1.5 h-1.5 rounded-full bg-amber-400 shadow-[0_0_8px_rgba(251,191,36,1)] animate-pulse" />
             )}
-          </span>
-          <span>Queue</span>
-        </button>
+          </button>
 
-        <button
-          type="button"
-          onClick={() => {
-            setActiveTab('pricing');
-            setMobileMenuOpen(false);
-          }}
-          className={`flex flex-col items-center gap-1 p-1.5 rounded-xl text-[10px] font-bold cursor-pointer transition-colors ${
-            activeTab === 'pricing' ? 'text-amber-400 font-black' : 'text-slate-400 hover:text-white'
-          }`}
-        >
-          <span className="text-lg">💎</span>
-          <span>Packages</span>
-        </button>
+          {/* 2. Packages */}
+          <button
+            type="button"
+            onClick={() => {
+              setActiveTab('pricing');
+              setMobileMenuOpen(false);
+            }}
+            className="flex-1 flex flex-col items-center justify-center py-1 transition-all duration-200 group relative cursor-pointer"
+          >
+            <div className={`transition-all duration-300 ${activeTab === 'pricing' ? 'scale-115 text-amber-400 drop-shadow-[0_0_10px_rgba(251,191,36,0.85)]' : 'text-slate-400 group-hover:text-slate-200'}`}>
+              <svg className="w-5 h-5 fill-current" viewBox="0 0 24 24">
+                <path d="M12 2L2 9l10 13L22 9l-10-7zm0 2.8L18.4 9H5.6L12 4.8z" />
+              </svg>
+            </div>
+            <span className={`text-[10px] sm:text-[11px] mt-0.5 leading-tight tracking-tight transition-colors ${activeTab === 'pricing' ? 'text-amber-400 font-black' : 'text-slate-400 font-semibold group-hover:text-slate-200'}`}>
+              Packages
+            </span>
+            {activeTab === 'pricing' && (
+              <span className="absolute -bottom-1 w-1.5 h-1.5 rounded-full bg-amber-400 shadow-[0_0_8px_rgba(251,191,36,1)] animate-pulse" />
+            )}
+          </button>
 
-        <button
-          type="button"
-          onClick={() => {
-            setActiveTab('orders');
-            setMobileMenuOpen(false);
-          }}
-          className={`flex flex-col items-center gap-1 p-1.5 rounded-xl text-[10px] font-bold cursor-pointer transition-colors ${
-            activeTab === 'orders' ? 'text-amber-400 font-black' : 'text-slate-400 hover:text-white'
-          }`}
-        >
-          <span className="text-lg">📦</span>
-          <span>Orders</span>
-        </button>
+          {/* 3. Orders */}
+          <button
+            type="button"
+            onClick={() => {
+              setActiveTab('orders');
+              setMobileMenuOpen(false);
+            }}
+            className="flex-1 flex flex-col items-center justify-center py-1 transition-all duration-200 group relative cursor-pointer"
+          >
+            <div className={`transition-all duration-300 ${activeTab === 'orders' ? 'scale-115 text-amber-400 drop-shadow-[0_0_10px_rgba(251,191,36,0.85)]' : 'text-slate-400 group-hover:text-slate-200'}`}>
+              <svg className="w-5 h-5 fill-current" viewBox="0 0 24 24">
+                <path d="M20 7h-4V4c0-1.1-.9-2-2-2h-4c-1.1 0-2 .9-2 2v3H4c-1.1 0-2 .9-2 2v11c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V9c0-1.1-.9-2-2-2zM10 4h4v3h-4V4zm10 16H4v-7h16v7zm0-9H4V9h16v2z" />
+              </svg>
+            </div>
+            <span className={`text-[10px] sm:text-[11px] mt-0.5 leading-tight tracking-tight transition-colors ${activeTab === 'orders' ? 'text-amber-400 font-black' : 'text-slate-400 font-semibold group-hover:text-slate-200'}`}>
+              Orders
+            </span>
+            {activeTab === 'orders' && (
+              <span className="absolute -bottom-1 w-1.5 h-1.5 rounded-full bg-amber-400 shadow-[0_0_8px_rgba(251,191,36,1)] animate-pulse" />
+            )}
+          </button>
 
-        <button
-          type="button"
-          onClick={() => {
-            setActiveTab('financials');
-            setMobileMenuOpen(false);
-          }}
-          className={`flex flex-col items-center gap-1 p-1.5 rounded-xl text-[10px] font-bold cursor-pointer transition-colors ${
-            activeTab === 'financials' ? 'text-amber-400 font-black' : 'text-slate-400 hover:text-white'
-          }`}
-        >
-          <span className="text-lg">💰</span>
-          <span>Profits</span>
-        </button>
+          {/* 4. Profits */}
+          <button
+            type="button"
+            onClick={() => {
+              setActiveTab('financials');
+              setMobileMenuOpen(false);
+            }}
+            className="flex-1 flex flex-col items-center justify-center py-1 transition-all duration-200 group relative cursor-pointer"
+          >
+            <div className={`transition-all duration-300 ${activeTab === 'financials' ? 'scale-115 text-amber-400 drop-shadow-[0_0_10px_rgba(251,191,36,0.85)]' : 'text-slate-400 group-hover:text-slate-200'}`}>
+              <svg className="w-5 h-5 fill-current" viewBox="0 0 24 24">
+                <path d="M11.8 10.9c-2.27-.59-3-1.2-3-2.15 0-1.09 1.01-1.85 2.7-1.85 1.78 0 2.44.85 2.5 2.1h2.21c-.07-1.72-1.12-3.3-3.21-3.81V3h-3v2.16c-1.94.42-3.5 1.68-3.5 3.61 0 2.31 1.91 3.46 4.7 4.13 2.5.6 3 1.48 3 2.41 0 .69-.49 1.79-2.7 1.79-2.06 0-2.87-.92-2.98-2.1h-2.2c.12 2.19 1.76 3.42 3.68 3.83V21h3v-2.15c1.95-.37 3.5-1.5 3.5-3.55 0-2.84-2.43-3.81-4.7-4.4z" />
+              </svg>
+            </div>
+            <span className={`text-[10px] sm:text-[11px] mt-0.5 leading-tight tracking-tight transition-colors ${activeTab === 'financials' ? 'text-amber-400 font-black' : 'text-slate-400 font-semibold group-hover:text-slate-200'}`}>
+              Profits
+            </span>
+            {activeTab === 'financials' && (
+              <span className="absolute -bottom-1 w-1.5 h-1.5 rounded-full bg-amber-400 shadow-[0_0_8px_rgba(251,191,36,1)] animate-pulse" />
+            )}
+          </button>
 
-        <button
-          type="button"
-          onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-          className={`flex flex-col items-center gap-1 p-1.5 rounded-xl text-[10px] font-bold cursor-pointer transition-all ${
-            mobileMenuOpen ? 'text-amber-300 font-black' : 'text-slate-400 hover:text-white'
-          }`}
-        >
-          <span className="text-lg">{mobileMenuOpen ? '✕' : '☰'}</span>
-          <span>{mobileMenuOpen ? 'Close' : 'Modules'}</span>
-        </button>
+          {/* 5. Modules */}
+          <button
+            type="button"
+            onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+            className="flex-1 flex flex-col items-center justify-center py-1 transition-all duration-200 group relative cursor-pointer"
+          >
+            <div className={`transition-all duration-300 ${mobileMenuOpen ? 'scale-115 text-amber-400 drop-shadow-[0_0_10px_rgba(251,191,36,0.85)]' : 'text-slate-400 group-hover:text-slate-200'}`}>
+              {mobileMenuOpen ? (
+                <svg className="w-5 h-5 fill-current" viewBox="0 0 24 24">
+                  <path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z" />
+                </svg>
+              ) : (
+                <svg className="w-5 h-5 fill-current" viewBox="0 0 24 24">
+                  <path d="M3 18h18v-2H3v2zm0-5h18v-2H3v2zm0-7v2h18V6H3z" />
+                </svg>
+              )}
+            </div>
+            <span className={`text-[10px] sm:text-[11px] mt-0.5 leading-tight tracking-tight transition-colors ${mobileMenuOpen ? 'text-amber-400 font-black' : 'text-slate-400 font-semibold group-hover:text-slate-200'}`}>
+              {mobileMenuOpen ? 'Close' : 'Modules'}
+            </span>
+            {mobileMenuOpen && (
+              <span className="absolute -bottom-1 w-1.5 h-1.5 rounded-full bg-amber-400 shadow-[0_0_8px_rgba(251,191,36,1)] animate-pulse" />
+            )}
+          </button>
+        </nav>
       </div>
 
       {/* ========================================================= */}
