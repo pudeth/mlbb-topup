@@ -344,6 +344,10 @@ const closeAbaCheckoutPopup = () => {
       abaCheckout.classList.remove('aba-checkout-desktop');
       abaCheckout.innerHTML = '';
     }
+    const form = document.getElementById('aba_merchant_request');
+    if (form) {
+      try { form.remove(); } catch (e) {}
+    }
     const sheet = document.getElementById('aba_checkout_sheet');
     if (sheet) {
       sheet.style.display = 'none';
@@ -795,31 +799,33 @@ const TopUp = () => {
         abaContainer.innerHTML = '';
       }
 
-      // 2. Prepare official form #aba_merchant_request targeting #aba_webservice iframe
+      // 2. Prepare official form #aba_merchant_request with strictly unique fields
       let form = document.getElementById('aba_merchant_request');
-      if (!form) {
-        form = document.createElement('form');
-        form.id = 'aba_merchant_request';
-        form.method = 'POST';
-        form.target = 'aba_webservice';
-        form.style.display = 'none';
-        document.body.appendChild(form);
+      if (form) {
+        try { form.remove(); } catch (e) {}
       }
-      form.action = payment.purchaseUrl || "https://checkout.payway.com.kh/api/payment-gateway/v1/payments/purchase";
+      form = document.createElement('form');
+      form.id = 'aba_merchant_request';
+      form.method = 'POST';
       form.target = 'aba_webservice';
-      form.innerHTML = '';
+      form.style.display = 'none';
+      form.action = payment.purchaseUrl || "https://checkout.payway.com.kh/api/payment-gateway/v1/payments/purchase";
 
+      const addedKeys = new Set();
       Object.entries(payment.formData).forEach(([k, v]) => {
-        const inp = document.createElement('input');
-        inp.type = 'hidden';
-        inp.name = k;
-        inp.value = v != null ? String(v) : '';
-        if (k === 'payment_option') inp.className = 'payment_option';
-        form.appendChild(inp);
+        if (!addedKeys.has(k)) {
+          addedKeys.add(k);
+          const inp = document.createElement('input');
+          inp.type = 'hidden';
+          inp.name = k;
+          inp.value = v != null ? String(v) : '';
+          if (k === 'payment_option') inp.className = 'payment_option';
+          form.appendChild(inp);
+        }
       });
 
-      // Ensure payment_option exists
-      if (!form.querySelector('input[name="payment_option"]')) {
+      // Ensure payment_option exists exactly once
+      if (!addedKeys.has('payment_option')) {
         const opt = document.createElement('input');
         opt.type = 'hidden';
         opt.name = 'payment_option';
@@ -827,6 +833,8 @@ const TopUp = () => {
         opt.value = 'abapay_khqr';
         form.appendChild(opt);
       }
+
+      document.body.appendChild(form);
 
       // 3. Launch official ABA PayWay popup on Desktop or Drawer on Mobile!
       const payway = getAbaPaywayInstance();
@@ -3181,28 +3189,6 @@ const TopUp = () => {
           </div>
         </div>
       )}
-      {/* Injected Form */}
-      <form
-        id="aba_merchant_request"
-        method="POST"
-        target="aba_webservice"
-        action={paymentData?.purchaseUrl || "https://checkout.payway.com.kh/api/payment-gateway/v1/payments/purchase"}
-        className="hidden"
-      >
-        {paymentData?.formData &&
-          Object.entries(paymentData.formData).map(([k, v]) => (
-            <input
-              key={k}
-              type="hidden"
-              name={k}
-              value={v || ''}
-              className={k === 'payment_option' ? 'payment_option' : undefined}
-            />
-          ))}
-        {paymentData?.formData && !paymentData.formData.payment_option && (
-          <input type="hidden" name="payment_option" className="payment_option" value="abapay_khqr" />
-        )}
-              </form>
     </div>
   );
 };
