@@ -129,6 +129,7 @@ export const paywayAPI = {
   },
   getExchangeRate: () => api.get('/payway/exchange-rate'),
   getPollingLog: (tranId) => api.get(`/payway/polling-log/${tranId}`),
+  syncReceiptsToMongoDB: (tranId) => api.post('/payway/sync-mongodb', tranId ? { tranId } : {}),
 };
 
 // Bakong Gateway API

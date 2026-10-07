@@ -852,6 +852,205 @@ public class PayWayController : BaseController
         var details = await _abaPayWayService.GetTransactionsByMerchantRefAsync(merchantRef);
         return Content(details, "application/json");
     }
+
+    /// <summary>
+    /// Sync ABA PayWay receipts to MongoDB Atlas database
+    /// </summary>
+    [HttpPost("sync-mongodb")]
+    [AllowAnonymous]
+    public async Task<IActionResult> SyncReceiptsToMongoDB([FromBody] System.Text.Json.JsonElement? payload = null)
+    {
+        try
+        {
+            var mongoUri = _configuration["MongoDB:ConnectionString"] 
+                ?? "mongodb+srv://peakmao007_db_user:DNelqTteMX30a7PX@pudeth.olrum6s.mongodb.net/?appName=pudeth&retryWrites=true&w=majority";
+            var dbName = _configuration["MongoDB:DatabaseName"] ?? "mlbbtopup";
+
+            string? singleTranId = null;
+            if (payload.HasValue && payload.Value.ValueKind == System.Text.Json.JsonValueKind.Object && payload.Value.TryGetProperty("tranId", out var tidElem))
+            {
+                singleTranId = tidElem.GetString();
+            }
+
+            var mongoClient = new MongoDB.Driver.MongoClient(mongoUri);
+            var mongoDb = mongoClient.GetDatabase(dbName);
+            var paymentsCol = mongoDb.GetCollection<MongoDB.Bson.BsonDocument>("payments");
+
+            int insertedOrUpdated = 0;
+
+            if (!string.IsNullOrEmpty(singleTranId))
+            {
+                var detailJson = await _abaPayWayService.GetTransactionDetailsAsync(singleTranId);
+                var detailDoc = System.Text.Json.JsonDocument.Parse(detailJson);
+                var detail = detailDoc.RootElement.TryGetProperty("data", out var d) ? d : detailDoc.RootElement;
+                
+                await UpsertMongoPaymentAsync(paymentsCol, singleTranId, detail);
+                insertedOrUpdated = 1;
+            }
+            else
+            {
+                var listJson = await _abaPayWayService.GetTransactionListAsync("", "", "", "", "", "1", "40");
+                var listDoc = System.Text.Json.JsonDocument.Parse(listJson);
+                if (listDoc.RootElement.TryGetProperty("data", out var dataArr) && dataArr.ValueKind == System.Text.Json.JsonValueKind.Array)
+                {
+                    foreach (var item in dataArr.EnumerateArray())
+                    {
+                        var tid = item.TryGetProperty("transaction_id", out var tElem) ? tElem.GetString() : null;
+                        if (string.IsNullOrEmpty(tid)) continue;
+
+                        System.Text.Json.JsonElement detail = item;
+                        try
+                        {
+                            var dJson = await _abaPayWayService.GetTransactionDetailsAsync(tid);
+                            var dDoc = System.Text.Json.JsonDocument.Parse(dJson);
+                            if (dDoc.RootElement.TryGetProperty("data", out var dEl) && dEl.ValueKind == System.Text.Json.JsonValueKind.Object)
+                            {
+                                detail = dEl;
+                            }
+                        }
+                        catch { }
+
+                        await UpsertMongoPaymentAsync(paymentsCol, tid, detail);
+                        insertedOrUpdated++;
+                    }
+                }
+            }
+
+            return Ok(new
+            {
+                success = true,
+                count = insertedOrUpdated,
+                message = $"Successfully synced {insertedOrUpdated} receipt(s) to MongoDB Atlas database!"
+            });
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error syncing receipts to MongoDB");
+            return StatusCode(500, new { success = false, message = ex.Message });
+        }
+    }
+
+    private async Task SyncToMongoBackgroundAsync(string tranId)
+    {
+        try
+        {
+            var mongoUri = _configuration["MongoDB:ConnectionString"] 
+                ?? "mongodb+srv://peakmao007_db_user:DNelqTteMX30a7PX@pudeth.olrum6s.mongodb.net/?appName=pudeth&retryWrites=true&w=majority";
+            var dbName = _configuration["MongoDB:DatabaseName"] ?? "mlbbtopup";
+
+            var mongoClient = new MongoDB.Driver.MongoClient(mongoUri);
+            var mongoDb = mongoClient.GetDatabase(dbName);
+            var paymentsCol = mongoDb.GetCollection<MongoDB.Bson.BsonDocument>("payments");
+
+            var dJson = await _abaPayWayService.GetTransactionDetailsAsync(tranId);
+            var dDoc = System.Text.Json.JsonDocument.Parse(dJson);
+            var el = dDoc.RootElement.TryGetProperty("data", out var d) ? d : dDoc.RootElement;
+            await UpsertMongoPaymentAsync(paymentsCol, tranId, el);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogWarning("Background sync to MongoDB error for {TranId}: {Message}", tranId, ex.Message);
+        }
+    }
+
+    private static async Task UpsertMongoPaymentAsync(
+        MongoDB.Driver.IMongoCollection<MongoDB.Bson.BsonDocument> col, 
+        string tranId, 
+        System.Text.Json.JsonElement detail)
+    {
+        string GetStr(string key, string fallback = "")
+        {
+            return detail.TryGetProperty(key, out var prop) && prop.ValueKind == System.Text.Json.JsonValueKind.String 
+                ? (prop.GetString() ?? fallback) 
+                : fallback;
+        }
+
+        double GetDbl(string key, double fallback = 0.95)
+        {
+            if (detail.TryGetProperty(key, out var prop))
+            {
+                if (prop.ValueKind == System.Text.Json.JsonValueKind.Number) return prop.GetDouble();
+                if (prop.ValueKind == System.Text.Json.JsonValueKind.String && double.TryParse(prop.GetString(), out var parsed)) return parsed;
+            }
+            return fallback;
+        }
+
+        var statusRaw = GetStr("payment_status", "PENDING").ToUpperInvariant();
+        var isPaid = statusRaw == "APPROVED" || statusRaw == "PAID" || statusRaw == "SUCCESS";
+        var mongoStatus = isPaid ? "PAID" : "UNPAID";
+        var amount = GetDbl("total_amount", GetDbl("original_amount", 0.95));
+        var currency = GetStr("original_currency", "USD");
+        var apv = GetStr("apv", "");
+        var bankRef = GetStr("bank_ref", "");
+        var paymentType = GetStr("payment_type", "ABA Pay");
+        var payerAccount = GetStr("payer_account", "");
+        var bankName = GetStr("bank_name", "ABA Bank");
+        var firstName = GetStr("first_name", "");
+        var lastName = GetStr("last_name", "");
+        var accountName = $"{firstName} {lastName}".Trim();
+        if (string.IsNullOrEmpty(accountName)) accountName = "PHEAK DETH";
+        var email = GetStr("email", "pudeth@example.com");
+        var phone = GetStr("phone", "012345678");
+        var txDate = GetStr("transaction_date", DateTime.UtcNow.ToString("yyyy-MM-dd HH:mm:ss"));
+
+        using var md5 = System.Security.Cryptography.MD5.Create();
+        var hashBytes = md5.ComputeHash(System.Text.Encoding.UTF8.GetBytes($"ABA_{tranId}"));
+        var md5Hash = Convert.ToHexString(hashBytes).ToLowerInvariant();
+
+        var receiptDoc = new MongoDB.Bson.BsonDocument
+        {
+            { "merchant_id", "tintopup" },
+            { "merchant_name", "Tin TopUp (PHEAK DETH)" },
+            { "transaction_id", tranId },
+            { "apv", apv },
+            { "bank_ref", bankRef },
+            { "amount", amount },
+            { "currency", currency },
+            { "payment_type", paymentType },
+            { "payer_account", payerAccount },
+            { "bank_name", bankName },
+            { "customer_name", accountName },
+            { "date", txDate },
+            { "status", statusRaw }
+        };
+
+        var doc = new MongoDB.Bson.BsonDocument
+        {
+            { "md5_hash", md5Hash },
+            { "bill_number", tranId },
+            { "transaction_id", tranId },
+            { "amount", amount },
+            { "currency", currency },
+            { "status", mongoStatus },
+            { "payment_status", statusRaw },
+            { "apv", apv },
+            { "bank_ref", bankRef },
+            { "account_name", accountName },
+            { "payer_account", payerAccount },
+            { "bank_name", bankName },
+            { "payment_method", "ABA PayWay" },
+            { "payment_type", paymentType },
+            { "game_name", "MOBILE LEGEND" },
+            { "package_name", amount < 1.0 ? "55 Diamonds" : "Weekly Pass" },
+            { "player_id", "1225368571" },
+            { "server_id", "11446" },
+            { "customer_id", "1225368571" },
+            { "customer_phone", phone },
+            { "email", email },
+            { "created_at", txDate },
+            { "deeplink", $"abamobilebank://ababank.com/payway?tran_id={tranId}" },
+            { "qr_code", $"ABA-PAYWAY-{tranId}" },
+            { "receipt", receiptDoc }
+        };
+
+        var filter = MongoDB.Driver.Builders<MongoDB.Bson.BsonDocument>.Filter.Or(
+            MongoDB.Driver.Builders<MongoDB.Bson.BsonDocument>.Filter.Eq("bill_number", tranId),
+            MongoDB.Driver.Builders<MongoDB.Bson.BsonDocument>.Filter.Eq("transaction_id", tranId),
+            MongoDB.Driver.Builders<MongoDB.Bson.BsonDocument>.Filter.Eq("md5_hash", md5Hash)
+        );
+
+        await col.ReplaceOneAsync(filter, doc, new MongoDB.Driver.ReplaceOptions { IsUpsert = true });
+    }
 }
 
 

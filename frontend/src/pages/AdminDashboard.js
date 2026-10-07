@@ -891,6 +891,7 @@ const PRICING_GAMES = [
   const [paywayTranDetailLoading, setPaywayTranDetailLoading] = useState(false);
   const [paywayReceiptModalOpen, setPaywayReceiptModalOpen] = useState(false);
   const [paywayReceiptTran, setPaywayReceiptTran] = useState(null);
+  const [paywaySyncing, setPaywaySyncing] = useState(false);
 
   // Game & Logo Management State
   const [gamesList, setGamesList] = useState(() => getStoredGames());
@@ -5930,6 +5931,27 @@ const PRICING_GAMES = [
                 </a>
                 <button
                   type="button"
+                  onClick={async () => {
+                    setPaywaySyncing(true);
+                    try {
+                      const res = await paywayAPI.syncReceiptsToMongoDB();
+                      const msg = res?.data?.message || 'Receipts synced to MongoDB Atlas!';
+                      showToast('success', msg);
+                    } catch (err) {
+                      showToast('error', err.response?.data?.message || err.message || 'Failed to sync receipts to MongoDB');
+                    } finally {
+                      setPaywaySyncing(false);
+                    }
+                  }}
+                  disabled={paywaySyncing || paywayLoading}
+                  className="btn btn-gold text-xs py-2 px-3 flex items-center gap-1.5 shadow-glow-gold cursor-pointer"
+                  title="Insert & Sync all ABA PayWay receipts into MongoDB Atlas database"
+                >
+                  <span className={paywaySyncing ? 'animate-spin' : ''}>{paywaySyncing ? '⏳' : '📥'}</span>
+                  <span>{paywaySyncing ? 'Syncing to DB...' : 'Sync Receipts to DB'}</span>
+                </button>
+                <button
+                  type="button"
                   onClick={() => loadData(false)}
                   disabled={refreshing || paywayLoading}
                   className="btn btn-secondary text-xs py-2 px-3 flex items-center gap-1.5"
@@ -6552,7 +6574,7 @@ const PRICING_GAMES = [
                     </div>
 
                     {/* Action buttons */}
-                    <div className="flex gap-2 pt-1">
+                    <div className="flex flex-wrap gap-2 pt-1">
                       <button
                         type="button"
                         onClick={() => window.print()}
@@ -6560,6 +6582,22 @@ const PRICING_GAMES = [
                       >
                         <span>🖨️</span>
                         <span>Print Receipt</span>
+                      </button>
+                      <button
+                        type="button"
+                        onClick={async () => {
+                          try {
+                            const res = await paywayAPI.syncReceiptsToMongoDB(tranId);
+                            showToast('success', res?.data?.message || `Receipt #${tranId} inserted into DB!`);
+                          } catch (err) {
+                            showToast('error', err.response?.data?.message || err.message || 'Failed to save receipt to DB');
+                          }
+                        }}
+                        className="btn btn-secondary text-xs py-2.5 px-3 flex items-center gap-1 text-emerald-400 hover:text-emerald-300 border-emerald-500/30 cursor-pointer"
+                        title="Save/Upsert this receipt into MongoDB database"
+                      >
+                        <span>💾</span>
+                        <span>Save to DB</span>
                       </button>
                       <button
                         type="button"
