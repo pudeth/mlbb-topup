@@ -1595,7 +1595,8 @@ const TopUp = () => {
         account_name: playerAccName,
         customer_id: customerId,
         game_name: gameTitle,
-        package_name: pkgName
+        package_name: pkgName,
+        diamondAmount: effectiveDiamonds
       };
 
       let directRes = null;

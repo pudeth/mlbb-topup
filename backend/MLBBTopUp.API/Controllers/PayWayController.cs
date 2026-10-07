@@ -15,6 +15,7 @@ public class PayWayController : BaseController
     private readonly Microsoft.Extensions.Configuration.IConfiguration _configuration;
     private readonly IPaymentService _paymentService;
     private readonly IOrderService _orderService;
+    private readonly ITopUpService _topUpService;
     private readonly ApplicationDbContext _context;
     private readonly ILogger<PayWayController> _logger;
     private readonly IServiceScopeFactory _serviceScopeFactory;
@@ -23,6 +24,7 @@ public class PayWayController : BaseController
         IAbaPayWayService abaPayWayService,
         IPaymentService paymentService,
         IOrderService orderService,
+        ITopUpService topUpService,
         ApplicationDbContext context,
         ILogger<PayWayController> logger,
         Microsoft.Extensions.Configuration.IConfiguration configuration,
@@ -31,6 +33,7 @@ public class PayWayController : BaseController
         _abaPayWayService = abaPayWayService;
         _paymentService = paymentService;
         _orderService = orderService;
+        _topUpService = topUpService;
         _context = context;
         _logger = logger;
         _configuration = configuration;
@@ -42,6 +45,19 @@ public class PayWayController : BaseController
         public int OrderId { get; set; }
         public decimal Amount { get; set; }
         public string Currency { get; set; } = "USD";
+        public string? PlayerId { get; set; }
+        public string? Player_Id { get; set; }
+        public string? ServerId { get; set; }
+        public string? Server_Id { get; set; }
+        public string? AccountName { get; set; }
+        public string? Account_Name { get; set; }
+        public string? CustomerId { get; set; }
+        public string? Customer_Id { get; set; }
+        public string? GameName { get; set; }
+        public string? Game_Name { get; set; }
+        public string? PackageName { get; set; }
+        public string? Package_Name { get; set; }
+        public int? DiamondAmount { get; set; }
     }
 
     /// <summary>
@@ -51,6 +67,12 @@ public class PayWayController : BaseController
     [AllowAnonymous]
     public async Task<IActionResult> CreatePayment([FromBody] CreatePayWayRequest request)
     {
+        var resolvedPlayerId = !string.IsNullOrWhiteSpace(request.PlayerId) ? request.PlayerId : request.Player_Id;
+        var resolvedServerId = !string.IsNullOrWhiteSpace(request.ServerId) ? request.ServerId : request.Server_Id;
+        var resolvedAccountName = !string.IsNullOrWhiteSpace(request.AccountName) ? request.AccountName : request.Account_Name;
+        var resolvedPkgName = !string.IsNullOrWhiteSpace(request.PackageName) ? request.PackageName : request.Package_Name;
+        var resolvedDiamonds = request.DiamondAmount ?? (resolvedPkgName?.Contains("55") == true ? 55 : (resolvedPkgName?.ToLower().Contains("weekly") == true ? 210 : 55));
+
         var order = await _context.Orders.FindAsync(request.OrderId);
         if (order == null)
         {
@@ -61,7 +83,7 @@ public class PayWayController : BaseController
             {
                 defaultProduct = new MLBBTopUp.Core.Entities.Product
                 {
-                    DiamondAmount = 55,
+                    DiamondAmount = resolvedDiamonds,
                     Price = fallbackAmt,
                     Status = "Active",
                     CreatedAt = DateTime.UtcNow
@@ -72,8 +94,9 @@ public class PayWayController : BaseController
 
             order = new MLBBTopUp.Core.Entities.Order
             {
-                PlayerID = "Player",
-                ServerID = "Global",
+                PlayerID = !string.IsNullOrWhiteSpace(resolvedPlayerId) ? resolvedPlayerId.Trim() : "Player",
+                ServerID = !string.IsNullOrWhiteSpace(resolvedServerId) ? resolvedServerId.Trim() : "Global",
+                AccountName = resolvedAccountName,
                 ProductId = defaultProduct.ProductId,
                 Amount = fallbackAmt,
                 PaymentStatus = "Pending",
@@ -83,6 +106,30 @@ public class PayWayController : BaseController
             _context.Orders.Add(order);
             await _context.SaveChangesAsync();
             request.OrderId = order.OrderId;
+        }
+        else
+        {
+            // If order already existed but had missing or placeholder PlayerID / ServerID, sync from request
+            bool modified = false;
+            if ((string.IsNullOrWhiteSpace(order.PlayerID) || order.PlayerID == "Player") && !string.IsNullOrWhiteSpace(resolvedPlayerId))
+            {
+                order.PlayerID = resolvedPlayerId.Trim();
+                modified = true;
+            }
+            if ((string.IsNullOrWhiteSpace(order.ServerID) || order.ServerID == "Global") && !string.IsNullOrWhiteSpace(resolvedServerId))
+            {
+                order.ServerID = resolvedServerId.Trim();
+                modified = true;
+            }
+            if (string.IsNullOrWhiteSpace(order.AccountName) && !string.IsNullOrWhiteSpace(resolvedAccountName))
+            {
+                order.AccountName = resolvedAccountName.Trim();
+                modified = true;
+            }
+            if (modified)
+            {
+                await _context.SaveChangesAsync();
+            }
         }
 
         decimal finalAmount = request.Amount > 0 ? request.Amount : order.Amount;
@@ -349,6 +396,7 @@ public class PayWayController : BaseController
                         {
                             payment.Status = "Completed";
                             payment.PaidAt = DateTime.UtcNow;
+                            await _orderService.UpdateOrderPaymentStatusAsync(payment.OrderId, "Paid");
                             await _context.SaveChangesAsync();
                         }
                         await paymentService.VerifyPaymentAsync(orderId);
@@ -450,7 +498,6 @@ public class PayWayController : BaseController
                     payment.Status = "Completed";
                     payment.PaidAt = DateTime.UtcNow;
                     await _orderService.UpdateOrderPaymentStatusAsync(payment.OrderId, "Paid");
-                    await _orderService.UpdateOrderTopupStatusAsync(payment.OrderId, "Completed");
                     await _context.SaveChangesAsync();
 
                     // Verify payment & trigger auto delivery
@@ -473,7 +520,6 @@ public class PayWayController : BaseController
                 status = 0,
                 tran_id = tranId,
                 payment_status = "Completed",
-                order_status = "Completed",
                 description = "Success",
                 message = "Transaction confirmed as Completed / Success"
             });
@@ -482,6 +528,65 @@ public class PayWayController : BaseController
         {
             _logger.LogError(ex, "Error processing ABA PayWay callback");
             return Ok(new { status = 0, description = "Success", message = "Callback processed" });
+        }
+    }
+
+    /// <summary>
+    /// Force or retry dispatch of diamonds for an approved ABA PayWay transaction
+    /// </summary>
+    [HttpPost("deliver-topup/{tranId}")]
+    [AllowAnonymous]
+    public async Task<IActionResult> DeliverTopUp(string tranId)
+    {
+        if (string.IsNullOrWhiteSpace(tranId))
+            return BadRequest(new { message = "tranId is required" });
+
+        var payment = await _context.Payments.FirstOrDefaultAsync(p => p.TransactionID == tranId);
+        if (payment == null)
+        {
+            return NotFound(new { message = $"Payment record with Transaction ID '{tranId}' not found." });
+        }
+
+        var order = await _orderService.GetOrderByIdAsync(payment.OrderId);
+        if (order == null)
+        {
+            return NotFound(new { message = $"Order #{payment.OrderId} not found." });
+        }
+
+        // Ensure payment marked Completed / Paid
+        payment.Status = "Completed";
+        payment.PaidAt ??= DateTime.UtcNow;
+        await _orderService.UpdateOrderPaymentStatusAsync(order.OrderId, "Paid");
+        await _context.SaveChangesAsync();
+
+        _logger.LogInformation("deliver-topup requested for TranId {TranId}, Order #{OrderId} (Player {PlayerId}, Zone {Zone}, Diamonds {Diamonds})",
+            tranId, order.OrderId, order.PlayerID, order.ServerID, order.DiamondAmount);
+
+        var topupRes = await _topUpService.ProcessTopUpAsync(order.OrderId, order.PlayerID, order.ServerID, order.DiamondAmount);
+        if (topupRes.Success)
+        {
+            await _orderService.UpdateOrderTopupStatusAsync(order.OrderId, "Completed");
+            return Ok(new
+            {
+                success = true,
+                message = topupRes.Message ?? "Diamonds dispatched successfully via Khmer TopUp supplier!",
+                orderId = order.OrderId,
+                transactionId = topupRes.TransactionId,
+                status = "Completed"
+            });
+        }
+        else
+        {
+            var err = (topupRes.ErrorReason ?? topupRes.Message ?? "").ToLower();
+            var isLowBalance = err.Contains("insufficient") || err.Contains("balance") || err.Contains("funds") || err.Contains("wallet") || err.Contains("fzr.cards");
+            await _orderService.UpdateOrderTopupStatusAsync(order.OrderId, isLowBalance ? "AwaitingBalance" : "Failed");
+            return BadRequest(new
+            {
+                success = false,
+                message = topupRes.ErrorReason ?? topupRes.Message ?? "Failed to fulfill top-up with supplier",
+                orderId = order.OrderId,
+                isLowBalance
+            });
         }
     }
 

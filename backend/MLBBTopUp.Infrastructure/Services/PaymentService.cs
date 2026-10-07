@@ -336,14 +336,15 @@ public class PaymentService : IPaymentService
             return false;
         }
 
-        // If payment already completed, return true
+        bool isPaymentPaid = false;
+
+        // If payment already completed in database
         if (payment.Status == "Completed" && payment.PaidAt.HasValue)
         {
-            return true;
+            isPaymentPaid = true;
         }
-
         // If ABA PayWay payment, check status with ABA PayWay service
-        if (payment.PaymentMethod?.ToLower() == "abapayway" && !string.IsNullOrEmpty(payment.TransactionID))
+        else if (payment.PaymentMethod?.ToLower() == "abapayway" && !string.IsNullOrEmpty(payment.TransactionID))
         {
             _logger.LogInformation("Verifying ABA PayWay payment for order {OrderId} (TranId: {TranId})", orderId, payment.TransactionID);
             var payWayCheck = await _abaPayWayService.CheckTransactionAsync(payment.TransactionID);
@@ -354,124 +355,105 @@ public class PaymentService : IPaymentService
                 payment.PaidAt = DateTime.UtcNow;
                 await _orderService.UpdateOrderPaymentStatusAsync(orderId, "Paid");
                 await _context.SaveChangesAsync();
-
-                // Auto-trigger top-up delivery
-                var order = await _orderService.GetOrderByIdAsync(orderId);
-                if (order != null && order.TopupStatus == "Pending")
-                {
-                    _logger.LogInformation("Auto-triggering top-up delivery for paid order {OrderId}", orderId);
-                    _ = Task.Run(async () =>
-                    {
-                        try
-                        {
-                            using var scope = _serviceScopeFactory.CreateScope();
-                            var scopedTopUp = scope.ServiceProvider.GetRequiredService<ITopUpService>();
-                            var scopedOrderService = scope.ServiceProvider.GetRequiredService<IOrderService>();
-                            var topupRes = await scopedTopUp.ProcessTopUpAsync(order.OrderId, order.PlayerID, order.ServerID, order.DiamondAmount);
-                            if (topupRes.Success)
-                            {
-                                await scopedOrderService.UpdateOrderTopupStatusAsync(order.OrderId, "Completed");
-                            }
-                            else
-                            {
-                                var err = (topupRes.ErrorReason ?? topupRes.Message ?? "").ToLower();
-                                var isLowBalance = err.Contains("insufficient") || err.Contains("balance") || err.Contains("funds") || err.Contains("wallet") || err.Contains("fzr.cards");
-                                await scopedOrderService.UpdateOrderTopupStatusAsync(order.OrderId, isLowBalance ? "AwaitingBalance" : "Failed");
-                            }
-                        }
-                        catch { }
-                    });
-                }
-                return true;
+                isPaymentPaid = true;
             }
         }
-
         // If KHQR payment, check status with KHQR service
-        if (!string.IsNullOrEmpty(payment.KHQRMd5Hash))
+        else if (!string.IsNullOrEmpty(payment.KHQRMd5Hash))
         {
             _logger.LogInformation("Verifying KHQR payment for order {OrderId} (MD5: {Md5Hash})", orderId, payment.KHQRMd5Hash);
-            
             var statusResult = await _khqrService.CheckPaymentStatusAsync(payment.KHQRMd5Hash);
             var rawSt = (statusResult.Status ?? string.Empty).ToUpper();
-            
             if (rawSt == "PAID" || rawSt == "SUCCESS" || rawSt == "COMPLETED")
             {
                 _logger.LogInformation("KHQR payment confirmed as PAID for order {OrderId}", orderId);
-                
                 payment.Status = "Completed";
                 payment.PaidAt = DateTime.UtcNow;
-                
                 await _orderService.UpdateOrderPaymentStatusAsync(orderId, "Paid");
                 await _context.SaveChangesAsync();
-                
-                // Auto-trigger top-up delivery
-                var order = await _orderService.GetOrderByIdAsync(orderId);
-                if (order != null && order.TopupStatus == "Pending")
-                {
-                    _logger.LogInformation("Auto-triggering top-up delivery for paid order {OrderId}", orderId);
-                    _ = Task.Run(async () =>
-                    {
-                        try
-                        {
-                            using var scope = _serviceScopeFactory.CreateScope();
-                            var scopedTopUp = scope.ServiceProvider.GetRequiredService<ITopUpService>();
-                            var scopedOrderService = scope.ServiceProvider.GetRequiredService<IOrderService>();
-                            var topupRes = await scopedTopUp.ProcessTopUpAsync(
-                                order.OrderId,
-                                order.PlayerID,
-                                order.ServerID,
-                                order.DiamondAmount
-                            );
-                            if (topupRes.Success)
-                            {
-                                await scopedOrderService.UpdateOrderTopupStatusAsync(order.OrderId, "Completed");
-                            }
-                            else
-                            {
-                                var err = (topupRes.ErrorReason ?? topupRes.Message ?? "").ToLower();
-                                var isLowBalance = err.Contains("insufficient") || err.Contains("balance") || err.Contains("funds") || err.Contains("fzr.cards") || err.Contains("wallet");
-                                await scopedOrderService.UpdateOrderTopupStatusAsync(order.OrderId, isLowBalance ? "AwaitingBalance" : "Failed");
-                            }
-                        }
-                        catch (Exception ex)
-                        {
-                            _logger.LogError(ex, "Error auto-processing top-up for order {OrderId}", orderId);
-                        }
-                    });
-
-                    // Send Telegram delivery notification
-                    _ = Task.Run(async () =>
-                    {
-                        try
-                        {
-                            var totalKhr = Math.Round(order.Amount * 4100m);
-                            string playerName = !string.IsNullOrWhiteSpace(order.AccountName) ? order.AccountName : "Player";
-                            string customerIdText = order.UserId.HasValue ? $"#{order.UserId.Value}" : $"Guest #{order.OrderId}";
-                            var msg = $"🎉 <b>ORDER #{order.OrderId} CONFIRMED & DELIVERED!</b>\n" +
-                                      $"━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n" +
-                                      $"👤 <b>Account Player:</b> <b>{EscapeHtml(playerName)}</b>\n" +
-                                      $"🆔 <b>Player ID:</b> <code>{EscapeHtml(order.PlayerID)}</code> (Zone {EscapeHtml(order.ServerID)})\n" +
-                                      $"👤 <b>Customer ID:</b> <code>{customerIdText}</code>\n" +
-                                      $"💎 <b>Diamonds:</b> {order.DiamondAmount}\n" +
-                                      $"💰 <b>Amount:</b> ${order.Amount:F2} USD ({totalKhr:N0} ៛)\n" +
-                                      $"⏰ <b>Time:</b> {DateTime.UtcNow:dd MMM yyyy, HH:mm:ss} UTC\n" +
-                                      $"━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n" +
-                                      $"⚡ <b>Customer screen transitioned to [PAID SUCCESS]!</b>";
-
-                            await SendTelegramAsync(msg);
-                        }
-                        catch { }
-                    });
-                }
-                
-                return true;
+                isPaymentPaid = true;
             }
-            
-            return false;
         }
 
-        // For non-KHQR payments, check local status
-        return payment.Status == "Completed" && payment.PaidAt.HasValue;
+        if (isPaymentPaid)
+        {
+            // Ensure top-up delivery is dispatched whenever payment is confirmed and top-up is not completed
+            var order = await _orderService.GetOrderByIdAsync(orderId);
+            if (order != null && order.TopupStatus != "Completed")
+            {
+                TriggerOrderTopUpDeliveryAsync(orderId);
+            }
+            return true;
+        }
+
+        return false;
+    }
+
+    private void TriggerOrderTopUpDeliveryAsync(int orderId)
+    {
+        _logger.LogInformation("Auto-triggering top-up delivery for paid order {OrderId}", orderId);
+        _ = Task.Run(async () =>
+        {
+            try
+            {
+                using var scope = _serviceScopeFactory.CreateScope();
+                var scopedTopUp = scope.ServiceProvider.GetRequiredService<ITopUpService>();
+                var scopedOrderService = scope.ServiceProvider.GetRequiredService<IOrderService>();
+
+                var order = await scopedOrderService.GetOrderByIdAsync(orderId);
+                if (order == null) return;
+
+                if (order.TopupStatus == "Completed")
+                {
+                    _logger.LogInformation("Order {OrderId} top-up is already completed, skipping duplicate delivery.", orderId);
+                    return;
+                }
+
+                _logger.LogInformation("Executing topup provider request for order {OrderId} (Player: {PlayerId}, Zone: {Zone}, Diamonds: {Diamonds})...",
+                    order.OrderId, order.PlayerID, order.ServerID, order.DiamondAmount);
+
+                var topupRes = await scopedTopUp.ProcessTopUpAsync(order.OrderId, order.PlayerID, order.ServerID, order.DiamondAmount);
+                if (topupRes.Success)
+                {
+                    _logger.LogInformation("Top-up SUCCESS for order {OrderId}! TxId: {TxId}", order.OrderId, topupRes.TransactionId);
+                    await scopedOrderService.UpdateOrderTopupStatusAsync(order.OrderId, "Completed");
+                }
+                else
+                {
+                    var err = (topupRes.ErrorReason ?? topupRes.Message ?? "").ToLower();
+                    var isLowBalance = err.Contains("insufficient") || err.Contains("balance") || err.Contains("funds") || err.Contains("wallet") || err.Contains("fzr.cards");
+                    _logger.LogWarning("Top-up failed for order {OrderId}: {Err} (isLowBalance: {IsLowBalance})", order.OrderId, err, isLowBalance);
+                    await scopedOrderService.UpdateOrderTopupStatusAsync(order.OrderId, isLowBalance ? "AwaitingBalance" : "Failed");
+                }
+
+                // Send Telegram delivery notification
+                try
+                {
+                    var totalKhr = Math.Round(order.Amount * 4100m);
+                    string playerName = !string.IsNullOrWhiteSpace(order.AccountName) ? order.AccountName : "Player";
+                    string customerIdText = order.UserId.HasValue ? $"#{order.UserId.Value}" : $"Guest #{order.OrderId}";
+                    var statusEmoji = topupRes.Success ? "🎉" : "⚠️";
+                    var statusText = topupRes.Success ? "CONFIRMED & DELIVERED!" : "PAID BUT TOPUP PENDING/FAILED";
+                    var msg = $"{statusEmoji} <b>ORDER #{order.OrderId} {statusText}</b>\n" +
+                              $"━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n" +
+                              $"👤 <b>Account Player:</b> <b>{EscapeHtml(playerName)}</b>\n" +
+                              $"🆔 <b>Player ID:</b> <code>{EscapeHtml(order.PlayerID)}</code> (Zone {EscapeHtml(order.ServerID)})\n" +
+                              $"👤 <b>Customer ID:</b> <code>{customerIdText}</code>\n" +
+                              $"💎 <b>Diamonds:</b> {order.DiamondAmount}\n" +
+                              $"💰 <b>Amount:</b> ${order.Amount:F2} USD ({totalKhr:N0} ៛)\n" +
+                              $"⏰ <b>Time:</b> {DateTime.UtcNow:dd MMM yyyy, HH:mm:ss} UTC\n" +
+                              $"━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n" +
+                              $"⚡ <b>Supplier Status:</b> {EscapeHtml(topupRes.Message ?? (topupRes.Success ? "Completed" : "Failed"))}";
+
+                    await SendTelegramAsync(msg);
+                }
+                catch { }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error auto-processing top-up for order {OrderId}", orderId);
+            }
+        });
     }
 
     private static PaymentResponse MapToResponse(Payment payment)

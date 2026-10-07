@@ -632,6 +632,9 @@ public class AdminController : BaseController
 
         if (!result.Success)
         {
+            var err = (result.ErrorReason ?? result.Message ?? "").ToLower();
+            var isLowBalance = err.Contains("insufficient") || err.Contains("balance") || err.Contains("funds") || err.Contains("wallet") || err.Contains("fzr.cards");
+            await _orderService.UpdateOrderTopupStatusAsync(id, isLowBalance ? "AwaitingBalance" : "Failed");
             return BadRequest(new
             {
                 message = !string.IsNullOrWhiteSpace(result.Message) ? result.Message : "Top-up processing failed",
@@ -639,6 +642,7 @@ public class AdminController : BaseController
             });
         }
 
+        await _orderService.UpdateOrderTopupStatusAsync(id, "Completed");
         return Ok(new
         {
             message = result.Message ?? "Top-up processed successfully",
@@ -696,8 +700,18 @@ public class AdminController : BaseController
                     order.DiamondAmount
                 );
 
-                if (result.Success) successCount++;
-                else failedCount++;
+                if (result.Success)
+                {
+                    await _orderService.UpdateOrderTopupStatusAsync(id, "Completed");
+                    successCount++;
+                }
+                else
+                {
+                    var err = (result.ErrorReason ?? result.Message ?? "").ToLower();
+                    var isLowBalance = err.Contains("insufficient") || err.Contains("balance") || err.Contains("funds") || err.Contains("wallet") || err.Contains("fzr.cards");
+                    await _orderService.UpdateOrderTopupStatusAsync(id, isLowBalance ? "AwaitingBalance" : "Failed");
+                    failedCount++;
+                }
             }
             else
             {

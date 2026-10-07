@@ -892,6 +892,7 @@ const PRICING_GAMES = [
   const [paywayReceiptModalOpen, setPaywayReceiptModalOpen] = useState(false);
   const [paywayReceiptTran, setPaywayReceiptTran] = useState(null);
   const [paywaySyncing, setPaywaySyncing] = useState(false);
+  const [paywayDeliveringId, setPaywayDeliveringId] = useState(null);
 
   // Game & Logo Management State
   const [gamesList, setGamesList] = useState(() => getStoredGames());
@@ -6249,6 +6250,29 @@ const PRICING_GAMES = [
                             <td className="py-3 px-3 text-slate-300 text-[11px] font-medium whitespace-nowrap">{dateStr}</td>
                             <td className="py-3 px-4 text-right">
                               <div className="flex items-center justify-end gap-1.5" onClick={(e) => e.stopPropagation()}>
+                                {isPaid && (
+                                  <button
+                                    type="button"
+                                    title="Deliver Diamonds via Khmer TopUp"
+                                    disabled={paywayDeliveringId === tranId}
+                                    className="text-[11px] text-emerald-300 hover:text-emerald-200 font-bold px-2.5 py-1 rounded-lg bg-emerald-500/15 hover:bg-emerald-500/25 border border-emerald-500/40 transition-colors flex items-center gap-1 cursor-pointer disabled:opacity-50"
+                                    onClick={async () => {
+                                      setPaywayDeliveringId(tranId);
+                                      try {
+                                        const res = await paywayAPI.deliverTopUp(tranId);
+                                        showToast('success', res?.data?.message || `Top-up delivered successfully! (Tx: ${res?.data?.transactionId || tranId})`);
+                                        loadData(true);
+                                      } catch (err) {
+                                        showToast('error', err.response?.data?.message || err.message || 'Failed to deliver diamonds via provider');
+                                      } finally {
+                                        setPaywayDeliveringId(null);
+                                      }
+                                    }}
+                                  >
+                                    <span>{paywayDeliveringId === tranId ? '⏳' : '💎'}</span>
+                                    <span>{paywayDeliveringId === tranId ? 'Sending...' : 'Top-Up'}</span>
+                                  </button>
+                                )}
                                 <button
                                   type="button"
                                   title="View Official Receipt"

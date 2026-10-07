@@ -359,11 +359,37 @@ public class RealTopUpProviderClient : ITopUpProviderClient
         var targetUrl = "https://khmer-topup.com/api/v1/orders";
         var activeKey = !string.IsNullOrWhiteSpace(apiKey) ? apiKey : "kt_28c2640c86717199395d973670cf039a30ba2716";
 
-        // Map diamond amount to official Khmer TopUp package_id
-        int packageId = 569; // Default 14 Diamonds Special ($0.25)
-        if (int.TryParse(sku, out var parsedSku) && parsedSku > 0)
+        // Map diamond amount and SKU to official Khmer TopUp package_id
+        int packageId;
+        if (int.TryParse(sku, out var parsedSku) && parsedSku > 100)
         {
             packageId = parsedSku;
+        }
+        else if (sku?.Contains("2wdp", StringComparison.OrdinalIgnoreCase) == true || diamondAmount == 440)
+        {
+            packageId = 4967; // 2x Weekly ($2.97)
+        }
+        else if (sku?.Contains("3wdp", StringComparison.OrdinalIgnoreCase) == true || diamondAmount == 660)
+        {
+            packageId = 4968; // 3x Weekly ($4.46)
+        }
+        else if (sku?.Contains("4wdp", StringComparison.OrdinalIgnoreCase) == true || diamondAmount == 880)
+        {
+            packageId = 4969; // 4x Weekly ($5.94)
+        }
+        else if (sku?.Contains("5wdp", StringComparison.OrdinalIgnoreCase) == true || diamondAmount == 1100)
+        {
+            packageId = 4970; // 5x Weekly ($7.43)
+        }
+        else if (sku?.Contains("wdp", StringComparison.OrdinalIgnoreCase) == true || 
+                 sku?.Contains("weekly", StringComparison.OrdinalIgnoreCase) == true || 
+                 diamondAmount == 210)
+        {
+            packageId = 371; // Weekly Pass ($1.55)
+        }
+        else if (sku?.Contains("twilight", StringComparison.OrdinalIgnoreCase) == true || diamondAmount == 500)
+        {
+            packageId = 370; // Twilight Pass ($8.14)
         }
         else
         {
@@ -372,21 +398,24 @@ public class RealTopUpProviderClient : ITopUpProviderClient
                 <= 15 => 569,   // 14 Diamonds Special ($0.25)
                 <= 30 => 570,   // 28 Diamonds Special ($0.49)
                 <= 45 => 571,   // 42 Diamonds Special ($0.73)
-                <= 60 => 268,   // 55 Diamonds Main ($0.77)
-                <= 90 => 269,   // 86 Diamonds Main ($1.21)
-                <= 120 => 4726, // 112 Diamonds Main ($1.64)
-                <= 170 => 270,  // 165 Diamonds Main ($2.30)
-                <= 200 => 271,  // 172 Diamonds Main ($2.40)
-                <= 260 => 272,  // 257 Diamonds Main ($3.43)
-                <= 300 => 273,  // 275 Diamonds Main ($3.73)
-                <= 400 => 274,  // 343 Diamonds Main ($4.65)
-                <= 550 => 278,  // 514 Diamonds Main ($6.87)
-                <= 800 => 283,  // 706 Diamonds Main ($9.56)
-                <= 1200 => 288, // 1050 Diamonds Main ($14.20)
-                <= 2500 => 300, // 2195 Diamonds Main ($28.50)
-                <= 4000 => 316, // 3688 Diamonds Main ($47.55)
-                <= 6000 => 337, // 5532 Diamonds Main ($71.78)
-                _ => 350        // 9288 Diamonds Main ($119.22)
+                <= 60 => 268,   // 55 Diamonds Main ($0.76)
+                <= 95 => 269,   // 86 Diamonds Main ($1.25)
+                <= 125 => 4726, // 112 Diamonds Main ($1.62)
+                <= 168 => 270,  // 165 Diamonds Main ($2.28)
+                <= 200 => 271,  // 172 Diamonds Main ($2.47)
+                <= 260 => 272,  // 257 Diamonds Main ($3.55)
+                <= 300 => 273,  // 275 Diamonds Main ($3.69)
+                <= 350 => 274,  // 343 Diamonds Main ($4.78)
+                <= 450 => 276,  // 429 Diamonds Main ($5.99)
+                <= 520 => 278,  // 514 Diamonds Main ($7.06)
+                <= 570 => 280,  // 565 Diamonds Main ($7.58)
+                <= 650 => 281,  // 600 Diamonds Main ($8.32)
+                <= 800 => 283,  // 706 Diamonds Main ($9.70)
+                <= 1200 => 288, // 1050 Diamonds Main ($14.63)
+                <= 2500 => 300, // 2195 Diamonds Main ($29.36)
+                <= 4000 => 316, // 3688 Diamonds Main ($48.96)
+                <= 6000 => 337, // 5532 Diamonds Main ($73.91)
+                _ => 350        // 9288 Diamonds Main ($122.77)
             };
         }
 
