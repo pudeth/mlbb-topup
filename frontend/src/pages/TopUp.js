@@ -58,13 +58,38 @@ const GAME_PACKAGES_MAP = {
     { productId: 206, diamondAmount: 8100, name: '6000 + 2100 UC', price: 95.00, tag: 'ULTIMATE ⚡' },
   ],
   freefire: [
-    { productId: 301, diamondAmount: 100, name: '100 + 10 Diamonds', price: 0.95, tag: 'Starter' },
-    { productId: 302, diamondAmount: 310, name: '310 + 31 Diamonds', price: 2.85, tag: 'Popular' },
-    { productId: 307, diamondAmount: 450, name: 'Weekly Membership Pass', price: 1.99, tag: 'PASS 🌟', isPass: true },
-    { productId: 303, diamondAmount: 520, name: '520 + 52 Diamonds', price: 4.75, tag: 'HOT 🔥' },
-    { productId: 304, diamondAmount: 1060, name: '1060 + 106 Diamonds', price: 9.50, tag: 'Best Value' },
-    { productId: 305, diamondAmount: 2180, name: '2180 + 218 Diamonds', price: 18.99, tag: 'Pro Pack' },
-    { productId: 308, diamondAmount: 2600, name: 'Monthly Membership Pass', price: 7.99, tag: 'VIP 👑', isPass: true },
+    // Best Seller Memberships & Passes (Requested Selling Prices)
+    { productId: 384, diamondAmount: 90, name: 'WeeklyLite', price: 0.39, packageId: 384, tag: 'ទទួលបាន 90 💎', isPass: true, category: 'Best seller', customImage: '/images/weekly-pass.png' },
+    { productId: 5028, diamondAmount: 180, name: '2 Weeklylite', price: 0.78, packageId: 5028, tag: 'ទទួលបាន 180 💎', isPass: true, category: 'Best seller', customImage: '/images/weekly-pass.png' },
+    { productId: 383, diamondAmount: 445, name: 'Weekly', price: 1.65, packageId: 383, tag: 'ទទួលបាន 445 💎', isPass: true, category: 'Best seller', customImage: '/images/weekly-pass.png' },
+    { productId: 5024, diamondAmount: 890, name: '2 Weekly', price: 3.30, packageId: 5024, tag: 'ទទួលបាន 890 💎', isPass: true, category: 'Best seller', customImage: '/images/weekly-pass.png' },
+    { productId: 5025, diamondAmount: 1335, name: '3 Weekly', price: 5.00, packageId: 5025, tag: 'Discount 5%', isPass: true, category: 'Best seller', customImage: '/images/weekly-pass.png' },
+    { productId: 5026, diamondAmount: 1780, name: '4 Weekly', price: 6.50, packageId: 5024, tag: 'Discount 10%', isPass: true, category: 'Best seller', customImage: '/images/weekly-pass.png' },
+    { productId: 3077, diamondAmount: 965, name: '520 + Weekly', price: 6.20, packageId: 377, tag: 'Discount 5%', isPass: true, category: 'Best seller', customImage: '/images/weekly-pass.png' },
+    { productId: 4852, diamondAmount: 2600, name: 'Monthly', price: 7.65, packageId: 4852, isPass: true, category: 'Best seller', customImage: '/images/weekly-pass.png' },
+    { productId: 5021, diamondAmount: 5000, name: '2 Monthly', price: 15.30, packageId: 5021, tag: 'ទទួលបាន 5000 💎', isPass: true, category: 'Best seller', customImage: '/images/weekly-pass.png' },
+    { productId: 5022, diamondAmount: 7800, name: '3 Monthly', price: 23.10, packageId: 5022, tag: 'Discount 10%', isPass: true, category: 'Best seller', customImage: '/images/weekly-pass.png' },
+    { productId: 5023, diamondAmount: 10000, name: '4 Monthly', price: 30.80, packageId: 5021, tag: 'ទទួលបាន 10000 💎', isPass: true, category: 'Best seller', customImage: '/images/weekly-pass.png' },
+    { productId: 5030, diamondAmount: 3000, name: '3 in 1 membership', price: 9.65, packageId: 383, tag: 'ទទួលបាន 3000 💎', isPass: true, category: 'Best seller', customImage: '/images/weekly-pass.png' },
+    { productId: 5031, diamondAmount: 2910, name: 'Weekly + monthly', price: 9.30, packageId: 4852, tag: 'ទទួលបាន 2910 💎', isPass: true, category: 'Best seller', customImage: '/images/weekly-pass.png' },
+    { productId: 5032, diamondAmount: 5820, name: '2Weekly+monthly', price: 18.60, packageId: 5021, isPass: true, category: 'Best seller', customImage: '/images/weekly-pass.png' },
+    // Official Level Up Packages (Level Pass)
+    { productId: 390, diamondAmount: 200, name: 'Level Up Package - Level 6', price: 0.29, packageId: 390, tag: 'Level 6 🎖️', isPass: true, isLevelPass: true, category: 'Level Pass', customImage: '/images/weekly-pass.png' },
+    { productId: 385, diamondAmount: 300, name: 'Level Up Package - Level 10', price: 0.61, packageId: 385, tag: 'Level 10 🎖️', isPass: true, isLevelPass: true, category: 'Level Pass', customImage: '/images/weekly-pass.png' },
+    { productId: 386, diamondAmount: 400, name: 'Level Up Package - Level 15', price: 0.61, packageId: 386, tag: 'Level 15 🎖️', isPass: true, isLevelPass: true, category: 'Level Pass', customImage: '/images/weekly-pass.png' },
+    { productId: 387, diamondAmount: 500, name: 'Level Up Package - Level 20', price: 0.61, packageId: 387, tag: 'Level 20 🎖️', isPass: true, isLevelPass: true, category: 'Level Pass', customImage: '/images/weekly-pass.png' },
+    { productId: 388, diamondAmount: 600, name: 'Level Up Package - Level 25', price: 0.61, packageId: 388, tag: 'Level 25 🎖️', isPass: true, isLevelPass: true, category: 'Level Pass', customImage: '/images/weekly-pass.png' },
+    { productId: 389, diamondAmount: 800, name: 'Level Up Package - Level 30', price: 0.90, packageId: 389, tag: 'Level 30 🎖️', isPass: true, isLevelPass: true, category: 'Level Pass', customImage: '/images/weekly-pass.png' },
+
+    // Standard Diamonds Top-Up
+    { productId: 374, diamondAmount: 25, name: '25 Diamonds', price: 0.25, packageId: 374, tag: 'Starter', customImage: '/images/diamond-chest-3d.png' },
+    { productId: 391, diamondAmount: 100, name: '100 Diamonds', price: 0.95, packageId: 391, tag: 'Popular', customImage: '/images/diamond-chest-3d.png' },
+    { productId: 376, diamondAmount: 310, name: '310 Diamonds', price: 2.85, packageId: 376, tag: 'HOT 🔥', customImage: '/images/diamond-chest-3d.png' },
+    { productId: 377, diamondAmount: 520, name: '520 Diamonds', price: 4.75, packageId: 377, tag: 'Best Value', customImage: '/images/diamond-chest-3d.png' },
+    { productId: 378, diamondAmount: 1060, name: '1060 Diamonds', price: 9.50, packageId: 378, tag: 'Pro Pack', customImage: '/images/diamond-chest-3d.png' },
+    { productId: 379, diamondAmount: 2180, name: '2180 Diamonds', price: 18.99, packageId: 379, tag: 'VIP', customImage: '/images/diamond-chest-3d.png' },
+    { productId: 380, diamondAmount: 5600, name: '5600 Diamonds', price: 46.50, packageId: 380, tag: 'Treasury', customImage: '/images/diamond-chest-3d.png' },
+    { productId: 381, diamondAmount: 11500, name: '11500 Diamonds', price: 95.00, packageId: 381, tag: 'ULTIMATE ⚡', customImage: '/images/diamond-chest-3d.png' },
   ],
   hok: [
     { productId: 407, diamondAmount: 100, name: 'Weekly Card Plus', price: 0.99, tag: 'PASS 🌟', isPass: true },
@@ -1771,12 +1796,12 @@ const TopUp = () => {
       <div id="packages-section" className="space-y-6">
           <div className="bg-slate-900/30 border border-slate-800/50 rounded-[24px] p-3.5 sm:p-5 shadow-2xl backdrop-blur-md space-y-5">
             
-            {/* Header: Row 1 - Category Sub-Tabs (All / Weekly Pass / Diamond Package) */}
-            <div className="grid grid-cols-3 gap-1.5 p-1 bg-slate-950/90 rounded-2xl border border-slate-800/90 shadow-inner">
+            {/* Header: Row 1 - Category Sub-Tabs (All / Weekly Pass / Level Pass / Diamond Package) */}
+            <div className={`grid ${isFreefire ? 'grid-cols-2 sm:grid-cols-4' : 'grid-cols-3'} gap-1.5 p-1 bg-slate-950/90 rounded-2xl border border-slate-800/90 shadow-inner`}>
               <button
                 type="button"
                 onClick={() => setProductCategoryTab('all')}
-                className={`py-2 px-2 rounded-xl text-xs font-bold transition-all text-center flex items-center justify-center gap-1 cursor-pointer ${
+                className={`py-2 px-1.5 sm:px-2 rounded-xl text-xs font-bold transition-all text-center flex items-center justify-center gap-1 cursor-pointer ${
                   productCategoryTab === 'all'
                     ? 'bg-gradient-to-r from-amber-400 to-amber-500 text-black font-black shadow-md shadow-amber-500/20 scale-[1.02]'
                     : 'text-slate-400 hover:text-white hover:bg-slate-900/60'
@@ -1790,7 +1815,7 @@ const TopUp = () => {
               <button
                 type="button"
                 onClick={() => setProductCategoryTab('passes')}
-                className={`py-2 px-2 rounded-xl text-xs font-bold transition-all text-center flex items-center justify-center gap-1 cursor-pointer ${
+                className={`py-2 px-1.5 sm:px-2 rounded-xl text-xs font-bold transition-all text-center flex items-center justify-center gap-1 cursor-pointer ${
                   productCategoryTab === 'passes'
                     ? 'bg-gradient-to-r from-cyan-400 to-blue-500 text-black font-black shadow-md shadow-cyan-500/20 scale-[1.02]'
                     : 'text-cyan-300 hover:text-white hover:bg-cyan-950/40'
@@ -1799,14 +1824,32 @@ const TopUp = () => {
                 <span>🔥</span>
                 <span className="truncate">{t('tab_pass_pkgs')}</span>
                 <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-cyan-900/50 text-cyan-200 font-mono font-bold">
-                  {products.filter(p => p.isPass || p.name?.toLowerCase().includes('pass') || p.name?.toLowerCase().includes('bundle') || [210, 440, 660, 880, 1100, 1320, 605, 500].includes(p.diamondAmount)).length}
+                  {products.filter(p => !p.isLevelPass && (p.isPass || p.name?.toLowerCase().includes('pass') || p.name?.toLowerCase().includes('bundle') || [210, 440, 660, 880, 1100, 1320, 605, 500].includes(p.diamondAmount))).length}
                 </span>
               </button>
+
+              {isFreefire && (
+                <button
+                  type="button"
+                  onClick={() => setProductCategoryTab('level_pass')}
+                  className={`py-2 px-1.5 sm:px-2 rounded-xl text-xs font-bold transition-all text-center flex items-center justify-center gap-1 cursor-pointer ${
+                    productCategoryTab === 'level_pass'
+                      ? 'bg-gradient-to-r from-emerald-400 to-teal-500 text-black font-black shadow-md shadow-emerald-500/20 scale-[1.02]'
+                      : 'text-emerald-300 hover:text-white hover:bg-emerald-950/40'
+                  }`}
+                >
+                  <span>🎖️</span>
+                  <span className="truncate">{language === 'km' ? 'កញ្ចប់ Level Pass' : 'Level Pass'}</span>
+                  <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-emerald-900/50 text-emerald-200 font-mono font-bold">
+                    {products.filter(p => p.isLevelPass || p.name?.toLowerCase().includes('level up')).length}
+                  </span>
+                </button>
+              )}
 
               <button
                 type="button"
                 onClick={() => setProductCategoryTab('diamonds')}
-                className={`py-2 px-2 rounded-xl text-xs font-bold transition-all text-center flex items-center justify-center gap-1 cursor-pointer ${
+                className={`py-2 px-1.5 sm:px-2 rounded-xl text-xs font-bold transition-all text-center flex items-center justify-center gap-1 cursor-pointer ${
                   productCategoryTab === 'diamonds'
                     ? 'bg-gradient-to-r from-purple-400 to-pink-500 text-black font-black shadow-md shadow-purple-500/20 scale-[1.02]'
                     : 'text-purple-300 hover:text-white hover:bg-purple-950/40'
@@ -1815,7 +1858,7 @@ const TopUp = () => {
                 <span>💎</span>
                 <span className="truncate">{t('tab_diamond_pkgs')}</span>
                 <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-purple-900/50 text-purple-200 font-mono font-bold">
-                  {products.filter(p => !(p.isPass || p.name?.toLowerCase().includes('pass') || p.name?.toLowerCase().includes('bundle') || [210, 440, 660, 880, 1100, 1320, 605, 500].includes(p.diamondAmount))).length}
+                  {products.filter(p => !p.isLevelPass && !(p.isPass || p.name?.toLowerCase().includes('pass') || p.name?.toLowerCase().includes('bundle') || [210, 440, 660, 880, 1100, 1320, 605, 500].includes(p.diamondAmount))).length}
                 </span>
               </button>
             </div>
@@ -1882,7 +1925,14 @@ const TopUp = () => {
                 <span className="flex items-center gap-1.5 text-[11px] sm:text-xs font-bold text-sky-200">
                   <svg className="w-3.5 h-3.5 text-cyan-300" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><path d="M6 3h12l4 6-10 12L2 9z" /><path d="M2 9h20M12 21L8 9l4-6 4 6-4 12" /></svg>
                   <span>{language === 'km' ? 'កញ្ចប់' : 'Packages'}</span>
-                  <span className="px-1.5 py-0.5 rounded-md bg-sky-500/15 border border-sky-400/30 text-[10px] font-mono text-sky-300">{products.filter(p => productCategoryTab === 'all' ? true : productCategoryTab === 'passes' ? (p.isPass || p.name?.toLowerCase().includes('pass') || p.name?.toLowerCase().includes('bundle') || [210, 440, 660, 880, 1100, 1320, 605, 500].includes(p.diamondAmount)) : !(p.isPass || p.name?.toLowerCase().includes('pass') || p.name?.toLowerCase().includes('bundle') || [210, 440, 660, 880, 1100, 1320, 605, 500].includes(p.diamondAmount))).length}</span>
+                  <span className="px-1.5 py-0.5 rounded-md bg-sky-500/15 border border-sky-400/30 text-[10px] font-mono text-sky-300">
+                    {products.filter(p => {
+                      if (productCategoryTab === 'all') return true;
+                      if (productCategoryTab === 'level_pass') return p.isLevelPass || p.name?.toLowerCase().includes('level up');
+                      if (productCategoryTab === 'passes') return !p.isLevelPass && (p.isPass || p.name?.toLowerCase().includes('pass') || p.name?.toLowerCase().includes('bundle') || [210, 440, 660, 880, 1100, 1320, 605, 500].includes(p.diamondAmount));
+                      return !p.isLevelPass && !(p.isPass || p.name?.toLowerCase().includes('pass') || p.name?.toLowerCase().includes('bundle') || [210, 440, 660, 880, 1100, 1320, 605, 500].includes(p.diamondAmount));
+                    }).length}
+                  </span>
                 </span>
                 <span className={`flex items-center gap-1 text-[10px] font-semibold transition-opacity ${listScroll.atBottom && listScroll.atTop ? 'opacity-0' : 'opacity-100'} text-slate-400`}>
                   <svg className="w-3 h-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M12 5v14M5 12l7 7 7-7" /></svg>
@@ -1911,8 +1961,9 @@ const TopUp = () => {
                 };
 
                 const filtered = products.filter(pkg => {
-                  if (productCategoryTab === 'passes') return isPassItem(pkg);
-                  if (productCategoryTab === 'diamonds') return !isPassItem(pkg);
+                  if (productCategoryTab === 'level_pass') return pkg.isLevelPass || pkg.name?.toLowerCase().includes('level up');
+                  if (productCategoryTab === 'passes') return !pkg.isLevelPass && isPassItem(pkg);
+                  if (productCategoryTab === 'diamonds') return !pkg.isLevelPass && !isPassItem(pkg);
                   return true;
                 });
 
@@ -1935,7 +1986,13 @@ const TopUp = () => {
                         const tagLower = (pkg.tag || '').toLowerCase();
                         const isPopular = pkg.productId === 2 || pkg.diamondAmount === 55 || tagLower.includes('popular') || tagLower.includes('starter');
                         const isRecommend = !isPopular && (pkg.productId === 3 || pkg.diamondAmount === 86 || tagLower.includes('bonus') || tagLower.includes('recommend') || tagLower.includes('best'));
-                        const ribbon = isPopular
+                        const isLevelPassTag = pkg.isLevelPass || pkg.name?.toLowerCase().includes('level up');
+                        const isPurpleTag = isFreefire && (pkg.tag?.includes('ទទួលបាន') || pkg.tag?.includes('Discount') || pkg.isPass);
+                        const ribbon = isLevelPassTag
+                          ? { text: pkg.tag || 'LEVEL PASS 🎖️', cls: 'from-emerald-500 to-teal-600 text-white shadow-sm' }
+                          : isPurpleTag
+                          ? { text: pkg.tag || 'PASS', cls: 'from-[#a855f7] to-[#7c3aed] text-white shadow-sm' }
+                          : isPopular
                           ? { text: 'Popular', cls: 'from-orange-500 to-amber-500 text-white' }
                           : isRecommend
                             ? { text: 'Recommend', cls: 'from-amber-300 to-yellow-500 text-slate-950' }
@@ -2011,7 +2068,13 @@ const TopUp = () => {
                         const tagLower = (pkg.tag || '').toLowerCase();
                         const isPopular = pkg.productId === 2 || pkg.diamondAmount === 55 || tagLower.includes('popular') || tagLower.includes('starter');
                         const isRecommend = !isPopular && (pkg.productId === 3 || pkg.diamondAmount === 86 || tagLower.includes('bonus') || tagLower.includes('recommend') || tagLower.includes('best'));
-                        const ribbon = isPopular
+                        const isLevelPassTag = pkg.isLevelPass || pkg.name?.toLowerCase().includes('level up');
+                        const isPurpleTag = isFreefire && (pkg.tag?.includes('ទទួលបាន') || pkg.tag?.includes('Discount') || pkg.isPass);
+                        const ribbon = isLevelPassTag
+                          ? { text: pkg.tag || 'LEVEL PASS 🎖️', cls: 'from-emerald-500 to-teal-600 text-white shadow-sm' }
+                          : isPurpleTag
+                          ? { text: pkg.tag || 'PASS', cls: 'from-[#a855f7] to-[#7c3aed] text-white shadow-sm' }
+                          : isPopular
                           ? { text: 'Popular', cls: 'from-orange-500 to-amber-500 text-white' }
                           : isRecommend
                             ? { text: 'Recommend', cls: 'from-amber-300 to-yellow-500 text-slate-950' }
@@ -2132,7 +2195,13 @@ const TopUp = () => {
                       const tagLower = (pkg.tag || '').toLowerCase();
                       const isPopular = pkg.productId === 2 || pkg.diamondAmount === 55 || tagLower.includes('popular') || tagLower.includes('starter');
                       const isRecommend = !isPopular && (pkg.productId === 3 || pkg.diamondAmount === 86 || tagLower.includes('bonus') || tagLower.includes('recommend') || tagLower.includes('best'));
-                      const ribbon = isPopular
+                      const isLevelPassTag = pkg.isLevelPass || pkg.name?.toLowerCase().includes('level up');
+                      const isPurpleTag = isFreefire && (pkg.tag?.includes('ទទួលបាន') || pkg.tag?.includes('Discount') || pkg.isPass);
+                      const ribbon = isLevelPassTag
+                        ? { text: pkg.tag || 'LEVEL PASS 🎖️', cls: 'from-emerald-500 to-teal-600 text-white' }
+                        : isPurpleTag
+                        ? { text: pkg.tag || 'PASS', cls: 'from-[#a855f7] to-[#7c3aed] text-white' }
+                        : isPopular
                         ? { text: 'Popular', cls: 'from-orange-500 to-amber-500 text-white' }
                         : isRecommend
                           ? { text: 'Recommend', cls: 'from-amber-300 to-yellow-500 text-slate-950' }

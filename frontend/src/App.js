@@ -14,6 +14,7 @@ import Support from './pages/Support';
 import PrivacyPolicy from './pages/PrivacyPolicy';
 import Profile from './pages/Profile';
 import AdminDashboard from './pages/AdminDashboard';
+import ApiDocs from './pages/ApiDocs';
 import AdminRoute from './components/AdminRoute';
 import Layout from './components/Layout';
 
@@ -35,6 +36,11 @@ function App() {
               <Route path="/terms-and-conditions" element={<PrivacyPolicy />} />
               <Route path="/privacy-policy" element={<PrivacyPolicy />} />
               
+              {/* API Documentation */}
+              <Route path="/api-docs" element={<ApiDocs />} />
+              <Route path="/api-docs/*" element={<ApiDocs />} />
+              <Route path="/docs/freefire" element={<ApiDocs />} />
+
               {/* Player Profile & Order History */}
               <Route path="/profile" element={<Profile />} />
               <Route path="/order-history" element={<OrderHistory />} />

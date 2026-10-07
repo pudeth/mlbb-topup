@@ -97,6 +97,17 @@ const DesktopSidebar = () => {
           <path strokeLinecap="round" strokeLinejoin="round" d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 100-6 3 3 0 000 6z" />
         </svg>
       )
+    },
+    {
+      id: 'apidocs',
+      label: language === 'km' ? 'ឯកសារ API' : 'API Docs',
+      sub: 'Free Fire & B2B',
+      path: '/api-docs',
+      icon: (
+        <svg className="w-4 h-4 text-amber-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2}>
+          <path strokeLinecap="round" strokeLinejoin="round" d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4" />
+        </svg>
+      )
     }
   ];
 

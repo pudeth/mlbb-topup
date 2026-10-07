@@ -361,9 +361,52 @@ public class RealTopUpProviderClient : ITopUpProviderClient
 
         // Map diamond amount and SKU to official Khmer TopUp package_id
         int packageId;
+        bool isFreeFire = (sku?.Contains("freefire", StringComparison.OrdinalIgnoreCase) == true) ||
+                          (sku?.Contains("ff", StringComparison.OrdinalIgnoreCase) == true) ||
+                          string.IsNullOrWhiteSpace(serverId) || serverId.Equals("FREEFIRE", StringComparison.OrdinalIgnoreCase);
+
         if (int.TryParse(sku, out var parsedSku) && parsedSku > 100)
         {
             packageId = parsedSku;
+        }
+        else if (isFreeFire)
+        {
+            // Free Fire Official Packages (khmer-topup.com slug: freefire-sgmy)
+            if (sku?.Contains("level", StringComparison.OrdinalIgnoreCase) == true)
+            {
+                if (sku.Contains("30")) packageId = 389;      // Level 30 ($0.90)
+                else if (sku.Contains("25")) packageId = 388; // Level 25 ($0.61)
+                else if (sku.Contains("20")) packageId = 387; // Level 20 ($0.61)
+                else if (sku.Contains("15")) packageId = 386; // Level 15 ($0.61)
+                else if (sku.Contains("10")) packageId = 385; // Level 10 ($0.61)
+                else packageId = 390;                         // Level 6  ($0.29)
+            }
+            else if (sku?.Contains("weeklylite", StringComparison.OrdinalIgnoreCase) == true || sku?.Contains("lite", StringComparison.OrdinalIgnoreCase) == true)
+            {
+                packageId = 384; // Weekly Lite ($0.32)
+            }
+            else if (sku?.Contains("monthly", StringComparison.OrdinalIgnoreCase) == true || diamondAmount == 2600)
+            {
+                packageId = 4852; // Monthly Membership ($7.76)
+            }
+            else if (sku?.Contains("weekly", StringComparison.OrdinalIgnoreCase) == true || diamondAmount == 450)
+            {
+                packageId = 383; // Weekly Membership ($1.57)
+            }
+            else
+            {
+                packageId = diamondAmount switch
+                {
+                    <= 25 => 374,   // 25 Diamonds ($0.24)
+                    <= 100 => 391,  // 100 Diamonds ($0.90)
+                    <= 310 => 376,  // 310 Diamonds ($2.74)
+                    <= 520 => 377,  // 520 Diamonds ($4.59)
+                    <= 1060 => 378, // 1060 Diamonds ($9.01)
+                    <= 2180 => 379, // 2180 Diamonds ($18.21)
+                    <= 5600 => 380, // 5600 Diamonds ($45.07)
+                    _ => 381        // 11500 Diamonds ($92.82)
+                };
+            }
         }
         else if (sku?.Contains("2wdp", StringComparison.OrdinalIgnoreCase) == true || diamondAmount == 440)
         {
