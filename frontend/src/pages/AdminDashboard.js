@@ -889,6 +889,8 @@ const PRICING_GAMES = [
   const [paywayTranDetailOpen, setPaywayTranDetailOpen] = useState(false);
   const [paywayTranDetail, setPaywayTranDetail] = useState(null);
   const [paywayTranDetailLoading, setPaywayTranDetailLoading] = useState(false);
+  const [paywayReceiptModalOpen, setPaywayReceiptModalOpen] = useState(false);
+  const [paywayReceiptTran, setPaywayReceiptTran] = useState(null);
 
   // Game & Logo Management State
   const [gamesList, setGamesList] = useState(() => getStoredGames());
@@ -1052,7 +1054,11 @@ const PRICING_GAMES = [
           const parseTxData = (res) => {
             try {
               const raw = typeof res?.data === 'string' ? JSON.parse(res.data) : res?.data;
-              return raw?.data?.transactions || raw?.transactions || raw?.data || [];
+              if (Array.isArray(raw?.data)) return raw.data;
+              if (Array.isArray(raw?.data?.transactions)) return raw.data.transactions;
+              if (Array.isArray(raw?.transactions)) return raw.transactions;
+              if (Array.isArray(raw)) return raw;
+              return [];
             } catch { return []; }
           };
           const parseRateData = (res) => {
@@ -6044,7 +6050,8 @@ const PRICING_GAMES = [
                           pagination: paywayFilter.pagination,
                         }).catch(() => ({ data: null }));
                         const raw = typeof txRes?.data === 'string' ? JSON.parse(txRes.data) : txRes?.data;
-                        setPaywayTransactions(raw?.data?.transactions || raw?.transactions || raw?.data || []);
+                        const list = Array.isArray(raw?.data) ? raw.data : (raw?.data?.transactions || raw?.transactions || (Array.isArray(raw) ? raw : []));
+                        setPaywayTransactions(list);
                       } catch (err) {
                         setPaywayError('Filter error: ' + (err?.message || String(err)));
                       } finally {
@@ -6116,9 +6123,12 @@ const PRICING_GAMES = [
                     </thead>
                     <tbody>
                       {paywayTransactions.map((tx, idx) => {
-                        const tranId = tx.tran_id || tx.tranId || tx.id || String(idx);
-                        const amount = tx.amount || tx.total_amount || '—';
-                        const currency = tx.currency || 'USD';
+                        const tranId = tx.transaction_id || tx.tran_id || tx.tranId || tx.id || String(idx);
+                        const amount = tx.total_amount ?? tx.original_amount ?? tx.amount ?? '—';
+                        const currency = tx.original_currency || tx.currency || 'USD';
+                        const paymentAmount = tx.payment_amount;
+                        const paymentCurrency = tx.payment_currency;
+                        const hasKhr = paymentCurrency === 'KHR' && paymentAmount;
                         const rawStatus = (tx.payment_status || tx.status || 'UNKNOWN').toString().toUpperCase();
                         const isPaid = rawStatus === 'APPROVED' || rawStatus === 'PAID' || rawStatus === 'SUCCESS';
                         const isPending = rawStatus === 'PENDING';
@@ -6128,9 +6138,9 @@ const PRICING_GAMES = [
                             ? 'bg-amber-500/20 text-amber-300 border-amber-500/30'
                             : 'bg-rose-500/20 text-rose-300 border-rose-500/30';
                         const statusIcon = isPaid ? '✅' : isPending ? '⏳' : '❌';
-                        const payMethod = tx.payment_option || tx.channel || tx.payment_method || '—';
-                        const dateRaw = tx.created_at || tx.createdAt || tx.request_time || tx.req_time || '';
-                        const dateStr = dateRaw ? new Date(dateRaw).toLocaleString('en-KH', { timeZone: 'Asia/Phnom_Penh' }) : '—';
+                        const payMethod = tx.payment_type || tx.payment_option || tx.channel || tx.payment_method || 'ABA Pay';
+                        const dateStr = tx.transaction_date || tx.created_at || tx.createdAt || tx.request_time || tx.req_time || '—';
+                        const apv = tx.apv;
 
                         return (
                           <tr
@@ -6150,28 +6160,66 @@ const PRICING_GAMES = [
                                 .finally(() => setPaywayTranDetailLoading(false));
                             }}
                           >
-                            <td className="py-3 px-4 text-white font-mono font-bold text-[10px]">{tranId}</td>
-                            <td className="py-3 px-3 text-white font-bold">{amount}</td>
-                            <td className="py-3 px-3 text-slate-300">{currency}</td>
+                            <td className="py-3 px-4">
+                              <div className="flex flex-col">
+                                <span className="text-white font-mono font-black text-xs tracking-wide">{tranId}</span>
+                                {apv && (
+                                  <span className="text-[10px] text-amber-400 font-mono font-bold mt-0.5">
+                                    APV: {apv}
+                                  </span>
+                                )}
+                              </div>
+                            </td>
                             <td className="py-3 px-3">
-                              <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold border ${statusColor}`}>
+                              <div className="flex flex-col">
+                                <span className="text-white font-black text-xs">
+                                  {typeof amount === 'number' ? `$${amount.toFixed(2)}` : (String(amount).startsWith('$') ? amount : `$${amount}`)}
+                                </span>
+                                {hasKhr && (
+                                  <span className="text-[10px] text-slate-400 font-mono">
+                                    ~{Number(paymentAmount).toLocaleString()} ៛
+                                  </span>
+                                )}
+                              </div>
+                            </td>
+                            <td className="py-3 px-3 text-slate-300 font-bold">{currency}</td>
+                            <td className="py-3 px-3">
+                              <span className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[10px] font-bold border ${statusColor}`}>
                                 {statusIcon} {rawStatus}
                               </span>
                             </td>
-                            <td className="py-3 px-3 text-slate-400 text-[10px]">{payMethod}</td>
-                            <td className="py-3 px-3 text-slate-400 text-[10px]">{dateStr}</td>
+                            <td className="py-3 px-3">
+                              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-lg bg-slate-800 text-cyan-300 text-[10px] font-bold border border-cyan-500/20">
+                                💳 {payMethod}
+                              </span>
+                            </td>
+                            <td className="py-3 px-3 text-slate-300 text-[11px] font-medium whitespace-nowrap">{dateStr}</td>
                             <td className="py-3 px-4 text-right">
-                              <button
-                                type="button"
-                                className="text-[10px] text-cyan-400 hover:text-cyan-300 font-bold px-2 py-1 rounded-lg hover:bg-cyan-500/10 transition-colors"
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  navigator.clipboard?.writeText(tranId);
-                                  showToast('success', `Tran ID "${tranId}" copied!`);
-                                }}
-                              >
-                                Copy ID
-                              </button>
+                              <div className="flex items-center justify-end gap-1.5" onClick={(e) => e.stopPropagation()}>
+                                <button
+                                  type="button"
+                                  title="View Official Receipt"
+                                  className="text-[11px] text-amber-400 hover:text-amber-300 font-bold px-2 py-1 rounded-lg bg-amber-500/10 hover:bg-amber-500/20 border border-amber-500/30 transition-colors flex items-center gap-1 cursor-pointer"
+                                  onClick={() => {
+                                    setPaywayReceiptTran(tx);
+                                    setPaywayReceiptModalOpen(true);
+                                  }}
+                                >
+                                  <span>🧾</span>
+                                  <span>Receipt</span>
+                                </button>
+                                <button
+                                  type="button"
+                                  title="Copy Transaction ID"
+                                  className="text-[11px] text-cyan-400 hover:text-cyan-300 font-bold px-2 py-1 rounded-lg hover:bg-cyan-500/10 transition-colors cursor-pointer"
+                                  onClick={() => {
+                                    navigator.clipboard?.writeText(tranId);
+                                    showToast('success', `Tran ID "${tranId}" copied!`);
+                                  }}
+                                >
+                                  Copy ID
+                                </button>
+                              </div>
                             </td>
                           </tr>
                         );
@@ -6183,83 +6231,360 @@ const PRICING_GAMES = [
             </div>
 
             {/* Transaction Detail Modal */}
-            {paywayTranDetailOpen && paywaySelectedTran && (
-              <div className="fixed inset-0 z-50 flex items-center justify-center p-4 animate-fadeIn">
-                <div className="fixed inset-0 bg-black/80 backdrop-blur-md" onClick={() => setPaywayTranDetailOpen(false)} />
-                <div className="relative w-full max-w-lg bg-[#0B0F19] border border-slate-700 rounded-3xl p-5 shadow-2xl z-10 max-h-[85vh] overflow-y-auto">
-                  <div className="flex items-center justify-between mb-4">
-                    <h3 className="text-sm font-black text-white flex items-center gap-2">
-                      <span>💳</span> Transaction Details
-                    </h3>
-                    <button
-                      type="button"
-                      onClick={() => setPaywayTranDetailOpen(false)}
-                      className="w-8 h-8 rounded-xl bg-slate-800 hover:bg-slate-700 border border-slate-700 text-slate-300 hover:text-white flex items-center justify-center text-sm font-bold transition-all cursor-pointer"
-                    >
-                      ✕
-                    </button>
-                  </div>
+            {paywayTranDetailOpen && paywaySelectedTran && (() => {
+              const detail = paywayTranDetail?.data || (paywayTranDetail?.transaction_id ? paywayTranDetail : null) || paywaySelectedTran;
+              const tranId = detail?.transaction_id || paywaySelectedTran?.transaction_id || paywaySelectedTran?.tran_id || paywaySelectedTran?.tranId || '—';
+              const rawStatus = (detail?.payment_status || paywaySelectedTran?.payment_status || 'UNKNOWN').toString().toUpperCase();
+              const isPaid = rawStatus === 'APPROVED' || rawStatus === 'PAID' || rawStatus === 'SUCCESS';
+              const isPending = rawStatus === 'PENDING';
+              const statusColor = isPaid
+                ? 'bg-emerald-500/20 text-emerald-300 border-emerald-500/30'
+                : isPending
+                  ? 'bg-amber-500/20 text-amber-300 border-amber-500/30'
+                  : 'bg-rose-500/20 text-rose-300 border-rose-500/30';
+              const statusIcon = isPaid ? '✅' : isPending ? '⏳' : '❌';
+              const apv = detail?.apv || paywaySelectedTran?.apv;
+              const bankRef = detail?.bank_ref;
+              const bankName = detail?.bank_name || 'ABA Bank';
+              const payerAccount = detail?.payer_account;
+              const customerName = [detail?.first_name, detail?.last_name].filter(Boolean).join(' ') || '—';
+              const email = detail?.email;
+              const phone = detail?.phone;
+              const origAmount = detail?.original_amount ?? detail?.total_amount ?? paywaySelectedTran?.total_amount ?? paywaySelectedTran?.original_amount ?? '0.00';
+              const origCurrency = detail?.original_currency || paywaySelectedTran?.original_currency || 'USD';
+              const paymentAmount = detail?.payment_amount ?? paywaySelectedTran?.payment_amount;
+              const paymentCurrency = detail?.payment_currency || paywaySelectedTran?.payment_currency || origCurrency;
+              const payMethod = detail?.payment_type || paywaySelectedTran?.payment_type || 'ABA Pay';
+              const dateStr = detail?.transaction_date || paywaySelectedTran?.transaction_date || '—';
+              const operations = Array.isArray(detail?.transaction_operations) ? detail.transaction_operations : [];
 
-                  <div className="space-y-3">
-                    {/* Summary */}
-                    <div className="grid grid-cols-2 gap-2">
-                      {[
-                        ['Tran ID', paywaySelectedTran.tran_id || paywaySelectedTran.tranId || paywaySelectedTran.id],
-                        ['Amount', paywaySelectedTran.amount || paywaySelectedTran.total_amount],
-                        ['Currency', paywaySelectedTran.currency],
-                        ['Status', paywaySelectedTran.payment_status || paywaySelectedTran.status],
-                        ['Channel', paywaySelectedTran.payment_option || paywaySelectedTran.channel || paywaySelectedTran.payment_method],
-                        ['Date', paywaySelectedTran.created_at || paywaySelectedTran.createdAt || paywaySelectedTran.request_time],
-                      ].map(([label, val]) => val !== undefined && val !== null && val !== '' && (
-                        <div key={label} className="p-2.5 rounded-xl bg-slate-800/60 border border-slate-700">
-                          <p className="text-[9px] text-slate-500 uppercase font-bold mb-0.5">{label}</p>
-                          <p className="text-xs text-white font-bold break-all">{String(val)}</p>
+              return (
+                <div className="fixed inset-0 z-50 flex items-center justify-center p-4 animate-fadeIn">
+                  <div className="fixed inset-0 bg-black/80 backdrop-blur-md" onClick={() => setPaywayTranDetailOpen(false)} />
+                  <div className="relative w-full max-w-xl bg-[#0B0F19] border border-amber-500/30 rounded-3xl p-5 sm:p-6 shadow-2xl z-10 max-h-[88vh] overflow-y-auto space-y-4">
+                    {/* Header */}
+                    <div className="flex items-center justify-between border-b border-slate-800 pb-3">
+                      <div className="flex items-center gap-2.5">
+                        <div className="w-10 h-10 rounded-2xl bg-amber-500/20 border border-amber-500/30 flex items-center justify-center text-xl">
+                          💳
                         </div>
-                      ))}
+                        <div>
+                          <h3 className="text-sm sm:text-base font-black text-white flex items-center gap-2">
+                            ABA PayWay Transaction Details
+                          </h3>
+                          <p className="text-[11px] text-slate-400 font-mono">
+                            {tranId}
+                          </p>
+                        </div>
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() => setPaywayTranDetailOpen(false)}
+                        className="w-8 h-8 rounded-xl bg-slate-800 hover:bg-slate-700 border border-slate-700 text-slate-300 hover:text-white flex items-center justify-center text-sm font-bold transition-all cursor-pointer"
+                      >
+                        ✕
+                      </button>
                     </div>
 
-                    {/* Full Detail from API */}
-                    <div className="p-3 rounded-2xl bg-[#060A14] border border-slate-800">
-                      <p className="text-[10px] text-slate-500 uppercase font-bold mb-2">Full API Response</p>
-                      {paywayTranDetailLoading ? (
-                        <p className="text-slate-500 text-xs animate-pulse">Loading details from ABA PayWay API...</p>
-                      ) : paywayTranDetail ? (
-                        <pre className="text-[10px] text-slate-400 whitespace-pre-wrap break-all leading-relaxed max-h-60 overflow-y-auto">
-                          {JSON.stringify(paywayTranDetail, null, 2)}
-                        </pre>
-                      ) : (
-                        <p className="text-slate-600 text-xs">No additional detail available.</p>
+                    {/* Status & Key Identifiers Bar */}
+                    <div className="p-4 rounded-2xl bg-[#0e1626] border border-slate-800 flex flex-wrap items-center justify-between gap-3">
+                      <div className="flex items-center gap-2">
+                        <span className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-xl text-xs font-black border ${statusColor}`}>
+                          {statusIcon} {rawStatus}
+                        </span>
+                        {apv && (
+                          <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-xl bg-amber-500/15 border border-amber-500/30 text-amber-300 text-xs font-mono font-bold">
+                            <span>🔑 APV:</span> {apv}
+                          </span>
+                        )}
+                      </div>
+                      {bankRef && (
+                        <div className="text-[11px] text-slate-400 font-mono">
+                          Bank Ref: <span className="text-white font-bold">{bankRef}</span>
+                        </div>
                       )}
                     </div>
 
-                    {/* Actions */}
-                    <div className="flex gap-2 pt-1">
+                    {/* Amount & Financial Grid */}
+                    <div className="grid grid-cols-2 sm:grid-cols-3 gap-2.5">
+                      <div className="p-3 rounded-2xl bg-[#111728] border border-slate-800">
+                        <p className="text-[10px] text-slate-400 font-bold uppercase tracking-wider mb-1">Total Amount</p>
+                        <p className="text-base font-black text-emerald-400">
+                          ${typeof origAmount === 'number' ? origAmount.toFixed(2) : origAmount} {origCurrency}
+                        </p>
+                      </div>
+                      <div className="p-3 rounded-2xl bg-[#111728] border border-slate-800">
+                        <p className="text-[10px] text-slate-400 font-bold uppercase tracking-wider mb-1">Settled Amount</p>
+                        <p className="text-base font-black text-cyan-300">
+                          {paymentAmount ? `${Number(paymentAmount).toLocaleString()} ${paymentCurrency}` : `${origAmount} ${origCurrency}`}
+                        </p>
+                      </div>
+                      <div className="p-3 rounded-2xl bg-[#111728] border border-slate-800 col-span-2 sm:col-span-1">
+                        <p className="text-[10px] text-slate-400 font-bold uppercase tracking-wider mb-1">Payment Method</p>
+                        <p className="text-sm font-black text-amber-300 flex items-center gap-1 mt-0.5">
+                          <span>💳</span> {payMethod}
+                        </p>
+                      </div>
+                    </div>
+
+                    {/* Customer & Bank Details */}
+                    <div className="p-4 rounded-2xl bg-[#111728] border border-slate-800 space-y-2 text-xs">
+                      <p className="text-[10px] text-slate-400 uppercase font-black tracking-wider mb-2">Customer &amp; Bank Information</p>
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-slate-300">
+                        <div className="flex justify-between p-2 rounded-xl bg-slate-900/60 border border-slate-800">
+                          <span className="text-slate-400">Payer Name:</span>
+                          <span className="text-white font-bold">{customerName}</span>
+                        </div>
+                        <div className="flex justify-between p-2 rounded-xl bg-slate-900/60 border border-slate-800">
+                          <span className="text-slate-400">Bank / Outlet:</span>
+                          <span className="text-white font-bold">{bankName}</span>
+                        </div>
+                        <div className="flex justify-between p-2 rounded-xl bg-slate-900/60 border border-slate-800">
+                          <span className="text-slate-400">Account:</span>
+                          <span className="text-cyan-300 font-mono font-bold">{payerAccount || '—'}</span>
+                        </div>
+                        <div className="flex justify-between p-2 rounded-xl bg-slate-900/60 border border-slate-800">
+                          <span className="text-slate-400">Date &amp; Time:</span>
+                          <span className="text-white font-bold">{dateStr}</span>
+                        </div>
+                        {email && (
+                          <div className="flex justify-between p-2 rounded-xl bg-slate-900/60 border border-slate-800 sm:col-span-2">
+                            <span className="text-slate-400">Email:</span>
+                            <span className="text-white font-mono">{email}</span>
+                          </div>
+                        )}
+                        {phone && (
+                          <div className="flex justify-between p-2 rounded-xl bg-slate-900/60 border border-slate-800 sm:col-span-2">
+                            <span className="text-slate-400">Phone:</span>
+                            <span className="text-white font-mono">{phone}</span>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+
+                    {/* Operations Log */}
+                    {operations.length > 0 && (
+                      <div className="p-4 rounded-2xl bg-[#111728] border border-slate-800 space-y-2">
+                        <p className="text-[10px] text-slate-400 uppercase font-black tracking-wider mb-2">Transaction Operations</p>
+                        <div className="space-y-1.5">
+                          {operations.map((op, oIdx) => (
+                            <div key={oIdx} className="p-2.5 rounded-xl bg-slate-900/80 border border-slate-800 text-xs flex items-center justify-between">
+                              <div className="flex items-center gap-2">
+                                <span className="w-2 h-2 rounded-full bg-emerald-400" />
+                                <span className="font-bold text-white">{op.status || 'Completed'}</span>
+                                <span className="text-slate-400 text-[11px]">({op.transaction_date})</span>
+                              </div>
+                              <span className="font-black text-emerald-400">${op.amount}</span>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Full API Response Accordion */}
+                    <div className="p-3 rounded-2xl bg-[#060A14] border border-slate-800">
+                      <p className="text-[10px] text-slate-400 uppercase font-bold mb-2">Full PayWay API Response</p>
+                      {paywayTranDetailLoading ? (
+                        <p className="text-slate-400 text-xs animate-pulse">Loading live details from ABA PayWay API...</p>
+                      ) : paywayTranDetail ? (
+                        <pre className="text-[10px] text-slate-400 whitespace-pre-wrap break-all leading-relaxed max-h-48 overflow-y-auto font-mono">
+                          {JSON.stringify(paywayTranDetail, null, 2)}
+                        </pre>
+                      ) : (
+                        <p className="text-slate-500 text-xs">No additional details returned.</p>
+                      )}
+                    </div>
+
+                    {/* Modal Actions */}
+                    <div className="flex flex-wrap gap-2 pt-2">
                       <button
                         type="button"
                         onClick={() => {
-                          const tranId = paywaySelectedTran.tran_id || paywaySelectedTran.tranId || paywaySelectedTran.id;
+                          setPaywayReceiptTran(detail);
+                          setPaywayReceiptModalOpen(true);
+                        }}
+                        className="btn btn-gold text-xs py-2.5 px-4 font-black flex-1 flex items-center justify-center gap-1.5 shadow-glow-gold cursor-pointer"
+                      >
+                        <span>🧾</span>
+                        <span>View Official Receipt</span>
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => {
                           if (tranId) {
                             navigator.clipboard?.writeText(tranId);
                             showToast('success', `Tran ID "${tranId}" copied!`);
                           }
                         }}
-                        className="btn btn-secondary text-xs py-2 px-4 flex-1"
+                        className="btn btn-secondary text-xs py-2.5 px-3 flex items-center gap-1 cursor-pointer"
                       >
-                        📋 Copy Tran ID
+                        <span>📋</span>
+                        <span>Copy ID</span>
                       </button>
                       <a
                         href="https://merchant.payway.com.kh/transactions"
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="btn btn-gold text-xs py-2 px-4 font-black flex-1 text-center flex items-center justify-center gap-1"
+                        className="btn btn-secondary text-xs py-2.5 px-3 flex items-center gap-1"
                       >
-                        🌐 PayWay Portal
+                        <span>🌐</span>
+                        <span>PayWay Portal</span>
                       </a>
                     </div>
                   </div>
                 </div>
-              </div>
-            )}
+              );
+            })()}
+
+            {/* Official ABA PayWay Receipt Modal */}
+            {paywayReceiptModalOpen && paywayReceiptTran && (() => {
+              const r = paywayReceiptTran;
+              const tranId = r.transaction_id || r.tran_id || r.tranId || '—';
+              const apv = r.apv || '—';
+              const bankRef = r.bank_ref || '—';
+              const amount = r.total_amount ?? r.original_amount ?? r.amount ?? '0.00';
+              const currency = r.original_currency || r.currency || 'USD';
+              const paymentAmount = r.payment_amount;
+              const paymentCurrency = r.payment_currency;
+              const hasKhr = paymentCurrency === 'KHR' && paymentAmount;
+              const payMethod = r.payment_type || r.payment_option || 'ABA Pay';
+              const dateStr = r.transaction_date || r.created_at || r.createdAt || new Date().toLocaleString();
+              const customerName = [r.first_name, r.last_name].filter(Boolean).join(' ') || 'PHEAK DETH';
+              const customerEmail = r.email || '—';
+              const customerPhone = r.phone || '—';
+              const payerAccount = r.payer_account || '—';
+              const bankName = r.bank_name || 'ABA Bank';
+
+              return (
+                <div className="fixed inset-0 z-50 flex items-center justify-center p-4 animate-fadeIn">
+                  <div className="fixed inset-0 bg-black/85 backdrop-blur-md" onClick={() => setPaywayReceiptModalOpen(false)} />
+                  <div className="relative w-full max-w-md bg-[#0B0F19] border-2 border-emerald-500/40 rounded-3xl p-6 shadow-2xl z-10 max-h-[90vh] overflow-y-auto space-y-4">
+                    {/* Official Receipt Card */}
+                    <div id="aba-receipt-printable" className="p-5 rounded-2xl bg-[#0d1527] border border-emerald-500/30 text-center space-y-4 text-white">
+                      {/* Top ABA Header */}
+                      <div className="flex items-center justify-between pb-3 border-b border-slate-700/80">
+                        <div className="text-left">
+                          <p className="text-sm font-black text-amber-300 tracking-wider uppercase">TIN TOPUP</p>
+                          <p className="text-[10px] text-slate-400">Merchant: <span className="font-mono text-white">tintopup</span></p>
+                        </div>
+                        <div className="text-right">
+                          <span className="text-xs font-black text-cyan-400 tracking-widest">ABA' PAYWAY</span>
+                          <p className="text-[9px] text-emerald-400 font-bold">OFFICIAL RECEIPT</p>
+                        </div>
+                      </div>
+
+                      {/* Success Checkmark Circle */}
+                      <div className="flex flex-col items-center justify-center pt-2">
+                        <div className="w-14 h-14 rounded-full bg-emerald-500/20 border-2 border-emerald-400 flex items-center justify-center text-3xl shadow-lg mb-2">
+                          ✓
+                        </div>
+                        <h4 className="text-base font-black text-white tracking-wide">Payment Successful</h4>
+                        <p className="text-[11px] text-emerald-400 font-bold uppercase tracking-widest mt-0.5">APPROVED</p>
+                      </div>
+
+                      {/* Amount Banner */}
+                      <div className="py-3 px-4 rounded-xl bg-[#09101f] border border-slate-800">
+                        <p className="text-[10px] text-slate-400 uppercase font-bold tracking-wider mb-0.5">Amount Paid</p>
+                        <p className="text-2xl font-black text-emerald-400 tracking-tight">
+                          ${typeof amount === 'number' ? amount.toFixed(2) : amount} {currency}
+                        </p>
+                        {hasKhr && (
+                          <p className="text-xs text-cyan-300 font-mono mt-0.5 font-bold">
+                            ~ {Number(paymentAmount).toLocaleString()} ៛ KHR
+                          </p>
+                        )}
+                      </div>
+
+                      {/* Receipt Fields */}
+                      <div className="space-y-2 text-xs text-left pt-1">
+                        <div className="flex justify-between py-1 border-b border-slate-800/80">
+                          <span className="text-slate-400">Transaction ID:</span>
+                          <span className="text-white font-mono font-black">{tranId}</span>
+                        </div>
+                        {apv && apv !== '—' && (
+                          <div className="flex justify-between py-1 border-b border-slate-800/80">
+                            <span className="text-slate-400">Approval Code (APV):</span>
+                            <span className="text-amber-300 font-mono font-bold">{apv}</span>
+                          </div>
+                        )}
+                        {bankRef && bankRef !== '—' && (
+                          <div className="flex justify-between py-1 border-b border-slate-800/80">
+                            <span className="text-slate-400">Bank Reference:</span>
+                            <span className="text-white font-mono">{bankRef}</span>
+                          </div>
+                        )}
+                        <div className="flex justify-between py-1 border-b border-slate-800/80">
+                          <span className="text-slate-400">Payment Method:</span>
+                          <span className="text-cyan-300 font-bold">{payMethod}</span>
+                        </div>
+                        {payerAccount && payerAccount !== '—' && (
+                          <div className="flex justify-between py-1 border-b border-slate-800/80">
+                            <span className="text-slate-400">Payer Account:</span>
+                            <span className="text-white font-mono">{payerAccount} ({bankName})</span>
+                          </div>
+                        )}
+                        <div className="flex justify-between py-1 border-b border-slate-800/80">
+                          <span className="text-slate-400">Customer:</span>
+                          <span className="text-white font-bold">{customerName}</span>
+                        </div>
+                        {customerEmail && customerEmail !== '—' && (
+                          <div className="flex justify-between py-1 border-b border-slate-800/80">
+                            <span className="text-slate-400">Email:</span>
+                            <span className="text-slate-300 font-mono text-[11px]">{customerEmail}</span>
+                          </div>
+                        )}
+                        {customerPhone && customerPhone !== '—' && (
+                          <div className="flex justify-between py-1 border-b border-slate-800/80">
+                            <span className="text-slate-400">Phone:</span>
+                            <span className="text-slate-300 font-mono text-[11px]">{customerPhone}</span>
+                          </div>
+                        )}
+                        <div className="flex justify-between py-1">
+                          <span className="text-slate-400">Date &amp; Time:</span>
+                          <span className="text-slate-200 font-medium">{dateStr}</span>
+                        </div>
+                      </div>
+
+                      {/* Seal / Footer */}
+                      <div className="pt-3 border-t border-slate-800 text-[10px] text-slate-500 leading-relaxed">
+                        Official payment confirmation verified through ABA PayWay Merchant Gateway.
+                      </div>
+                    </div>
+
+                    {/* Action buttons */}
+                    <div className="flex gap-2 pt-1">
+                      <button
+                        type="button"
+                        onClick={() => window.print()}
+                        className="btn btn-gold text-xs py-2.5 px-4 font-black flex-1 flex items-center justify-center gap-1.5 shadow-glow-gold cursor-pointer"
+                      >
+                        <span>🖨️</span>
+                        <span>Print Receipt</span>
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          const receiptText = `=== ABA PAYWAY RECEIPT ===\nMerchant: Tin TopUp (tintopup)\nTran ID: ${tranId}\nAPV: ${apv}\nBank Ref: ${bankRef}\nAmount: $${amount} ${currency}\nMethod: ${payMethod}\nCustomer: ${customerName}\nDate: ${dateStr}\nStatus: APPROVED\n==========================`;
+                          navigator.clipboard?.writeText(receiptText);
+                          showToast('success', 'Receipt details copied to clipboard!');
+                        }}
+                        className="btn btn-secondary text-xs py-2.5 px-3 flex items-center gap-1 cursor-pointer"
+                      >
+                        <span>📋</span>
+                        <span>Copy</span>
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setPaywayReceiptModalOpen(false)}
+                        className="btn btn-secondary text-xs py-2.5 px-3 cursor-pointer"
+                      >
+                        ✕ Close
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              );
+            })()}
           </div>
         )}
 

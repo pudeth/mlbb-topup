@@ -352,6 +352,7 @@ namespace MLBBTopUp.Infrastructure.Services
                         Status = isPaid ? "APPROVED" : statusText
                     };
 
+                    return checkResult;
                 }
                 var errBody = await response.Content.ReadAsStringAsync();
                 _logger.LogWarning("ABA PayWay check-transaction-2 returned {StatusCode} for {TranId}: {Body}", response.StatusCode, tranId, errBody);
@@ -456,8 +457,34 @@ namespace MLBBTopUp.Infrastructure.Services
 
             var reqTime = DateTime.UtcNow.ToString("yyyyMMddHHmmss");
             
-            var fDate = string.IsNullOrEmpty(fromDate) ? null : fromDate;
-            var tDate = string.IsNullOrEmpty(toDate) ? null : toDate;
+            string? fDate = null;
+            string? tDate = null;
+
+            if (!string.IsNullOrEmpty(fromDate))
+            {
+                if (DateTime.TryParse(fromDate, out var pFrom))
+                    fDate = pFrom.ToString("yyyy-MM-dd 00:00:00");
+                else
+                    fDate = fromDate;
+            }
+            else
+            {
+                // Default to last 3 days (inclusive) so real transactions appear automatically
+                fDate = DateTime.UtcNow.AddDays(-2).ToString("yyyy-MM-dd 00:00:00");
+            }
+
+            if (!string.IsNullOrEmpty(toDate))
+            {
+                if (DateTime.TryParse(toDate, out var pTo))
+                    tDate = pTo.ToString("yyyy-MM-dd 23:59:59");
+                else
+                    tDate = toDate;
+            }
+            else
+            {
+                tDate = DateTime.UtcNow.ToString("yyyy-MM-dd 23:59:59");
+            }
+
             var fAmt = string.IsNullOrEmpty(fromAmount) ? null : fromAmount;
             var tAmt = string.IsNullOrEmpty(toAmount) ? null : toAmount;
             var stat = string.IsNullOrEmpty(status) ? null : status;

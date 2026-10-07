@@ -1369,13 +1369,13 @@ const TopUp = () => {
         }
       }
 
-      // Always check .NET backend DB via quick-status as fallback
-      if (!isPaidConfirmed && curOrderId) {
+      // Fallback only if NOT an ABA PayWay transaction (e.g. manual offline transfer without PayWay tranId)
+      if (!isPaidConfirmed && curOrderId && !curTranId) {
         try {
           const ordCheckRes = await ordersAPI.getQuickStatus(curOrderId);
           const ordCheck = ordCheckRes?.data;
           if (ordCheck?.isPaid === true || ordCheck?.paymentStatus === 'Paid') {
-            console.log(`%c[ABA PayWay Tracker] ✓ Backend DB confirmed PAID for Order #${curOrderId}`, 'color: #10b981; font-weight: bold;');
+            console.log(`%c[Order Tracker] ✓ Backend DB confirmed PAID for Order #${curOrderId}`, 'color: #10b981; font-weight: bold;');
             isPaidConfirmed = true;
           }
         } catch (e) {}
@@ -1383,7 +1383,7 @@ const TopUp = () => {
 
       if (isPaidConfirmed) {
         console.log(`%c[ABA PayWay Tracker] ✓ Confirmed PAID! Processing order completion...`, 'color: #10b981; font-weight: bold;');
-        const confirmResult = await ordersAPI.checkPayment(curOrderId, true);
+        const confirmResult = await ordersAPI.checkPayment(curOrderId, false);
         // Check if topup is awaiting balance (provider has no funds)
         const topupStatus = confirmResult?.data?.topupStatus || confirmResult?.data?.order?.TopupStatus || '';
         updateLocalOrderStatus(curOrderId, {
