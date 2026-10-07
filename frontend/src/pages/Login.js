@@ -52,24 +52,31 @@ const Login = () => {
   };
 
   return (
-    <div className="min-h-[calc(100dvh-32px)] w-full flex items-center justify-center bg-[#07090E] text-slate-100 p-3 sm:p-6 lg:p-10 relative overflow-hidden select-none">
-      {/* Ambient background glows */}
-      <div className="fixed top-1/4 left-1/4 w-[500px] h-[500px] bg-amber-500/[0.07] rounded-full blur-[160px] pointer-events-none" />
-      <div className="fixed bottom-1/4 right-1/4 w-[500px] h-[500px] bg-cyan-500/[0.07] rounded-full blur-[160px] pointer-events-none" />
-      <div className="fixed inset-0 bg-gaming-grid pointer-events-none opacity-30" />
+    <div className="min-h-[100dvh] w-full flex items-center justify-center bg-[#040816] text-slate-100 p-3 sm:p-6 lg:p-8 relative overflow-hidden select-none">
+      {/* Ambient Cyber Neon Background Glows */}
+      <div className="fixed -top-40 -left-40 w-[600px] h-[600px] bg-blue-600/[0.18] rounded-full blur-[160px] pointer-events-none" />
+      <div className="fixed -bottom-40 -right-40 w-[600px] h-[600px] bg-sky-500/[0.14] rounded-full blur-[160px] pointer-events-none" />
+      <div className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[750px] h-[550px] bg-blue-700/[0.09] rounded-full blur-[180px] pointer-events-none" />
+      <div className="fixed inset-0 bg-gaming-grid pointer-events-none opacity-25" />
 
-      {/* Full-Display Executive Admin Portal Card */}
-      <div className="max-w-5xl w-full grid grid-cols-1 lg:grid-cols-12 rounded-2xl sm:rounded-3xl border border-slate-800/90 bg-[#0B0F19]/95 backdrop-blur-2xl shadow-2xl relative z-10 overflow-hidden">
+      {/* Decorative Cyber Gaming Diagonal Lines */}
+      <div className="hidden xl:block absolute top-12 left-12 w-48 h-48 border-l border-t border-blue-500/20 rounded-tl-3xl pointer-events-none" />
+      <div className="hidden xl:block absolute bottom-12 right-12 w-48 h-48 border-r border-b border-blue-500/20 rounded-br-3xl pointer-events-none" />
+
+      {/* Full Executive Admin Portal Card */}
+      <div className="max-w-5xl w-full grid grid-cols-1 lg:grid-cols-12 rounded-[28px] sm:rounded-[32px] border border-blue-500/35 bg-[#070E22]/95 backdrop-blur-2xl shadow-[0_0_50px_rgba(37,99,235,0.25)] relative z-10 overflow-hidden transition-all duration-300">
         
-        {/* Left Side: System Showcase & Branding (Full Display on Desktop, Clean Logo on Mobile) */}
-        <div className="lg:col-span-5 bg-gradient-to-br from-slate-950 via-[#0d1424] to-[#07090E] p-3.5 sm:p-6 lg:p-10 flex flex-col justify-between border-b lg:border-b-0 lg:border-r border-slate-800/80 relative">
+        {/* ========================================================= */}
+        {/* Left Side: System Showcase & Architecture Status */}
+        {/* ========================================================= */}
+        <div className="lg:col-span-5 bg-gradient-to-b from-[#0B1736]/95 via-[#08122B]/95 to-[#050D20] p-5 sm:p-7 lg:p-8 flex flex-col justify-between border-b lg:border-b-0 lg:border-r border-blue-500/25 relative overflow-hidden">
           {/* Subtle accent glow */}
-          <div className="absolute top-0 right-0 w-48 h-48 bg-amber-500/10 rounded-full blur-3xl pointer-events-none" />
+          <div className="absolute top-0 right-0 w-48 h-48 bg-blue-500/10 rounded-full blur-3xl pointer-events-none" />
 
           {/* Top Logo & Title */}
-          <div className="space-y-4 lg:space-y-6 relative z-10 w-full flex flex-col items-center lg:items-start text-center lg:text-left">
-            <Link to="/" className="inline-flex items-center gap-3 group">
-              <div className="h-10 w-10 sm:h-12 sm:w-12 lg:h-14 lg:w-14 rounded-xl sm:rounded-2xl bg-slate-900 border border-slate-700/60 p-1.5 sm:p-2 flex items-center justify-center shrink-0 group-hover:scale-105 transition-transform shadow-md">
+          <div className="space-y-4 lg:space-y-5 relative z-10 w-full flex flex-col items-center lg:items-start text-center lg:text-left">
+            <Link to="/" className="inline-flex items-center gap-3.5 group">
+              <div className="h-12 w-12 sm:h-14 sm:w-14 rounded-2xl bg-slate-900 border border-blue-400/40 p-1 flex items-center justify-center shrink-0 group-hover:scale-105 transition-transform shadow-[0_0_15px_rgba(59,130,246,0.35)] overflow-hidden">
                 <img
                   src={branding.logoImage || '/tin-logo.png'}
                   alt={branding.storeName || 'Tin-Topup'}
@@ -82,116 +89,187 @@ const Login = () => {
               </div>
               <div className="text-left">
                 <div className="flex items-center gap-2">
-                  <span className="text-lg sm:text-xl lg:text-2xl font-black tracking-wider text-white group-hover:text-amber-400 transition-colors">
-                    {branding.storeName || 'Tin-Topup'}
+                  <span className="text-xl sm:text-2xl font-black tracking-wide text-white group-hover:text-sky-300 transition-colors">
+                    Tin-<span className="bg-gradient-to-r from-sky-400 to-blue-400 bg-clip-text text-transparent">Topup</span>
                   </span>
-                  <span className="bg-amber-400 text-slate-950 text-[9px] sm:text-[10px] font-black px-1.5 sm:px-2 py-0.5 rounded uppercase tracking-wider">
+                  <span className="bg-[#FBBF24] text-slate-950 text-[10px] font-black px-2.5 py-0.5 rounded-full uppercase tracking-wider shadow-sm">
                     ADMIN
                   </span>
                 </div>
-                <p className="text-[10px] sm:text-xs text-slate-400 font-semibold tracking-wide">
+                <p className="text-xs text-slate-400 font-semibold tracking-wide mt-0.5">
                   {branding.tagline || 'Official Diamond Hub'}
                 </p>
               </div>
             </Link>
 
-            {/* System Status Indicators (Hidden on Mobile, Visible on Desktop) */}
-            <div className="hidden lg:block space-y-2.5 pt-2 w-full">
-              <div className="text-[11px] font-bold uppercase tracking-wider text-slate-400 flex items-center gap-1.5">
-                <span>⚡</span>
-                <span>System Architecture Status</span>
+            {/* System Status Indicators */}
+            <div className="space-y-2.5 pt-1 w-full text-left">
+              <div className="text-[11px] font-bold uppercase tracking-wider text-sky-400 flex items-center gap-1.5">
+                <svg className="w-3.5 h-3.5 text-sky-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
+                </svg>
+                <span>SYSTEM ARCHITECTURE STATUS</span>
               </div>
+
               <div className="space-y-2">
-                <div className="flex items-center justify-between p-3 rounded-xl bg-slate-900/80 border border-slate-800/80">
-                  <div className="flex items-center gap-2.5">
-                    <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
-                    <span className="text-xs font-bold text-white">Core Dispatch Engine</span>
+                {/* 1. Core Dispatch Engine */}
+                <div className="flex items-center justify-between p-2.5 sm:p-3 rounded-2xl bg-[#091530]/80 border border-blue-500/25 hover:border-blue-400/50 transition-all">
+                  <div className="flex items-center gap-3">
+                    <div className="w-9 h-9 rounded-xl bg-emerald-500/15 border border-emerald-500/30 flex items-center justify-center text-emerald-400 shrink-0 shadow-sm">
+                      <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                        <rect x="2" y="2" width="20" height="8" rx="2" ry="2" />
+                        <rect x="2" y="14" width="20" height="8" rx="2" ry="2" />
+                        <line x1="6" y1="6" x2="6.01" y2="6" />
+                        <line x1="6" y1="18" x2="6.01" y2="18" />
+                      </svg>
+                    </div>
+                    <div>
+                      <div className="text-xs font-bold text-white">Core Dispatch Engine</div>
+                      <div className="text-[10px] text-slate-400">High performance &amp; stable</div>
+                    </div>
                   </div>
-                  <span className="text-[10px] text-emerald-400 font-mono font-bold bg-emerald-500/10 px-2 py-0.5 rounded border border-emerald-500/20">OPERATIONAL</span>
+                  <span className="text-[9px] font-black tracking-wider text-emerald-300 bg-emerald-500/15 px-2.5 py-1 rounded-full border border-emerald-500/30 shrink-0 flex items-center gap-1">
+                    <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
+                    <span>OPERATIONAL</span>
+                  </span>
                 </div>
 
-                <div className="flex items-center justify-between p-3 rounded-xl bg-slate-900/80 border border-slate-800/80">
-                  <div className="flex items-center gap-2.5">
-                    <span className="w-2 h-2 rounded-full bg-cyan-400 animate-pulse" />
-                    <span className="text-xs font-bold text-white">Bakong KHQR Gateway</span>
+                {/* 2. Bakong KHQR Gateway */}
+                <div className="flex items-center justify-between p-2.5 sm:p-3 rounded-2xl bg-[#091530]/80 border border-blue-500/25 hover:border-blue-400/50 transition-all">
+                  <div className="flex items-center gap-3">
+                    <div className="w-9 h-9 rounded-xl bg-sky-500/15 border border-sky-500/30 flex items-center justify-center text-sky-400 shrink-0 shadow-sm">
+                      <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                        <path d="M18 10h-1.26A8 8 0 1 0 9 20h9a5 5 0 0 0 0-10z" />
+                      </svg>
+                    </div>
+                    <div>
+                      <div className="text-xs font-bold text-white">Bakong KHQR Gateway</div>
+                      <div className="text-[10px] text-slate-400">Secure &amp; reliable payment</div>
+                    </div>
                   </div>
-                  <span className="text-[10px] text-cyan-400 font-mono font-bold bg-cyan-500/10 px-2 py-0.5 rounded border border-cyan-500/20">0% FEE LIVE</span>
+                  <span className="text-[9px] font-black tracking-wider text-sky-300 bg-sky-500/15 px-2.5 py-1 rounded-full border border-sky-500/30 shrink-0 flex items-center gap-1">
+                    <span className="w-1.5 h-1.5 rounded-full bg-sky-400 animate-pulse" />
+                    <span>99% LIVE</span>
+                  </span>
                 </div>
 
-                <div className="flex items-center justify-between p-3 rounded-xl bg-slate-900/80 border border-slate-800/80">
-                  <div className="flex items-center gap-2.5">
-                    <span className="w-2 h-2 rounded-full bg-amber-400" />
-                    <span className="text-xs font-bold text-white">Auto Top-Up Bot</span>
+                {/* 3. Auto Top-Up Bot */}
+                <div className="flex items-center justify-between p-2.5 sm:p-3 rounded-2xl bg-[#091530]/80 border border-blue-500/25 hover:border-blue-400/50 transition-all">
+                  <div className="flex items-center gap-3">
+                    <div className="w-9 h-9 rounded-xl bg-amber-500/15 border border-amber-500/30 flex items-center justify-center text-amber-400 shrink-0 shadow-sm">
+                      <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                        <rect x="3" y="11" width="18" height="10" rx="2" />
+                        <circle cx="12" cy="5" r="2" />
+                        <path d="M12 7v4" />
+                        <line x1="8" y1="16" x2="8.01" y2="16" />
+                        <line x1="16" y1="16" x2="16.01" y2="16" />
+                      </svg>
+                    </div>
+                    <div>
+                      <div className="text-xs font-bold text-white">Auto Top-Up Bot</div>
+                      <div className="text-[10px] text-slate-400">24/7 Service</div>
+                    </div>
                   </div>
-                  <span className="text-[10px] text-amber-400 font-mono font-bold bg-amber-500/10 px-2 py-0.5 rounded border border-amber-500/20">10-SEC READY</span>
+                  <span className="text-[9px] font-black tracking-wider text-amber-300 bg-amber-500/15 px-2.5 py-1 rounded-full border border-amber-500/30 shrink-0 flex items-center gap-1">
+                    <span className="w-1.5 h-1.5 rounded-full bg-amber-400 animate-pulse" />
+                    <span>10-SEC READY</span>
+                  </span>
                 </div>
               </div>
             </div>
           </div>
 
-          {/* Bottom Security Assurance (Hidden on Mobile, Visible on Desktop) */}
-          <div className="hidden lg:flex pt-8 text-xs text-slate-400 relative z-10 items-center gap-2">
-            <span className="text-base">🛡️</span>
-            <span>Restricted Administrator Access. Enterprise Hub v2.5.</span>
+          {/* Bottom Visual: 3D Controller with Diamonds */}
+          <div className="relative pt-4 lg:pt-6 w-full flex flex-col items-center">
+            <div className="relative w-full max-w-[340px] overflow-hidden rounded-2xl flex items-center justify-center">
+              <img
+                src="/images/admin_login_controller_clean.png"
+                alt="Gaming Controller with Diamonds"
+                className="w-full h-auto max-h-[140px] object-contain drop-shadow-[0_10px_20px_rgba(59,130,246,0.35)]"
+                onError={(e) => {
+                  e.target.style.display = 'none';
+                }}
+              />
+            </div>
+
+            {/* Bottom Security Assurance Badge */}
+            <div className="w-full pt-3 text-[11px] text-slate-400 relative z-10 flex items-center justify-center lg:justify-start gap-2">
+              <svg className="w-4 h-4 text-sky-400 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
+                <polyline points="9 12 11 14 15 10" />
+              </svg>
+              <span>Restricted Administrator Access. Enterprise Hub v2.5.</span>
+            </div>
           </div>
         </div>
 
+        {/* ========================================================= */}
         {/* Right Side: Admin Authentication Form */}
-        <div className="lg:col-span-7 p-4 sm:p-8 lg:p-12 flex flex-col justify-center space-y-3.5 sm:space-y-6">
-          {/* Header text shown on larger screens */}
-          <div className="hidden lg:block">
-            <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-lg bg-amber-400/10 border border-amber-400/30 text-amber-400 text-xs font-bold uppercase tracking-wider mb-2.5">
-              <span>👑</span>
-              <span>Admin Authentication Portal</span>
+        {/* ========================================================= */}
+        <div className="lg:col-span-7 p-5 sm:p-8 lg:p-11 flex flex-col justify-center space-y-4 sm:space-y-5.5">
+          {/* Header Title & Portal Tag */}
+          <div>
+            <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-lg bg-blue-500/15 border border-blue-400/30 text-sky-300 text-xs font-bold uppercase tracking-wider mb-2.5 shadow-sm">
+              <span className="text-amber-400 text-sm">👑</span>
+              <span>ADMIN AUTHENTICATION PORTAL</span>
             </div>
-            <h2 className="text-2xl sm:text-3xl font-black text-white tracking-tight">
-              Sign In to Admin Hub
+            <h2 className="text-2xl sm:text-3xl lg:text-4xl font-black text-white tracking-tight">
+              Sign In to <span className="bg-gradient-to-r from-sky-400 via-blue-400 to-blue-500 bg-clip-text text-transparent">Admin Hub</span>
             </h2>
-            <p className="text-xs sm:text-sm text-slate-400 mt-1">
-              Authorized access only. Enter administrative credentials to manage store operations.
+            <p className="text-xs sm:text-sm text-slate-400 mt-1 leading-relaxed">
+              Authorized access only. Enter your administrative credentials to manage store operations, users and system settings.
             </p>
           </div>
 
-          {/* Quick link to Player ID & Server ID Login */}
+          {/* Quick Switch to Player Login */}
           <Link
             to="/order-history"
-            className="p-3 rounded-2xl bg-gradient-to-r from-blue-950/70 via-sky-950/60 to-indigo-950/70 border border-sky-500/40 hover:border-sky-400 text-sky-200 hover:text-white flex items-center justify-between transition-all group shadow-lg"
+            className="p-3.5 sm:p-4 rounded-2xl bg-[#091530]/85 border border-blue-500/30 hover:border-blue-400/60 text-sky-200 hover:text-white flex items-center justify-between transition-all group shadow-lg"
           >
-            <div className="flex items-center gap-3">
-              <div className="w-9 h-9 rounded-xl bg-sky-500/20 border border-sky-400/30 flex items-center justify-center text-lg shrink-0 group-hover:scale-105 transition-transform">
-                🎮
+            <div className="flex items-center gap-3 min-w-0">
+              <div className="w-10 h-10 rounded-full bg-blue-500/20 border border-blue-400/40 flex items-center justify-center text-blue-400 shrink-0 group-hover:scale-105 transition-transform shadow-sm">
+                <svg className="w-5 h-5 text-blue-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" />
+                  <circle cx="9" cy="7" r="4" />
+                  <path d="M23 21v-2a4 4 0 0 0-3-3.87" />
+                  <path d="M16 3.13a4 4 0 0 1 0 7.75" />
+                </svg>
               </div>
-              <div className="text-left">
-                <div className="text-xs font-black text-white group-hover:text-cyan-300">
-                  Player Login (ID Player & ID Server)
+              <div className="text-left min-w-0">
+                <div className="text-xs sm:text-sm font-bold text-white group-hover:text-sky-300 truncate">
+                  Player Login (ID Player &amp; ID Server)
                 </div>
-                <div className="text-[10px] text-sky-300 font-medium">
-                  ចូលគណនីអ្នកលេងជាមួយលេខ Player ID និង Server ID →
+                <div className="text-[10px] sm:text-[11px] text-slate-400 font-medium truncate mt-0.5">
+                  ចូលគណនីអ្នកលេងតាមលេខ Player ID និង Server ID →
                 </div>
               </div>
             </div>
-            <span className="text-[11px] font-black bg-sky-500/20 px-2.5 py-1 rounded-lg border border-sky-400/40 text-sky-200 group-hover:bg-sky-500 group-hover:text-slate-950 transition-all shrink-0">
-              ចូលលេង →
+            <span className="text-xs font-bold px-3.5 py-1.5 rounded-xl bg-blue-600/30 hover:bg-blue-600 border border-blue-400/40 text-blue-200 group-hover:text-white transition-all shrink-0 ml-2 shadow-sm flex items-center gap-1">
+              <span>Switch</span>
+              <span>→</span>
             </span>
           </Link>
 
-          {/* Error Message */}
+          {/* Error Banner */}
           {error && (
-            <div className="p-3 rounded-xl bg-rose-950/80 border border-rose-500/50 text-rose-200 text-xs flex items-center gap-2.5 animate-fadeIn">
+            <div className="p-3.5 rounded-xl bg-rose-950/80 border border-rose-500/50 text-rose-200 text-xs flex items-center gap-2.5 animate-fadeIn shadow-md">
               <span className="text-base shrink-0">⚠️</span>
               <div className="flex-1 font-semibold">{error}</div>
             </div>
           )}
 
-          <form className="space-y-3 sm:space-y-4" onSubmit={handleSubmit}>
+          <form className="space-y-3.5 sm:space-y-4" onSubmit={handleSubmit}>
             {/* Email Field */}
             <div>
-              <label htmlFor="email" className="block text-[11px] sm:text-xs font-bold text-slate-300 mb-1 uppercase tracking-wider">
-                Admin Email <span className="text-amber-400">*</span>
+              <label htmlFor="email" className="block text-[11px] font-bold text-slate-300 mb-1.5 uppercase tracking-wider">
+                ADMIN EMAIL <span className="text-rose-400">*</span>
               </label>
-              <div className="relative">
-                <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400 text-xs sm:text-sm">
-                  ✉️
+              <div className="relative group">
+                <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400 group-focus-within:text-sky-400 transition-colors">
+                  <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z" />
+                    <polyline points="22,6 12,13 2,6" />
+                  </svg>
                 </div>
                 <input
                   id="email"
@@ -201,7 +279,7 @@ const Login = () => {
                   required
                   value={formData.email}
                   onChange={handleChange}
-                  className="w-full bg-[#111728] border border-slate-700/80 focus:border-amber-400 focus:ring-1 focus:ring-amber-400 text-white placeholder-slate-500 text-xs sm:text-sm rounded-xl pl-9 sm:pl-10 pr-4 py-2.5 sm:py-3 transition-all outline-none"
+                  className="w-full bg-[#081124] border border-blue-500/30 hover:border-blue-500/50 focus:border-blue-400 focus:ring-2 focus:ring-blue-500/25 text-white placeholder-slate-500 text-xs sm:text-sm rounded-xl pl-10 pr-4 py-2.5 sm:py-3 transition-all outline-none shadow-inner"
                   placeholder="Enter administrator email"
                 />
               </div>
@@ -209,12 +287,15 @@ const Login = () => {
 
             {/* Password Field */}
             <div>
-              <label htmlFor="password" className="block text-[11px] sm:text-xs font-bold text-slate-300 mb-1 uppercase tracking-wider">
-                Password <span className="text-amber-400">*</span>
+              <label htmlFor="password" className="block text-[11px] font-bold text-slate-300 mb-1.5 uppercase tracking-wider">
+                PASSWORD <span className="text-rose-400">*</span>
               </label>
-              <div className="relative">
-                <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400 text-xs sm:text-sm">
-                  🔑
+              <div className="relative group">
+                <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400 group-focus-within:text-sky-400 transition-colors">
+                  <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <rect x="3" y="11" width="18" height="11" rx="2" ry="2" />
+                    <path d="M7 11V7a5 5 0 0 1 10 0v4" />
+                  </svg>
                 </div>
                 <input
                   id="password"
@@ -224,64 +305,84 @@ const Login = () => {
                   required
                   value={formData.password}
                   onChange={handleChange}
-                  className="w-full bg-[#111728] border border-slate-700/80 focus:border-amber-400 focus:ring-1 focus:ring-amber-400 text-white placeholder-slate-500 text-xs sm:text-sm rounded-xl pl-9 sm:pl-10 pr-10 py-2.5 sm:py-3 transition-all outline-none"
+                  className="w-full bg-[#081124] border border-blue-500/30 hover:border-blue-500/50 focus:border-blue-400 focus:ring-2 focus:ring-blue-500/25 text-white placeholder-slate-500 text-xs sm:text-sm rounded-xl pl-10 pr-10 py-2.5 sm:py-3 transition-all outline-none shadow-inner"
                   placeholder="Enter administrator password"
                 />
                 <button
                   type="button"
                   onClick={() => setShowPassword(!showPassword)}
-                  className="absolute inset-y-0 right-0 pr-3.5 flex items-center text-slate-400 hover:text-white text-xs transition-colors cursor-pointer"
+                  className="absolute inset-y-0 right-0 pr-3.5 flex items-center text-slate-400 hover:text-sky-300 transition-colors cursor-pointer"
                   aria-label="Toggle password visibility"
                 >
-                  {showPassword ? '🙈' : '👁️'}
+                  {showPassword ? (
+                    <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                      <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24" />
+                      <line x1="1" y1="1" x2="23" y2="23" />
+                    </svg>
+                  ) : (
+                    <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                      <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
+                      <circle cx="12" cy="12" r="3" />
+                    </svg>
+                  )}
                 </button>
               </div>
             </div>
 
-            {/* Remember Me */}
+            {/* Remember Me Checkbox */}
             <div className="flex items-center justify-between pt-0.5">
               <label className="flex items-center gap-2 cursor-pointer select-none">
                 <input
                   type="checkbox"
                   checked={rememberMe}
                   onChange={(e) => setRememberMe(e.target.checked)}
-                  className="w-3.5 h-3.5 sm:w-4 sm:h-4 rounded bg-[#111728] border-slate-700 text-amber-500 focus:ring-amber-500 cursor-pointer accent-amber-500"
+                  className="w-4 h-4 rounded bg-[#081124] border-blue-500/40 text-blue-600 focus:ring-blue-500 cursor-pointer accent-blue-600"
                 />
-                <span className="text-[11px] sm:text-xs font-medium text-slate-400 hover:text-slate-300">
+                <span className="text-xs font-medium text-slate-400 hover:text-slate-300">
                   Keep administrator session active
                 </span>
               </label>
             </div>
 
-            {/* Submit Button */}
-            <div className="pt-1">
+            {/* Submit Button (Electric Blue Neon) */}
+            <div className="pt-1.5">
               <button
                 type="submit"
                 disabled={loading}
-                className="w-full py-2.5 sm:py-3.5 px-4 rounded-xl bg-gradient-to-r from-amber-400 via-amber-400 to-yellow-400 hover:from-amber-300 hover:to-yellow-300 active:from-amber-500 text-slate-950 font-black text-xs sm:text-sm uppercase tracking-wider hover:scale-[1.01] active:scale-[0.98] transition-all disabled:opacity-60 flex items-center justify-center gap-2 cursor-pointer shadow-md"
+                className="w-full py-3 sm:py-3.5 px-6 rounded-xl bg-gradient-to-r from-[#0066FF] via-[#0080FF] to-[#00A3FF] hover:from-[#0052EE] hover:to-[#0090FF] active:scale-[0.99] text-white font-black text-xs sm:text-sm uppercase tracking-wider shadow-[0_0_25px_rgba(0,128,255,0.45)] hover:shadow-[0_0_35px_rgba(0,140,255,0.65)] flex items-center justify-center gap-2.5 transition-all cursor-pointer disabled:opacity-60"
               >
                 {loading ? (
                   <>
-                    <span className="w-4 h-4 border-2 border-slate-950 border-t-transparent rounded-full animate-spin" />
-                    <span>Authenticating Admin...</span>
+                    <span className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                    <span>AUTHENTICATING ADMIN...</span>
                   </>
                 ) : (
                   <>
-                    <span>⚡</span>
-                    <span>Sign In to Admin Dashboard</span>
+                    <svg className="w-4 h-4 text-white shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                      <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
+                      <polyline points="9 12 11 14 15 10" />
+                    </svg>
+                    <span>SIGN IN TO ADMIN DASHBOARD</span>
+                    <span className="text-base">→</span>
                   </>
                 )}
               </button>
             </div>
           </form>
 
-          {/* Return link */}
-          <div className="flex items-center justify-between text-[11px] sm:text-xs text-slate-400 pt-1.5 border-t border-slate-800/60">
+          {/* Footer Security & Return Link */}
+          <div className="flex flex-col sm:flex-row items-center justify-between gap-2 text-[11px] text-slate-400 pt-2 border-t border-blue-500/20">
             <div className="flex items-center gap-1.5">
-              <span>🔒</span>
+              <svg className="w-3.5 h-3.5 text-slate-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <rect x="3" y="11" width="18" height="11" rx="2" ry="2" />
+                <path d="M7 11V7a5 5 0 0 1 10 0v4" />
+              </svg>
               <span>256-Bit SSL Encrypted Session</span>
             </div>
-            <Link to="/" className="text-slate-400 hover:text-amber-400 transition-colors font-medium flex items-center gap-1">
+            <Link
+              to="/"
+              className="text-slate-400 hover:text-sky-300 transition-colors font-medium flex items-center gap-1"
+            >
               <span>←</span>
               <span>Return to Storefront</span>
             </Link>
