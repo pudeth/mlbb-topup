@@ -59,22 +59,22 @@ const Login = () => {
       <div className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[750px] h-[550px] bg-blue-700/[0.09] rounded-full blur-[180px] pointer-events-none" />
       <div className="fixed inset-0 bg-gaming-grid pointer-events-none opacity-25" />
 
-      {/* Decorative Cyber Gaming Diagonal Lines */}
+      {/* Decorative Cyber Gaming Diagonal Lines (Desktop) */}
       <div className="hidden xl:block absolute top-12 left-12 w-48 h-48 border-l border-t border-blue-500/20 rounded-tl-3xl pointer-events-none" />
       <div className="hidden xl:block absolute bottom-12 right-12 w-48 h-48 border-r border-b border-blue-500/20 rounded-br-3xl pointer-events-none" />
 
-      {/* Full Executive Admin Portal Card */}
-      <div className="max-w-5xl w-full grid grid-cols-1 lg:grid-cols-12 rounded-[28px] sm:rounded-[32px] border border-blue-500/35 bg-[#070E22]/95 backdrop-blur-2xl shadow-[0_0_50px_rgba(37,99,235,0.25)] relative z-10 overflow-hidden transition-all duration-300">
+      {/* Executive Admin Portal Card */}
+      <div className="max-w-md lg:max-w-5xl w-full grid grid-cols-1 lg:grid-cols-12 rounded-[24px] sm:rounded-[32px] border border-blue-500/35 bg-[#070E22]/95 backdrop-blur-2xl shadow-[0_0_50px_rgba(37,99,235,0.25)] relative z-10 overflow-hidden my-auto transition-all duration-300">
         
         {/* ========================================================= */}
-        {/* Left Side: System Showcase & Architecture Status */}
+        {/* Left Side: System Showcase (Desktop Only: hidden on mobile) */}
         {/* ========================================================= */}
-        <div className="lg:col-span-5 bg-gradient-to-b from-[#0B1736]/95 via-[#08122B]/95 to-[#050D20] p-5 sm:p-7 lg:p-8 flex flex-col justify-between border-b lg:border-b-0 lg:border-r border-blue-500/25 relative overflow-hidden">
+        <div className="hidden lg:flex lg:col-span-5 bg-gradient-to-b from-[#0B1736]/95 via-[#08122B]/95 to-[#050D20] p-6 lg:p-8 flex-col justify-between border-r border-blue-500/25 relative overflow-hidden">
           {/* Subtle accent glow */}
           <div className="absolute top-0 right-0 w-48 h-48 bg-blue-500/10 rounded-full blur-3xl pointer-events-none" />
 
           {/* Top Logo & Title */}
-          <div className="space-y-4 lg:space-y-5 relative z-10 w-full flex flex-col items-center lg:items-start text-center lg:text-left">
+          <div className="space-y-4 relative z-10 w-full flex flex-col items-start text-left">
             <Link to="/" className="inline-flex items-center gap-3.5 group">
               <div className="h-12 w-12 sm:h-14 sm:w-14 rounded-2xl bg-slate-900 border border-blue-400/40 p-1 flex items-center justify-center shrink-0 group-hover:scale-105 transition-transform shadow-[0_0_15px_rgba(59,130,246,0.35)] overflow-hidden">
                 <img
@@ -180,7 +180,7 @@ const Login = () => {
           </div>
 
           {/* Bottom Visual: 3D Controller with Diamonds */}
-          <div className="relative pt-4 lg:pt-6 w-full flex flex-col items-center">
+          <div className="relative pt-4 w-full flex flex-col items-center">
             <div className="relative w-full max-w-[340px] overflow-hidden rounded-2xl flex items-center justify-center">
               <img
                 src="/images/admin_login_controller_clean.png"
@@ -193,7 +193,7 @@ const Login = () => {
             </div>
 
             {/* Bottom Security Assurance Badge */}
-            <div className="w-full pt-3 text-[11px] text-slate-400 relative z-10 flex items-center justify-center lg:justify-start gap-2">
+            <div className="w-full pt-3 text-[11px] text-slate-400 relative z-10 flex items-center justify-start gap-2">
               <svg className="w-4 h-4 text-sky-400 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                 <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
                 <polyline points="9 12 11 14 15 10" />
@@ -204,31 +204,77 @@ const Login = () => {
         </div>
 
         {/* ========================================================= */}
-        {/* Right Side: Admin Authentication Form */}
+        {/* Right Side: Admin Authentication Form (Responsive & Compact) */}
         {/* ========================================================= */}
-        <div className="lg:col-span-7 p-5 sm:p-8 lg:p-11 flex flex-col justify-center space-y-4 sm:space-y-5.5">
-          {/* Header Title & Portal Tag */}
-          <div>
-            <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-lg bg-blue-500/15 border border-blue-400/30 text-sky-300 text-xs font-bold uppercase tracking-wider mb-2.5 shadow-sm">
+        <div className="lg:col-span-7 p-4 sm:p-7 lg:p-10 flex flex-col justify-center space-y-3.5 sm:space-y-4.5">
+          
+          {/* Mobile-Only Sleek Brand Header (Hidden on Desktop) */}
+          <div className="lg:hidden flex items-center justify-between pb-3 border-b border-blue-500/20">
+            <Link to="/" className="flex items-center gap-2.5">
+              <div className="h-10 w-10 rounded-xl bg-slate-900 border border-blue-400/40 p-1 flex items-center justify-center shrink-0 shadow-sm overflow-hidden">
+                <img
+                  src={branding.logoImage || '/tin-logo.png'}
+                  alt={branding.storeName || 'Tin-Topup'}
+                  className="w-full h-full object-contain"
+                  onError={(e) => {
+                    e.target.onerror = null;
+                    e.target.src = '/tin-logo.png';
+                  }}
+                />
+              </div>
+              <div>
+                <div className="flex items-center gap-1.5">
+                  <span className="text-base font-black text-white">
+                    Tin-<span className="bg-gradient-to-r from-sky-400 to-blue-400 bg-clip-text text-transparent">Topup</span>
+                  </span>
+                  <span className="bg-[#FBBF24] text-slate-950 text-[9px] font-black px-1.5 py-0.2 rounded-full uppercase">
+                    ADMIN
+                  </span>
+                </div>
+                <span className="text-[10px] text-slate-400 font-medium block">
+                  {branding.tagline || 'Official Diamond Hub'}
+                </span>
+              </div>
+            </Link>
+
+            <div className="flex items-center gap-1 px-2 py-0.5 rounded-lg bg-blue-500/10 border border-blue-400/25 text-[10px] font-bold text-sky-300">
+              <span>👑</span>
+              <span>PORTAL</span>
+            </div>
+          </div>
+
+          {/* Desktop Title & Portal Tag */}
+          <div className="hidden lg:block">
+            <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-lg bg-blue-500/15 border border-blue-400/30 text-sky-300 text-xs font-bold uppercase tracking-wider mb-2 shadow-sm">
               <span className="text-amber-400 text-sm">👑</span>
               <span>ADMIN AUTHENTICATION PORTAL</span>
             </div>
-            <h2 className="text-2xl sm:text-3xl lg:text-4xl font-black text-white tracking-tight">
+            <h2 className="text-2xl lg:text-3xl font-black text-white tracking-tight">
               Sign In to <span className="bg-gradient-to-r from-sky-400 via-blue-400 to-blue-500 bg-clip-text text-transparent">Admin Hub</span>
             </h2>
-            <p className="text-xs sm:text-sm text-slate-400 mt-1 leading-relaxed">
-              Authorized access only. Enter your administrative credentials to manage store operations, users and system settings.
+            <p className="text-xs text-slate-400 mt-1 leading-relaxed">
+              Authorized access only. Enter your credentials to manage store operations.
             </p>
           </div>
 
-          {/* Quick Switch to Player Login */}
+          {/* Mobile Title (Compact) */}
+          <div className="lg:hidden text-left">
+            <h2 className="text-xl font-black text-white tracking-tight">
+              Sign In to <span className="bg-gradient-to-r from-sky-400 via-blue-400 to-blue-500 bg-clip-text text-transparent">Admin Hub</span>
+            </h2>
+            <p className="text-[11px] text-slate-400 mt-0.5">
+              Enter administrator email and password to manage store.
+            </p>
+          </div>
+
+          {/* Quick Switch to Player Login (Compact on Mobile) */}
           <Link
             to="/order-history"
-            className="p-3.5 sm:p-4 rounded-2xl bg-[#091530]/85 border border-blue-500/30 hover:border-blue-400/60 text-sky-200 hover:text-white flex items-center justify-between transition-all group shadow-lg"
+            className="p-2.5 sm:p-3 rounded-xl sm:rounded-2xl bg-[#091530]/85 border border-blue-500/30 hover:border-blue-400/60 text-sky-200 hover:text-white flex items-center justify-between transition-all group shadow-sm"
           >
-            <div className="flex items-center gap-3 min-w-0">
-              <div className="w-10 h-10 rounded-full bg-blue-500/20 border border-blue-400/40 flex items-center justify-center text-blue-400 shrink-0 group-hover:scale-105 transition-transform shadow-sm">
-                <svg className="w-5 h-5 text-blue-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <div className="flex items-center gap-2.5 min-w-0">
+              <div className="w-8 h-8 rounded-lg bg-blue-500/20 border border-blue-400/40 flex items-center justify-center text-blue-400 shrink-0 group-hover:scale-105 transition-transform shadow-sm">
+                <svg className="w-4 h-4 text-blue-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                   <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" />
                   <circle cx="9" cy="7" r="4" />
                   <path d="M23 21v-2a4 4 0 0 0-3-3.87" />
@@ -236,15 +282,15 @@ const Login = () => {
                 </svg>
               </div>
               <div className="text-left min-w-0">
-                <div className="text-xs sm:text-sm font-bold text-white group-hover:text-sky-300 truncate">
+                <div className="text-xs font-bold text-white group-hover:text-sky-300 truncate">
                   Player Login (ID Player &amp; ID Server)
                 </div>
-                <div className="text-[10px] sm:text-[11px] text-slate-400 font-medium truncate mt-0.5">
-                  ចូលគណនីអ្នកលេងតាមលេខ Player ID និង Server ID →
+                <div className="text-[10px] text-slate-400 font-medium truncate">
+                  ចូលគណនីអ្នកលេងតាម Player ID →
                 </div>
               </div>
             </div>
-            <span className="text-xs font-bold px-3.5 py-1.5 rounded-xl bg-blue-600/30 hover:bg-blue-600 border border-blue-400/40 text-blue-200 group-hover:text-white transition-all shrink-0 ml-2 shadow-sm flex items-center gap-1">
+            <span className="text-[11px] font-bold px-2.5 py-1 rounded-lg bg-blue-600/30 hover:bg-blue-600 border border-blue-400/40 text-blue-200 group-hover:text-white transition-all shrink-0 ml-2 shadow-sm flex items-center gap-1">
               <span>Switch</span>
               <span>→</span>
             </span>
@@ -252,20 +298,20 @@ const Login = () => {
 
           {/* Error Banner */}
           {error && (
-            <div className="p-3.5 rounded-xl bg-rose-950/80 border border-rose-500/50 text-rose-200 text-xs flex items-center gap-2.5 animate-fadeIn shadow-md">
-              <span className="text-base shrink-0">⚠️</span>
+            <div className="p-3 rounded-xl bg-rose-950/80 border border-rose-500/50 text-rose-200 text-xs flex items-center gap-2 animate-fadeIn shadow-md">
+              <span className="text-sm shrink-0">⚠️</span>
               <div className="flex-1 font-semibold">{error}</div>
             </div>
           )}
 
-          <form className="space-y-3.5 sm:space-y-4" onSubmit={handleSubmit}>
+          <form className="space-y-3 sm:space-y-3.5" onSubmit={handleSubmit}>
             {/* Email Field */}
             <div>
-              <label htmlFor="email" className="block text-[11px] font-bold text-slate-300 mb-1.5 uppercase tracking-wider">
+              <label htmlFor="email" className="block text-[10px] sm:text-[11px] font-bold text-slate-300 mb-1 uppercase tracking-wider">
                 ADMIN EMAIL <span className="text-rose-400">*</span>
               </label>
               <div className="relative group">
-                <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400 group-focus-within:text-sky-400 transition-colors">
+                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-400 group-focus-within:text-sky-400 transition-colors">
                   <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                     <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z" />
                     <polyline points="22,6 12,13 2,6" />
@@ -279,7 +325,7 @@ const Login = () => {
                   required
                   value={formData.email}
                   onChange={handleChange}
-                  className="w-full bg-[#081124] border border-blue-500/30 hover:border-blue-500/50 focus:border-blue-400 focus:ring-2 focus:ring-blue-500/25 text-white placeholder-slate-500 text-xs sm:text-sm rounded-xl pl-10 pr-4 py-2.5 sm:py-3 transition-all outline-none shadow-inner"
+                  className="w-full bg-[#081124] border border-blue-500/30 hover:border-blue-500/50 focus:border-blue-400 focus:ring-2 focus:ring-blue-500/25 text-white placeholder-slate-500 text-xs sm:text-sm rounded-xl pl-9 sm:pl-10 pr-4 py-2.5 sm:py-2.5 transition-all outline-none shadow-inner"
                   placeholder="Enter administrator email"
                 />
               </div>
@@ -287,11 +333,11 @@ const Login = () => {
 
             {/* Password Field */}
             <div>
-              <label htmlFor="password" className="block text-[11px] font-bold text-slate-300 mb-1.5 uppercase tracking-wider">
+              <label htmlFor="password" className="block text-[10px] sm:text-[11px] font-bold text-slate-300 mb-1 uppercase tracking-wider">
                 PASSWORD <span className="text-rose-400">*</span>
               </label>
               <div className="relative group">
-                <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400 group-focus-within:text-sky-400 transition-colors">
+                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-400 group-focus-within:text-sky-400 transition-colors">
                   <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                     <rect x="3" y="11" width="18" height="11" rx="2" ry="2" />
                     <path d="M7 11V7a5 5 0 0 1 10 0v4" />
@@ -305,13 +351,13 @@ const Login = () => {
                   required
                   value={formData.password}
                   onChange={handleChange}
-                  className="w-full bg-[#081124] border border-blue-500/30 hover:border-blue-500/50 focus:border-blue-400 focus:ring-2 focus:ring-blue-500/25 text-white placeholder-slate-500 text-xs sm:text-sm rounded-xl pl-10 pr-10 py-2.5 sm:py-3 transition-all outline-none shadow-inner"
+                  className="w-full bg-[#081124] border border-blue-500/30 hover:border-blue-500/50 focus:border-blue-400 focus:ring-2 focus:ring-blue-500/25 text-white placeholder-slate-500 text-xs sm:text-sm rounded-xl pl-9 sm:pl-10 pr-10 py-2.5 sm:py-2.5 transition-all outline-none shadow-inner"
                   placeholder="Enter administrator password"
                 />
                 <button
                   type="button"
                   onClick={() => setShowPassword(!showPassword)}
-                  className="absolute inset-y-0 right-0 pr-3.5 flex items-center text-slate-400 hover:text-sky-300 transition-colors cursor-pointer"
+                  className="absolute inset-y-0 right-0 pr-3 flex items-center text-slate-400 hover:text-sky-300 transition-colors cursor-pointer"
                   aria-label="Toggle password visibility"
                 >
                   {showPassword ? (
@@ -336,20 +382,20 @@ const Login = () => {
                   type="checkbox"
                   checked={rememberMe}
                   onChange={(e) => setRememberMe(e.target.checked)}
-                  className="w-4 h-4 rounded bg-[#081124] border-blue-500/40 text-blue-600 focus:ring-blue-500 cursor-pointer accent-blue-600"
+                  className="w-3.5 h-3.5 sm:w-4 sm:h-4 rounded bg-[#081124] border-blue-500/40 text-blue-600 focus:ring-blue-500 cursor-pointer accent-blue-600"
                 />
-                <span className="text-xs font-medium text-slate-400 hover:text-slate-300">
+                <span className="text-[11px] sm:text-xs font-medium text-slate-400 hover:text-slate-300">
                   Keep administrator session active
                 </span>
               </label>
             </div>
 
             {/* Submit Button (Electric Blue Neon) */}
-            <div className="pt-1.5">
+            <div className="pt-1">
               <button
                 type="submit"
                 disabled={loading}
-                className="w-full py-3 sm:py-3.5 px-6 rounded-xl bg-gradient-to-r from-[#0066FF] via-[#0080FF] to-[#00A3FF] hover:from-[#0052EE] hover:to-[#0090FF] active:scale-[0.99] text-white font-black text-xs sm:text-sm uppercase tracking-wider shadow-[0_0_25px_rgba(0,128,255,0.45)] hover:shadow-[0_0_35px_rgba(0,140,255,0.65)] flex items-center justify-center gap-2.5 transition-all cursor-pointer disabled:opacity-60"
+                className="w-full py-2.5 sm:py-3 px-5 rounded-xl bg-gradient-to-r from-[#0066FF] via-[#0080FF] to-[#00A3FF] hover:from-[#0052EE] hover:to-[#0090FF] active:scale-[0.99] text-white font-black text-xs sm:text-sm uppercase tracking-wider shadow-[0_0_25px_rgba(0,128,255,0.45)] hover:shadow-[0_0_35px_rgba(0,140,255,0.65)] flex items-center justify-center gap-2 transition-all cursor-pointer disabled:opacity-60"
               >
                 {loading ? (
                   <>
@@ -363,7 +409,7 @@ const Login = () => {
                       <polyline points="9 12 11 14 15 10" />
                     </svg>
                     <span>SIGN IN TO ADMIN DASHBOARD</span>
-                    <span className="text-base">→</span>
+                    <span className="text-sm">→</span>
                   </>
                 )}
               </button>
@@ -371,17 +417,17 @@ const Login = () => {
           </form>
 
           {/* Footer Security & Return Link */}
-          <div className="flex flex-col sm:flex-row items-center justify-between gap-2 text-[11px] text-slate-400 pt-2 border-t border-blue-500/20">
+          <div className="flex items-center justify-between gap-2 text-[10px] sm:text-[11px] text-slate-400 pt-1.5 border-t border-blue-500/20">
             <div className="flex items-center gap-1.5">
-              <svg className="w-3.5 h-3.5 text-slate-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <svg className="w-3.5 h-3.5 text-slate-400 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                 <rect x="3" y="11" width="18" height="11" rx="2" ry="2" />
                 <path d="M7 11V7a5 5 0 0 1 10 0v4" />
               </svg>
-              <span>256-Bit SSL Encrypted Session</span>
+              <span>256-Bit SSL Encrypted</span>
             </div>
             <Link
               to="/"
-              className="text-slate-400 hover:text-sky-300 transition-colors font-medium flex items-center gap-1"
+              className="text-slate-400 hover:text-sky-300 transition-colors font-medium flex items-center gap-1 shrink-0"
             >
               <span>←</span>
               <span>Return to Storefront</span>

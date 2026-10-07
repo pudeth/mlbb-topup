@@ -76,8 +76,8 @@ const Layout = ({ children }) => {
 
       {/* Main Container shifted right on desktop / laptop */}
       <div className={`flex flex-col min-h-screen ${!isAuthPath ? 'lg:pl-60 xl:pl-64' : ''}`}>
-        <Navbar />
-        <main className={`flex-grow relative z-10 ${isAuthPath ? 'pb-0 flex flex-col' : 'pb-6 lg:pb-12'}`}>
+        {!isAuthPath && <Navbar />}
+        <main className={`flex-grow relative z-10 ${isAuthPath ? 'pb-0 flex flex-col justify-center' : 'pb-6 lg:pb-12'}`}>
           {children}
         </main>
         {!isAuthPath && <MobileBottomNav />}
