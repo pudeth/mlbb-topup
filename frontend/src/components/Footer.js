@@ -76,14 +76,6 @@ const Footer = () => {
             {/* Terms & Privacy Links */}
             <div className="flex items-center gap-3 text-[11px] text-slate-400">
               <Link
-                to="/api-docs"
-                onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
-                className="text-amber-400/90 hover:text-amber-300 font-bold transition-colors"
-              >
-                API Docs (Free Fire)
-              </Link>
-              <span>•</span>
-              <Link
                 to="/terms"
                 onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
                 className="hover:text-amber-400 transition-colors"
