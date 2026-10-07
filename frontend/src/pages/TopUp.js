@@ -1600,49 +1600,69 @@ const TopUp = () => {
       };
 
       let directRes = null;
-      try {
-        directRes = await paywayAPI.create(paywayPayload);
-      } catch (firstErr) {
-        console.warn('ABA PayWay first attempt failed, retrying in 4s...', firstErr?.message);
-        // Show "connecting" feedback while backend wakes up
-        setError('');
-        setLoading(true);
-        await new Promise(r => setTimeout(r, 4000));
+      let lastErr = null;
+      const maxAttempts = 3;
+
+      for (let attempt = 1; attempt <= maxAttempts; attempt++) {
         try {
           directRes = await paywayAPI.create(paywayPayload);
-        } catch (retryErr) {
-          console.error('ABA PayWay retry also failed:', retryErr);
-          setError(
-            retryErr.response?.data?.message ||
-            firstErr.response?.data?.message ||
-            'Could not connect to ABA PayWay gateway. Please check your internet and try again.'
-          );
+          if (directRes?.data?.tranId) break;
+        } catch (err) {
+          lastErr = err;
+          console.warn(`ABA PayWay attempt ${attempt}/${maxAttempts} notice:`, err?.message);
+          if (attempt < maxAttempts) {
+            setError(t('connecting_gateway') || 'Connecting to ABA PayWay gateway... Please wait.');
+            setLoading(true);
+            await new Promise(r => setTimeout(r, attempt * 2500));
+          }
         }
       }
 
-      if (directRes) {
-        const pd = directRes?.data;
-        if (pd?.tranId && (pd?.formData || pd?.purchaseUrl)) {
-          createdPayment = {
-            orderId: activeOrderId,
-            amount: targetAmount,
-            currency: currency,
-            tranId: pd.tranId,
-            qrString: pd.qrString || null,
-            abapayDeeplink: pd.abapayDeeplink || pd.checkoutUrl,
-            khqrDeeplink: pd.abapayDeeplink || pd.checkoutUrl,
-            md5Hash: pd.md5,
-            khqrMd5Hash: pd.md5,
-            khqrQRCode: pd.qrString || null,
-            formData: pd.formData,
-            purchaseUrl: pd.purchaseUrl,
-            checkoutUrl: pd.checkoutUrl,
-            merchantName: 'DETH PHEAK',
-            gateway: 'aba_payway'
-          };
-        } else {
-          setError(pd?.message || 'Failed to initialize ABA PayWay transaction. Please try again.');
-        }
+      if (directRes?.data?.tranId) {
+        const pd = directRes.data;
+        createdPayment = {
+          orderId: activeOrderId,
+          amount: targetAmount,
+          currency: currency,
+          tranId: pd.tranId,
+          qrString: pd.qrString || null,
+          abapayDeeplink: pd.abapayDeeplink || pd.checkoutUrl,
+          khqrDeeplink: pd.abapayDeeplink || pd.checkoutUrl,
+          md5Hash: pd.md5,
+          khqrMd5Hash: pd.md5,
+          khqrQRCode: pd.qrString || null,
+          formData: pd.formData,
+          purchaseUrl: pd.purchaseUrl,
+          checkoutUrl: pd.checkoutUrl,
+          merchantName: 'DETH PHEAK',
+          gateway: 'aba_payway'
+        };
+        setError('');
+      } else if (newOrder?.payment?.transactionId) {
+        // Instant Fallback to pre-generated ABA PayWay transaction from order creation
+        const np = newOrder.payment;
+        createdPayment = {
+          orderId: activeOrderId,
+          amount: targetAmount,
+          currency: currency,
+          tranId: np.transactionId,
+          qrString: np.khqrQRCode || null,
+          abapayDeeplink: np.khqrDeeplink,
+          khqrDeeplink: np.khqrDeeplink,
+          md5Hash: np.khqrMd5Hash,
+          khqrMd5Hash: np.khqrMd5Hash,
+          khqrQRCode: np.khqrQRCode || null,
+          merchantName: 'DETH PHEAK',
+          gateway: 'aba_payway'
+        };
+        setError('');
+      } else {
+        console.error('ABA PayWay all attempts failed:', lastErr);
+        setError(
+          lastErr?.response?.data?.message ||
+          lastErr?.message ||
+          'Could not connect to ABA PayWay gateway. Please check your internet and try again.'
+        );
       }
 
       if (createdPayment) {
