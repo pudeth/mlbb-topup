@@ -1982,18 +1982,18 @@ public class AdminController : BaseController
 
     public class ProviderSettingsDto
     {
-        public string ActiveProvider { get; set; } = "FazerCards";
+        public string ActiveProvider { get; set; } = "KhmerTopUp";
         public string Environment { get; set; } = "Production";
         public bool AutoDispatchOnPayment { get; set; } = true;
         public string MerchantId { get; set; } = "peakmao007";
-        public string ApiKey { get; set; } = "fc_5f79a0016d5d87bd1e83ea4f";
-        public string KhmerTopUpApiKey { get; set; } = "kt_6d38a3a5940e970221cc62fa306ae96044736364";
+        public string ApiKey { get; set; } = "kt_28c2640c86717199395d973670cf039a30ba2716";
+        public string KhmerTopUpApiKey { get; set; } = "kt_28c2640c86717199395d973670cf039a30ba2716";
         public string FazerCardsApiKey { get; set; } = "fc_5f79a0016d5d87bd1e83ea4f";
         public List<FazerCardsTokenItem> FazerCardsTokens { get; set; } = new();
         public string WebhookUrl { get; set; } = "http://localhost:5000/api/supplier/webhook";
-        public decimal BalanceUSD { get; set; } = 18.50m;
-        public decimal KhmerTopUpBalanceUSD { get; set; } = 1.25m;
-        public decimal FazerCardsBalanceUSD { get; set; } = 18.50m;
+        public decimal BalanceUSD { get; set; } = 3.0m;
+        public decimal KhmerTopUpBalanceUSD { get; set; } = 3.0m;
+        public decimal FazerCardsBalanceUSD { get; set; } = 0.01m;
         public string Status { get; set; } = "Connected & Active";
     }
 

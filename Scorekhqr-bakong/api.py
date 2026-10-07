@@ -1562,8 +1562,8 @@ def handle_provider_switch():
             if active_tok:
                 settings_data['fazerCardsApiKey'] = active_tok
 
-        settings_data['apiKey'] = settings_data.get('khmerTopUpApiKey', 'kt_6d38a3a5940e970221cc62fa306ae96044736364') if normalized == 'KhmerTopUp' else settings_data.get('fazerCardsApiKey', 'fc_5f79a0016d5d87bd1e83ea4f')
-        settings_data['balanceUSD'] = settings_data.get('khmerTopUpBalanceUSD', 1.25) if normalized == 'KhmerTopUp' else settings_data.get('fazerCardsBalanceUSD', 18.50)
+        settings_data['apiKey'] = settings_data.get('khmerTopUpApiKey', 'kt_28c2640c86717199395d973670cf039a30ba2716') if normalized == 'KhmerTopUp' else settings_data.get('fazerCardsApiKey', 'fc_5f79a0016d5d87bd1e83ea4f')
+        settings_data['balanceUSD'] = settings_data.get('khmerTopUpBalanceUSD', 3.00) if normalized == 'KhmerTopUp' else settings_data.get('fazerCardsBalanceUSD', 0.01)
         settings_data['updatedAt'] = datetime.utcnow().isoformat()
 
         if mongo_db is not None:

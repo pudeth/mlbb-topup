@@ -978,12 +978,15 @@ const PRICING_GAMES = [
           const serverActive = provRes.data.activeProvider || provRes.data.ActiveProvider;
           const finalActive = pinned || (serverActive ? (String(serverActive).toLowerCase().includes('khmer') ? 'KhmerTopUp' : 'FazerCards') : 'FazerCards');
           const currentLocal = getStoredProviderSettings();
-          const ktBal = provRes.data.khmerTopUpBalanceUSD !== undefined ? Number(provRes.data.khmerTopUpBalanceUSD) : Number(currentLocal.khmerTopUpBalanceUSD ?? 0.49);
+          const cleanKtKey = (provRes.data.khmerTopUpApiKey && provRes.data.khmerTopUpApiKey !== 'kt_6d38a3a5940e970221cc62fa306ae96044736364')
+            ? provRes.data.khmerTopUpApiKey
+            : (currentLocal.khmerTopUpApiKey && currentLocal.khmerTopUpApiKey !== 'kt_6d38a3a5940e970221cc62fa306ae96044736364' ? currentLocal.khmerTopUpApiKey : 'kt_28c2640c86717199395d973670cf039a30ba2716');
+          const ktBal = provRes.data.khmerTopUpBalanceUSD !== undefined ? Number(provRes.data.khmerTopUpBalanceUSD) : Number(currentLocal.khmerTopUpBalanceUSD ?? 3.00);
           const fcBal = provRes.data.fazerCardsBalanceUSD !== undefined ? Number(provRes.data.fazerCardsBalanceUSD) : Number(currentLocal.fazerCardsBalanceUSD ?? 0.01);
           const activeBal = finalActive === 'KhmerTopUp' ? ktBal : fcBal;
 
           const updatedProviders = (currentLocal.providers || DEFAULT_PROVIDERS).map(p => {
-            if (p.id === 'KhmerTopUp') return { ...p, balanceUSD: ktBal, apiKey: provRes.data.khmerTopUpApiKey || p.apiKey };
+            if (p.id === 'KhmerTopUp') return { ...p, balanceUSD: ktBal, apiKey: cleanKtKey };
             if (p.id === 'FazerCards') return { ...p, balanceUSD: fcBal, apiKey: provRes.data.fazerCardsApiKey || p.apiKey };
             return p;
           });
@@ -993,6 +996,8 @@ const PRICING_GAMES = [
             ...provRes.data,
             activeProvider: finalActive,
             ActiveProvider: finalActive,
+            apiKey: finalActive === 'KhmerTopUp' ? cleanKtKey : (provRes.data.apiKey || currentLocal.apiKey),
+            khmerTopUpApiKey: cleanKtKey,
             khmerTopUpBalanceUSD: ktBal,
             fazerCardsBalanceUSD: fcBal,
             balanceUSD: activeBal,
@@ -1013,14 +1018,17 @@ const PRICING_GAMES = [
         if (provRes.data) {
           const pinned = localStorage.getItem('admin_active_provider_pinned');
           const serverActive = provRes.data.activeProvider || provRes.data.ActiveProvider;
-          const finalActive = pinned || (serverActive ? (String(serverActive).toLowerCase().includes('khmer') ? 'KhmerTopUp' : 'FazerCards') : 'FazerCards');
+          const finalActive = pinned || (serverActive ? (String(serverActive).toLowerCase().includes('khmer') ? 'KhmerTopUp' : 'FazerCards') : 'KhmerTopUp');
           const currentLocal = getStoredProviderSettings();
-          const ktBal = provRes.data.khmerTopUpBalanceUSD !== undefined ? Number(provRes.data.khmerTopUpBalanceUSD) : Number(currentLocal.khmerTopUpBalanceUSD ?? 0.49);
+          const cleanKtKey = (provRes.data.khmerTopUpApiKey && provRes.data.khmerTopUpApiKey !== 'kt_6d38a3a5940e970221cc62fa306ae96044736364')
+            ? provRes.data.khmerTopUpApiKey
+            : (currentLocal.khmerTopUpApiKey && currentLocal.khmerTopUpApiKey !== 'kt_6d38a3a5940e970221cc62fa306ae96044736364' ? currentLocal.khmerTopUpApiKey : 'kt_28c2640c86717199395d973670cf039a30ba2716');
+          const ktBal = provRes.data.khmerTopUpBalanceUSD !== undefined ? Number(provRes.data.khmerTopUpBalanceUSD) : Number(currentLocal.khmerTopUpBalanceUSD ?? 3.00);
           const fcBal = provRes.data.fazerCardsBalanceUSD !== undefined ? Number(provRes.data.fazerCardsBalanceUSD) : Number(currentLocal.fazerCardsBalanceUSD ?? 0.01);
           const activeBal = finalActive === 'KhmerTopUp' ? ktBal : fcBal;
 
           const updatedProviders = (currentLocal.providers || DEFAULT_PROVIDERS).map(p => {
-            if (p.id === 'KhmerTopUp') return { ...p, balanceUSD: ktBal, apiKey: provRes.data.khmerTopUpApiKey || p.apiKey };
+            if (p.id === 'KhmerTopUp') return { ...p, balanceUSD: ktBal, apiKey: cleanKtKey };
             if (p.id === 'FazerCards') return { ...p, balanceUSD: fcBal, apiKey: provRes.data.fazerCardsApiKey || p.apiKey };
             return p;
           });
@@ -1030,6 +1038,8 @@ const PRICING_GAMES = [
             ...provRes.data,
             activeProvider: finalActive,
             ActiveProvider: finalActive,
+            apiKey: finalActive === 'KhmerTopUp' ? cleanKtKey : (provRes.data.apiKey || currentLocal.apiKey),
+            khmerTopUpApiKey: cleanKtKey,
             khmerTopUpBalanceUSD: ktBal,
             fazerCardsBalanceUSD: fcBal,
             balanceUSD: activeBal,
@@ -1797,11 +1807,12 @@ const PRICING_GAMES = [
     try {
       const activeBal = providerSettings.activeProvider === 'FazerCards'
         ? (providerSettings.fazerCardsBalanceUSD !== undefined ? Number(providerSettings.fazerCardsBalanceUSD) : 0.01)
-        : (providerSettings.khmerTopUpBalanceUSD !== undefined ? Number(providerSettings.khmerTopUpBalanceUSD) : 0.49);
+        : (providerSettings.khmerTopUpBalanceUSD !== undefined ? Number(providerSettings.khmerTopUpBalanceUSD) : 3.00);
 
       // If user typed a new FazerCards token in the input box, ensure it is added to keyring and old tokens are KEPT!
       let tokens = Array.isArray(providerSettings.fazerCardsTokens) ? [...providerSettings.fazerCardsTokens] : [];
       let fzrKey = providerSettings.fazerCardsApiKey || 'fc_5f79a0016d5d87bd1e83ea4f';
+      let ktKey = providerSettings.khmerTopUpApiKey || 'kt_28c2640c86717199395d973670cf039a30ba2716';
 
       if (providerSettings.activeProvider === 'FazerCards' && providerSettings.apiKey) {
         const cleanInputKey = providerSettings.apiKey.trim();
@@ -1821,6 +1832,10 @@ const PRICING_GAMES = [
         } else {
           tokens.forEach(t => { t.isActive = (t.token === cleanInputKey); });
         }
+      } else if (providerSettings.activeProvider === 'KhmerTopUp' && providerSettings.apiKey) {
+        ktKey = providerSettings.apiKey.trim();
+      } else if (providerSettings.apiKey && providerSettings.apiKey.startsWith('kt_')) {
+        ktKey = providerSettings.apiKey.trim();
       }
 
       // Sync active provider's API key into providers list
@@ -1829,17 +1844,32 @@ const PRICING_GAMES = [
       if (activeIdx >= 0) {
         provList[activeIdx] = {
           ...provList[activeIdx],
-          apiKey: providerSettings.apiKey,
+          apiKey: providerSettings.activeProvider === 'KhmerTopUp' ? ktKey : providerSettings.apiKey,
+        };
+      }
+      const ktIdx = provList.findIndex(p => p.id === 'KhmerTopUp');
+      if (ktIdx >= 0) {
+        provList[ktIdx] = {
+          ...provList[ktIdx],
+          apiKey: ktKey,
         };
       }
 
       const payload = {
         ...providerSettings,
+        activeProvider: providerSettings.activeProvider,
+        ActiveProvider: providerSettings.activeProvider,
+        apiKey: providerSettings.activeProvider === 'KhmerTopUp' ? ktKey : providerSettings.apiKey,
+        khmerTopUpApiKey: ktKey,
         fazerCardsApiKey: fzrKey,
         fazerCardsTokens: tokens,
         providers: provList,
         balanceUSD: activeBal,
       };
+
+      try {
+        localStorage.setItem('admin_active_provider_pinned', providerSettings.activeProvider);
+      } catch (e) {}
 
       const saved = await saveStoredProviderSettings(payload);
       setProviderSettings(saved);
@@ -4896,11 +4926,12 @@ const PRICING_GAMES = [
                           onChange={(e) => {
                             const nextId = e.target.value;
                             const targetProv = allProvidersList.find(p => p.id === nextId);
-                            const nextKey = targetProv?.apiKey || (nextId === 'FazerCards' ? (providerSettings.fazerCardsApiKey || 'fc_5f79a0016d5d87bd1e83ea4f') : (providerSettings.khmerTopUpApiKey || 'kt_6d38a3a5940e970221cc62fa306ae96044736364'));
+                            const nextKey = targetProv?.apiKey || (nextId === 'FazerCards' ? (providerSettings.fazerCardsApiKey || 'fc_5f79a0016d5d87bd1e83ea4f') : (providerSettings.khmerTopUpApiKey || 'kt_28c2640c86717199395d973670cf039a30ba2716'));
                             setProviderSettings({
                               ...providerSettings,
                               activeProvider: nextId,
                               apiKey: nextKey,
+                              khmerTopUpApiKey: nextId === 'KhmerTopUp' ? nextKey : providerSettings.khmerTopUpApiKey
                             });
                           }}
                           className="input w-full text-xs py-2.5 rounded-xl font-bold bg-dark-bg border-slate-700 text-amber-300 focus:border-amber-400 focus:ring-1 focus:ring-amber-400/30 transition-all cursor-pointer"

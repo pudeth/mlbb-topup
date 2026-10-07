@@ -357,7 +357,7 @@ public class RealTopUpProviderClient : ITopUpProviderClient
         string? apiUrl)
     {
         var targetUrl = "https://khmer-topup.com/api/v1/orders";
-        var activeKey = !string.IsNullOrWhiteSpace(apiKey) ? apiKey : "kt_6d38a3a5940e970221cc62fa306ae96044736364";
+        var activeKey = !string.IsNullOrWhiteSpace(apiKey) ? apiKey : "kt_28c2640c86717199395d973670cf039a30ba2716";
 
         // Map diamond amount to official Khmer TopUp package_id
         int packageId = 569; // Default 14 Diamonds Special ($0.25)

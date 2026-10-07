@@ -31,23 +31,23 @@ public class CustomProviderItem
 
 public class SupplierSettingsModel
 {
-    public string ActiveProvider { get; set; } = "FazerCards"; // "FazerCards", "KhmerTopUp", or custom id/name
+    public string ActiveProvider { get; set; } = "KhmerTopUp"; // "FazerCards", "KhmerTopUp", or custom id/name
     public string Environment { get; set; } = "Production";    // "Production" or "Sandbox"
     public bool AutoDispatchOnPayment { get; set; } = true;
     public bool AutoFailoverEnabled { get; set; } = true;       // Automatic failover if primary provider balance is 0 or fails
     public string MerchantId { get; set; } = "peakmao007";
-    public string ApiKey { get; set; } = "fc_5f79a0016d5d87bd1e83ea4f";
+    public string ApiKey { get; set; } = "kt_28c2640c86717199395d973670cf039a30ba2716";
     public string FazerCardsApiKey { get; set; } = "fc_5f79a0016d5d87bd1e83ea4f";
     public List<FazerCardsTokenItem> FazerCardsTokens { get; set; } = new();
     public List<CustomProviderItem> CustomProviders { get; set; } = new();
     public object? Providers { get; set; }
-    public string KhmerTopUpApiKey { get; set; } = "kt_6d38a3a5940e970221cc62fa306ae96044736364";
+    public string KhmerTopUpApiKey { get; set; } = "kt_28c2640c86717199395d973670cf039a30ba2716";
     public string FazerCardsApiUrl { get; set; } = "https://api.fzr.cards/api/v2";
     public string KhmerTopUpApiUrl { get; set; } = "https://khmer-topup.com/api/v1/orders";
     public string WebhookUrl { get; set; } = "https://mlbb-backend-api.onrender.com/api/supplier/webhook";
-    public decimal BalanceUSD { get; set; } = 0.49m;
+    public decimal BalanceUSD { get; set; } = 3.0m;
     public decimal FazerCardsBalanceUSD { get; set; } = 0.01m;
-    public decimal KhmerTopUpBalanceUSD { get; set; } = 0.49m;
+    public decimal KhmerTopUpBalanceUSD { get; set; } = 3.0m;
     public string Status { get; set; } = "Connected & Active";
     public DateTime UpdatedAt { get; set; } = DateTime.UtcNow;
 }

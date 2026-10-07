@@ -74,18 +74,18 @@ public class SupplierGatewayManager : ISupplierGatewayManager
         }
 
         // 2. Fallback to appsettings.json or defaults
-        var active = _configuration["TopUpProvider:Provider"] ?? "FazerCards";
+        var active = _configuration["TopUpProvider:Provider"] ?? "KhmerTopUp";
         var fzrKey = _configuration["TopUpProvider:ApiKey"] ?? "fc_5f79a0016d5d87bd1e83ea4f";
-        var ktKey = "kt_6d38a3a5940e970221cc62fa306ae96044736364";
+        var ktKey = "kt_28c2640c86717199395d973670cf039a30ba2716";
 
         return new SupplierSettingsModel
         {
-            ActiveProvider = active.Contains("khmer", StringComparison.OrdinalIgnoreCase) ? "KhmerTopUp" : "FazerCards",
+            ActiveProvider = active.Contains("fazer", StringComparison.OrdinalIgnoreCase) ? "FazerCards" : "KhmerTopUp",
             Environment = _configuration["TopUpProvider:Environment"] ?? "Production",
             AutoDispatchOnPayment = true,
             AutoFailoverEnabled = true,
             MerchantId = _configuration["TopUpProvider:MerchantId"] ?? "peakmao007",
-            ApiKey = active.Contains("khmer", StringComparison.OrdinalIgnoreCase) ? ktKey : fzrKey,
+            ApiKey = active.Contains("fazer", StringComparison.OrdinalIgnoreCase) ? fzrKey : ktKey,
             FazerCardsApiKey = fzrKey,
             FazerCardsTokens = new List<FazerCardsTokenItem>
             {
@@ -94,7 +94,7 @@ public class SupplierGatewayManager : ISupplierGatewayManager
                     Id = "default_fzr_token",
                     Token = fzrKey,
                     Name = "Primary Token (Default)",
-                    IsActive = true,
+                    IsActive = false,
                     BalanceUSD = 0.01m,
                     CreatedAt = DateTime.UtcNow
                 }
@@ -103,9 +103,9 @@ public class SupplierGatewayManager : ISupplierGatewayManager
             FazerCardsApiUrl = "https://api.fzr.cards/api/v2",
             KhmerTopUpApiUrl = "https://khmer-topup.com/api/v1/orders",
             WebhookUrl = "https://mlbb-backend-api.onrender.com/api/supplier/webhook",
-            BalanceUSD = 0.49m,
+            BalanceUSD = 3.0m,
             FazerCardsBalanceUSD = 0.01m,
-            KhmerTopUpBalanceUSD = 0.49m,
+            KhmerTopUpBalanceUSD = 3.0m,
             Status = "Connected & Active",
             UpdatedAt = DateTime.UtcNow
         };
@@ -139,7 +139,11 @@ public class SupplierGatewayManager : ISupplierGatewayManager
                             {
                                 _settings.FazerCardsTokens = fromDb.FazerCardsTokens;
                             }
-                            _settings.KhmerTopUpApiKey = !string.IsNullOrWhiteSpace(fromDb.KhmerTopUpApiKey) ? fromDb.KhmerTopUpApiKey : _settings.KhmerTopUpApiKey;
+                            var incomingKtKey = fromDb.KhmerTopUpApiKey;
+                            if (!string.IsNullOrWhiteSpace(incomingKtKey) && incomingKtKey != "kt_6d38a3a5940e970221cc62fa306ae96044736364")
+                            {
+                                _settings.KhmerTopUpApiKey = incomingKtKey.Trim();
+                            }
                             _settings.ApiKey = _settings.ActiveProvider == "KhmerTopUp" ? _settings.KhmerTopUpApiKey : _settings.FazerCardsApiKey;
                             _settings.AutoDispatchOnPayment = fromDb.AutoDispatchOnPayment;
                             _settings.AutoFailoverEnabled = fromDb.AutoFailoverEnabled;
@@ -274,7 +278,15 @@ public class SupplierGatewayManager : ISupplierGatewayManager
             _settings.Environment = incoming.Environment ?? _settings.Environment;
             _settings.AutoDispatchOnPayment = incoming.AutoDispatchOnPayment;
             _settings.AutoFailoverEnabled = incoming.AutoFailoverEnabled;
-            if (!string.IsNullOrWhiteSpace(incoming.KhmerTopUpApiKey)) _settings.KhmerTopUpApiKey = incoming.KhmerTopUpApiKey;
+            if (!string.IsNullOrWhiteSpace(incoming.KhmerTopUpApiKey))
+            {
+                _settings.KhmerTopUpApiKey = incoming.KhmerTopUpApiKey.Trim();
+            }
+            if (!string.IsNullOrWhiteSpace(incoming.ApiKey) && (_settings.ActiveProvider == "KhmerTopUp" || incoming.ApiKey.StartsWith("kt_")))
+            {
+                _settings.KhmerTopUpApiKey = incoming.ApiKey.Trim();
+            }
+
             if (incoming.CustomProviders != null) _settings.CustomProviders = incoming.CustomProviders;
             if (incoming.Providers != null) _settings.Providers = incoming.Providers;
 
@@ -327,11 +339,16 @@ public class SupplierGatewayManager : ISupplierGatewayManager
 
             if (!string.IsNullOrWhiteSpace(incoming.ApiKey))
             {
-                _settings.ApiKey = incoming.ApiKey;
+                _settings.ApiKey = incoming.ApiKey.Trim();
             }
             else
             {
                 _settings.ApiKey = _settings.ActiveProvider == "KhmerTopUp" ? _settings.KhmerTopUpApiKey : _settings.FazerCardsApiKey;
+            }
+
+            if (_settings.ActiveProvider == "KhmerTopUp")
+            {
+                _settings.ApiKey = _settings.KhmerTopUpApiKey;
             }
 
             if (incoming.KhmerTopUpBalanceUSD >= 0)

@@ -26,8 +26,8 @@ export const DEFAULT_PROVIDERS = [
     badge: 'DIRECT KH',
     badgeColor: 'cyan',
     apiUrl: 'https://khmer-topup.com/api/v1/orders',
-    apiKey: 'kt_6d38a3a5940e970221cc62fa306ae96044736364',
-    balanceUSD: 0.49,
+    apiKey: 'kt_28c2640c86717199395d973670cf039a30ba2716',
+    balanceUSD: 3.00,
     docsUrl: 'https://khmer-topup.com/tl/api-docs',
     refillUrl: 'https://khmer-topup.com/wallet',
     isDefault: true,
@@ -104,29 +104,29 @@ export const PROVIDER_PRESETS = [
 ];
 
 export const DEFAULT_PROVIDER_SETTINGS = {
-  activeProvider: 'FazerCards',
+  activeProvider: 'KhmerTopUp',
   environment: 'Production',
   autoDispatchOnPayment: true,
   autoFailoverEnabled: true,
   merchantId: 'peakmao007',
-  apiKey: 'fc_5f79a0016d5d87bd1e83ea4f',
+  apiKey: 'kt_28c2640c86717199395d973670cf039a30ba2716',
   fazerCardsApiKey: 'fc_5f79a0016d5d87bd1e83ea4f',
   fazerCardsTokens: [
     {
       id: 'default_fzr_token',
       name: 'Primary Token (Default)',
       token: 'fc_5f79a0016d5d87bd1e83ea4f',
-      isActive: true,
+      isActive: false,
       balanceUSD: 0.01,
       createdAt: '2026-01-01T00:00:00.000Z'
     }
   ],
-  khmerTopUpApiKey: 'kt_6d38a3a5940e970221cc62fa306ae96044736364',
+  khmerTopUpApiKey: 'kt_28c2640c86717199395d973670cf039a30ba2716',
   providers: DEFAULT_PROVIDERS,
   webhookUrl: 'https://mlbb-backend-api.onrender.com/api/supplier/webhook',
-  balanceUSD: 0.49,
+  balanceUSD: 3.00,
   fazerCardsBalanceUSD: 0.01,
-  khmerTopUpBalanceUSD: 0.49,
+  khmerTopUpBalanceUSD: 3.00,
   status: 'Connected & Active',
   updatedAt: new Date().toISOString()
 };
@@ -182,8 +182,11 @@ export const getStoredProviderSettings = () => {
     }
 
     // Sanitize stale legacy defaults if present
-    if (merged.khmerTopUpBalanceUSD === 1.25 || merged.khmerTopUpBalanceUSD === 1.45) {
-      merged.khmerTopUpBalanceUSD = 0.49;
+    if (merged.khmerTopUpBalanceUSD === 1.25 || merged.khmerTopUpBalanceUSD === 1.45 || merged.khmerTopUpBalanceUSD === 0.49) {
+      merged.khmerTopUpBalanceUSD = 3.00;
+    }
+    if (merged.khmerTopUpApiKey === 'kt_6d38a3a5940e970221cc62fa306ae96044736364') {
+      merged.khmerTopUpApiKey = 'kt_28c2640c86717199395d973670cf039a30ba2716';
     }
     if (merged.fazerCardsBalanceUSD === 18.50) {
       merged.fazerCardsBalanceUSD = 0.01;
@@ -200,11 +203,14 @@ export const getStoredProviderSettings = () => {
         };
       }
       if (p.id === 'KhmerTopUp') {
-        const bal = merged.khmerTopUpBalanceUSD !== undefined ? Number(merged.khmerTopUpBalanceUSD) : 0.49;
+        const bal = merged.khmerTopUpBalanceUSD !== undefined ? Number(merged.khmerTopUpBalanceUSD) : 3.00;
+        const curKey = (merged.khmerTopUpApiKey && merged.khmerTopUpApiKey !== 'kt_6d38a3a5940e970221cc62fa306ae96044736364')
+          ? merged.khmerTopUpApiKey
+          : ((p.apiKey && p.apiKey !== 'kt_6d38a3a5940e970221cc62fa306ae96044736364') ? p.apiKey : 'kt_28c2640c86717199395d973670cf039a30ba2716');
         return {
           ...p,
-          apiKey: merged.khmerTopUpApiKey || p.apiKey,
-          balanceUSD: (bal === 1.25 || bal === 1.45) ? 0.49 : bal
+          apiKey: curKey,
+          balanceUSD: (bal === 1.25 || bal === 1.45 || bal === 0.49) ? 3.00 : bal
         };
       }
       return p;
@@ -335,26 +341,35 @@ export const switchActiveProvider = async (targetProvider) => {
 export const saveStoredProviderSettings = async (settings) => {
   if (!settings) return;
   const current = getStoredProviderSettings();
-  const activeNormalized = settings.activeProvider || current.activeProvider;
+  const activeNormalized = settings.activeProvider || current.activeProvider || 'KhmerTopUp';
+
+  let ktKey = settings.khmerTopUpApiKey || current.khmerTopUpApiKey || 'kt_28c2640c86717199395d973670cf039a30ba2716';
+  if (activeNormalized === 'KhmerTopUp' && settings.apiKey) {
+    ktKey = settings.apiKey.trim();
+  } else if (settings.apiKey && settings.apiKey.startsWith('kt_')) {
+    ktKey = settings.apiKey.trim();
+  }
 
   const merged = {
     ...current,
     ...settings,
     activeProvider: activeNormalized,
     ActiveProvider: activeNormalized,
+    khmerTopUpApiKey: ktKey,
+    apiKey: activeNormalized === 'KhmerTopUp' ? ktKey : (settings.apiKey || current.apiKey),
     updatedAt: new Date().toISOString()
   };
 
-  // Keep FazerCards and KhmerTopUp in providers list strictly aligned with top-level balances
+  // Keep FazerCards and KhmerTopUp in providers list strictly aligned with top-level balances and credentials
   if (Array.isArray(merged.providers)) {
     merged.providers = merged.providers.map(p => {
       if (p.id === 'FazerCards') {
         const fc = merged.fazerCardsBalanceUSD !== undefined ? Number(merged.fazerCardsBalanceUSD) : p.balanceUSD;
-        return { ...p, balanceUSD: fc };
+        return { ...p, balanceUSD: fc, apiKey: merged.fazerCardsApiKey || p.apiKey };
       }
       if (p.id === 'KhmerTopUp') {
         const kt = merged.khmerTopUpBalanceUSD !== undefined ? Number(merged.khmerTopUpBalanceUSD) : p.balanceUSD;
-        return { ...p, balanceUSD: kt };
+        return { ...p, balanceUSD: kt, apiKey: ktKey };
       }
       return p;
     });
@@ -603,18 +618,26 @@ export const fetchStoredProviderSettings = async () => {
               return { ...p, balanceUSD: fc, apiKey: incoming.fazerCardsApiKey || merged.fazerCardsApiKey || p.apiKey };
             }
             if (p.id === 'KhmerTopUp') {
-              const kt = incoming.khmerTopUpBalanceUSD !== undefined ? Number(incoming.khmerTopUpBalanceUSD) : (merged.khmerTopUpBalanceUSD !== undefined ? Number(merged.khmerTopUpBalanceUSD) : 0.49);
-              return { ...p, balanceUSD: kt, apiKey: incoming.khmerTopUpApiKey || merged.khmerTopUpApiKey || p.apiKey };
+              const kt = incoming.khmerTopUpBalanceUSD !== undefined ? Number(incoming.khmerTopUpBalanceUSD) : (merged.khmerTopUpBalanceUSD !== undefined ? Number(merged.khmerTopUpBalanceUSD) : 3.00);
+              const inKtKey = incoming.khmerTopUpApiKey;
+              const safeKey = (inKtKey && inKtKey !== 'kt_6d38a3a5940e970221cc62fa306ae96044736364')
+                ? inKtKey
+                : (merged.khmerTopUpApiKey && merged.khmerTopUpApiKey !== 'kt_6d38a3a5940e970221cc62fa306ae96044736364' ? merged.khmerTopUpApiKey : (local.khmerTopUpApiKey || 'kt_28c2640c86717199395d973670cf039a30ba2716'));
+              return { ...p, balanceUSD: kt, apiKey: safeKey };
             }
             return p;
           });
           merged.providers = finalProviders;
 
+          if (merged.khmerTopUpApiKey === 'kt_6d38a3a5940e970221cc62fa306ae96044736364') {
+            merged.khmerTopUpApiKey = local.khmerTopUpApiKey || 'kt_28c2640c86717199395d973670cf039a30ba2716';
+          }
+
           if (incoming.khmerTopUpBalanceUSD !== undefined) merged.khmerTopUpBalanceUSD = Number(incoming.khmerTopUpBalanceUSD);
           if (incoming.fazerCardsBalanceUSD !== undefined) merged.fazerCardsBalanceUSD = Number(incoming.fazerCardsBalanceUSD);
 
           const activeItem = finalProviders.find(p => p.id === merged.activeProvider) || finalProviders[0];
-          merged.balanceUSD = activeItem ? Number(activeItem.balanceUSD) : Number(merged.balanceUSD ?? 0.49);
+          merged.balanceUSD = activeItem ? Number(activeItem.balanceUSD) : Number(merged.balanceUSD ?? 3.00);
 
           try {
             localStorage.setItem(STORAGE_SETTINGS_KEY, JSON.stringify(merged));
