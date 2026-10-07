@@ -55,6 +55,15 @@ public class PaymentResponse
 
     [JsonPropertyName("khqrQRCode")]
     public string? KHQRQRCode { get; set; }
+
+    [JsonPropertyName("formData")]
+    public Dictionary<string, string>? FormData { get; set; }
+
+    [JsonPropertyName("purchaseUrl")]
+    public string? PurchaseUrl { get; set; }
+
+    [JsonPropertyName("checkoutUrl")]
+    public string? CheckoutUrl { get; set; }
 }
 
 public class PaymentWebhookRequest

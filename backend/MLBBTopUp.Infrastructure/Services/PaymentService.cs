@@ -62,6 +62,8 @@ public class PaymentService : IPaymentService
         var existingPayment = await _context.Payments
             .FirstOrDefaultAsync(p => p.OrderId == request.OrderId);
 
+        PayWayCreateResult? lastPaywayResult = null;
+
         if (existingPayment != null)
         {
             if (existingPayment.Status == "Pending")
@@ -69,6 +71,7 @@ public class PaymentService : IPaymentService
                 if (method == "abapayway")
                 {
                     var paywayResult = await _abaPayWayService.CreatePaymentAsync(request.OrderId, payAmount, targetCurrency);
+                    lastPaywayResult = paywayResult;
                     if (paywayResult.Success)
                     {
                         existingPayment.Amount = payAmount;
@@ -98,6 +101,12 @@ public class PaymentService : IPaymentService
             var resp = MapToResponse(existingPayment);
             resp.Currency = targetCurrency;
             resp.Amount = payAmount;
+            if (lastPaywayResult != null)
+            {
+                resp.FormData = lastPaywayResult.FormData;
+                resp.PurchaseUrl = lastPaywayResult.PurchaseUrl;
+                resp.CheckoutUrl = lastPaywayResult.CheckoutUrl;
+            }
             return resp;
         }
 
@@ -122,6 +131,7 @@ public class PaymentService : IPaymentService
                 request.OrderId, payAmount, targetCurrency);
 
             var paywayResult = await _abaPayWayService.CreatePaymentAsync(request.OrderId, payAmount, targetCurrency);
+            lastPaywayResult = paywayResult;
             if (paywayResult.Success)
             {
                 payment.TransactionID = paywayResult.TranId ?? transactionId;
@@ -227,6 +237,12 @@ public class PaymentService : IPaymentService
         var createdResp = MapToResponse(payment);
         createdResp.Currency = targetCurrency;
         createdResp.Amount = payAmount;
+        if (lastPaywayResult != null)
+        {
+            createdResp.FormData = lastPaywayResult.FormData;
+            createdResp.PurchaseUrl = lastPaywayResult.PurchaseUrl;
+            createdResp.CheckoutUrl = lastPaywayResult.CheckoutUrl;
+        }
         return createdResp;
     }
 

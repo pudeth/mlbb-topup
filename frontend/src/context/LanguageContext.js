@@ -135,6 +135,7 @@ export const translations = {
     pay_khqr_btn: "Pay with KHQR",
     pay_now_btn: "Pay Now",
     generating_khqr: "Generating KHQR...",
+    connecting_gateway: "Connecting to ABA PayWay...",
     trust_official: "Official MLBB Direct Top-Up",
     trust_instant: "Auto-dispatched in 10s",
     
@@ -393,6 +394,7 @@ export const translations = {
     pay_khqr_btn: "ទូទាត់ជាមួយ KHQR",
     pay_now_btn: "ទូទាត់ឥឡូវនេះ",
     generating_khqr: "កំពុងបង្កើត KHQR...",
+    connecting_gateway: "កំពុងភ្ជាប់ទៅកាន់ ABA PayWay...",
     trust_official: "បញ្ចូលពេជ្រ MLBB ផ្លូវការ",
     trust_instant: "ដឹកជញ្ជូនស្វ័យប្រវត្តិក្នុង 10 វិនាទី",
     
@@ -651,6 +653,7 @@ export const translations = {
     pay_khqr_btn: "使用 ABA PayWay 支付",
     pay_now_btn: "立即付款",
     generating_khqr: "正在生成 ABA 支付账单...",
+    connecting_gateway: "正在连接 ABA PayWay 网关...",
     trust_official: "MLBB 官方直充认证",
     trust_instant: "10 秒自动发货到账",
     

@@ -6,8 +6,7 @@ import { saveLocalOrder, updateLocalOrderStatus } from '../utils/orderStorage';
 import { getStoredGames, getMasterTopupStatus, fetchStoredGames, fetchMasterTopupStatus } from '../services/gamesConfig';
 import { CambodiaFlagFrame } from '../components/CambodiaFlagBadge';
 import ProductPackageImage from '../components/ProductPackageImage';
-import { AbaKhqrLogo, KhqrVoucherHeader } from '../components/AbaPaymentLogos';
-import { QRCodeSVG } from 'qrcode.react';
+import { AbaKhqrLogo } from '../components/AbaPaymentLogos';
 import WeAcceptPayments from '../components/WeAcceptPayments';
 import GamerAvatar from '../components/GamerAvatar';
 // Game-specific packages matching upstream supplier catalog
@@ -695,7 +694,6 @@ const TopUp = () => {
   const [qrExpired, setQrExpired] = useState(false);
   const qrExpiredRef = useRef(false);
   const timeLeftRef = useRef(360); // 6-minute (360 seconds) transaction lifetime (ABA PayWay standard)
-  const [timeLeft, setTimeLeft] = useState(360);
   const [currency, setCurrency] = useState('USD'); // 'USD' or 'KHR'
   const [productCategoryTab, setProductCategoryTab] = useState('all'); // 'all', 'passes', 'diamonds'
   const [layoutMode, setLayoutMode] = useState('tiles'); // 'list', 'tiles', 'grid'
@@ -779,49 +777,110 @@ const TopUp = () => {
   };
 
 
-  // Handle on-demand launch of ABA PayWay web popup if customer explicitly chooses
-  const handleOpenAbaWebCheckout = useCallback(() => {
-    const payway = getAbaPaywayInstance();
-    if (payway && typeof payway.checkout === 'function' && paymentData?.formData) {
-      try {
-        let form = document.getElementById('aba_merchant_request');
-        if (!form) {
-          form = document.createElement('form');
-          form.id = 'aba_merchant_request';
-          form.method = 'POST';
-          form.target = 'aba_webservice';
-          form.style.display = 'none';
-          document.body.appendChild(form);
-        }
-        form.action = paymentData.purchaseUrl || "https://checkout.payway.com.kh/api/payment-gateway/v1/payments/purchase";
-        form.target = 'aba_webservice';
-        form.innerHTML = '';
-        Object.entries(paymentData.formData).forEach(([k, v]) => {
-          const inp = document.createElement('input');
-          inp.type = 'hidden';
-          inp.name = k;
-          inp.value = v != null ? String(v) : '';
-          form.appendChild(inp);
-        });
-        payway.checkout();
-      } catch (e) {
-        console.warn('ABA PayWay web checkout launch notice:', e);
-      }
-    } else if (paymentData?.checkoutUrl) {
-      window.open(paymentData.checkoutUrl, '_blank');
+  // Launch Official ABA PayWay Popup (Strictly adhering to ABA PayWay Merchant Integration Guidelines)
+  const launchOfficialAbaCheckout = useCallback((payment) => {
+    if (!payment?.formData) {
+      console.warn('Cannot launch ABA PayWay: formData missing');
+      return false;
     }
-  }, [paymentData]);
+
+    try {
+      // 1. Ensure official desktop container exists in DOM
+      let abaContainer = document.getElementById('aba-checkout');
+      if (!abaContainer) {
+        abaContainer = document.createElement('div');
+        abaContainer.id = 'aba-checkout';
+        document.body.appendChild(abaContainer);
+      } else {
+        abaContainer.innerHTML = '';
+      }
+
+      // 2. Prepare official form #aba_merchant_request targeting #aba_webservice iframe
+      let form = document.getElementById('aba_merchant_request');
+      if (!form) {
+        form = document.createElement('form');
+        form.id = 'aba_merchant_request';
+        form.method = 'POST';
+        form.target = 'aba_webservice';
+        form.style.display = 'none';
+        document.body.appendChild(form);
+      }
+      form.action = payment.purchaseUrl || "https://checkout.payway.com.kh/api/payment-gateway/v1/payments/purchase";
+      form.target = 'aba_webservice';
+      form.innerHTML = '';
+
+      Object.entries(payment.formData).forEach(([k, v]) => {
+        const inp = document.createElement('input');
+        inp.type = 'hidden';
+        inp.name = k;
+        inp.value = v != null ? String(v) : '';
+        if (k === 'payment_option') inp.className = 'payment_option';
+        form.appendChild(inp);
+      });
+
+      // Ensure payment_option exists
+      if (!form.querySelector('input[name="payment_option"]')) {
+        const opt = document.createElement('input');
+        opt.type = 'hidden';
+        opt.name = 'payment_option';
+        opt.className = 'payment_option';
+        opt.value = 'abapay_khqr';
+        form.appendChild(opt);
+      }
+
+      // 3. Launch official ABA PayWay popup on Desktop or Drawer on Mobile!
+      const payway = getAbaPaywayInstance();
+      if (payway && typeof payway.checkout === 'function') {
+        payway.checkout();
+        console.log('[ABA PayWay] Official AbaPayway.checkout() launched successfully!');
+
+        // Mobile-specific sheet display
+        const isMobile = typeof navigator !== 'undefined' && /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+        if (isMobile) {
+          setTimeout(() => {
+            const sheet = document.getElementById('aba_checkout_sheet');
+            if (sheet) {
+              sheet.style.display = 'flex';
+              sheet.setAttribute('aria-hidden', 'false');
+              const contents = sheet.querySelector('.aba_checkout_contents');
+              if (contents) contents.style.height = '500px';
+            }
+          }, 300);
+        }
+
+        // Dismiss loading spinner safeguard:
+        // Dismiss loading overlay after 2.5s once iframe has initialized
+        let checkCount = 0;
+        const spinnerWatcher = setInterval(() => {
+          checkCount++;
+          const spinner = document.getElementById('aba_webservice_loading');
+          const iframe = document.getElementById('aba_webservice');
+          if (iframe && spinner && checkCount >= 3) {
+            spinner.style.opacity = '0';
+            setTimeout(() => {
+              try { spinner.remove(); } catch (e) {}
+            }, 300);
+            clearInterval(spinnerWatcher);
+          }
+          if (checkCount >= 10) clearInterval(spinnerWatcher);
+        }, 800);
+
+        return true;
+      }
+    } catch (e) {
+      console.warn('[ABA PayWay] AbaPayway.checkout() notice:', e);
+    }
+    return false;
+  }, []);
 
   // Transaction Lifetime Countdown Timer (6 minutes / 360 seconds matching ABA PayWay standard: 5-15 mins)
   useEffect(() => {
     if (!paymentData || paymentPaid) return;
     timeLeftRef.current = 360;
-    setTimeLeft(360);
     setQrExpired(false);
     qrExpiredRef.current = false;
     const timer = setInterval(() => {
       timeLeftRef.current -= 1;
-      setTimeLeft(prev => Math.max(0, prev - 1));
       if (timeLeftRef.current <= 0) {
         clearInterval(timer);
         setQrExpired(true);
@@ -841,14 +900,14 @@ const TopUp = () => {
 
   // Lock scroll when payment modal is active
   useEffect(() => {
-    if (paymentData) {
+    if (paymentPaid) {
       document.body.classList.add('modal-open');
     } else {
       document.body.classList.remove('modal-open');
     }
 
     const handleKeyDown = (e) => {
-      if (e.key === 'Escape' && paymentData) {
+      if (e.key === 'Escape' && (paymentData || paymentPaid)) {
         closeAbaCheckoutPopup();
         setPaymentData(null);
         setOrderId(null);
@@ -861,7 +920,7 @@ const TopUp = () => {
       document.body.classList.remove('modal-open');
       window.removeEventListener('keydown', handleKeyDown);
     };
-  }, [paymentData]);
+  }, [paymentData, paymentPaid]);
 
   // Listen for ABA PayWay postMessage events and custom close events to guarantee scroll unlock
   useEffect(() => {
@@ -869,14 +928,16 @@ const TopUp = () => {
       try {
         const data = e.data;
         if (!data) return;
-        if (data.close || data.merchantUrl === '' || data.merchantUrl) {
+        if (data.close === true || data.action === 'close' || data === 'closeCheckout') {
           closeAbaCheckoutPopup();
+          setPaymentData(null);
         }
       } catch (err) {}
     };
 
     const handleAbaClosedEvent = () => {
       closeAbaCheckoutPopup();
+      setPaymentData(null);
     };
 
     window.addEventListener('message', handleAbaMessage);
@@ -885,7 +946,6 @@ const TopUp = () => {
     return () => {
       window.removeEventListener('message', handleAbaMessage);
       window.removeEventListener('abaCheckoutClosed', handleAbaClosedEvent);
-      closeAbaCheckoutPopup();
     };
   }, []);
 
@@ -1509,78 +1569,87 @@ const TopUp = () => {
         diamondAmount: effectiveDiamonds
       };
 
-      let directRes = null;
-      let lastErr = null;
-      const maxAttempts = 3;
-
-      for (let attempt = 1; attempt <= maxAttempts; attempt++) {
-        try {
-          directRes = await paywayAPI.create(paywayPayload);
-          if (directRes?.data?.tranId) break;
-        } catch (err) {
-          lastErr = err;
-          console.warn(`ABA PayWay attempt ${attempt}/${maxAttempts} notice:`, err?.message);
-          if (attempt < maxAttempts) {
-            setError(t('connecting_gateway') || 'Connecting to ABA PayWay gateway... Please wait.');
-            setLoading(true);
-            await new Promise(r => setTimeout(r, attempt * 2500));
-          }
-        }
-      }
-
-      if (directRes?.data?.tranId) {
-        const pd = directRes.data;
-        createdPayment = {
-          orderId: activeOrderId,
-          amount: targetAmount,
-          currency: currency,
-          tranId: pd.tranId,
-          qrString: pd.qrString || null,
-          abapayDeeplink: pd.abapayDeeplink || pd.checkoutUrl,
-          khqrDeeplink: pd.abapayDeeplink || pd.checkoutUrl,
-          md5Hash: pd.md5,
-          khqrMd5Hash: pd.md5,
-          khqrQRCode: pd.qrString || null,
-          formData: pd.formData,
-          purchaseUrl: pd.purchaseUrl,
-          checkoutUrl: pd.checkoutUrl,
-          merchantName: 'DETH PHEAK',
-          gateway: 'aba_payway'
-        };
-        setError('');
-      } else if (newOrder?.payment?.transactionId) {
-        // Instant Fallback to pre-generated ABA PayWay transaction from order creation
+      // 1. Instant check: If newOrder already generated PayWay payment with valid formData
+      if (newOrder?.payment?.formData && (newOrder?.payment?.transactionId || newOrder?.payment?.tranId)) {
         const np = newOrder.payment;
         createdPayment = {
           orderId: activeOrderId,
           amount: targetAmount,
           currency: currency,
-          tranId: np.transactionId,
-          qrString: np.khqrQRCode || null,
-          abapayDeeplink: np.khqrDeeplink,
-          khqrDeeplink: np.khqrDeeplink,
-          md5Hash: np.khqrMd5Hash,
-          khqrMd5Hash: np.khqrMd5Hash,
-          khqrQRCode: np.khqrQRCode || null,
-          merchantName: 'DETH PHEAK',
+          tranId: np.transactionId || np.tranId,
+          qrString: np.khqrQRCode || np.qrString || null,
+          abapayDeeplink: np.khqrDeeplink || np.abapayDeeplink || np.checkoutUrl,
+          khqrDeeplink: np.khqrDeeplink || np.abapayDeeplink || np.checkoutUrl,
+          md5Hash: np.khqrMd5Hash || np.md5Hash,
+          khqrMd5Hash: np.khqrMd5Hash || np.md5Hash,
+          khqrQRCode: np.khqrQRCode || np.qrString || null,
+          formData: np.formData,
+          purchaseUrl: np.purchaseUrl || "https://checkout.payway.com.kh/api/payment-gateway/v1/payments/purchase",
+          checkoutUrl: np.checkoutUrl,
+          merchantName: 'PHEAK DETH',
           gateway: 'aba_payway'
         };
         setError('');
-      } else {
-        console.error('ABA PayWay all attempts failed:', lastErr);
-        setError(
-          lastErr?.response?.data?.message ||
-          lastErr?.message ||
-          'Could not connect to ABA PayWay gateway. Please check your internet and try again.'
-        );
       }
 
-      if (createdPayment) {
+      // 2. Fallback: Call /api/payway/create directly if needed
+      if (!createdPayment) {
+        let directRes = null;
+        let lastErr = null;
+        const maxAttempts = 3;
+
+        for (let attempt = 1; attempt <= maxAttempts; attempt++) {
+          try {
+            directRes = await paywayAPI.create(paywayPayload);
+            if (directRes?.data?.tranId && directRes?.data?.formData) break;
+          } catch (err) {
+            lastErr = err;
+            console.warn(`ABA PayWay attempt ${attempt}/${maxAttempts} notice:`, err?.message);
+            if (attempt < maxAttempts) {
+              setLoading(true);
+              await new Promise(r => setTimeout(r, attempt * 1500));
+            }
+          }
+        }
+
+        if (directRes?.data?.tranId && directRes?.data?.formData) {
+          const pd = directRes.data;
+          createdPayment = {
+            orderId: activeOrderId,
+            amount: targetAmount,
+            currency: currency,
+            tranId: pd.tranId,
+            qrString: pd.qrString || null,
+            abapayDeeplink: pd.abapayDeeplink || pd.checkoutUrl,
+            khqrDeeplink: pd.abapayDeeplink || pd.checkoutUrl,
+            md5Hash: pd.md5,
+            khqrMd5Hash: pd.md5,
+            khqrQRCode: pd.qrString || null,
+            formData: pd.formData,
+            purchaseUrl: pd.purchaseUrl,
+            checkoutUrl: pd.checkoutUrl,
+            merchantName: 'PHEAK DETH',
+            gateway: 'aba_payway'
+          };
+          setError('');
+        } else {
+          console.error('ABA PayWay all attempts failed:', lastErr);
+          setError(
+            lastErr?.response?.data?.message ||
+            lastErr?.message ||
+            'Could not connect to ABA PayWay gateway. Please check your internet and try again.'
+          );
+        }
+      }
+
+      if (createdPayment && createdPayment.formData) {
         setPaymentData({
           ...createdPayment,
           amount: targetAmount,
           currency: currency
         });
+        // Trigger official ABA PayWay popup modal adhering to ABA Merchant Guidelines
+        launchOfficialAbaCheckout(createdPayment);
       }
       setLoading(false);
     } catch (err) {
@@ -2887,244 +2956,79 @@ const TopUp = () => {
         </div>
 
       {/* ======================================================== */}
-      {/* INSTANT NATIVE ABA KHQR PAYMENT & RECEIPT MODAL */}
+      {/* PAYMENT CONFIRMED — OFFICIAL RECEIPT MODAL */}
       {/* ======================================================== */}
-      {paymentData && !awaitingBalance && (
-        <div className="fixed inset-0 z-[9999] flex items-center justify-center p-3 sm:p-4 bg-black/85 backdrop-blur-md overflow-y-auto animate-fadeIn">
-          <div className="bg-[#0f172a] border border-cyan-500/30 rounded-3xl max-w-sm sm:max-w-md w-full p-4 sm:p-6 shadow-2xl relative overflow-hidden my-auto space-y-4">
+      {paymentPaid && !awaitingBalance && (
+        <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4 bg-black/85 backdrop-blur-md overflow-y-auto animate-fadeIn">
+          <div className="bg-[#0f172a] border border-emerald-500/40 rounded-3xl max-w-sm sm:max-w-md w-full p-6 shadow-2xl text-center space-y-4 animate-scaleUp relative overflow-hidden my-auto">
             
-            {/* Modal Header */}
-            <div className="flex items-center justify-between border-b border-slate-800 pb-3">
-              <div className="flex items-center gap-2">
-                <AbaKhqrLogo className="h-6 w-auto" />
-                <span className="font-black text-white text-base tracking-wide">
-                  {paymentPaid ? 'Payment Confirmed' : 'ABA KHQR'}
-                </span>
-              </div>
-              <div className="flex items-center gap-2">
-                {!paymentPaid && !qrExpired && (
-                  <span className="text-xs font-mono font-bold px-2.5 py-1 rounded-full bg-cyan-500/10 text-cyan-400 border border-cyan-500/30">
-                    ⏱️ {Math.floor(timeLeft / 60)}:{(timeLeft % 60).toString().padStart(2, '0')}
-                  </span>
-                )}
-                <button
-                  type="button"
-                  onClick={() => {
-                    closeAbaCheckoutPopup();
-                    setPaymentData(null);
-                    setOrderId(null);
-                    setPaymentPaid(false);
-                  }}
-                  className="w-8 h-8 rounded-full bg-slate-800/80 hover:bg-slate-700 text-slate-300 hover:text-white flex items-center justify-center transition-colors cursor-pointer text-sm font-bold"
-                  aria-label="Close"
-                >
-                  ✕
-                </button>
-              </div>
+            <div className="w-16 h-16 rounded-full bg-gradient-to-tr from-emerald-500 to-teal-400 text-slate-950 text-3xl flex items-center justify-center mx-auto shadow-lg shadow-emerald-500/30">
+              ✓
             </div>
 
-            {!paymentPaid ? (
-              /* QR CODE VOUCHER VIEW */
-              <div className="space-y-3.5">
-                {/* White KHQR Voucher Card */}
-                <div className="bg-white rounded-2xl shadow-xl overflow-hidden border border-slate-200 text-slate-900">
-                  {/* Authentic Red KHQR Banner Header */}
-                  <KhqrVoucherHeader />
+            <div className="space-y-1">
+              <span className="px-3 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-500/40 text-[11px] font-black uppercase tracking-widest inline-flex items-center gap-1.5">
+                Payment Received
+              </span>
+              <h3 className="text-xl sm:text-2xl font-black text-white">Diamonds Delivering!</h3>
+              <p className="text-xs text-slate-300">
+                Thank you! Your ABA PayWay payment was confirmed and diamonds are being delivered directly to your account.
+              </p>
+            </div>
 
-                  <div className="p-4 sm:p-5 text-center space-y-3">
-                    {/* Merchant & Amount */}
-                    <div className="space-y-0.5">
-                      <div className="text-xs font-bold text-slate-600 uppercase tracking-wider">
-                        {paymentData.merchantName || 'DETH PHEAK'}
-                      </div>
-                      <div className="text-2xl sm:text-3xl font-black text-slate-950 tracking-tight">
-                        {paymentData.currency === 'KHR'
-                          ? `${Number(paymentData.amount || 0).toLocaleString()} ៛`
-                          : `$${Number(paymentData.amount || 0).toFixed(2)}`}
-                      </div>
-                      <div className="text-[11px] text-slate-500 font-medium">
-                        Order #{paymentData.orderId || orderId} • {selectedProduct?.name || 'Diamonds'}
-                      </div>
-                    </div>
-
-                    {/* QR Code Container or Expired State */}
-                    {qrExpired ? (
-                      <div className="p-6 bg-rose-50 rounded-2xl border border-rose-200 text-center space-y-2">
-                        <span className="text-3xl">⚠️</span>
-                        <div className="text-sm font-bold text-rose-700">QR Code Expired</div>
-                        <p className="text-xs text-rose-600">
-                          This payment session has expired. Please create a new order to proceed.
-                        </p>
-                        <button
-                          type="button"
-                          onClick={() => {
-                            closeAbaCheckoutPopup();
-                            setPaymentData(null);
-                            setOrderId(null);
-                            setQrExpired(false);
-                          }}
-                          className="mt-2 px-4 py-2 bg-rose-600 text-white rounded-xl text-xs font-bold hover:bg-rose-500 transition-colors"
-                        >
-                          Try Again
-                        </button>
-                      </div>
-                    ) : (
-                      <div className="flex justify-center my-2">
-                        <div className="relative p-2.5 bg-white rounded-2xl shadow-sm border-2 border-slate-100 flex items-center justify-center">
-                          {paymentData.qrString || paymentData.khqrQRCode ? (
-                            <>
-                              <QRCodeSVG
-                                value={paymentData.qrString || paymentData.khqrQRCode}
-                                size={200}
-                                level="H"
-                                includeMargin={false}
-                              />
-                              {/* Center Bakong Currency Badge Overlay */}
-                              <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-                                <div className="w-10 h-10 rounded-full bg-white shadow-md border-2 border-red-600 flex items-center justify-center">
-                                  <span className="text-red-600 font-black text-base leading-none">
-                                    {paymentData.currency === 'KHR' ? '៛' : '$'}
-                                  </span>
-                                </div>
-                              </div>
-                            </>
-                          ) : (
-                            <div className="w-48 h-48 flex items-center justify-center text-slate-400 text-xs">
-                              Generating QR Code...
-                            </div>
-                          )}
-                        </div>
-                      </div>
-                    )}
-
-                    {!qrExpired && (
-                      <>
-                        {/* Instruction */}
-                        <p className="text-[11px] sm:text-xs text-slate-600 leading-snug">
-                          Scan with <strong className="text-slate-900 font-bold">ABA Mobile</strong> or any banking app supporting KHQR
-                        </p>
-
-                        {/* Waiting pulse indicator */}
-                        <div className="inline-flex items-center gap-2 py-1 px-3 rounded-full bg-emerald-50 text-emerald-700 text-[11px] font-semibold border border-emerald-200">
-                          <span className="w-2 h-2 rounded-full bg-emerald-500 animate-ping" />
-                          <span>Waiting for payment confirmation...</span>
-                        </div>
-                      </>
-                    )}
-                  </div>
-                </div>
-
-                {!qrExpired && (
-                  <>
-                    {/* Open in Mobile Banking Deeplink Button */}
-                    {(paymentData.abapayDeeplink || paymentData.khqrDeeplink) && (
-                      <a
-                        href={paymentData.abapayDeeplink || paymentData.khqrDeeplink}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="w-full py-3 px-4 rounded-xl bg-gradient-to-r from-sky-500 to-blue-600 hover:from-sky-400 hover:to-blue-500 text-white font-black text-xs uppercase tracking-wider flex items-center justify-center gap-2 shadow-lg shadow-sky-500/25 transition-all text-center"
-                      >
-                        <span>📱</span>
-                        <span>Open in ABA Mobile / Banking App</span>
-                      </a>
-                    )}
-
-                    {/* Footer Controls */}
-                    <div className="flex items-center justify-between pt-1 px-1 text-[11px] text-slate-400">
-                      <button
-                        type="button"
-                        onClick={handleOpenAbaWebCheckout}
-                        className="hover:text-cyan-400 underline transition-colors cursor-pointer"
-                      >
-                        Pay via ABA Web Portal ↗
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => {
-                          closeAbaCheckoutPopup();
-                          setPaymentData(null);
-                          setOrderId(null);
-                        }}
-                        className="text-slate-400 hover:text-rose-400 transition-colors cursor-pointer"
-                      >
-                        Cancel Order
-                      </button>
-                    </div>
-                  </>
-                )}
+            <div className="p-3.5 rounded-2xl bg-[#111728] border border-slate-700 text-left space-y-2 text-xs">
+              <div className="flex justify-between items-center pb-1.5 border-b border-slate-800">
+                <span className="text-slate-400">Order ID:</span>
+                <span className="font-mono font-bold text-amber-300">#{orderId || paymentData?.orderId}</span>
               </div>
-            ) : (
-              /* SUCCESS RECEIPT VIEW */
-              <div className="space-y-4 text-center py-2 animate-fadeIn">
-                <div className="w-16 h-16 rounded-full bg-gradient-to-tr from-emerald-500 to-teal-400 text-slate-950 text-3xl flex items-center justify-center mx-auto shadow-lg shadow-emerald-500/30">
-                  ✓
+              <div className="flex justify-between items-center">
+                <span className="text-slate-400">Player ID:</span>
+                <span className="font-mono text-white">
+                  {formData.playerID} {formData.serverID ? `(${formData.serverID})` : ''}
+                </span>
+              </div>
+              {verifiedAccount?.name && (
+                <div className="flex justify-between items-center">
+                  <span className="text-slate-400">Account Name:</span>
+                  <span className="text-white font-semibold">{verifiedAccount.name}</span>
                 </div>
-
-                <div className="space-y-1">
-                  <span className="px-3 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-500/40 text-[11px] font-black uppercase tracking-widest inline-flex items-center gap-1.5">
-                    Payment Successful
+              )}
+              <div className="flex justify-between items-center">
+                <span className="text-slate-400">Package:</span>
+                <span className="text-white font-bold">{selectedProduct?.name || 'Diamonds'}</span>
+              </div>
+              <div className="flex justify-between items-center pt-1.5 border-t border-slate-800">
+                <span className="text-slate-400">Amount Paid:</span>
+                <span className="font-black text-emerald-400">
+                  {paymentData?.currency === 'KHR'
+                    ? `${Number(paymentData?.amount || 0).toLocaleString()} ៛`
+                    : `$${Number(paymentData?.amount || 0).toFixed(2)}`}
+                </span>
+              </div>
+              {paymentData?.tranId && (
+                <div className="flex justify-between items-center pt-1 border-t border-slate-800/50">
+                  <span className="text-slate-400 text-[11px]">ABA Tran ID:</span>
+                  <span className="font-mono text-[10px] text-slate-300 bg-slate-800/60 px-1.5 py-0.5 rounded">
+                    {paymentData.tranId}
                   </span>
-                  <h3 className="text-xl sm:text-2xl font-black text-white">Diamonds Delivering!</h3>
-                  <p className="text-xs text-slate-300">
-                    Thank you! Your payment has been received and your diamonds are on their way.
-                  </p>
                 </div>
+              )}
+            </div>
 
-                <div className="p-3.5 rounded-2xl bg-[#111728] border border-slate-700 text-left space-y-2 text-xs">
-                  <div className="flex justify-between items-center pb-1.5 border-b border-slate-800">
-                    <span className="text-slate-400">Order ID:</span>
-                    <span className="font-mono font-bold text-amber-300">#{orderId || paymentData.orderId}</span>
-                  </div>
-                  <div className="flex justify-between items-center">
-                    <span className="text-slate-400">Player ID:</span>
-                    <span className="font-mono text-white">
-                      {formData.playerID} {formData.serverID ? `(${formData.serverID})` : ''}
-                    </span>
-                  </div>
-                  {verifiedAccount?.name && (
-                    <div className="flex justify-between items-center">
-                      <span className="text-slate-400">Account Name:</span>
-                      <span className="text-white font-semibold">{verifiedAccount.name}</span>
-                    </div>
-                  )}
-                  <div className="flex justify-between items-center">
-                    <span className="text-slate-400">Package:</span>
-                    <span className="text-white font-bold">{selectedProduct?.name || 'Diamonds'}</span>
-                  </div>
-                  <div className="flex justify-between items-center pt-1.5 border-t border-slate-800">
-                    <span className="text-slate-400">Amount Paid:</span>
-                    <span className="font-black text-emerald-400">
-                      {paymentData.currency === 'KHR'
-                        ? `${Number(paymentData.amount || 0).toLocaleString()} ៛`
-                        : `$${Number(paymentData.amount || 0).toFixed(2)}`}
-                    </span>
-                  </div>
-                  {paymentData.tranId && (
-                    <div className="flex justify-between items-center pt-1 border-t border-slate-800/50">
-                      <span className="text-slate-400 text-[11px]">ABA Tran ID:</span>
-                      <span className="font-mono text-[10px] text-slate-300 bg-slate-800/60 px-1.5 py-0.5 rounded">
-                        {paymentData.tranId}
-                      </span>
-                    </div>
-                  )}
-                </div>
-
-                <button
-                  type="button"
-                  onClick={() => {
-                    closeAbaCheckoutPopup();
-                    setPaymentData(null);
-                    setOrderId(null);
-                    setPaymentPaid(false);
-                    setAwaitingBalance(false);
-                    setConfirmSent(false);
-                  }}
-                  className="w-full py-3 rounded-xl bg-gradient-to-r from-emerald-500 to-teal-500 text-slate-950 font-black text-sm uppercase tracking-wider hover:opacity-95 shadow-lg transition-all cursor-pointer"
-                >
-                  Done
-                </button>
-              </div>
-            )}
+            <button
+              type="button"
+              onClick={() => {
+                closeAbaCheckoutPopup();
+                setPaymentData(null);
+                setOrderId(null);
+                setPaymentPaid(false);
+                setAwaitingBalance(false);
+                setConfirmSent(false);
+              }}
+              className="w-full py-3 rounded-xl bg-gradient-to-r from-emerald-500 to-teal-500 text-slate-950 font-black text-sm uppercase tracking-wider hover:opacity-95 shadow-lg transition-all cursor-pointer"
+            >
+              Done
+            </button>
           </div>
         </div>
       )}
