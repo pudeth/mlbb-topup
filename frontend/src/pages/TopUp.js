@@ -3228,30 +3228,81 @@ const TopUp = () => {
         <div className="fixed inset-0 z-[999999] bg-[#030713] flex flex-col select-none overflow-hidden h-[100dvh] w-full animate-fadeIn font-khmer">
           {/* 1. Modal Top Bar (Sticky, Safe-Area Top Aware) */}
           <header
-            className="shrink-0 px-3 sm:px-6 py-2 sm:py-2.5 bg-[#060e22] border-b border-slate-800/90 shadow-xl flex items-center justify-between gap-2 z-20"
-            style={{ paddingTop: 'max(8px, env(safe-area-inset-top, 0px))' }}
+            className="shrink-0 px-3 sm:px-6 py-2.5 sm:py-3 bg-[#060e22] border-b border-slate-800/90 shadow-xl flex flex-col gap-2 z-20"
+            style={{ paddingTop: 'max(10px, env(safe-area-inset-top, 0px))' }}
           >
-            {/* Left Group: Back Button + Category Dropdown + Layout Mode Dropdown (KEEP THIS BUTTON) */}
-            <div className="flex items-center gap-1.5 sm:gap-2 min-w-0 flex-wrap">
-              {/* Back / Close button */}
-              <button
-                type="button"
-                onClick={() => setShowPackageModal(false)}
-                className="flex items-center gap-1.5 py-1.5 px-2.5 sm:px-3 rounded-xl bg-slate-900/95 hover:bg-slate-800 border border-slate-700/80 hover:border-rose-400/50 text-rose-300 hover:text-white text-xs font-black transition-all cursor-pointer active:scale-95 shadow-sm shrink-0"
-                aria-label="Close full display"
-              >
-                <svg className="w-3.5 h-3.5 text-rose-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                  <path d="M19 12H5M12 19l-7-7 7-7" />
-                </svg>
-                <span className="hidden xs:inline">{language === 'km' ? 'ត្រឡប់' : 'Back'}</span>
-              </button>
+            {/* Row 1: Clean Navigation Header (Back + Title + Currency + Close) */}
+            <div className="flex items-center justify-between gap-2">
+              {/* Left: Back Button & Game Badge */}
+              <div className="flex items-center gap-2 min-w-0">
+                <button
+                  type="button"
+                  onClick={() => setShowPackageModal(false)}
+                  className="flex items-center gap-1.5 py-1.5 px-2.5 sm:px-3 rounded-xl bg-slate-900/95 hover:bg-slate-800 border border-slate-700/80 hover:border-rose-400/50 text-rose-300 hover:text-white text-xs font-black transition-all cursor-pointer active:scale-95 shadow-sm shrink-0"
+                  aria-label="Back to topup page"
+                >
+                  <svg className="w-3.5 h-3.5 text-rose-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M19 12H5M12 19l-7-7 7-7" />
+                  </svg>
+                  <span>{language === 'km' ? 'ត្រឡប់' : 'Back'}</span>
+                </button>
 
-              {/* Category Dropdown List */}
-              <div className="relative inline-flex items-center">
+                <div className="flex items-center gap-1.5 min-w-0">
+                  <span className="text-xs sm:text-sm font-black text-white truncate">
+                    {language === 'km' ? 'ជ្រើសរើសកញ្ចប់' : 'Select Package'}
+                  </span>
+                  <span className="px-1.5 py-0.5 rounded-full bg-cyan-500/15 text-cyan-300 border border-cyan-400/30 text-[9px] font-mono font-bold shrink-0">
+                    {modalFilteredProducts.length}
+                  </span>
+                </div>
+              </div>
+
+              {/* Right: Currency Toggle Pill + Close X */}
+              <div className="flex items-center gap-1.5 shrink-0">
+                <div className="flex items-center p-0.5 bg-slate-900/90 rounded-xl border border-slate-700/80 shadow-sm">
+                  <button
+                    type="button"
+                    onClick={() => handleSwitchCurrency('USD')}
+                    className={`py-1 px-2 rounded-lg text-[10px] font-black transition-all cursor-pointer ${
+                      currency === 'USD'
+                        ? 'bg-amber-400 text-slate-950 font-black shadow-sm'
+                        : 'text-slate-400 hover:text-white'
+                    }`}
+                  >
+                    USD
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => handleSwitchCurrency('KHR')}
+                    className={`py-1 px-2 rounded-lg text-[10px] font-black transition-all cursor-pointer font-khmer ${
+                      currency === 'KHR'
+                        ? 'bg-emerald-400 text-slate-950 font-black shadow-sm'
+                        : 'text-slate-400 hover:text-white'
+                    }`}
+                  >
+                    KHR
+                  </button>
+                </div>
+
+                <button
+                  type="button"
+                  onClick={() => setShowPackageModal(false)}
+                  className="w-7 h-7 rounded-xl bg-slate-900/90 hover:bg-rose-500/30 text-slate-400 hover:text-rose-300 flex items-center justify-center transition-all cursor-pointer border border-slate-700/80 text-xs font-bold"
+                  aria-label="Close"
+                >
+                  ✕
+                </button>
+              </div>
+            </div>
+
+            {/* Row 2: Perfectly Balanced Symmetrical 50/50 Dropdown Filters */}
+            <div className="grid grid-cols-2 gap-2">
+              {/* 1. Category Dropdown */}
+              <div className="relative">
                 <select
                   value={productCategoryTab}
                   onChange={(e) => setProductCategoryTab(e.target.value)}
-                  className="appearance-none bg-[#0a1024] hover:bg-[#0f1733] border border-slate-700/80 hover:border-slate-600 focus:border-cyan-400 text-slate-200 text-xs font-bold rounded-xl pl-2.5 pr-7 py-1.5 cursor-pointer focus:outline-none focus:ring-1 focus:ring-cyan-400/40 transition-all font-khmer shadow-sm max-w-[130px] sm:max-w-none truncate"
+                  className="w-full appearance-none bg-[#0a1024] hover:bg-[#0f1733] border border-slate-700/80 hover:border-slate-600 focus:border-cyan-400 text-slate-200 text-xs font-bold rounded-xl pl-3 pr-7 py-2 cursor-pointer focus:outline-none focus:ring-1 focus:ring-cyan-400/40 transition-all font-khmer shadow-sm truncate"
                   aria-label="Filter packages category"
                 >
                   <option value="all" className="bg-slate-900 text-white">
@@ -3269,19 +3320,19 @@ const TopUp = () => {
                     💎 {isFreefire ? 'Other Packages' : t('tab_diamond_pkgs')} ({getFilteredPackages('diamonds').length})
                   </option>
                 </select>
-                <div className="pointer-events-none absolute right-2 top-1/2 -translate-y-1/2 text-slate-400">
+                <div className="pointer-events-none absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400">
                   <svg className="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
                     <polyline points="6 9 12 15 18 9"></polyline>
                   </svg>
                 </div>
               </div>
 
-              {/* KEEP THIS BUTTON: Layout Mode Dropdown List (Tiles / Large / List) */}
-              <div className="relative inline-flex items-center">
+              {/* 2. Layout Mode Dropdown (KEEP THIS BUTTON) */}
+              <div className="relative">
                 <select
                   value={layoutMode}
                   onChange={(e) => setLayoutMode(e.target.value)}
-                  className="appearance-none bg-[#0a1024] hover:bg-[#0f1733] border border-slate-700/80 hover:border-slate-600 focus:border-cyan-400 text-cyan-300 text-xs font-bold rounded-xl pl-2.5 pr-7 py-1.5 cursor-pointer focus:outline-none focus:ring-1 focus:ring-cyan-400/40 transition-all font-khmer shadow-sm"
+                  className="w-full appearance-none bg-[#0a1024] hover:bg-[#0f1733] border border-slate-700/80 hover:border-slate-600 focus:border-cyan-400 text-cyan-300 text-xs font-bold rounded-xl pl-3 pr-7 py-2 cursor-pointer focus:outline-none focus:ring-1 focus:ring-cyan-400/40 transition-all font-khmer shadow-sm truncate"
                   aria-label="Select layout size"
                 >
                   <option value="tiles" className="bg-slate-900 text-white">
@@ -3294,50 +3345,12 @@ const TopUp = () => {
                     ≡ {language === 'km' ? 'បញ្ជី (List)' : 'List View'}
                   </option>
                 </select>
-                <div className="pointer-events-none absolute right-2 top-1/2 -translate-y-1/2 text-cyan-400">
+                <div className="pointer-events-none absolute right-2.5 top-1/2 -translate-y-1/2 text-cyan-400">
                   <svg className="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
                     <polyline points="6 9 12 15 18 9"></polyline>
                   </svg>
                 </div>
               </div>
-            </div>
-
-            {/* Right Group: Currency Switcher & Close Icon */}
-            <div className="flex items-center gap-1.5 sm:gap-2 shrink-0">
-              <div className="flex items-center p-0.5 bg-slate-900/90 rounded-xl border border-slate-700/80">
-                <button
-                  type="button"
-                  onClick={() => handleSwitchCurrency('USD')}
-                  className={`py-1 px-2 rounded-lg text-[10px] font-black transition-all cursor-pointer ${
-                    currency === 'USD'
-                      ? 'bg-amber-400 text-slate-950 font-black'
-                      : 'text-slate-400 hover:text-white'
-                  }`}
-                >
-                  USD
-                </button>
-                <button
-                  type="button"
-                  onClick={() => handleSwitchCurrency('KHR')}
-                  className={`py-1 px-2 rounded-lg text-[10px] font-black transition-all cursor-pointer font-khmer ${
-                    currency === 'KHR'
-                      ? 'bg-emerald-400 text-slate-950 font-black'
-                      : 'text-slate-400 hover:text-white'
-                  }`}
-                >
-                  KHR
-                </button>
-              </div>
-
-              {/* Close Icon button */}
-              <button
-                type="button"
-                onClick={() => setShowPackageModal(false)}
-                className="w-7 h-7 rounded-xl bg-slate-800/90 hover:bg-rose-500/30 text-slate-400 hover:text-rose-300 flex items-center justify-center transition-all cursor-pointer border border-slate-700 text-xs font-bold"
-                aria-label="Close"
-              >
-                ✕
-              </button>
             </div>
           </header>
 
