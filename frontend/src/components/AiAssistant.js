@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef, useEffect, useCallback } from 'react';
 import { useLanguage } from '../context/LanguageContext';
 import { Link } from 'react-router-dom';
 
@@ -498,6 +498,33 @@ const AiAssistant = () => {
     hasMoved: false,
   });
 
+  // 30-second idle auto-fade (opacity 50%) when user does not press, touch, or move on the button
+  const [isIdle, setIsIdle] = useState(false);
+  const idleTimerRef = useRef(null);
+
+  const resetIdleTimer = useCallback(() => {
+    setIsIdle(false);
+    if (idleTimerRef.current) {
+      clearTimeout(idleTimerRef.current);
+    }
+    idleTimerRef.current = setTimeout(() => {
+      setIsIdle(true);
+    }, 30000); // 30 seconds
+  }, []);
+
+  useEffect(() => {
+    if (isOpen) {
+      setIsIdle(false);
+      if (idleTimerRef.current) clearTimeout(idleTimerRef.current);
+      return;
+    }
+
+    resetIdleTimer();
+    return () => {
+      if (idleTimerRef.current) clearTimeout(idleTimerRef.current);
+    };
+  }, [isOpen, resetIdleTimer]);
+
   // Clamp any saved position on initial mount so it never sits behind/over the header
   useEffect(() => {
     setPos(prev => {
@@ -693,7 +720,12 @@ const AiAssistant = () => {
       <button
         ref={btnRef}
         type="button"
-        onClick={handleClick}
+        onClick={(e) => {
+          resetIdleTimer();
+          handleClick(e);
+        }}
+        onMouseEnter={resetIdleTimer}
+        onMouseMove={resetIdleTimer}
         onDoubleClick={() => {
           setPos(null);
           try {
@@ -701,13 +733,16 @@ const AiAssistant = () => {
           } catch (e) {}
         }}
         onMouseDown={(e) => {
+          resetIdleTimer();
           if (e.button === 0) handleDragStart(e.clientX, e.clientY);
         }}
         onTouchStart={(e) => {
+          resetIdleTimer();
           if (e.touches && e.touches[0]) {
             handleDragStart(e.touches[0].clientX, e.touches[0].clientY);
           }
         }}
+        onTouchMove={resetIdleTimer}
         style={
           pos
             ? {
@@ -723,9 +758,11 @@ const AiAssistant = () => {
                 zIndex: 999999,
               }
         }
-        className={`ai-assistant-widget fixed z-[99999] w-14 h-14 sm:w-16 sm:h-16 md:w-20 md:h-20 select-none cursor-grab active:cursor-grabbing bg-transparent border-0 outline-none p-0 transition-transform ${
+        className={`ai-assistant-widget fixed z-[99999] w-14 h-14 sm:w-16 sm:h-16 md:w-20 md:h-20 select-none cursor-grab active:cursor-grabbing bg-transparent border-0 outline-none p-0 transition-all duration-500 ${
           pos ? '' : 'bottom-20 right-3.5 sm:bottom-6 sm:right-6'
-        } ${isDragging ? 'scale-115 opacity-90' : 'hover:scale-110 active:scale-95'}`}
+        } ${isDragging ? 'scale-115 opacity-90' : 'hover:scale-110 active:scale-95'} ${
+          isIdle && !isOpen ? 'opacity-50 hover:opacity-100' : 'opacity-100'
+        }`}
         aria-label="Open AI Assistant"
         title="Drag to move anywhere • Double-click to reset / ចុចឬអូសផ្លាស់ប្តូរទីតាំង"
       >

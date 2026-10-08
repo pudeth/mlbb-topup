@@ -662,8 +662,8 @@ const GameSelection = () => {
           </Link>
         </div>
 
-        {/* Promo Cards */}
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 lg:gap-4">
+        {/* Promo Cards - 1 row, 3 columns */}
+        <div className="grid grid-cols-3 gap-2 sm:gap-3 lg:gap-4">
           {[
             {
               key: 'discount',
@@ -741,58 +741,63 @@ const GameSelection = () => {
             <Link
               key={promo.key}
               to={promo.to}
-              className={`relative group block rounded-2xl p-[1px] border ${promo.theme.border} ${promo.theme.shadow} bg-gradient-to-br ${promo.theme.card} transition-all duration-300 hover:-translate-y-0.5 overflow-hidden select-none`}
+              className={`relative group block rounded-2xl p-[1px] border ${promo.theme.border} ${promo.theme.shadow} bg-gradient-to-br ${promo.theme.card} transition-all duration-300 hover:-translate-y-0.5 overflow-hidden select-none min-h-[140px] sm:min-h-[160px] md:min-h-[180px] lg:min-h-[200px] flex items-center justify-center`}
             >
               {/* Top accent line */}
               <div className={`absolute top-0 inset-x-6 h-px bg-gradient-to-r ${promo.theme.line}`} />
               {/* Ambient glow behind art */}
-              <div className={`absolute -right-8 -top-8 w-32 h-32 ${promo.theme.glow} rounded-full blur-2xl pointer-events-none opacity-70 group-hover:opacity-100 transition-opacity`} />
+              <div className={`absolute -right-6 -top-6 w-28 h-28 sm:w-36 sm:h-36 ${promo.theme.glow} rounded-full blur-2xl pointer-events-none opacity-80 group-hover:opacity-100 transition-opacity`} />
               {/* Subtle dot pattern */}
               <div
                 className="absolute inset-0 opacity-[0.06] pointer-events-none"
                 style={{ backgroundImage: 'radial-gradient(circle, #fff 1px, transparent 1px)', backgroundSize: '14px 14px' }}
               />
-              {/* Shine sweep on hover */}
-              <div className="absolute inset-0 -translate-x-full group-hover:translate-x-full transition-transform duration-1000 bg-gradient-to-r from-transparent via-white/[0.07] to-transparent pointer-events-none" />
 
-              <div className="relative z-10 flex items-center gap-3 p-3 sm:p-3.5">
-                {/* Text content */}
-                <div className="flex-1 min-w-0 flex flex-col items-start">
-                  <span className={`px-2 py-0.5 rounded-md text-[9px] font-black tracking-wider uppercase shadow-sm ${promo.theme.badge}`}>
-                    {promo.badge}
-                  </span>
-                  <h3 className={`mt-1.5 font-black text-sm sm:text-base leading-tight truncate w-full ${promo.theme.title}`}>
-                    {promo.title}
-                  </h3>
-                  <p className={`text-[10px] sm:text-[11px] font-medium leading-snug mt-0.5 line-clamp-1 w-full ${promo.theme.sub}`}>
-                    {promo.subtitle}
-                  </p>
-
-                  <div className="mt-2.5 flex items-center gap-2">
-                    <span className={`inline-flex items-center gap-1 pl-3 pr-1 py-1 rounded-full font-black text-[10.5px] sm:text-xs transition-transform group-hover:scale-[1.03] active:scale-95 ${promo.theme.btn}`}>
-                      <span>{promo.cta}</span>
-                      <span className="w-5 h-5 rounded-full bg-black/20 flex items-center justify-center text-[10px] transition-transform group-hover:translate-x-0.5">
-                        →
-                      </span>
-                    </span>
-                    <span className={`px-2 py-1 rounded-full border text-[9.5px] font-bold whitespace-nowrap ${promo.theme.chip}`}>
-                      {promo.chip}
-                    </span>
-                  </div>
-                </div>
-
-                {/* 3D Art */}
-                <div className="relative w-20 h-20 sm:w-[84px] sm:h-[84px] shrink-0">
+              {/* 3D Art - ALWAYS VISIBLE BY DEFAULT */}
+              <div className="relative z-10 w-full h-full flex flex-col items-center justify-center p-3 sm:p-4">
+                <div className="relative w-20 h-20 sm:w-28 sm:h-28 md:w-32 md:h-32 flex items-center justify-center">
                   <div className="absolute inset-2 rounded-full bg-white/5 blur-md" />
                   <img
                     src={promo.img}
                     alt={promo.title}
                     loading="lazy"
-                    className={`relative w-full h-full object-contain ${promo.theme.drop} group-hover:scale-110 group-hover:-rotate-3 transition-transform duration-300`}
+                    className={`relative w-full h-full object-contain ${promo.theme.drop} transition-transform duration-300 group-hover:scale-110 group-hover:-rotate-3`}
                     onError={(e) => {
                       if (e.target.src.indexOf(promo.fallback) === -1) e.target.src = promo.fallback;
                     }}
                   />
+                </div>
+                {/* Minimal label under image in normal state */}
+                <div className="mt-1 text-center transition-opacity duration-200 group-hover:opacity-0">
+                  <span className={`px-2 py-0.5 rounded-md text-[9px] sm:text-[10px] font-black tracking-wider uppercase shadow-sm ${promo.theme.badge}`}>
+                    {promo.badge}
+                  </span>
+                </div>
+              </div>
+
+              {/* Text & Action Details - HIDDEN BY DEFAULT, REVEALED ON HOVER */}
+              <div className="absolute inset-0 z-20 bg-[#070d1e]/90 sm:bg-[#070d1e]/95 backdrop-blur-md opacity-0 group-hover:opacity-100 transition-all duration-300 p-2.5 sm:p-4 flex flex-col items-center justify-center text-center">
+                <span className={`px-2 py-0.5 rounded-md text-[8px] sm:text-[9px] font-black tracking-wider uppercase shadow-sm ${promo.theme.badge}`}>
+                  {promo.badge}
+                </span>
+                
+                <h3 className={`mt-1.5 font-black text-xs sm:text-sm md:text-base leading-tight ${promo.theme.title}`}>
+                  {promo.title}
+                </h3>
+                
+                <p className={`text-[9px] sm:text-[11px] font-medium leading-snug mt-1 text-slate-300 line-clamp-2 max-w-[90%]`}>
+                  {promo.subtitle}
+                </p>
+
+                <div className="mt-2.5 sm:mt-3 flex flex-col items-center gap-1.5 w-full">
+                  <span className={`inline-flex items-center gap-1 px-3 py-1 rounded-full font-black text-[10px] sm:text-xs transition-transform group-hover:scale-105 active:scale-95 shadow-md ${promo.theme.btn}`}>
+                    <span>{promo.cta}</span>
+                    <span className="text-[10px]">→</span>
+                  </span>
+                  
+                  <span className={`px-2 py-0.5 rounded-full border text-[8.5px] sm:text-[9.5px] font-bold ${promo.theme.chip}`}>
+                    {promo.chip}
+                  </span>
                 </div>
               </div>
             </Link>
