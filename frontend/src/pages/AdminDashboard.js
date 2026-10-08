@@ -172,8 +172,8 @@ const PRICING_GAMES = [
     id: 'freefire',
     name: 'Free Fire',
     icon: '🔥',
-    logo: 'https://res.cloudinary.com/dpz7vpmf8/image/upload/v1790944937/logo-game/srnteatj2ns0e2dswfwq.webp',
-    fallbackLogo: '/images/freefire-banner.webp',
+    logo: '/images/freefire-square-logo.png',
+    fallbackLogo: '/images/freefire_hero_banner.jpg',
   },
   {
     id: 'genshin',

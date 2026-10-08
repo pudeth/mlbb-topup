@@ -35,7 +35,7 @@ const BASE_GAMES_CATALOG = [
     category: 'Free Fire',
     badge: 'HOT',
     badgeColor: 'red',
-    image: 'https://res.cloudinary.com/dpz7vpmf8/image/upload/v1790944937/logo-game/srnteatj2ns0e2dswfwq.webp',
+    image: '/images/freefire-square-logo.png',
     route: '/topup?game=freefire'
   },
   {

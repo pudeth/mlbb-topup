@@ -10,10 +10,15 @@ export const DEFAULT_GAMES = [
     category: 'Service top-up',
     providerCategory: 'Service top-up',
     currency: 'Diamonds',
-    image: 'https://res.cloudinary.com/dpz7vpmf8/image/upload/v1790944937/logo-game/srnteatj2ns0e2dswfwq.webp',
-    localFallbackImage: '/images/freefire-banner.webp',
-    badge: 'SEVER ខ្មែរ 🇰🇭',
+    image: '/images/freefire-square-logo.png',
+    localFallbackImage: '/images/freefire_hero_banner.jpg',
+    badge: 'សេវើខ្មែរ 🇰🇭',
     badgeColor: 'cyan',
+    flagType: 'kh',
+    flagTitle: 'សេវើខ្មែរ',
+    flagSubtitle: 'KH',
+    flagServerText: 'SERVER',
+    flagFrameStyle: 'gold_cyber',
     rating: '4.9 ⭐',
     deliveryTime: '10 - 30s',
     route: '/topup?game=freefire',
@@ -276,8 +281,8 @@ export const DEFAULT_GAMES = [
     category: 'Service top-up',
     providerCategory: 'Service top-up',
     currency: 'Diamonds',
-    image: 'https://res.cloudinary.com/dpz7vpmf8/image/upload/v1790944937/logo-game/srnteatj2ns0e2dswfwq.webp',
-    localFallbackImage: '/images/freefire-banner.webp',
+    image: '/images/freefire-square-logo.png',
+    localFallbackImage: '/images/freefire_hero_banner.jpg',
     badge: 'MENA',
     badgeColor: 'cyan',
     rating: '4.8 ⭐',
@@ -294,8 +299,8 @@ export const DEFAULT_GAMES = [
     category: 'Service top-up',
     providerCategory: 'Service top-up',
     currency: 'Diamonds',
-    image: 'https://res.cloudinary.com/dpz7vpmf8/image/upload/v1790944937/logo-game/srnteatj2ns0e2dswfwq.webp',
-    localFallbackImage: '/images/freefire-banner.webp',
+    image: '/images/freefire-square-logo.png',
+    localFallbackImage: '/images/freefire_hero_banner.jpg',
     badge: 'LATAM',
     badgeColor: 'cyan',
     rating: '4.8 ⭐',
@@ -671,12 +676,17 @@ export const normalizeGameFlags = (game) => {
     .replace(/\bPH\s+PH\b/gi, 'PH')
     .replace(/\bID\s+ID\b/gi, 'ID')
     .replace(/\bKH\s+KH\b/gi, 'KH')
+    .replace(/\bSEVER\b/gi, 'SERVER')
     .trim();
 
-  if (!cleanTitle || cleanTitle === 'PH' || cleanTitle === 'ID') {
+  const isFreeFire = (clone.id && clone.id.toLowerCase().includes('freefire')) || (clone.name && clone.name.toLowerCase().includes('free fire'));
+  const isPubg = (clone.id && clone.id.toLowerCase().includes('pubg')) || (clone.name && clone.name.toLowerCase().includes('pubg'));
+
+  if (!cleanTitle || cleanTitle === 'PH' || cleanTitle === 'ID' || cleanTitle === 'KH' || cleanTitle === 'SERVER') {
     if (clone.flagType === 'ph') cleanTitle = 'PH SERVER';
     else if (clone.flagType === 'id') cleanTitle = 'ID SERVER';
     else if (clone.flagType === 'global') cleanTitle = 'GLOBAL UC';
+    else if (isFreeFire) cleanTitle = 'សេវើខ្មែរ';
     else cleanTitle = 'សេវើខ្មែរ 5v5';
   }
 
@@ -684,7 +694,7 @@ export const normalizeGameFlags = (game) => {
 
   // 3. Defaults for subtitle and server text
   if (clone.flagSubtitle === undefined) {
-    clone.flagSubtitle = '5V5';
+    clone.flagSubtitle = isFreeFire ? 'KH' : '5V5';
   }
   if (!clone.flagServerText) {
     if (clone.flagType === 'ph') clone.flagServerText = 'OFFICIAL';
@@ -698,15 +708,12 @@ export const normalizeGameFlags = (game) => {
   }
 
   // 4. Automatic upgrade for game artwork from legacy Unsplash to official game logos across all mobile & desktop clients
-  const isFreeFire = (clone.id && clone.id.toLowerCase().includes('freefire')) || (clone.name && clone.name.toLowerCase().includes('free fire'));
-  const isPubg = (clone.id && clone.id.toLowerCase().includes('pubg')) || (clone.name && clone.name.toLowerCase().includes('pubg'));
-
   if (isFreeFire) {
-    if (!clone.image || clone.image.includes('1542751371-adc38448a05e') || clone.image.includes('unsplash.com')) {
-      clone.image = 'https://res.cloudinary.com/dpz7vpmf8/image/upload/v1790944937/logo-game/srnteatj2ns0e2dswfwq.webp';
+    if (!clone.image || clone.image.includes('1542751371-adc38448a05e') || clone.image.includes('unsplash.com') || clone.image.includes('srnteatj2ns0e2dswfwq')) {
+      clone.image = '/images/freefire-square-logo.png';
     }
-    if (!clone.localFallbackImage || clone.localFallbackImage === '/mlbb-logo.png') {
-      clone.localFallbackImage = '/images/freefire-banner.webp';
+    if (!clone.localFallbackImage || clone.localFallbackImage === '/mlbb-logo.png' || clone.localFallbackImage === '/images/freefire-banner.webp') {
+      clone.localFallbackImage = '/images/freefire_hero_banner.jpg';
     }
   } else if (isPubg) {
     if (!clone.image || clone.image.includes('1511512578047-dfb367046420') || clone.image.includes('unsplash.com')) {

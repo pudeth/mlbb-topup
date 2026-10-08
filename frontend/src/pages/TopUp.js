@@ -416,6 +416,13 @@ const MLBB_BANNERS = [
   '/images/banner_starlight_cosmic.jpg',
 ];
 
+// Free Fire Multi-Artwork Showcase Banner Slides
+const FREEFIRE_BANNERS = [
+  '/images/freefire_hero_banner.jpg',
+  '/images/freefire-square-logo.png',
+  '/images/banner_freefire_booyah.jpg',
+];
+
 const TopUp = () => {
   const { t, language } = useLanguage();
   const [searchParams, setSearchParams] = useSearchParams();
@@ -2354,13 +2361,15 @@ const TopUp = () => {
             <img
               src={
                 selectedGame.id.startsWith('mlbb')
-                  ? (MLBB_BANNERS[activeBannerIdx] || '/images/mlbb_hero_banner.png')
-                  : (selectedGame.image || selectedGame.localFallbackImage || '/mlbb-logo.png')
+                  ? (MLBB_BANNERS[activeBannerIdx % MLBB_BANNERS.length] || '/images/mlbb_hero_banner.png')
+                  : selectedGame.id.includes('freefire')
+                    ? (FREEFIRE_BANNERS[activeBannerIdx % FREEFIRE_BANNERS.length] || '/images/freefire_hero_banner.jpg')
+                    : (selectedGame.image || selectedGame.localFallbackImage || '/mlbb-logo.png')
               }
               alt={selectedGame.name}
               onError={(e) => {
                 e.target.onerror = null;
-                e.target.src = selectedGame.localFallbackImage || '/mlbb-logo.png';
+                e.target.src = selectedGame.id.includes('freefire') ? '/images/freefire_hero_banner.jpg' : (selectedGame.localFallbackImage || '/mlbb-logo.png');
               }}
               className="w-full h-full object-cover object-center transition-all duration-700 group-hover:scale-105"
             />
@@ -2374,12 +2383,12 @@ const TopUp = () => {
 
             {/* Right: 3D Server Badge Frame & Back Button */}
             <div className="flex items-center gap-1.5 sm:gap-2.5">
-              {(selectedGame.id.startsWith('mlbb') || selectedGame.flagTitle || (selectedGame.flagType && selectedGame.flagType !== 'none') || selectedGame.badge?.includes('ខ្មែរ')) && (
+              {(selectedGame.id.startsWith('mlbb') || selectedGame.id.includes('freefire') || selectedGame.flagTitle || (selectedGame.flagType && selectedGame.flagType !== 'none') || selectedGame.badge?.includes('ខ្មែរ')) && (
                 <div className="pointer-events-none drop-shadow-[0_4px_12px_rgba(0,0,0,0.85)] scale-[0.62] xs:scale-[0.72] sm:scale-[0.88] md:scale-100 origin-right">
                   <CambodiaFlagFrame
-                    title={selectedGame.flagTitle || (selectedGame.id?.includes('ph') ? 'PH SERVER' : selectedGame.id?.includes('id') ? 'ID SERVER' : selectedGame.badge || "សេវើខ្មែរ 5v5")}
-                    subtitle={selectedGame.flagSubtitle || (selectedGame.id?.startsWith('mlbb') ? "5V5" : "")}
-                    sub={selectedGame.flagServerText || (selectedGame.id?.includes('ph') ? 'OFFICIAL' : selectedGame.id?.includes('id') ? 'FAST' : 'SERVER')}
+                    title={selectedGame.id.includes('freefire') ? 'សេវើខ្មែរ' : (selectedGame.flagTitle || (selectedGame.id?.includes('ph') ? 'PH SERVER' : selectedGame.id?.includes('id') ? 'ID SERVER' : selectedGame.badge || "សេវើខ្មែរ 5v5"))}
+                    subtitle={selectedGame.id.includes('freefire') ? 'KH' : (selectedGame.flagSubtitle || (selectedGame.id?.startsWith('mlbb') ? "5V5" : ""))}
+                    sub={selectedGame.id.includes('freefire') ? 'SERVER' : (selectedGame.flagServerText || (selectedGame.id?.includes('ph') ? 'OFFICIAL' : selectedGame.id?.includes('id') ? 'FAST' : 'SERVER'))}
                     flagType={selectedGame.flagType || (selectedGame.id?.includes('ph') || selectedGame.name?.includes('(PH)') ? 'ph' : selectedGame.id?.includes('id') || selectedGame.name?.includes('(ID)') ? 'id' : selectedGame.badge?.includes('ខ្មែរ') ? 'kh' : 'kh')}
                     flagImage={selectedGame.flagImage || null}
                     isFullBadgePng={selectedGame.isFullBadgePng || false}
@@ -2402,7 +2411,7 @@ const TopUp = () => {
 
           {/* Bottom Artwork Content: Slogan, 5v5 Emblem & Carousel Dots */}
           <div className="relative z-10 p-2.5 xs:p-3 sm:p-6 mt-auto flex flex-col justify-end space-y-2 sm:space-y-4">
-            {!selectedGame.id.startsWith('mlbb') && (
+            {!selectedGame.id.startsWith('mlbb') && !selectedGame.id.includes('freefire') && (
               <div className="flex flex-col select-none min-w-0">
                 <span className="text-[11px] xs:text-sm sm:text-2xl lg:text-3xl font-black uppercase leading-tight text-white drop-shadow-[0_2px_10px_rgba(0,0,0,0.9)] line-clamp-3 break-words">
                   {selectedGame.name}
@@ -2416,38 +2425,45 @@ const TopUp = () => {
             )}
 
             {/* Carousel Pagination Controls: < ● ○ ○ ○ > */}
-            {selectedGame.id.startsWith('mlbb') && (
+            {(selectedGame.id.startsWith('mlbb') || selectedGame.id.includes('freefire')) && (
             <div className="flex items-center justify-center gap-1.5 sm:gap-3 pt-1">
-              <button
-                type="button"
-                onClick={() => setActiveBannerIdx((prev) => (prev > 0 ? prev - 1 : MLBB_BANNERS.length - 1))}
-                className="text-slate-400 hover:text-cyan-300 text-xs sm:text-sm font-black px-1 py-0.5 transition-colors cursor-pointer"
-                title="Previous Banner"
-              >
-                ‹
-              </button>
-              <div className="flex items-center gap-1 sm:gap-1.5">
-                {MLBB_BANNERS.map((_, idx) => (
-                  <button
-                    key={idx}
-                    type="button"
-                    onClick={() => setActiveBannerIdx(idx)}
-                    className={`rounded-full transition-all duration-300 cursor-pointer ${
-                      activeBannerIdx === idx
-                        ? 'w-3.5 sm:w-5 h-1.5 sm:h-2 bg-gradient-to-r from-cyan-400 to-blue-500 shadow-[0_0_8px_rgba(34,211,238,0.8)]'
-                        : 'w-1.5 sm:w-2 h-1.5 sm:h-2 bg-slate-600/80 hover:bg-slate-400'
-                    }`}
-                  />
-                ))}
-              </div>
-              <button
-                type="button"
-                onClick={() => setActiveBannerIdx((prev) => (prev < MLBB_BANNERS.length - 1 ? prev + 1 : 0))}
-                className="text-slate-400 hover:text-cyan-300 text-xs sm:text-sm font-black px-1 py-0.5 transition-colors cursor-pointer"
-                title="Next Banner"
-              >
-                ›
-              </button>
+              {(() => {
+                const activeBanners = selectedGame.id.startsWith('mlbb') ? MLBB_BANNERS : FREEFIRE_BANNERS;
+                return (
+                  <>
+                    <button
+                      type="button"
+                      onClick={() => setActiveBannerIdx((prev) => (prev > 0 ? prev - 1 : activeBanners.length - 1))}
+                      className="text-slate-400 hover:text-cyan-300 text-xs sm:text-sm font-black px-1 py-0.5 transition-colors cursor-pointer"
+                      title="Previous Banner"
+                    >
+                      ‹
+                    </button>
+                    <div className="flex items-center gap-1 sm:gap-1.5">
+                      {activeBanners.map((_, idx) => (
+                        <button
+                          key={idx}
+                          type="button"
+                          onClick={() => setActiveBannerIdx(idx)}
+                          className={`rounded-full transition-all duration-300 cursor-pointer ${
+                            (activeBannerIdx % activeBanners.length) === idx
+                              ? 'w-3.5 sm:w-5 h-1.5 sm:h-2 bg-gradient-to-r from-cyan-400 to-blue-500 shadow-[0_0_8px_rgba(34,211,238,0.8)]'
+                              : 'w-1.5 sm:w-2 h-1.5 sm:h-2 bg-slate-600/80 hover:bg-slate-400'
+                          }`}
+                        />
+                      ))}
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => setActiveBannerIdx((prev) => (prev < activeBanners.length - 1 ? prev + 1 : 0))}
+                      className="text-slate-400 hover:text-cyan-300 text-xs sm:text-sm font-black px-1 py-0.5 transition-colors cursor-pointer"
+                      title="Next Banner"
+                    >
+                      ›
+                    </button>
+                  </>
+                );
+              })()}
             </div>
             )}
           </div>
