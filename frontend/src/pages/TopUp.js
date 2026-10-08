@@ -2052,7 +2052,7 @@ const TopUp = () => {
 
 
   return (
-    <div className="max-w-6xl mx-auto px-3 sm:px-6 py-6 animate-fadeIn pb-32 sm:pb-36">
+    <div className="max-w-6xl mx-auto px-3 sm:px-6 py-4 sm:py-6 animate-fadeIn pb-32 sm:pb-36 space-y-4 sm:space-y-6">
       {/* Top-Up Paused / Closed Maintenance Notice Banner (Classic Fintech & Multilingual) */}
       {isTopupDisabled && (
         <div className={`relative overflow-hidden rounded-[22px] p-4 sm:p-5 mb-6 border backdrop-blur-xl shadow-2xl transition-all duration-300 select-none ${
@@ -2256,7 +2256,7 @@ const TopUp = () => {
       {/* ======================================================== */}
       {/* 2. PLAYER INFORMATION CARD (Exact match to Reference Image 2) */}
       {/* ======================================================== */}
-      <div id="player-info-section" className="rounded-2xl sm:rounded-3xl bg-[#0b1329] border border-slate-800/90 shadow-2xl overflow-hidden font-khmer transition-all">
+      <div id="player-info-section" className="mt-4 sm:mt-6 rounded-2xl sm:rounded-3xl bg-[#0b1329] border border-slate-800/90 shadow-2xl overflow-hidden font-khmer transition-all">
         {/* Pink/Rose Header Ribbon matching Reference Image 2 */}
         <div className="bg-gradient-to-r from-[#ec4899] via-[#f43f5e] to-[#ec4899] text-white px-4 sm:px-5 py-2.5 sm:py-3 flex items-center justify-between shadow-md">
           <div className="flex items-center gap-2">
@@ -2321,12 +2321,12 @@ const TopUp = () => {
                     {pastedPlayerId ? (
                       <>
                         <span className="text-emerald-400">✓</span>
-                        <span className="text-emerald-400 font-extrabold text-[11px]">{language === 'km' ? 'បានបិទ' : 'Pasted'}</span>
+                        <span className="text-emerald-400 font-extrabold text-[11px]">{language === 'km' ? 'បានដាក់' : 'Pasted'}</span>
                       </>
                     ) : (
                       <>
                         <span>📋</span>
-                        <span className="font-extrabold text-[11px]">{language === 'km' ? 'បិទភ្ជាប់' : 'Paste'}</span>
+                        <span className="font-extrabold text-[11px]">Paste</span>
                       </>
                     )}
                   </button>
@@ -2541,7 +2541,7 @@ const TopUp = () => {
       {/* ======================================================== */}
       {/* STEP 2: SELECT RECHARGE PACKAGE (DIAMONDS & PASSES)      */}
       {/* ======================================================== */}
-      <div id="packages-section" className="space-y-6 pt-1 sm:pt-2">
+      <div id="packages-section" className="mt-4 sm:mt-6 space-y-6">
           <div className="bg-slate-900/30 border border-slate-800/50 rounded-[24px] p-3.5 sm:p-5 shadow-2xl backdrop-blur-md space-y-5">
             
             {/* Step 2 Header Title */}
