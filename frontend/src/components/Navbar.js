@@ -239,77 +239,144 @@ const Navbar = () => {
                 {userMenuOpen && (
                   <>
                     <div className="fixed inset-0 z-40" onClick={() => setUserMenuOpen(false)} />
-                    <div className="absolute right-0 mt-2 w-60 rounded-2xl bg-[#090f20]/95 backdrop-blur-2xl border border-sky-500/40 shadow-2xl p-2 z-50 animate-scaleUp font-khmer">
-                      {/* Top Header Card - Click to edit profile */}
-                      <div 
-                        onClick={() => {
-                          setUserMenuOpen(false);
-                          window.dispatchEvent(new CustomEvent('open-player-profile'));
-                        }}
-                        className="p-2.5 border-b border-slate-800/80 mb-1 hover:bg-slate-800/50 rounded-xl transition-all cursor-pointer group flex items-center gap-2.5"
-                        title="Click to view & edit profile"
-                      >
-                        <GamerAvatar 
-                          avatarId={playerAccount?.avatar || user?.avatar} 
-                          name={playerAccount?.realName || user?.name || playerAccount?.playerId} 
-                          size="sm" 
-                          showGlow={true} 
-                        />
-                        <div className="min-w-0 flex-1">
-                          <div className="flex items-center justify-between">
-                            <div className="text-xs font-black text-white truncate group-hover:text-cyan-300 transition-colors">
-                              {playerAccount?.realName || user?.name || 'Player'}
+                    <div className="absolute right-0 mt-3 w-72 sm:w-80 rounded-[22px] bg-[#040816]/98 backdrop-blur-2xl border-2 border-[#0055ff]/80 shadow-[0_15px_50px_rgba(0,0,0,0.92),0_0_28px_rgba(0,85,255,0.25)] p-2.5 z-50 animate-profileDropdown font-khmer select-none">
+                      {/* Top Caret Pointer Triangle matching Reference Image 1 */}
+                      <div className="absolute -top-2 right-6 w-3.5 h-3.5 rotate-45 bg-[#0a1838] border-t-2 border-l-2 border-[#0055ff]/80 z-20 pointer-events-none" />
+
+                      {/* Top Header Card - Exact Match to Reference Image 1 */}
+                      <div className="relative overflow-hidden rounded-2xl bg-gradient-to-r from-[#0a1838] via-[#091530] to-[#0a1226] border border-blue-500/40 p-3 mb-2 shadow-inner">
+                        {/* Ambient Golden Glow on Left */}
+                        <div className="absolute -left-10 -top-10 w-32 h-32 bg-amber-500/15 rounded-full blur-2xl pointer-events-none" />
+                        
+                        {/* Specular Top Sheen */}
+                        <div className="absolute top-0 inset-x-0 h-[1px] bg-gradient-to-r from-amber-400/50 via-blue-400/30 to-transparent pointer-events-none" />
+
+                        {/* Faint Crown Watermark in Background on Right */}
+                        <div className="absolute -right-2 -bottom-2 text-white/5 pointer-events-none select-none">
+                          <svg className="w-20 h-20 fill-current" viewBox="0 0 24 24">
+                            <path d="M5 16L3 5l5.5 5L12 4l3.5 6L21 5l-2 11H5zm14 3c0 .6-.4 1-1 1H6c-.6 0-1-.4-1-1v-1h14v1z" />
+                          </svg>
+                        </div>
+
+                        <div className="relative z-10 flex items-center justify-between gap-2.5">
+                          {/* Left: Glowing Gold Squircle Avatar */}
+                          <div className="relative shrink-0">
+                            <div className="w-13 h-13 sm:w-14 sm:h-14 rounded-2xl p-[2px] bg-gradient-to-br from-amber-300 via-amber-500 to-yellow-600 shadow-[0_0_18px_rgba(245,158,11,0.55)]">
+                              <div className="w-full h-full rounded-[14px] bg-gradient-to-b from-[#2a1705] via-[#140b02] to-[#0a0501] flex items-center justify-center overflow-hidden">
+                                <GamerAvatar 
+                                  avatarId={playerAccount?.avatar || user?.avatar || 'crown'} 
+                                  name={playerAccount?.realName || user?.name || playerAccount?.playerId} 
+                                  size="sm" 
+                                  showGlow={false} 
+                                />
+                              </div>
                             </div>
-                            <span className="text-[10px] text-sky-400 group-hover:translate-x-0.5 transition-transform">✏️</span>
                           </div>
-                          <div className="text-[10px] text-sky-300 font-mono mt-0.5 truncate">
-                            ID: {playerAccount?.playerId || user?.email?.split('@')[0]}
-                          </div>
-                          {playerAccount?.serverId && (
-                            <div className="text-[9.5px] text-emerald-400 font-semibold mt-0.5 flex items-center gap-1">
-                              <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
-                              Zone: {playerAccount.serverId} • Active
+
+                          {/* Middle: User Identity & Active Status */}
+                          <div className="min-w-0 flex-1 pl-1">
+                            <h4 className="text-sm sm:text-base font-black text-white tracking-wide truncate font-sans">
+                              {playerAccount?.realName || user?.name || 'Pu Deth'}
+                            </h4>
+                            <div className="text-xs font-bold text-slate-300 font-mono mt-0.5 truncate flex items-center gap-1">
+                              <span className="text-slate-400 font-sans">ID:</span>
+                              <span className="text-[#00e5ff] font-mono tracking-tight font-extrabold">
+                                {playerAccount?.playerId || user?.email?.split('@')[0] || '1225368571'}
+                              </span>
                             </div>
-                          )}
+                            <div className="text-[11px] text-[#00f59b] font-bold mt-0.5 flex items-center gap-1.5 font-sans tracking-tight">
+                              <span className="w-2 h-2 rounded-full bg-[#00f59b] shadow-[0_0_8px_#00f59b] animate-pulse shrink-0" />
+                              <span className="truncate">
+                                {playerAccount?.serverId ? `Zone: ${playerAccount.serverId} • Active` : 'Zone: 11446 • Active'}
+                              </span>
+                            </div>
+                          </div>
+
+                          {/* Right: Sleek Edit Icon Button */}
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setUserMenuOpen(false);
+                              window.dispatchEvent(new CustomEvent('open-player-profile'));
+                            }}
+                            className="w-8 h-8 rounded-xl bg-[#0e1d3e] hover:bg-[#162a56] border border-blue-500/50 hover:border-cyan-400 text-blue-200 hover:text-white flex items-center justify-center transition-all cursor-pointer shadow-sm active:scale-95 shrink-0 self-start"
+                            title={language === 'km' ? 'កែសម្រួល Profile' : 'Edit Profile'}
+                          >
+                            <svg className="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                              <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" />
+                              <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" />
+                            </svg>
+                          </button>
                         </div>
                       </div>
 
-                      {/* 1. Profile / Edit Info Option */}
+                      {/* 1. Profile & Edit Info Row Button */}
                       <button
                         type="button"
                         onClick={() => {
                           setUserMenuOpen(false);
                           window.dispatchEvent(new CustomEvent('open-player-profile'));
                         }}
-                        className="w-full flex items-center gap-2 px-3 py-2 rounded-xl text-xs font-bold text-slate-300 hover:text-cyan-300 hover:bg-slate-800/70 transition-colors cursor-pointer"
+                        className="w-full flex items-center justify-between p-2.5 sm:p-3 rounded-xl bg-[#0c152e]/85 hover:bg-[#122046] border border-blue-500/25 hover:border-blue-400/60 transition-all duration-200 cursor-pointer group mb-1.5 shadow-sm active:scale-[0.99]"
                       >
-                        <span>👤</span>
-                        <span>{language === 'km' ? 'ព័ត៌មាន Profile & កែប្រែ' : 'Profile & Edit Info'}</span>
+                        <div className="flex items-center gap-3 min-w-0">
+                          <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-[#1e1b4b] to-[#1e293b] border border-indigo-500/40 text-indigo-300 flex items-center justify-center shrink-0 shadow-sm group-hover:scale-105 transition-transform">
+                            <svg className="w-4 h-4 fill-current" viewBox="0 0 24 24">
+                              <path d="M12 12c2.7 0 4.8-2.1 4.8-4.8S14.7 2.4 12 2.4 7.2 4.5 7.2 7.2 9.3 12 12 12zm0 2.4c-3.2 0-9.6 1.6-9.6 4.8v2.4h19.2v-2.4c0-3.2-6.4-4.8-9.6-4.8z"/>
+                            </svg>
+                          </div>
+                          <span className="text-xs sm:text-[13px] font-black text-white group-hover:text-cyan-300 transition-colors font-khmer truncate">
+                            {language === 'km' ? 'ព័ត៌មាន Profile & ពិនិត្យ' : 'Profile & Edit Info'}
+                          </span>
+                        </div>
+                        <svg className="w-4 h-4 text-slate-400 group-hover:text-cyan-300 group-hover:translate-x-0.5 transition-all shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+                          <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
+                        </svg>
                       </button>
 
-                      {/* 2. Order History */}
+                      {/* 2. Order History Row Button */}
                       <Link
                         to="/order-history"
                         onClick={() => setUserMenuOpen(false)}
-                        className="w-full flex items-center gap-2 px-3 py-2 rounded-xl text-xs font-bold text-slate-300 hover:text-white hover:bg-slate-800/70 transition-colors"
+                        className="w-full flex items-center justify-between p-2.5 sm:p-3 rounded-xl bg-[#0c152e]/85 hover:bg-[#122046] border border-blue-500/25 hover:border-blue-400/60 transition-all duration-200 cursor-pointer group mb-1.5 shadow-sm active:scale-[0.99]"
                       >
-                        <span>📋</span>
-                        <span>{language === 'km' ? 'ប្រវត្តិបញ្ជាទិញ' : 'Order History'}</span>
+                        <div className="flex items-center gap-3 min-w-0">
+                          <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-[#0c2340] to-[#0f172a] border border-cyan-500/40 text-cyan-300 flex items-center justify-center shrink-0 shadow-sm group-hover:scale-105 transition-transform">
+                            <svg className="w-4 h-4 fill-none" stroke="currentColor" strokeWidth={2.2} viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                            </svg>
+                          </div>
+                          <span className="text-xs sm:text-[13px] font-black text-white group-hover:text-cyan-300 transition-colors font-khmer truncate">
+                            {language === 'km' ? 'ប្រវត្តិបញ្ជាទិញ' : 'Order History'}
+                          </span>
+                        </div>
+                        <svg className="w-4 h-4 text-slate-400 group-hover:text-cyan-300 group-hover:translate-x-0.5 transition-all shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+                          <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
+                        </svg>
                       </Link>
 
-                      {/* 3. Sign Out */}
+                      {/* 3. Sign Out Row Button */}
                       <button
                         type="button"
                         onClick={() => {
                           setUserMenuOpen(false);
                           logout();
                         }}
-                        className="w-full flex items-center gap-2 px-3 py-2 rounded-xl text-xs font-bold text-rose-400 hover:text-rose-200 hover:bg-rose-950/40 transition-colors cursor-pointer mt-1"
+                        className="w-full flex items-center justify-between p-2.5 sm:p-3 rounded-xl bg-gradient-to-r from-[#200c14]/90 via-[#18080f]/90 to-[#12050b]/95 hover:from-[#2c0e1b] hover:to-[#1a0710] border border-rose-500/40 hover:border-rose-400/70 transition-all duration-200 cursor-pointer group shadow-sm active:scale-[0.99]"
                       >
-                        <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                          <path strokeLinecap="round" strokeLinejoin="round" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+                        <div className="flex items-center gap-3 min-w-0">
+                          <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-rose-950/80 to-red-950/80 border border-rose-500/50 text-rose-400 flex items-center justify-center shrink-0 shadow-sm group-hover:scale-105 transition-transform">
+                            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.2}>
+                              <path strokeLinecap="round" strokeLinejoin="round" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+                            </svg>
+                          </div>
+                          <span className="text-xs sm:text-[13px] font-black text-[#ff3366] group-hover:text-rose-200 transition-colors font-khmer truncate">
+                            {language === 'km' ? 'ចាកចេញ (Sign Out)' : 'Sign Out'}
+                          </span>
+                        </div>
+                        <svg className="w-4 h-4 text-rose-400/70 group-hover:text-rose-300 group-hover:translate-x-0.5 transition-all shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+                          <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
                         </svg>
-                        <span>{language === 'km' ? 'ចាកចេញ (Sign Out)' : 'Sign Out'}</span>
                       </button>
                     </div>
                   </>

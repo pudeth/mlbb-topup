@@ -238,6 +238,26 @@ html {
   }
 }
 
+.animate-profileDropdown {
+  animation: profileDropdownIn 0.24s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  transform-origin: top right;
+}
+
+@keyframes profileDropdownIn {
+  0% {
+    opacity: 0;
+    transform: translateY(-10px) scale(0.95);
+  }
+  60% {
+    opacity: 1;
+    transform: translateY(2px) scale(1.01);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
 @keyframes btn-gold-glint {
   0%, 25% {
     left: -120%;
