@@ -106,22 +106,40 @@ const Navbar = () => {
             }`}>
             <div className="flex items-center justify-between h-full">
           
-              {/* Logo (Avatar Medallion + Title) - Hidden on desktop (lg:hidden) to avoid duplicate with DesktopSidebar */}
-              <div className={`flex lg:hidden items-center select-none ${isScrolled ? 'pl-1 sm:pl-2' : ''}`}>
+              {/* Logo (Avatar Medallion + Title) - On desktop, shown only when scrolled in floating capsule to avoid duplicate with sidebar */}
+              <div className={`${isScrolled ? 'flex items-center select-none pl-1 sm:pl-2' : 'flex lg:hidden items-center select-none'}`}>
                 <Link to="/" className="group flex items-center">
                   <BrandLogo size="sm" hideTitle={isScrolled} />
                 </Link>
               </div>
 
-              {/* Desktop Central Smart Search Bar */}
-              <div className={`transition-all duration-300 ${
-                isScrolled ? 'hidden' : 'hidden lg:flex items-center flex-1 max-w-xl mr-4'
-              }`}>
+              {/* Desktop Central Smart Search Bar (Always visible on desktop across all scroll states) */}
+              <div className="hidden lg:flex items-center flex-1 max-w-xl mx-2 sm:mx-4">
                 <SmartSearchBar isMobile={false} />
               </div>
 
               {/* Right: Actions (Capsule Pills) */}
               <div className="flex items-center gap-2 select-none">
+                {/* Mobile Search Button (Quick search on phone/tablet) */}
+                <button
+                  type="button"
+                  onClick={() => {
+                    const searchInput = document.querySelector('input[placeholder*="Search games"], input[placeholder*="ស្វែងរកហ្គេម"]');
+                    if (searchInput) {
+                      searchInput.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                      setTimeout(() => searchInput.focus(), 300);
+                    } else {
+                      const gamesSec = document.getElementById('games-section');
+                      if (gamesSec) gamesSec.scrollIntoView({ behavior: 'smooth' });
+                    }
+                  }}
+                  className="lg:hidden w-10 h-10 rounded-full border border-[#0055ff]/40 bg-[#081329]/90 hover:bg-[#0e204c] text-slate-200 hover:text-white flex items-center justify-center transition-all duration-200 active:scale-95 shadow-sm cursor-pointer shrink-0"
+                  title="Search Games / ស្វែងរកហ្គេម"
+                  aria-label="Search"
+                >
+                  <span className="text-sm">🔍</span>
+                </button>
+
                 {/* 1. Notification Bell with Red Badge 1 */}
                 <button
                   type="button"
