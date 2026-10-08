@@ -416,16 +416,17 @@ public class RealTopUpProviderClient : ITopUpProviderClient
 
             // Check for Level Up Packages (e.g. Level 6 pass is $0.29 for 200 diamonds)
             bool isLevelPass = passContext.Contains("level") ||
-                               (orderAmount.HasValue && orderAmount.Value <= 0.35m && (diamondAmount == 200 || orderAmount.Value == 0.29m)) ||
-                               (productId.HasValue && productId.Value == 390);
+                               passContext.Contains("lvl") ||
+                               (productId.HasValue && productId.Value >= 385 && productId.Value <= 390) ||
+                               (diamondAmount == 200 && passContext.Contains("pass"));
 
             if (isLevelPass)
             {
-                if (passContext.Contains("30") || (orderAmount.HasValue && orderAmount.Value >= 0.85m && orderAmount.Value <= 0.95m && passContext.Contains("level"))) packageId = 389;      // Level 30 ($0.90)
-                else if (passContext.Contains("25")) packageId = 388; // Level 25 ($0.61)
-                else if (passContext.Contains("20")) packageId = 387; // Level 20 ($0.61)
-                else if (passContext.Contains("15")) packageId = 386; // Level 15 ($0.61)
-                else if (passContext.Contains("10")) packageId = 385; // Level 10 ($0.61)
+                if (passContext.Contains("level 30") || passContext.Contains("lvl 30") || passContext.Contains("level-30") || (productId.HasValue && productId.Value == 389) || diamondAmount == 800) packageId = 389;      // Level 30 ($0.90)
+                else if (passContext.Contains("level 25") || passContext.Contains("lvl 25") || passContext.Contains("level-25") || (productId.HasValue && productId.Value == 388) || diamondAmount == 600) packageId = 388; // Level 25 ($0.61)
+                else if (passContext.Contains("level 20") || passContext.Contains("lvl 20") || passContext.Contains("level-20") || (productId.HasValue && productId.Value == 387) || diamondAmount == 500) packageId = 387; // Level 20 ($0.61)
+                else if (passContext.Contains("level 15") || passContext.Contains("lvl 15") || passContext.Contains("level-15") || (productId.HasValue && productId.Value == 386) || diamondAmount == 400) packageId = 386; // Level 15 ($0.61)
+                else if (passContext.Contains("level 10") || passContext.Contains("lvl 10") || passContext.Contains("level-10") || (productId.HasValue && productId.Value == 385) || diamondAmount == 300) packageId = 385; // Level 10 ($0.61)
                 else packageId = 390;                                 // Level 6  ($0.29)
             }
             else if (passContext.Contains("evo"))
