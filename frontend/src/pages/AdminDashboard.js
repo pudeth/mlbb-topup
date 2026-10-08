@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback, useRef } from 'react';
+import React, { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { adminAPI, bakongAPI, paywayAPI } from '../services/api';
@@ -420,6 +420,66 @@ const PRICING_GAMES = [
   const [financialsSubTab, setFinancialsSubTab] = useState('ledger'); // 'ledger' | 'packages' | 'trends'
   const [financialsPage, setFinancialsPage] = useState(1);
   const [financialsPageSize, setFinancialsPageSize] = useState(15);
+
+  // Compute live display financials combining API metrics and real orders
+  const displayFinancials = useMemo(() => {
+    if (financials && ((financials.salesLedger && financials.salesLedger.length > 0) || Number(financials.totalGrossRevenue || 0) > 0)) {
+      return financials;
+    }
+    const paidList = (orders || []).filter(o => o && (o.paymentStatus === 'Paid' || o.topupStatus === 'Completed'));
+    if (paidList.length > 0) {
+      let rev = 0;
+      let cogs = 0;
+      const ledger = paidList.map(o => {
+        const sell = Number(o.amount || 0);
+        const prov = sell <= 0.35 ? 0.24 : sell <= 0.60 ? 0.36 : sell <= 1.00 ? 0.74 : Number((sell * 0.82).toFixed(2));
+        const profit = Number((sell - prov).toFixed(2));
+        const margin = sell > 0 ? Number(((profit / sell) * 100).toFixed(1)) : 0;
+        rev += sell;
+        cogs += prov;
+        return {
+          billNumber: `ORD-${o.orderId}`,
+          orderId: o.orderId,
+          gameName: o.gameName || 'Mobile Legends',
+          packageName: o.productName || `${o.diamondAmount} Diamonds`,
+          playerId: o.playerID || o.playerId || 'N/A',
+          serverId: o.serverID || o.serverId || 'Global',
+          sellerPrice: sell,
+          providerPrice: prov,
+          netProfit: profit,
+          marginPct: margin,
+          date: o.createdAt || '',
+          status: o.topupStatus || 'Completed'
+        };
+      });
+      const net = Number((rev - cogs).toFixed(2));
+      const marginPct = rev > 0 ? Number(((net / rev) * 100).toFixed(1)) : 0;
+      return {
+        totalGrossRevenue: rev,
+        totalGrossRevenueKHR: Math.round(rev * 4100),
+        totalSupplierCogs: cogs,
+        totalSupplierCogsKHR: Math.round(cogs * 4100),
+        totalNetProfit: net,
+        totalNetProfitKHR: Math.round(net * 4100),
+        overallMarginPct: marginPct,
+        dailyProfitTrend: financials?.dailyProfitTrend || [],
+        packageProfitability: financials?.packageProfitability || [],
+        salesLedger: ledger
+      };
+    }
+    return financials || {
+      totalGrossRevenue: 0,
+      totalGrossRevenueKHR: 0,
+      totalSupplierCogs: 0,
+      totalSupplierCogsKHR: 0,
+      totalNetProfit: 0,
+      totalNetProfitKHR: 0,
+      overallMarginPct: 0,
+      dailyProfitTrend: [],
+      packageProfitability: [],
+      salesLedger: []
+    };
+  }, [financials, orders]);
 
   // Sync event banners from cloud MongoDB on Admin load & auto-seed if cloud is empty
   useEffect(() => {
@@ -5156,10 +5216,10 @@ const PRICING_GAMES = [
                   <span className="w-8 h-8 rounded-xl bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 flex items-center justify-center text-sm shadow-sm">💎</span>
                 </div>
                 <div className="text-3xl sm:text-4xl font-black text-emerald-400 mt-2 tracking-tight">
-                  ${financials?.totalNetProfit?.toFixed(2) || '0.00'}
+                  ${displayFinancials?.totalNetProfit?.toFixed(2) || '0.00'}
                 </div>
                 <div className="flex items-center justify-between mt-2 pt-2 border-t border-slate-800/80 text-xs">
-                  <span className="text-slate-400 font-bold">៛{financials?.totalNetProfitKHR?.toLocaleString() || '0'} KHR</span>
+                  <span className="text-slate-400 font-bold">៛{displayFinancials?.totalNetProfitKHR?.toLocaleString() || '0'} KHR</span>
                   <span className="text-emerald-400/90 text-[10px] font-black bg-emerald-500/10 px-2 py-0.5 rounded-full border border-emerald-500/20">Earnings After Costs</span>
                 </div>
               </div>
@@ -5171,10 +5231,10 @@ const PRICING_GAMES = [
                   <span className="w-8 h-8 rounded-xl bg-cyan-500/10 border border-cyan-500/30 text-cyan-300 flex items-center justify-center text-sm shadow-sm">💰</span>
                 </div>
                 <div className="text-3xl sm:text-4xl font-black text-cyan-300 mt-2 tracking-tight">
-                  ${financials?.totalGrossRevenue?.toFixed(2) || '0.00'}
+                  ${displayFinancials?.totalGrossRevenue?.toFixed(2) || '0.00'}
                 </div>
                 <div className="flex items-center justify-between mt-2 pt-2 border-t border-slate-800/80 text-xs">
-                  <span className="text-slate-400 font-bold">៛{financials?.totalGrossRevenueKHR?.toLocaleString() || Math.round((financials?.totalGrossRevenue || 0) * 4100).toLocaleString()} KHR</span>
+                  <span className="text-slate-400 font-bold">៛{displayFinancials?.totalGrossRevenueKHR?.toLocaleString() || Math.round((displayFinancials?.totalGrossRevenue || 0) * 4100).toLocaleString()} KHR</span>
                   <span className="text-cyan-400/90 text-[10px] font-black bg-cyan-500/10 px-2 py-0.5 rounded-full border border-cyan-500/20">Total Customer Paid</span>
                 </div>
               </div>
@@ -5186,10 +5246,10 @@ const PRICING_GAMES = [
                   <span className="w-8 h-8 rounded-xl bg-rose-500/10 border border-rose-500/30 text-rose-400 flex items-center justify-center text-sm shadow-sm">⚡</span>
                 </div>
                 <div className="text-3xl sm:text-4xl font-black text-rose-400 mt-2 tracking-tight">
-                  ${financials?.totalSupplierCogs?.toFixed(2) || '0.00'}
+                  ${displayFinancials?.totalSupplierCogs?.toFixed(2) || '0.00'}
                 </div>
                 <div className="flex items-center justify-between mt-2 pt-2 border-t border-slate-800/80 text-xs">
-                  <span className="text-slate-400 font-bold">៛{financials?.totalSupplierCogsKHR?.toLocaleString() || Math.round((financials?.totalSupplierCogs || 0) * 4100).toLocaleString()} KHR</span>
+                  <span className="text-slate-400 font-bold">៛{displayFinancials?.totalSupplierCogsKHR?.toLocaleString() || Math.round((displayFinancials?.totalSupplierCogs || 0) * 4100).toLocaleString()} KHR</span>
                   <span className="text-rose-400/90 text-[10px] font-black bg-rose-500/10 px-2 py-0.5 rounded-full border border-rose-500/20">KhmerTopUp / Fazer</span>
                 </div>
               </div>
@@ -5201,11 +5261,11 @@ const PRICING_GAMES = [
                   <span className="w-8 h-8 rounded-xl bg-amber-500/10 border border-amber-500/30 text-amber-300 flex items-center justify-center text-sm shadow-sm">📈</span>
                 </div>
                 <div className="text-3xl sm:text-4xl font-black text-amber-300 mt-2 tracking-tight">
-                  {financials?.overallMarginPct || 0}%
+                  {displayFinancials?.overallMarginPct || 0}%
                 </div>
                 <div className="flex items-center justify-between mt-2 pt-2 border-t border-slate-800/80 text-xs">
                   <span className="text-slate-400 font-bold">Average Profit %</span>
-                  <span className="text-amber-400/90 text-[10px] font-black bg-amber-500/10 px-2 py-0.5 rounded-full border border-amber-500/20">{(financials?.overallMarginPct || 0) > 15 ? '🔥 High Return' : 'Standard'}</span>
+                  <span className="text-amber-400/90 text-[10px] font-black bg-amber-500/10 px-2 py-0.5 rounded-full border border-amber-500/20">{(displayFinancials?.overallMarginPct || 0) > 15 ? '🔥 High Return' : 'Standard'}</span>
                 </div>
               </div>
             </div>
@@ -5225,7 +5285,7 @@ const PRICING_GAMES = [
                     }`}
                   >
                     <span>📑</span>
-                    <span>Sales & Profit Ledger ({(financials?.salesLedger || []).length})</span>
+                    <span>Sales & Profit Ledger ({(displayFinancials?.salesLedger || []).length})</span>
                   </button>
                   <button
                     type="button"
@@ -5237,7 +5297,7 @@ const PRICING_GAMES = [
                     }`}
                   >
                     <span>💎</span>
-                    <span>Package Profitability ({(financials?.packageProfitability || []).length})</span>
+                    <span>Package Profitability ({(displayFinancials?.packageProfitability || []).length})</span>
                   </button>
                   <button
                     type="button"
@@ -5290,7 +5350,7 @@ const PRICING_GAMES = [
                   <button
                     type="button"
                     onClick={() => {
-                      const ledger = financials?.salesLedger || [];
+                      const ledger = displayFinancials?.salesLedger || [];
                       if (ledger.length === 0) {
                         showToast('error', 'No ledger data available to export.');
                         return;
@@ -5332,7 +5392,7 @@ const PRICING_GAMES = [
 
               {/* SUB-VIEW 1: SALES & PROFIT LEDGER */}
               {financialsSubTab === 'ledger' && (() => {
-                const ledger = financials?.salesLedger || [];
+                const ledger = displayFinancials?.salesLedger || [];
                 const filteredLedger = ledger.filter(item => {
                   if (!item) return false;
                   const q = financialsSearch.trim().toLowerCase();
@@ -5516,7 +5576,7 @@ const PRICING_GAMES = [
 
               {/* SUB-VIEW 2: PACKAGE PROFITABILITY LEADERBOARD */}
               {financialsSubTab === 'packages' && (() => {
-                const pkgs = financials?.packageProfitability || [];
+                const pkgs = displayFinancials?.packageProfitability || [];
                 return (
                   <div className="space-y-3">
                     <div className="overflow-x-auto rounded-xl border border-slate-800/80 bg-slate-950/40">
@@ -5567,7 +5627,7 @@ const PRICING_GAMES = [
 
               {/* SUB-VIEW 3: 7-DAY DAILY PERFORMANCE TRENDS */}
               {financialsSubTab === 'trends' && (() => {
-                const trends = financials?.dailyProfitTrend || [];
+                const trends = displayFinancials?.dailyProfitTrend || [];
                 return (
                   <div className="space-y-4">
                     <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 lg:grid-cols-7 gap-3">
