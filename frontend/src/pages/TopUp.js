@@ -2860,69 +2860,6 @@ const TopUp = () => {
                 </button>
               </div>
 
-              {/* Desktop / Laptop (PC) Dedicated "Press to Pay" CTA Button */}
-              {!paymentData && !paymentPaid && (
-                <div className="hidden lg:block pt-1">
-                  <button
-                    type="button"
-                    id="desktop_press_to_pay_button"
-                    onClick={() => {
-                      if (loading || isTopupDisabled) return;
-                      if (!formData.playerID || !formData.playerID.trim()) {
-                        const idInput = document.getElementById('player_id_input') || document.querySelector('input[placeholder*="Player ID"], input[placeholder*="ID"], input[name="playerID"]');
-                        if (idInput) {
-                          idInput.scrollIntoView({ behavior: 'smooth', block: 'center' });
-                          setTimeout(() => idInput.focus(), 300);
-                        }
-                        setError(language === 'km' ? 'សូមបញ្ចូល Player ID របស់លោកអ្នកជាមុនសិន' : 'Please enter your Player ID first');
-                        return;
-                      }
-                      handleProceedToPayment();
-                    }}
-                    disabled={loading || isTopupDisabled}
-                    className={`w-full py-3.5 px-5 rounded-2xl font-black text-sm uppercase tracking-wider flex items-center justify-between gap-3 transition-all cursor-pointer shadow-xl active:scale-[0.99] border select-none ${
-                      isTopupDisabled
-                        ? 'bg-slate-800 text-slate-400 border-slate-700 cursor-not-allowed opacity-80'
-                        : loading
-                        ? 'bg-sky-600/70 text-white cursor-wait opacity-90 border-sky-400/40'
-                        : 'bg-gradient-to-r from-cyan-500 via-blue-600 to-indigo-600 hover:from-cyan-400 hover:via-blue-500 hover:to-indigo-500 text-white border-cyan-300/40 shadow-cyan-500/20'
-                    }`}
-                  >
-                    <div className="flex items-center gap-2.5">
-                      <span className="w-8 h-8 rounded-xl bg-white/15 flex items-center justify-center text-base">
-                        {loading ? '⏳' : '💳'}
-                      </span>
-                      <div className="text-left font-khmer">
-                        <div className="font-black text-white text-xs sm:text-sm flex items-center gap-2">
-                          <span>{language === 'km' ? 'ចុចដើម្បីទូទាត់' : 'Press to Pay'}</span>
-                          <span className="text-[11px] font-bold text-cyan-200">
-                            (ABA KHQR)
-                          </span>
-                        </div>
-                        <div className="text-[11px] font-medium text-white/80">
-                          {selectedProduct?.name || 'Diamonds'}
-                        </div>
-                      </div>
-                    </div>
-
-                    <div className="flex items-center gap-3">
-                      <div className="text-right">
-                        <div className="text-[10px] text-white/70 uppercase tracking-wider">
-                          {language === 'km' ? 'តម្លៃសរុប' : 'Total'}
-                        </div>
-                        <div className="text-sm sm:text-base font-black text-white font-mono">
-                          {currency === 'KHR'
-                            ? `${Math.round((selectedProduct?.price || 0.95) * 4100).toLocaleString()} ៛`
-                            : `$${(selectedProduct?.price || 0.95).toFixed(2)}`}
-                        </div>
-                      </div>
-                      <div className="w-8 h-8 rounded-xl bg-white/20 flex items-center justify-center text-white">
-                        <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
-                      </div>
-                    </div>
-                  </button>
-                </div>
-              )}
 
               {error && (
                 <div className="p-3 bg-rose-950/60 border border-rose-500/40 rounded-xl text-rose-300 text-xs font-bold flex items-center gap-2 animate-pulse font-khmer">
