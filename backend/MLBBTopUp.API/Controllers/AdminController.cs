@@ -1218,7 +1218,8 @@ public class AdminController : BaseController
                 MongoDB.Driver.Builders<MongoDB.Bson.BsonDocument>.Filter.Eq("payment_status", "APPROVED")
             );
 
-            var mongoDocs = await paymentsCol.Find(filter).SortByDescending(d => d["_id"]).ToListAsync();
+            var mongoDocs = await paymentsCol.Find(filter).ToListAsync();
+            mongoDocs.Reverse();
             foreach (var doc in mongoDocs)
             {
                 var bill = doc.Contains("bill_number") && !doc["bill_number"].IsBsonNull ? doc["bill_number"].AsString : string.Empty;
