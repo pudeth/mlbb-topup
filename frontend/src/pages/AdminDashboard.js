@@ -941,6 +941,280 @@ const PRICING_GAMES = [
   };
 
   const [packageSearch, setPackageSearch] = useState('');
+  const [packageAnalyticsGameFilter, setPackageAnalyticsGameFilter] = useState('ALL');
+  const [packageAnalyticsSortBy, setPackageAnalyticsSortBy] = useState('game'); // 'game' | 'sold' | 'profit' | 'unitProfit' | 'margin' | 'retail' | 'cost' | 'reseller' | 'revenue' | 'name'
+  const [packageAnalyticsSortOrder, setPackageAnalyticsSortOrder] = useState('asc'); // 'asc' | 'desc'
+  const [packageAnalyticsSearch, setPackageAnalyticsSearch] = useState('');
+
+  const getGameAnalyticsMeta = (gameId) => {
+    const g = String(gameId || 'mlbb').toLowerCase();
+    switch (g) {
+      case 'mlbb':
+        return { id: 'mlbb', name: 'Mobile Legends', icon: '⚔️', badgeColor: 'bg-cyan-500/15 text-cyan-300 border-cyan-500/30' };
+      case 'pubgm':
+        return { id: 'pubgm', name: 'PUBG Mobile', icon: '🎯', badgeColor: 'bg-amber-500/15 text-amber-300 border-amber-500/30' };
+      case 'freefire':
+        return { id: 'freefire', name: 'Free Fire', icon: '🔥', badgeColor: 'bg-orange-500/15 text-orange-300 border-orange-500/30' };
+      case 'hok':
+        return { id: 'hok', name: 'Honor of Kings', icon: '👑', badgeColor: 'bg-yellow-500/15 text-yellow-300 border-yellow-500/30' };
+      case 'genshin':
+        return { id: 'genshin', name: 'Genshin Impact', icon: '🌙', badgeColor: 'bg-indigo-500/15 text-indigo-300 border-indigo-500/30' };
+      case 'star_rail':
+        return { id: 'star_rail', name: 'Honkai: Star Rail', icon: '🚂', badgeColor: 'bg-violet-500/15 text-violet-300 border-violet-500/30' };
+      case 'zenless':
+        return { id: 'zenless', name: 'Zenless Zone Zero', icon: '⚡', badgeColor: 'bg-emerald-500/15 text-emerald-300 border-emerald-500/30' };
+      case 'steam_usd':
+        return { id: 'steam_usd', name: 'Steam Wallet', icon: '💨', badgeColor: 'bg-blue-500/15 text-blue-300 border-blue-500/30' };
+      case 'telegram_stars':
+        return { id: 'telegram_stars', name: 'Telegram Stars', icon: '✈️', badgeColor: 'bg-sky-500/15 text-sky-300 border-sky-500/30' };
+      case 'gift_cards':
+        return { id: 'gift_cards', name: 'Gift Cards', icon: '🎁', badgeColor: 'bg-pink-500/15 text-pink-300 border-pink-500/30' };
+      default:
+        return { id: g, name: gameId || 'Game', icon: '🎮', badgeColor: 'bg-purple-500/15 text-purple-300 border-purple-500/30' };
+    }
+  };
+
+  const packageAnalyticsData = useMemo(() => {
+    const list = getMergedProductsList();
+    const backendPkgs = displayFinancials?.packageProfitability || [];
+    const clearedTimestamp = financials?.clearedAt || (typeof window !== 'undefined' ? localStorage.getItem('financials_cleared_at') : null);
+    const clearedDate = clearedTimestamp ? new Date(clearedTimestamp) : null;
+
+    const paidOrders = (orders || []).filter(o => {
+      if (!o || (o.paymentStatus !== 'Paid' && o.topupStatus !== 'Completed')) return false;
+      if (clearedDate && new Date(o.createdAt || 0) <= clearedDate) return false;
+      return true;
+    });
+
+    const activeProv = providerSettings?.activeProvider || 'FazerCards';
+
+    return list.map((prod, idx) => {
+      const gId = prod.game || 'mlbb';
+      const meta = getGameAnalyticsMeta(gId);
+      const retailPrice = Number(prod.price || 0);
+      const providerCost = getProductCostForActiveProvider(prod);
+      const resellerPrice = prod.resellerPrice > 0 ? Number(prod.resellerPrice) : Number((retailPrice * 0.92).toFixed(2));
+      const unitNetProfit = Math.max(0, Number((retailPrice - providerCost).toFixed(2)));
+      const resellerUnitProfit = Math.max(0, Number((resellerPrice - providerCost).toFixed(2)));
+      const retailMarginPct = retailPrice > 0 ? Number(((unitNetProfit / retailPrice) * 100).toFixed(1)) : 0;
+      const resellerMarginPct = resellerPrice > 0 ? Number(((resellerUnitProfit / resellerPrice) * 100).toFixed(1)) : 0;
+
+      // Find matching sales in backend package profitability or paid orders
+      const backendMatch = backendPkgs.find(bp => {
+        if (bp.productId && prod.productId && Number(bp.productId) === Number(prod.productId)) return true;
+        if (gId === 'mlbb' && Number(bp.diamondAmount) === Number(prod.diamondAmount)) return true;
+        return false;
+      });
+
+      const orderMatches = paidOrders.filter(o => {
+        if (prod.productId && (Number(o.productId) === Number(prod.productId) || Number(o.productID) === Number(prod.productId))) {
+          return true;
+        }
+        const oGame = String(o.gameName || o.game || '').toLowerCase();
+        const pGame = String(gId).toLowerCase();
+        const gameMatch = oGame.includes(pGame) || (pGame === 'mlbb' && (oGame.includes('mlbb') || oGame.includes('mobile legend') || !o.gameName));
+        if (gameMatch && Number(o.diamondAmount) === Number(prod.diamondAmount)) {
+          return true;
+        }
+        return false;
+      });
+
+      const backendSoldCount = Number(backendMatch?.totalSoldCount || 0);
+      const ordersSoldCount = orderMatches.length;
+      const unitsSold = Math.max(ordersSoldCount, backendSoldCount);
+
+      const totalProfit = unitsSold > 0
+        ? Number((unitsSold * unitNetProfit).toFixed(2))
+        : (backendMatch?.totalProfit ? Number(backendMatch.totalProfit) : 0);
+
+      const totalRevenue = unitsSold > 0
+        ? Number((unitsSold * retailPrice).toFixed(2))
+        : 0;
+
+      const totalProviderCost = unitsSold > 0
+        ? Number((unitsSold * providerCost).toFixed(2))
+        : 0;
+
+      const packageName = prod.name || `${prod.diamondAmount} ${gId === 'steam_usd' ? 'USD' : gId === 'telegram_stars' ? 'Stars' : 'Diamonds'}`;
+
+      return {
+        key: `${gId}-${prod.productId || idx}`,
+        productId: prod.productId,
+        gameId: gId,
+        gameName: meta.name,
+        gameIcon: meta.icon,
+        gameBadgeColor: meta.badgeColor,
+        name: packageName,
+        diamondAmount: prod.diamondAmount,
+        retailPrice,
+        providerCost,
+        resellerPrice,
+        unitNetProfit,
+        resellerUnitProfit,
+        retailMarginPct,
+        resellerMarginPct,
+        unitsSold,
+        totalProfit,
+        totalRevenue,
+        totalProviderCost,
+        status: prod.status || 'Active',
+        isPass: Boolean(prod.isPass),
+        tag: prod.tag || '',
+        activeProvider: activeProv
+      };
+    });
+  }, [products, providerSettings, orders, displayFinancials, financials]);
+
+  const filteredAndSortedPackages = useMemo(() => {
+    let list = [...packageAnalyticsData];
+
+    // Filter by Game
+    if (packageAnalyticsGameFilter !== 'ALL') {
+      list = list.filter(p => p.gameId === packageAnalyticsGameFilter);
+    }
+
+    // Search query
+    if (packageAnalyticsSearch.trim()) {
+      const q = packageAnalyticsSearch.trim().toLowerCase();
+      list = list.filter(p =>
+        p.name.toLowerCase().includes(q) ||
+        p.gameName.toLowerCase().includes(q) ||
+        String(p.diamondAmount).includes(q) ||
+        String(p.tag || '').toLowerCase().includes(q)
+      );
+    }
+
+    // Sort by Game ("short by game") or other columns
+    list.sort((a, b) => {
+      let cmp = 0;
+      switch (packageAnalyticsSortBy) {
+        case 'game':
+          cmp = a.gameName.localeCompare(b.gameName);
+          if (cmp === 0) {
+            cmp = a.retailPrice - b.retailPrice;
+          }
+          break;
+        case 'sold':
+          cmp = a.unitsSold - b.unitsSold;
+          if (cmp === 0) cmp = b.totalProfit - a.totalProfit;
+          break;
+        case 'profit':
+          cmp = a.totalProfit - b.totalProfit;
+          if (cmp === 0) cmp = a.unitNetProfit - b.unitNetProfit;
+          break;
+        case 'unitProfit':
+          cmp = a.unitNetProfit - b.unitNetProfit;
+          break;
+        case 'margin':
+          cmp = a.retailMarginPct - b.retailMarginPct;
+          break;
+        case 'retail':
+          cmp = a.retailPrice - b.retailPrice;
+          break;
+        case 'cost':
+          cmp = a.providerCost - b.providerCost;
+          break;
+        case 'reseller':
+          cmp = a.resellerPrice - b.resellerPrice;
+          break;
+        case 'revenue':
+          cmp = a.totalRevenue - b.totalRevenue;
+          break;
+        case 'name':
+          cmp = a.name.localeCompare(b.name);
+          break;
+        default:
+          cmp = 0;
+      }
+      return packageAnalyticsSortOrder === 'asc' ? cmp : -cmp;
+    });
+
+    return list;
+  }, [packageAnalyticsData, packageAnalyticsGameFilter, packageAnalyticsSearch, packageAnalyticsSortBy, packageAnalyticsSortOrder]);
+
+  const packageAnalyticsKpis = useMemo(() => {
+    const pkgs = filteredAndSortedPackages;
+    const totalCount = pkgs.length;
+    let totalRevenue = 0;
+    let totalCost = 0;
+    let totalProfit = 0;
+    let totalUnitsSold = 0;
+    let sumMargin = 0;
+
+    pkgs.forEach(p => {
+      totalRevenue += p.totalRevenue;
+      totalCost += p.totalProviderCost;
+      totalProfit += p.totalProfit;
+      totalUnitsSold += p.unitsSold;
+      sumMargin += p.retailMarginPct;
+    });
+
+    const avgMargin = totalCount > 0 ? (sumMargin / totalCount).toFixed(1) : '0.0';
+
+    return {
+      totalCount,
+      totalRevenue,
+      totalCost,
+      totalProfit,
+      totalUnitsSold,
+      avgMargin
+    };
+  }, [filteredAndSortedPackages]);
+
+  const handleExportPackageAnalyticsCSV = () => {
+    const list = filteredAndSortedPackages;
+    if (list.length === 0) {
+      showToast('error', 'No package data to export.');
+      return;
+    }
+    const headers = [
+      'Game',
+      'Package Name',
+      'Diamonds / Units',
+      'Seller Retail (USD)',
+      'Provider Cost (USD)',
+      'Active Provider',
+      'Reseller Wholesale (USD)',
+      'Unit Net Profit (USD)',
+      'Retail Margin (%)',
+      'Reseller Unit Profit (USD)',
+      'Reseller Margin (%)',
+      'Units Sold',
+      'Total Profit (USD)',
+      'Total Revenue (USD)',
+      'Status',
+      'Pass / Promo Tag'
+    ];
+    const rows = list.map(p => [
+      `"${p.gameName}"`,
+      `"${p.name.replace(/"/g, '""')}"`,
+      `"${p.diamondAmount || ''}"`,
+      p.retailPrice.toFixed(2),
+      p.providerCost.toFixed(2),
+      `"${p.activeProvider}"`,
+      p.resellerPrice.toFixed(2),
+      p.unitNetProfit.toFixed(2),
+      `"${p.retailMarginPct}%"`,
+      p.resellerUnitProfit.toFixed(2),
+      `"${p.resellerMarginPct}%"`,
+      p.unitsSold,
+      p.totalProfit.toFixed(2),
+      p.totalRevenue.toFixed(2),
+      `"${p.status}"`,
+      `"${(p.tag || (p.isPass ? 'Pass' : '')).replace(/"/g, '""')}"`
+    ]);
+
+    const csvContent = 'data:text/csv;charset=utf-8,\uFEFF' + [headers.join(','), ...rows.map(r => r.join(','))].join('\n');
+    const encodedUri = encodeURI(csvContent);
+    const link = document.createElement('a');
+    link.setAttribute('href', encodedUri);
+    const filterSuffix = packageAnalyticsGameFilter === 'ALL' ? 'All_Games' : packageAnalyticsGameFilter.toUpperCase();
+    link.setAttribute('download', `Package_Profitability_Analytics_${filterSuffix}_${new Date().toISOString().slice(0, 10)}.csv`);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    showToast('success', `Exported ${rows.length} package analytics rows to CSV!`);
+  };
   const [exportModalOpen, setExportModalOpen] = useState(false);
   const [exportGameTarget, setExportGameTarget] = useState('current');
   const [exportStatusTarget, setExportStatusTarget] = useState('ALL');
@@ -5369,7 +5643,7 @@ const PRICING_GAMES = [
                     }`}
                   >
                     <span>💎</span>
-                    <span>Package Profitability ({(displayFinancials?.packageProfitability || []).length})</span>
+                    <span>Package Profitability ({packageAnalyticsData.length})</span>
                   </button>
                   <button
                     type="button"
@@ -5646,50 +5920,357 @@ const PRICING_GAMES = [
                 );
               })()}
 
-              {/* SUB-VIEW 2: PACKAGE PROFITABILITY LEADERBOARD */}
+              {/* SUB-VIEW 2: REAL PACKAGE PROFITABILITY ANALYTICS (MULTI-GAME & MULTI-PROVIDER) */}
               {financialsSubTab === 'packages' && (() => {
-                const pkgs = displayFinancials?.packageProfitability || [];
+                const pkgs = filteredAndSortedPackages;
+                const kpis = packageAnalyticsKpis;
+                const activeProvName = providerSettings?.activeProvider || 'FazerCards';
+
+                const handleHeaderSort = (key) => {
+                  if (packageAnalyticsSortBy === key) {
+                    setPackageAnalyticsSortOrder(prev => prev === 'asc' ? 'desc' : 'asc');
+                  } else {
+                    setPackageAnalyticsSortBy(key);
+                    setPackageAnalyticsSortOrder(key === 'game' || key === 'name' ? 'asc' : 'desc');
+                  }
+                };
+
+                const renderSortArrow = (key) => {
+                  if (packageAnalyticsSortBy !== key) return <span className="opacity-30 text-[9px] ml-1">↕</span>;
+                  return (
+                    <span className="text-amber-400 font-black text-[10px] ml-1">
+                      {packageAnalyticsSortOrder === 'asc' ? '▲' : '▼'}
+                    </span>
+                  );
+                };
+
                 return (
-                  <div className="space-y-3">
-                    <div className="overflow-x-auto rounded-xl border border-slate-800/80 bg-slate-950/40">
-                      <table className="w-full text-left text-xs min-w-[800px]">
-                        <thead className="bg-[#111728] text-slate-400 uppercase text-[10px] tracking-wider border-b border-slate-800 font-bold">
+                  <div className="space-y-4">
+                    {/* Controls & Filter Bar */}
+                    <div className="p-3.5 sm:p-4 rounded-2xl bg-[#0F1423] border border-slate-800/90 shadow-lg space-y-3">
+                      <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-3">
+                        {/* Search & Active Game Filter */}
+                        <div className="flex flex-wrap items-center gap-2.5 flex-1">
+                          {/* Search Input */}
+                          <div className="relative min-w-[200px] flex-1 sm:flex-initial">
+                            <span className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-xs">🔍</span>
+                            <input
+                              type="text"
+                              placeholder="Search game, package, diamonds..."
+                              value={packageAnalyticsSearch}
+                              onChange={(e) => setPackageAnalyticsSearch(e.target.value)}
+                              className="input text-xs pl-8 pr-7 py-1.5 w-full bg-slate-950/80 border-slate-700/80 rounded-xl"
+                            />
+                            {packageAnalyticsSearch && (
+                              <button
+                                type="button"
+                                onClick={() => setPackageAnalyticsSearch('')}
+                                className="absolute right-2 top-1/2 -translate-y-1/2 text-slate-400 hover:text-white text-xs"
+                              >
+                                ✕
+                              </button>
+                            )}
+                          </div>
+
+                          {/* Game Filter Dropdown */}
+                          <div className="flex items-center gap-1.5">
+                            <span className="text-[11px] font-bold text-slate-400 uppercase hidden sm:inline">Game:</span>
+                            <select
+                              value={packageAnalyticsGameFilter}
+                              onChange={(e) => setPackageAnalyticsGameFilter(e.target.value)}
+                              className="input text-xs py-1.5 px-3 bg-slate-950/90 border-slate-700/80 rounded-xl font-bold text-slate-200 cursor-pointer"
+                            >
+                              <option value="ALL">🎮 All Games ({packageAnalyticsData.length})</option>
+                              <option value="mlbb">⚔️ Mobile Legends</option>
+                              <option value="pubgm">🎯 PUBG Mobile</option>
+                              <option value="freefire">🔥 Free Fire</option>
+                              <option value="hok">👑 Honor of Kings</option>
+                              <option value="genshin">🌙 Genshin Impact</option>
+                              <option value="star_rail">🚂 Honkai: Star Rail</option>
+                              <option value="zenless">⚡ Zenless Zone Zero</option>
+                              <option value="steam_usd">💨 Steam Wallet</option>
+                              <option value="telegram_stars">✈️ Telegram Stars</option>
+                              <option value="gift_cards">🎁 Gift Cards</option>
+                            </select>
+                          </div>
+
+                          {/* Sort By Dropdown ("short by game") */}
+                          <div className="flex items-center gap-1.5">
+                            <span className="text-[11px] font-bold text-slate-400 uppercase hidden sm:inline">Sort:</span>
+                            <select
+                              value={packageAnalyticsSortBy}
+                              onChange={(e) => setPackageAnalyticsSortBy(e.target.value)}
+                              className="input text-xs py-1.5 px-3 bg-slate-950/90 border-slate-700/80 rounded-xl font-bold text-amber-300 cursor-pointer"
+                            >
+                              <option value="game">🎮 Sort by Game</option>
+                              <option value="profit">💰 Highest Total Profit</option>
+                              <option value="sold">📦 Most Units Sold</option>
+                              <option value="unitProfit">💎 Unit Net Profit</option>
+                              <option value="margin">📈 Profit Margin %</option>
+                              <option value="retail">🏷️ Seller Retail Price</option>
+                              <option value="cost">⚡ Provider Wholesale Cost</option>
+                              <option value="reseller">🏢 Reseller Wholesale</option>
+                              <option value="revenue">💵 Total Revenue</option>
+                              <option value="name">🔤 Package Name</option>
+                            </select>
+
+                            {/* Sort Direction Toggle */}
+                            <button
+                              type="button"
+                              onClick={() => setPackageAnalyticsSortOrder(prev => prev === 'asc' ? 'desc' : 'asc')}
+                              className="btn btn-secondary text-xs py-1.5 px-2.5 rounded-xl border-slate-700 font-bold flex items-center gap-1 cursor-pointer"
+                              title={packageAnalyticsSortOrder === 'asc' ? 'Ascending Order' : 'Descending Order'}
+                            >
+                              <span>{packageAnalyticsSortOrder === 'asc' ? '▲ Asc' : '▼ Desc'}</span>
+                            </button>
+                          </div>
+                        </div>
+
+                        {/* Right: Active Provider & CSV Export */}
+                        <div className="flex items-center gap-2.5 flex-wrap">
+                          {/* Live Provider indicator */}
+                          <div className="px-3 py-1.5 rounded-xl bg-purple-950/40 border border-purple-500/30 text-purple-300 text-xs font-bold flex items-center gap-1.5" title={`Wholesale cost dynamically pulled for ${activeProvName}`}>
+                            <span>🔌</span>
+                            <span className="text-[10px] uppercase text-purple-400 font-normal">Active Provider:</span>
+                            <span className="font-black text-white">{activeProvName}</span>
+                          </div>
+
+                          {/* Dedicated Export CSV button */}
+                          <button
+                            type="button"
+                            onClick={handleExportPackageAnalyticsCSV}
+                            className="btn btn-secondary text-xs py-1.5 px-3 rounded-xl border-emerald-500/40 text-emerald-300 hover:bg-emerald-950/60 font-bold flex items-center gap-1.5 cursor-pointer shadow-sm"
+                            title="Export package profitability leaderboard with live provider & reseller rates"
+                          >
+                            <span>📥</span>
+                            <span>Export CSV ({pkgs.length})</span>
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* 5 Real-Analytics Summary KPI Cards */}
+                    <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3">
+                      {/* KPI 1: Total Packages */}
+                      <div className="card bg-gradient-to-br from-[#0F1423] to-[#0A0D18] border border-cyan-500/30 rounded-2xl p-3.5 space-y-1 shadow-md">
+                        <div className="flex items-center justify-between">
+                          <span className="text-[10px] font-black uppercase tracking-wider text-cyan-300">Catalog Size</span>
+                          <span className="text-cyan-400 text-sm">📦</span>
+                        </div>
+                        <div className="text-2xl font-black text-cyan-200">
+                          {kpis.totalCount}
+                        </div>
+                        <div className="text-[10px] text-slate-400 font-medium">
+                          {packageAnalyticsGameFilter === 'ALL' ? 'Across all games' : getGameAnalyticsMeta(packageAnalyticsGameFilter).name}
+                        </div>
+                      </div>
+
+                      {/* KPI 2: Total Revenue */}
+                      <div className="card bg-gradient-to-br from-[#0F1423] to-[#0A0D18] border border-blue-500/30 rounded-2xl p-3.5 space-y-1 shadow-md">
+                        <div className="flex items-center justify-between">
+                          <span className="text-[10px] font-black uppercase tracking-wider text-blue-300">Retail Revenue</span>
+                          <span className="text-blue-400 text-sm">💰</span>
+                        </div>
+                        <div className="text-2xl font-black text-blue-200">
+                          ${kpis.totalRevenue.toFixed(2)}
+                        </div>
+                        <div className="text-[10px] text-slate-400 font-medium">
+                          ~{Math.round(kpis.totalRevenue * 4100).toLocaleString()} ៛ Gross
+                        </div>
+                      </div>
+
+                      {/* KPI 3: Total Provider Cost */}
+                      <div className="card bg-gradient-to-br from-[#0F1423] to-[#0A0D18] border border-rose-500/30 rounded-2xl p-3.5 space-y-1 shadow-md">
+                        <div className="flex items-center justify-between">
+                          <span className="text-[10px] font-black uppercase tracking-wider text-rose-300">Provider Cost</span>
+                          <span className="text-rose-400 text-sm">⚡</span>
+                        </div>
+                        <div className="text-2xl font-black text-rose-300">
+                          ${kpis.totalCost.toFixed(2)}
+                        </div>
+                        <div className="text-[10px] text-slate-400 font-medium">
+                          Supplier COGS ({activeProvName})
+                        </div>
+                      </div>
+
+                      {/* KPI 4: Total Net Profit / Income */}
+                      <div className="card bg-gradient-to-br from-[#0F1423] to-[#0A0D18] border border-emerald-500/40 rounded-2xl p-3.5 space-y-1 shadow-md">
+                        <div className="flex items-center justify-between">
+                          <span className="text-[10px] font-black uppercase tracking-wider text-emerald-300">Net Profit</span>
+                          <span className="text-emerald-400 text-sm">💎</span>
+                        </div>
+                        <div className="text-2xl font-black text-emerald-400">
+                          +${kpis.totalProfit.toFixed(2)}
+                        </div>
+                        <div className="text-[10px] text-emerald-400/80 font-bold">
+                          ~{Math.round(kpis.totalProfit * 4100).toLocaleString()} ៛ Income
+                        </div>
+                      </div>
+
+                      {/* KPI 5: Avg Margin & Volume */}
+                      <div className="card bg-gradient-to-br from-[#0F1423] to-[#0A0D18] border border-amber-500/30 rounded-2xl p-3.5 space-y-1 shadow-md col-span-2 sm:col-span-1">
+                        <div className="flex items-center justify-between">
+                          <span className="text-[10px] font-black uppercase tracking-wider text-amber-300">Avg Margin</span>
+                          <span className="text-amber-400 text-sm">📈</span>
+                        </div>
+                        <div className="text-2xl font-black text-amber-300">
+                          {kpis.avgMargin}%
+                        </div>
+                        <div className="text-[10px] text-slate-400 font-medium">
+                          {kpis.totalUnitsSold} total units sold
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Real-Analytics Table */}
+                    <div className="overflow-x-auto rounded-xl border border-slate-800/80 bg-slate-950/40 shadow-xl">
+                      <table className="w-full text-left text-xs min-w-[1050px]">
+                        <thead className="bg-[#111728] text-slate-400 uppercase text-[10px] tracking-wider border-b border-slate-800 font-bold select-none">
                           <tr>
-                            <th className="p-3">Package / Diamonds</th>
-                            <th className="p-3 text-right">Seller Retail</th>
-                            <th className="p-3 text-right">Provider Cost</th>
-                            <th className="p-3 text-right">Reseller Wholesale</th>
-                            <th className="p-3 text-right">Unit Net Profit</th>
-                            <th className="p-3 text-center">Margin %</th>
-                            <th className="p-3 text-center">Units Sold</th>
-                            <th className="p-3 text-right">Total Profit</th>
+                            <th onClick={() => handleHeaderSort('game')} className="p-3 cursor-pointer hover:text-white transition-colors">
+                              Game {renderSortArrow('game')}
+                            </th>
+                            <th onClick={() => handleHeaderSort('name')} className="p-3 cursor-pointer hover:text-white transition-colors">
+                              Package / Denomination {renderSortArrow('name')}
+                            </th>
+                            <th onClick={() => handleHeaderSort('retail')} className="p-3 text-right cursor-pointer hover:text-white transition-colors">
+                              Seller Retail {renderSortArrow('retail')}
+                            </th>
+                            <th onClick={() => handleHeaderSort('cost')} className="p-3 text-right cursor-pointer hover:text-white transition-colors">
+                              Provider Cost {renderSortArrow('cost')}
+                            </th>
+                            <th onClick={() => handleHeaderSort('reseller')} className="p-3 text-right cursor-pointer hover:text-white transition-colors">
+                              Reseller Wholesale {renderSortArrow('reseller')}
+                            </th>
+                            <th onClick={() => handleHeaderSort('unitProfit')} className="p-3 text-right cursor-pointer hover:text-white transition-colors">
+                              Unit Net Profit {renderSortArrow('unitProfit')}
+                            </th>
+                            <th onClick={() => handleHeaderSort('margin')} className="p-3 text-center cursor-pointer hover:text-white transition-colors">
+                              Margin % {renderSortArrow('margin')}
+                            </th>
+                            <th onClick={() => handleHeaderSort('sold')} className="p-3 text-center cursor-pointer hover:text-white transition-colors">
+                              Units Sold {renderSortArrow('sold')}
+                            </th>
+                            <th onClick={() => handleHeaderSort('profit')} className="p-3 text-right cursor-pointer hover:text-white transition-colors">
+                              Total Profit {renderSortArrow('profit')}
+                            </th>
+                            <th onClick={() => handleHeaderSort('revenue')} className="p-3 text-right cursor-pointer hover:text-white transition-colors">
+                              Total Income {renderSortArrow('revenue')}
+                            </th>
                           </tr>
                         </thead>
                         <tbody className="divide-y divide-slate-800/60 font-mono">
-                          {pkgs.map((p, idx) => (
-                            <tr key={p.productId || idx} className="hover:bg-slate-900/60 transition-colors">
-                              <td className="p-3 font-sans font-bold text-white flex items-center gap-2">
-                                <span className="text-amber-400">💎</span>
-                                <span>{p.diamondAmount} Diamonds</span>
-                                {p.status === 'Inactive' && (
-                                  <span className="text-[9px] px-1.5 py-0.5 rounded bg-slate-800 text-slate-400 border border-slate-700">Inactive</span>
-                                )}
-                              </td>
-                              <td className="p-3 text-right font-black text-cyan-300">${Number(p.price || 0).toFixed(2)}</td>
-                              <td className="p-3 text-right font-black text-rose-300">${Number(p.costPrice || 0).toFixed(2)}</td>
-                              <td className="p-3 text-right font-bold text-purple-300">${Number(p.resellerPrice || 0).toFixed(2)}</td>
-                              <td className="p-3 text-right">
-                                <span className="px-2 py-0.5 rounded bg-emerald-500/15 text-emerald-400 border border-emerald-500/30 font-black">
-                                  +${Number(p.retailProfit || 0).toFixed(2)}
-                                </span>
-                              </td>
-                              <td className="p-3 text-center font-bold text-amber-300">{Number(p.retailMarginPct || 0).toFixed(1)}%</td>
-                              <td className="p-3 text-center font-bold text-slate-300">{p.totalSoldCount || 0}</td>
-                              <td className="p-3 text-right font-black text-emerald-400">
-                                ${(Number(p.totalProfit || 0)).toFixed(2)}
+                          {pkgs.length === 0 ? (
+                            <tr>
+                              <td colSpan={10} className="p-10 text-center text-slate-400 font-sans">
+                                <div className="space-y-2">
+                                  <div className="text-3xl">🎮</div>
+                                  <p className="font-bold text-white text-sm">No packages match the selected criteria</p>
+                                  <p className="text-xs text-slate-500">Try selecting "All Games" or clearing your search query.</p>
+                                </div>
                               </td>
                             </tr>
-                          ))}
+                          ) : (
+                            pkgs.map((p) => {
+                              const marginBadgeColor = p.retailMarginPct >= 20
+                                ? 'bg-emerald-500/15 text-emerald-300 border-emerald-500/30'
+                                : p.retailMarginPct >= 10
+                                  ? 'bg-amber-500/15 text-amber-300 border-amber-500/30'
+                                  : 'bg-cyan-500/15 text-cyan-300 border-cyan-500/30';
+
+                              return (
+                                <tr key={p.key} className="hover:bg-slate-900/60 transition-colors">
+                                  {/* Game Badge */}
+                                  <td className="p-3 font-sans">
+                                    <div className="flex items-center gap-1.5">
+                                      <span className={`px-2 py-0.5 rounded-md text-[10px] font-bold border ${p.gameBadgeColor} inline-flex items-center gap-1`}>
+                                        <span>{p.gameIcon}</span>
+                                        <span>{p.gameName}</span>
+                                      </span>
+                                    </div>
+                                  </td>
+
+                                  {/* Package / Denomination */}
+                                  <td className="p-3 font-sans font-bold text-white">
+                                    <div className="flex items-center gap-2 flex-wrap">
+                                      <span>{p.name}</span>
+                                      {p.isPass && (
+                                        <span className="text-[9px] px-1.5 py-0.5 rounded bg-amber-500/15 text-amber-300 border border-amber-500/30 font-bold">
+                                          Pass ⭐
+                                        </span>
+                                      )}
+                                      {p.status === 'Inactive' && (
+                                        <span className="text-[9px] px-1.5 py-0.5 rounded bg-slate-800 text-slate-400 border border-slate-700">
+                                          Inactive
+                                        </span>
+                                      )}
+                                      {p.tag && !p.isPass && (
+                                        <span className="text-[9px] px-1.5 py-0.5 rounded bg-cyan-950/60 text-cyan-300 border border-cyan-500/20">
+                                          {p.tag}
+                                        </span>
+                                      )}
+                                    </div>
+                                  </td>
+
+                                  {/* Seller Retail */}
+                                  <td className="p-3 text-right font-black text-cyan-300">
+                                    ${p.retailPrice.toFixed(2)}
+                                  </td>
+
+                                  {/* Provider Wholesale Cost */}
+                                  <td className="p-3 text-right">
+                                    <div className="inline-flex flex-col items-end">
+                                      <span className="font-black text-rose-300">${p.providerCost.toFixed(2)}</span>
+                                      <span className="text-[9px] text-slate-500 font-mono">
+                                        {activeProvName === 'FazerCards' ? 'FZR' : 'KHM'}
+                                      </span>
+                                    </div>
+                                  </td>
+
+                                  {/* Reseller Wholesale */}
+                                  <td className="p-3 text-right font-bold text-purple-300">
+                                    <div className="inline-flex flex-col items-end">
+                                      <span>${p.resellerPrice.toFixed(2)}</span>
+                                      <span className="text-[9px] text-purple-400/80 font-normal">
+                                        +${p.resellerUnitProfit.toFixed(2)} net
+                                      </span>
+                                    </div>
+                                  </td>
+
+                                  {/* Unit Net Profit */}
+                                  <td className="p-3 text-right">
+                                    <span className="px-2 py-0.5 rounded bg-emerald-500/15 text-emerald-400 border border-emerald-500/30 font-black">
+                                      +${p.unitNetProfit.toFixed(2)}
+                                    </span>
+                                  </td>
+
+                                  {/* Margin % */}
+                                  <td className="p-3 text-center">
+                                    <span className={`px-2 py-0.5 rounded text-[11px] font-bold border ${marginBadgeColor}`}>
+                                      {p.retailMarginPct.toFixed(1)}%
+                                    </span>
+                                  </td>
+
+                                  {/* Units Sold */}
+                                  <td className="p-3 text-center">
+                                    <span className={`px-2 py-0.5 rounded font-bold ${p.unitsSold > 0 ? 'bg-slate-800 text-white font-black' : 'text-slate-500'}`}>
+                                      {p.unitsSold}
+                                    </span>
+                                  </td>
+
+                                  {/* Total Profit */}
+                                  <td className="p-3 text-right font-black text-emerald-400">
+                                    ${p.totalProfit.toFixed(2)}
+                                  </td>
+
+                                  {/* Total Income / Revenue */}
+                                  <td className="p-3 text-right font-bold text-cyan-300">
+                                    ${p.totalRevenue.toFixed(2)}
+                                  </td>
+                                </tr>
+                              );
+                            })
+                          )}
                         </tbody>
                       </table>
                     </div>

@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { useLanguage } from '../context/LanguageContext';
@@ -12,6 +12,23 @@ const Navbar = () => {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [langDropdownOpen, setLangDropdownOpen] = useState(false);
   const [userMenuOpen, setUserMenuOpen] = useState(false);
+  const [isScrolled, setIsScrolled] = useState(false);
+
+  useEffect(() => {
+    let ticking = false;
+    const handleScroll = () => {
+      if (!ticking) {
+        window.requestAnimationFrame(() => {
+          setIsScrolled(window.scrollY > 30);
+          ticking = false;
+        });
+        ticking = true;
+      }
+    };
+    window.addEventListener('scroll', handleScroll, { passive: true });
+    handleScroll();
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
 
   const isUserLoggedIn = isAuthenticated();
 
@@ -35,92 +52,114 @@ const Navbar = () => {
   const isAuthPage = location.pathname.startsWith('/login') || location.pathname.startsWith('/register');
 
   return (
-    <header className={`sticky top-0 z-[9995] ${isAuthPage ? '' : 'bg-dark-bg/85 backdrop-blur-xl border-b border-slate-800/80 shadow-2xl'}`}>
-      {/* Top micro moving marquee announcement bar (Text Transition) */}
-      <div className="bg-gradient-to-r from-cyan-950 via-slate-900 to-indigo-950 border-b border-cyan-500/20 py-1.5 overflow-hidden relative select-none">
-        <div className="flex items-center gap-2">
-          {/* Live pulsing dot */}
-          <div className="pl-3 sm:pl-4 pr-1 flex items-center gap-1.5 shrink-0 z-10 bg-gradient-to-r from-cyan-950 via-cyan-950/90 to-transparent">
-            <span className="flex h-2 w-2 relative">
-              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
-              <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
-            </span>
-          </div>
+    <>
+      {/* Top micro moving marquee announcement bar (Natural document flow at top of page, scrolls naturally away) */}
+      {!isAuthPage && (
+        <div className={`bg-gradient-to-r from-cyan-950 via-slate-900 to-indigo-950 border-b border-cyan-500/20 overflow-hidden relative select-none transition-all duration-300 ${
+          isScrolled ? 'opacity-0 pointer-events-none' : 'opacity-100'
+        }`}>
+          <div className="flex items-center gap-2 py-1.5">
+            {/* Live pulsing dot */}
+            <div className="pl-3 sm:pl-4 pr-1 flex items-center gap-1.5 shrink-0 z-10 bg-gradient-to-r from-cyan-950 via-cyan-950/90 to-transparent">
+              <span className="flex h-2 w-2 relative">
+                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
+              </span>
+            </div>
 
-          {/* Marquee Track */}
-          <div className="overflow-hidden flex-1 relative">
-            <div className="animate-marquee flex items-center gap-8 whitespace-nowrap text-xs font-semibold text-cyan-200">
-              {[...trustNotices, ...trustNotices, ...trustNotices].map((item, idx) => (
-                <div key={idx} className="inline-flex items-center gap-2">
-                  <span className="text-amber-400 text-sm">{item.icon}</span>
-                  <span className="font-bold text-white">{item.title}</span>
-                  <span className="text-slate-400 text-[11px] font-normal">• {item.desc}</span>
-                  <span className="text-slate-600 pl-4">|</span>
-                </div>
-              ))}
+            {/* Marquee Track */}
+            <div className="overflow-hidden flex-1 relative">
+              <div className="animate-marquee flex items-center gap-8 whitespace-nowrap text-xs font-semibold text-cyan-200">
+                {[...trustNotices, ...trustNotices, ...trustNotices].map((item, idx) => (
+                  <div key={idx} className="inline-flex items-center gap-2">
+                    <span className="text-amber-400 text-sm">{item.icon}</span>
+                    <span className="font-bold text-white">{item.title}</span>
+                    <span className="text-slate-400 text-[11px] font-normal">• {item.desc}</span>
+                    <span className="text-slate-600 pl-4">|</span>
+                  </div>
+                ))}
+              </div>
             </div>
           </div>
         </div>
-      </div>
+      )}
 
-      {!isAuthPage && (
-        <>
-          <div className="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 relative z-20">
-            <div className="flex items-center justify-between h-16 lg:h-20">
+      <header className={`sticky top-0 z-[9995] transition-all duration-300 ease-[cubic-bezier(0.16,1,0.3,1)] ${
+        isAuthPage 
+          ? '' 
+          : isScrolled
+          ? 'pt-2 sm:pt-3 px-3 sm:px-4 pb-0 pointer-events-none'
+          : 'bg-dark-bg/85 backdrop-blur-xl border-b border-slate-800/80 shadow-2xl pointer-events-auto'
+      }`}>
+        {!isAuthPage && (
+          <>
+            <div className={`transition-all duration-300 ease-[cubic-bezier(0.16,1,0.3,1)] ${
+              isScrolled
+                ? 'max-w-6xl mx-auto rounded-full bg-[#03091e]/95 backdrop-blur-2xl border-2 border-[#0062ff] shadow-[0_12px_40px_rgba(0,0,0,0.92),0_0_28px_rgba(0,98,255,0.35)] ring-1 ring-white/10 px-3.5 sm:px-4 h-13 sm:h-14 relative overflow-visible pointer-events-auto'
+                : 'max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 relative z-20 pointer-events-auto'
+            }`}>
+            <div className={`flex items-center justify-between transition-all duration-300 ${
+              isScrolled ? 'h-full' : 'h-16 lg:h-20'
+            }`}>
           
-              {/* Logo (Visible on mobile & tablet, hidden on desktop since it is in DesktopSidebar) */}
-              <div className="flex items-center lg:hidden select-none">
+              {/* Logo (Avatar Medallion + Title) */}
+              <div className={`flex items-center select-none ${isScrolled ? 'pl-1 sm:pl-2' : ''}`}>
                 <Link to="/" className="group flex items-center">
-                  <BrandLogo size="sm" />
+                  <BrandLogo size={isScrolled ? "md" : "sm"} hideTitle={isScrolled} />
                 </Link>
               </div>
 
               {/* Desktop Central Smart Search Bar */}
-              <div className="hidden lg:flex items-center flex-1 max-w-xl mx-4">
+              <div className={`transition-all duration-300 ${
+                isScrolled ? 'hidden' : 'hidden lg:flex items-center flex-1 max-w-xl mx-4'
+              }`}>
                 <SmartSearchBar isMobile={false} />
               </div>
 
-          {/* Right: Actions */}
-          <div className="flex items-center gap-2 select-none">
-            {/* Notification Bell with Red Badge 1 */}
-            <button
-              type="button"
-              title="Notifications"
-              className="relative h-10 w-10 rounded-xl bg-slate-900/80 hover:bg-slate-800 border border-slate-800 hover:border-slate-700 text-slate-300 hover:text-white flex items-center justify-center transition-all duration-200 active:scale-95 shadow-sm cursor-pointer"
-            >
-              <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
-              </svg>
-              <span className="absolute -top-1 -right-1 w-4 h-4 rounded-full bg-rose-500 text-white font-black text-[9px] flex items-center justify-center shadow-md">
-                1
-              </span>
-            </button>
-
-            {/* Language Selector Dropdown */}
-            <div className="relative z-[100]">
-              <button
-                type="button"
-                onClick={() => setLangDropdownOpen(!langDropdownOpen)}
-                className={`h-10 px-3 sm:px-3.5 rounded-xl border transition-all duration-200 text-xs font-bold flex items-center gap-2 shadow-sm active:scale-95 whitespace-nowrap cursor-pointer ${
-                  langDropdownOpen
-                    ? 'bg-[#0a1838] border-2 border-cyan-400 text-white ring-2 ring-cyan-400/25 shadow-[0_0_18px_rgba(0,229,255,0.4)]'
-                    : 'bg-slate-900/95 hover:bg-slate-800/95 border-slate-700/80 hover:border-slate-600 text-slate-200'
-                }`}
-                aria-expanded={langDropdownOpen}
-                aria-label="Select Language"
-              >
-                <span className="w-5.5 h-4 rounded-[4px] overflow-hidden shadow-xs border border-white/25 shrink-0 inline-flex items-center justify-center">
-                  <span className={`fi fi-${currentLang.flagCode || 'kh'} w-full h-full object-cover leading-none`} />
-                </span>
-                <span className="hidden sm:inline font-bold tracking-wide">{currentLang.short}</span>
-                <svg
-                  className={`w-3.5 h-3.5 text-slate-400 transition-transform duration-300 ${langDropdownOpen ? 'rotate-180 text-cyan-400' : ''}`}
-                  viewBox="0 0 20 20"
-                  fill="currentColor"
+              {/* Right: Actions (Capsule Pills) */}
+              <div className="flex items-center gap-2 select-none">
+                {/* 1. Notification Bell with Red Badge 1 */}
+                <button
+                  type="button"
+                  title="Notifications"
+                  className="relative h-10 px-3.5 rounded-full border border-[#0055ff]/40 bg-[#081329]/90 hover:bg-[#0e204c] hover:border-[#0088ff]/70 text-slate-200 hover:text-white flex items-center justify-center transition-all duration-200 active:scale-95 shadow-sm cursor-pointer"
                 >
-                  <path fillRule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clipRule="evenodd" />
-                </svg>
-              </button>
+                  <svg className="w-4.5 h-4.5 text-white/95" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
+                  </svg>
+                  <span className="absolute -top-1 -right-0.5 min-w-[18px] h-[18px] px-1 rounded-full bg-[#ff3b5c] text-white font-black text-[10px] flex items-center justify-center shadow-[0_0_10px_rgba(255,59,92,0.8)] border border-white/20 animate-pulse">
+                    1
+                  </span>
+                </button>
+
+                {/* 2. Language Selector Dropdown */}
+                <div className="relative z-[100]">
+                  <button
+                    type="button"
+                    onClick={() => setLangDropdownOpen(!langDropdownOpen)}
+                    className={`h-10 px-3 rounded-full border transition-all duration-200 text-xs font-bold flex items-center gap-2 shadow-sm active:scale-95 whitespace-nowrap cursor-pointer ${
+                      langDropdownOpen
+                        ? 'bg-[#0e204c] border-2 border-cyan-400 text-white ring-2 ring-cyan-400/25 shadow-[0_0_18px_rgba(0,229,255,0.4)]'
+                        : 'bg-[#081329]/90 hover:bg-[#0e204c] border-[#0055ff]/40 hover:border-[#0088ff]/70 text-slate-200'
+                    }`}
+                    aria-expanded={langDropdownOpen}
+                    aria-label="Select Language"
+                  >
+                    <span className="w-5.5 h-4 rounded-[3px] overflow-hidden shadow-sm shrink-0 inline-flex items-center justify-center">
+                      <span className={`fi fi-${currentLang.flagCode || 'kh'} w-full h-full object-cover`} />
+                    </span>
+                    {!isScrolled && (
+                      <span className="hidden sm:inline font-bold tracking-wide">{currentLang.short}</span>
+                    )}
+                    <svg
+                      className={`w-3.5 h-3.5 text-slate-300 stroke-[2.5] transition-transform duration-300 ${langDropdownOpen ? 'rotate-180 text-cyan-400' : ''}`}
+                      fill="none"
+                      viewBox="0 0 24 24"
+                      stroke="currentColor"
+                    >
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" />
+                    </svg>
+                  </button>
 
               {langDropdownOpen && (
                 <>
@@ -243,7 +282,7 @@ const Navbar = () => {
               <button
                 type="button"
                 onClick={() => window.dispatchEvent(new CustomEvent('open-player-login'))}
-                className="h-10 px-3 sm:px-3.5 rounded-xl bg-gradient-to-r from-blue-600 via-sky-600 to-cyan-500 hover:from-blue-500 hover:to-cyan-400 text-white text-xs font-bold flex items-center gap-1.5 shadow-[0_2px_10px_rgba(14,165,233,0.3)] transition-all active:scale-95 cursor-pointer whitespace-nowrap"
+                className="h-10 px-3.5 rounded-full bg-gradient-to-r from-blue-600 via-sky-600 to-cyan-500 hover:from-blue-500 hover:to-cyan-400 text-white text-xs font-bold flex items-center gap-1.5 shadow-[0_2px_10px_rgba(14,165,233,0.3)] transition-all active:scale-95 cursor-pointer whitespace-nowrap"
                 title="Login with Player ID & Server ID"
               >
                 <svg className="w-4 h-4 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
@@ -256,19 +295,26 @@ const Navbar = () => {
                 <button
                   type="button"
                   onClick={() => setUserMenuOpen(!userMenuOpen)}
-                  className="h-10 px-2.5 sm:px-3 rounded-xl bg-slate-900/90 hover:bg-slate-800 border border-sky-500/40 text-white text-xs font-bold flex items-center gap-1.5 sm:gap-2 shadow-sm transition-all active:scale-95 cursor-pointer"
+                  className={`h-10 px-2.5 sm:px-3 rounded-full border transition-all duration-200 text-xs font-bold flex items-center gap-2 shadow-sm active:scale-95 cursor-pointer ${
+                    userMenuOpen
+                      ? 'bg-[#0e204c] border-2 border-cyan-400 text-white ring-2 ring-cyan-400/25 shadow-[0_0_18px_rgba(0,229,255,0.4)]'
+                      : 'bg-[#081329]/90 hover:bg-[#0e204c] border-[#0055ff]/40 hover:border-[#0088ff]/70 text-slate-200'
+                  }`}
                   title="Player Account Menu"
                 >
-                  <GamerAvatar 
-                    avatarId={playerAccount?.avatar || user?.avatar} 
-                    name={playerAccount?.realName || user?.name || playerAccount?.playerId} 
-                    size="xs" 
-                    showGlow={false} 
-                  />
-                  <span className="hidden sm:inline max-w-[85px] truncate text-[11px] font-bold">
-                    {playerAccount?.realName || user?.name || playerAccount?.playerId}
-                  </span>
-                  <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse shrink-0" />
+                  {/* Golden Crown Squircle Medallion matching Reference Image 1 */}
+                  <div className="w-7.5 h-7.5 rounded-xl border-2 border-amber-400 bg-gradient-to-b from-[#2e1805] via-[#160c02] to-[#0a0501] shadow-[0_0_12px_rgba(251,191,36,0.65)] flex items-center justify-center overflow-hidden shrink-0">
+                    <svg className="w-4 h-4 text-amber-400 drop-shadow-[0_1px_3px_rgba(0,0,0,0.9)]" viewBox="0 0 24 24" fill="currentColor">
+                      <path d="M5 16L3 5l5.5 5L12 4l3.5 6L21 5l-2 11H5zm14 3c0 .6-.4 1-1 1H6c-.6 0-1-.4-1-1v-1h14v1z"/>
+                      <circle cx="12" cy="11.5" r="1.5" fill="#38bdf8"/>
+                    </svg>
+                  </div>
+                  {!isScrolled && (
+                    <span className="hidden md:inline font-bold max-w-[85px] truncate text-[11px]">
+                      {playerAccount?.realName || user?.name || playerAccount?.playerId}
+                    </span>
+                  )}
+                  <span className="w-2.5 h-2.5 rounded-full bg-[#10e396] shadow-[0_0_8px_#10e396] animate-pulse shrink-0" />
                 </button>
 
                 {userMenuOpen && (
@@ -433,32 +479,36 @@ const Navbar = () => {
               </div>
             )}
 
-            {/* Mobile Hamburger / Close Button - Hidden to match clean mockup where bottom dock handles navigation */}
+            {/* 4. Quick Games & Categories 4-Square Grid Button matching Reference Image 1 */}
             <button
               type="button"
-              className={`hidden h-10 w-10 items-center justify-center rounded-xl border transition-all duration-300 ${
-                mobileMenuOpen
-                  ? 'bg-rose-950/40 border-rose-500/40 text-rose-300 rotate-90 shadow-sm'
-                  : 'bg-slate-900/80 hover:bg-slate-800 border-slate-800 text-slate-300 hover:text-white'
-              }`}
-              onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-              aria-label="Toggle menu"
+              onClick={() => {
+                const gamesSection = document.getElementById('games-section');
+                if (gamesSection) {
+                  gamesSection.scrollIntoView({ behavior: 'smooth' });
+                } else {
+                  setMobileMenuOpen(!mobileMenuOpen);
+                }
+              }}
+              className="w-10 h-10 rounded-full border border-[#0055ff]/50 bg-[#081329]/90 hover:bg-[#0e204c] hover:border-[#0088ff]/80 text-white flex items-center justify-center transition-all duration-200 active:scale-95 shadow-sm cursor-pointer group shrink-0"
+              title="All Games & Categories / ហ្គេមទាំងអស់"
+              aria-label="Toggle all games menu"
             >
-              {mobileMenuOpen ? (
-                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M6 18L18 6M6 6l12 12" />
-                </svg>
-              ) : (
-                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M4 6h16M4 12h16M4 18h16" />
-                </svg>
-              )}
+              <svg className="w-4 h-4 fill-white group-hover:scale-110 transition-transform" viewBox="0 0 24 24">
+                <rect x="3.5" y="3.5" width="7" height="7" rx="2" />
+                <rect x="13.5" y="3.5" width="7" height="7" rx="2" />
+                <rect x="3.5" y="13.5" width="7" height="7" rx="2" />
+                <rect x="13.5" y="13.5" width="7" height="7" rx="2" />
+              </svg>
             </button>
           </div>
         </div>
+      </div>
 
-        {/* Mobile Smart Search Bar matching screenshot */}
-        <div className="lg:hidden pb-3 pt-1">
+        {/* Mobile Smart Search Bar - completely outside the capsule dock! */}
+        <div className={`lg:hidden max-w-7xl mx-auto px-3 sm:px-6 transition-all duration-300 ease-[cubic-bezier(0.16,1,0.3,1)] overflow-hidden pointer-events-auto ${
+          isScrolled ? 'max-h-0 min-h-0 h-0 opacity-0 -translate-y-4 pointer-events-none py-0' : 'max-h-24 opacity-100 pb-3 pt-1'
+        }`}>
           <SmartSearchBar
             isMobile={true}
             onFilterClick={() => {
@@ -467,7 +517,6 @@ const Navbar = () => {
             }}
           />
         </div>
-      </div>
 
       {/* Ultra Clean & Smooth Animated Mobile Drawer */}
       <div
@@ -657,6 +706,7 @@ const Navbar = () => {
         </>
       )}
     </header>
+    </>
   );
 };
 

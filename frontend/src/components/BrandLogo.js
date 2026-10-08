@@ -11,6 +11,7 @@ export const BrandLogo = ({
   branding = {},
   size = 'md', // 'sm' | 'md' | 'lg'
   showSubtitle = true,
+  hideTitle = false,
   className = ''
 }) => {
   const storeName = branding.storeName || 'Tin-Topup';
@@ -62,7 +63,7 @@ export const BrandLogo = ({
   };
 
   return (
-    <div className={`flex items-center gap-2.5 sm:gap-3 select-none ${className}`}>
+    <div className={`flex items-center select-none ${hideTitle ? 'gap-0' : 'gap-2.5 sm:gap-3'} ${className}`}>
       {/* Frameless Brand Logo Avatar */}
       <div className={`relative ${avatarSize} shrink-0 flex items-center justify-center`}>
         <img
@@ -77,40 +78,42 @@ export const BrandLogo = ({
       </div>
 
       {/* Brand Name: 3D Official Artwork or Dynamic Fallback */}
-      {isStandardTinBrand ? (
-        <div className="flex items-center shrink-0">
-          <img
-            src={tinTopupTitleImg}
-            alt={storeName}
-            className={`${titleHeightClass} w-auto object-contain select-none filter drop-shadow-[0_2px_8px_rgba(0,0,0,0.7)] group-hover:scale-[1.02] transition-transform duration-300`}
-            onError={(e) => {
-              if (e.target.src !== `${process.env.PUBLIC_URL || ''}/images/tin-topup-title.png`) {
-                e.target.src = `${process.env.PUBLIC_URL || ''}/images/tin-topup-title.png`;
-              }
-            }}
-          />
-        </div>
-      ) : (
-        <div className="flex flex-col text-left">
-          <div className="flex items-center gap-2 leading-none">
-            <span className="text-lg sm:text-xl font-black tracking-wide flex items-center">
-              {renderStyledTitle()}
-            </span>
-            {badgeText && (
-              <span className="relative inline-flex items-center gap-0.5 px-2 py-0.5 rounded-full font-black text-[9px] tracking-widest uppercase bg-gradient-to-r from-cyan-500 via-blue-600 to-indigo-600 text-white shadow-[0_0_12px_rgba(6,182,212,0.5)] border border-cyan-300/60">
-                <span className="text-[8px] text-amber-300 animate-pulse">⚡</span>
-                <span>{badgeText}</span>
+      <div className={`transition-all duration-300 ease-[cubic-bezier(0.16,1,0.3,1)] overflow-hidden ${hideTitle ? 'max-w-0 w-0 min-w-0 opacity-0 -translate-x-3 pointer-events-none' : 'max-w-xs min-w-0 opacity-100 translate-x-0'}`}>
+        {isStandardTinBrand ? (
+          <div className={`flex items-center transition-all duration-300 ${hideTitle ? 'w-0 min-w-0 overflow-hidden opacity-0' : 'shrink-0'}`}>
+            <img
+              src={tinTopupTitleImg}
+              alt={storeName}
+              className={`${titleHeightClass} w-auto object-contain select-none filter drop-shadow-[0_2px_8px_rgba(0,0,0,0.7)] group-hover:scale-[1.02] transition-transform duration-300 ${hideTitle ? 'w-0 opacity-0' : ''}`}
+              onError={(e) => {
+                if (e.target.src !== `${process.env.PUBLIC_URL || ''}/images/tin-topup-title.png`) {
+                  e.target.src = `${process.env.PUBLIC_URL || ''}/images/tin-topup-title.png`;
+                }
+              }}
+            />
+          </div>
+        ) : (
+          <div className="flex flex-col text-left">
+            <div className="flex items-center gap-2 leading-none">
+              <span className="text-lg sm:text-xl font-black tracking-wide flex items-center">
+                {renderStyledTitle()}
               </span>
+              {badgeText && (
+                <span className="relative inline-flex items-center gap-0.5 px-2 py-0.5 rounded-full font-black text-[9px] tracking-widest uppercase bg-gradient-to-r from-cyan-500 via-blue-600 to-indigo-600 text-white shadow-[0_0_12px_rgba(6,182,212,0.5)] border border-cyan-300/60">
+                  <span className="text-[8px] text-amber-300 animate-pulse">⚡</span>
+                  <span>{badgeText}</span>
+                </span>
+              )}
+            </div>
+            {showSubtitle && (
+              <div className="flex items-center gap-1.5 mt-1 font-mono text-[10px] sm:text-[10.5px] font-extrabold uppercase text-slate-400">
+                <span className="inline-block h-1.5 w-1.5 rounded-full bg-emerald-400" />
+                <span>{versionText}</span>
+              </div>
             )}
           </div>
-          {showSubtitle && (
-            <div className="flex items-center gap-1.5 mt-1 font-mono text-[10px] sm:text-[10.5px] font-extrabold uppercase text-slate-400">
-              <span className="inline-block h-1.5 w-1.5 rounded-full bg-emerald-400" />
-              <span>{versionText}</span>
-            </div>
-          )}
-        </div>
-      )}
+        )}
+      </div>
     </div>
   );
 };

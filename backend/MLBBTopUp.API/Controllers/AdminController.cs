@@ -3,6 +3,8 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using MLBBTopUp.Core.Interfaces;
 using MLBBTopUp.Infrastructure.Data;
+using MongoDB.Bson;
+using MongoDB.Driver;
 using System.Diagnostics;
 
 namespace MLBBTopUp.API.Controllers;
@@ -1208,10 +1210,10 @@ public class AdminController : BaseController
             var key = $"ORD-{o.OrderId}";
             seenKeys.Add(key);
             var sell = o.Amount;
-            var pkg = o.Product?.Description ?? $"{o.DiamondAmount} Diamonds";
+            var pkg = o.Product?.Description ?? $"{o.Product?.DiamondAmount} Diamonds";
             var prov = (o.Product != null && o.Product.CostPrice > 0)
                 ? o.Product.CostPrice
-                : ResolveProviderWholesaleCost(pkg, sell, o.DiamondAmount);
+                : ResolveProviderWholesaleCost(pkg, sell, o.Product?.DiamondAmount);
             var profit = Math.Round(sell - prov, 2);
             var margin = sell > 0 ? Math.Round((profit / sell) * 100, 1) : 0;
 
@@ -1336,7 +1338,7 @@ public class AdminController : BaseController
         {
             var dayOrders = paidOrders.Where(o => o.CreatedAt.Date == day).ToList();
             var rev = dayOrders.Sum(o => o.Amount);
-            var cost = dayOrders.Sum(o => (o.Product != null && o.Product.CostPrice > 0) ? o.Product.CostPrice : ResolveProviderWholesaleCost(o.Product?.Description, o.Amount, o.DiamondAmount));
+            var cost = dayOrders.Sum(o => (o.Product != null && o.Product.CostPrice > 0) ? o.Product.CostPrice : ResolveProviderWholesaleCost(o.Product?.Description, o.Amount, o.Product?.DiamondAmount));
             var profit = rev - cost;
             var margin = rev > 0 ? Math.Round((profit / rev) * 100, 1) : 0;
 

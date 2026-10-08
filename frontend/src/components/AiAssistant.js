@@ -498,32 +498,32 @@ const AiAssistant = () => {
     hasMoved: false,
   });
 
-  // 30-second idle auto-fade (opacity 50%) when user does not press, touch, or move on the button
-  const [isIdle, setIsIdle] = useState(false);
-  const idleTimerRef = useRef(null);
+  // 10-second auto-hide timer: icon hides after 10 seconds unless interacted
+  const [isHidden, setIsHidden] = useState(false);
+  const hideTimerRef = useRef(null);
 
-  const resetIdleTimer = useCallback(() => {
-    setIsIdle(false);
-    if (idleTimerRef.current) {
-      clearTimeout(idleTimerRef.current);
+  const resetHideTimer = useCallback(() => {
+    setIsHidden(false);
+    if (hideTimerRef.current) {
+      clearTimeout(hideTimerRef.current);
     }
-    idleTimerRef.current = setTimeout(() => {
-      setIsIdle(true);
-    }, 30000); // 30 seconds
+    hideTimerRef.current = setTimeout(() => {
+      setIsHidden(true);
+    }, 10000); // 10 seconds
   }, []);
 
   useEffect(() => {
     if (isOpen) {
-      setIsIdle(false);
-      if (idleTimerRef.current) clearTimeout(idleTimerRef.current);
+      setIsHidden(false);
+      if (hideTimerRef.current) clearTimeout(hideTimerRef.current);
       return;
     }
 
-    resetIdleTimer();
+    resetHideTimer();
     return () => {
-      if (idleTimerRef.current) clearTimeout(idleTimerRef.current);
+      if (hideTimerRef.current) clearTimeout(hideTimerRef.current);
     };
-  }, [isOpen, resetIdleTimer]);
+  }, [isOpen, resetHideTimer]);
 
   // Clamp any saved position on initial mount so it never sits behind/over the header
   useEffect(() => {
@@ -717,64 +717,140 @@ const AiAssistant = () => {
       )}
 
       {/* Flexible Draggable Floating AI Trigger - Always Forward Layer */}
-      <button
-        ref={btnRef}
-        type="button"
-        onClick={(e) => {
-          resetIdleTimer();
-          handleClick(e);
-        }}
-        onMouseEnter={resetIdleTimer}
-        onMouseMove={resetIdleTimer}
-        onDoubleClick={() => {
-          setPos(null);
-          try {
-            localStorage.removeItem('ai_assistant_pos');
-          } catch (e) {}
-        }}
-        onMouseDown={(e) => {
-          resetIdleTimer();
-          if (e.button === 0) handleDragStart(e.clientX, e.clientY);
-        }}
-        onTouchStart={(e) => {
-          resetIdleTimer();
-          if (e.touches && e.touches[0]) {
-            handleDragStart(e.touches[0].clientX, e.touches[0].clientY);
-          }
-        }}
-        onTouchMove={resetIdleTimer}
-        style={
-          pos
-            ? {
-                left: `${pos.x}px`,
-                top: `${pos.y}px`,
-                right: 'auto',
-                bottom: 'auto',
-                touchAction: 'none',
-                zIndex: 999999,
+      {/* Flexible Draggable Floating AI Trigger - Always Forward Layer */}
+      {(() => {
+        const isDockedLeft = pos ? pos.x < ((typeof window !== 'undefined' ? window.innerWidth : 1000) / 2) : false;
+        return (
+          <>
+            {/* 1. Main Floating Bot (Full Companion Mode - Static & Clean, No Bobbing Animation) */}
+            <div
+              style={
+                pos
+                  ? {
+                      left: `${pos.x}px`,
+                      top: `${pos.y}px`,
+                      right: 'auto',
+                      bottom: 'auto',
+                      zIndex: 999999,
+                    }
+                  : {
+                      zIndex: 999999,
+                    }
               }
-            : {
-                touchAction: 'none',
-                zIndex: 999999,
-              }
-        }
-        className={`ai-assistant-widget fixed z-[99999] w-14 h-14 sm:w-16 sm:h-16 md:w-20 md:h-20 select-none cursor-grab active:cursor-grabbing bg-transparent border-0 outline-none p-0 transition-all duration-500 ${
-          pos ? '' : 'bottom-20 right-3.5 sm:bottom-6 sm:right-6'
-        } ${isDragging ? 'scale-115 opacity-90' : 'hover:scale-110 active:scale-95'} ${
-          isIdle && !isOpen ? 'opacity-50 hover:opacity-100' : 'opacity-100'
-        }`}
-        aria-label="Open AI Assistant"
-        title="Drag to move anywhere • Double-click to reset / ចុចឬអូសផ្លាស់ប្តូរទីតាំង"
-      >
-        {/* MLBB Bot Badge - Full icon */}
-        <div className="relative w-full h-full pointer-events-none flex items-center justify-center">
-          <img
-            src="/ai-bot-icon.png"
-            alt="AI Assistant"
-            className="w-full h-full object-contain transition-all duration-300"
-          />
-        </div>
-      </button>
+              className={`ai-assistant-widget fixed select-none transition-all duration-400 ease-[cubic-bezier(0.16,1,0.3,1)] ${
+                pos ? '' : 'bottom-28 right-3.5 sm:bottom-10 sm:right-6'
+              } ${
+                isHidden && !isOpen
+                  ? (isDockedLeft ? '-translate-x-12 scale-0 opacity-0 pointer-events-none' : 'translate-x-12 scale-0 opacity-0 pointer-events-none')
+                  : 'translate-x-0 scale-100 opacity-100 pointer-events-auto'
+              }`}
+            >
+              {/* Quick Hide Button Pill on Top of Bot */}
+              <button
+                type="button"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setIsHidden(true);
+                }}
+                className="absolute -top-1 -right-1 z-20 w-5 h-5 rounded-full bg-[#0a162e] border border-cyan-400/80 text-cyan-300 hover:text-white hover:bg-rose-500 hover:border-rose-400 flex items-center justify-center text-[10px] font-bold shadow-md transition-all active:scale-90"
+                title="Hide / លាក់"
+                aria-label="Hide assistant"
+              >
+                ✕
+              </button>
+
+              {/* Bot Trigger Button (Static, No continuous bobbing animation) */}
+              <button
+                ref={btnRef}
+                type="button"
+                onClick={(e) => {
+                  resetHideTimer();
+                  handleClick(e);
+                }}
+                onMouseEnter={resetHideTimer}
+                onMouseMove={resetHideTimer}
+                onDoubleClick={() => {
+                  setPos(null);
+                  try {
+                    localStorage.removeItem('ai_assistant_pos');
+                  } catch (e) {}
+                }}
+                onMouseDown={(e) => {
+                  resetHideTimer();
+                  if (e.button === 0) handleDragStart(e.clientX, e.clientY);
+                }}
+                onTouchStart={(e) => {
+                  resetHideTimer();
+                  if (e.touches && e.touches[0]) {
+                    handleDragStart(e.touches[0].clientX, e.touches[0].clientY);
+                  }
+                }}
+                onTouchMove={resetHideTimer}
+                className={`w-14 h-14 sm:w-16 sm:h-16 md:w-20 md:h-20 cursor-grab active:cursor-grabbing bg-transparent border-0 outline-none p-0 transition-transform duration-200 ${
+                  isDragging ? 'scale-110 opacity-95' : 'hover:scale-105 active:scale-95'
+                }`}
+                aria-label="Open AI Assistant"
+                title="Drag to move anywhere • Double-click to reset / ចុចឬអូសផ្លាស់ប្តូរទីតាំង"
+              >
+                <div className="relative w-full h-full pointer-events-none flex items-center justify-center">
+                  <img
+                    src="/ai-bot-icon.png"
+                    alt="AI Assistant"
+                    className="w-full h-full object-contain filter drop-shadow-[0_4px_16px_rgba(0,160,255,0.65)] transition-all duration-300"
+                  />
+                </div>
+              </button>
+            </div>
+
+            {/* 2. Sleek Peeking Cyber Medallion Hide Button (Flush at edge when 10s expire) */}
+            {isHidden && !isOpen && (
+              <div
+                onClick={() => {
+                  resetHideTimer();
+                  setIsOpen(true);
+                }}
+                onMouseEnter={resetHideTimer}
+                onTouchStart={resetHideTimer}
+                style={
+                  pos
+                    ? {
+                        top: `${Math.max(80, Math.min(pos.y, (typeof window !== 'undefined' ? window.innerHeight : 800) - 80))}px`,
+                        [isDockedLeft ? 'left' : 'right']: 0,
+                        zIndex: 999999,
+                      }
+                    : {
+                        [isDockedLeft ? 'left' : 'right']: 0,
+                        zIndex: 999999,
+                      }
+                }
+                className={`fixed z-[999999] select-none cursor-pointer transition-all duration-300 ${
+                  pos ? '' : 'bottom-28 sm:bottom-10'
+                }`}
+                aria-label="Open AI Assistant"
+                title="Tap to open AI Assistant / ចុចដើម្បីបើកជំនួយការ"
+              >
+                {/* Half-circle Peeking Cyber Medallion */}
+                <div className={`h-12 sm:h-14 flex items-center bg-gradient-to-b from-[#051026]/95 via-[#08183a]/95 to-[#040c1e]/95 backdrop-blur-2xl border-y-2 border-cyan-400/90 shadow-[0_4px_25px_rgba(0,180,255,0.5),0_0_20px_rgba(0,240,255,0.3)] transition-all duration-300 group hover:brightness-125 ${
+                  isDockedLeft
+                    ? 'w-11 sm:w-13 rounded-r-full border-r-2 pl-1 pr-2 hover:w-14'
+                    : 'w-11 sm:w-13 rounded-l-full border-l-2 pl-2 pr-1 hover:w-14'
+                }`}>
+                  {/* Peeking Bot Face with soft pulse aura */}
+                  <div className="relative w-8 h-8 sm:w-9 sm:h-9 shrink-0 flex items-center justify-center">
+                    <img
+                      src="/ai-bot-icon.png"
+                      alt="AI Assistant"
+                      className="w-full h-full object-contain filter drop-shadow-[0_0_10px_rgba(0,210,255,0.9)] group-hover:scale-110 transition-transform"
+                    />
+                    {/* Live cyan pulsing jewel on the peek */}
+                    <span className="absolute -top-0.5 -right-0.5 w-2 h-2 rounded-full bg-cyan-400 shadow-[0_0_8px_#00f0ff] animate-pulse" />
+                  </div>
+                </div>
+              </div>
+            )}
+          </>
+        );
+      })()}
 
       {/* AI Assistant Chat Modal Drawer */}
       {isOpen && (
