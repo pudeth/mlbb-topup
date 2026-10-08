@@ -55,6 +55,43 @@ const Navbar = () => {
       })
     : allGames.slice(0, 10);
 
+  const isUserLoggedIn = isAuthenticated();
+
+  const toggleLangDropdown = () => {
+    setUserMenuOpen(false);
+    setMobileMenuOpen(false);
+    setLangDropdownOpen((prev) => !prev);
+  };
+
+  const toggleUserMenu = () => {
+    setLangDropdownOpen(false);
+    setMobileMenuOpen(false);
+    setUserMenuOpen((prev) => !prev);
+  };
+
+  const toggleMobileMenu = () => {
+    setLangDropdownOpen(false);
+    setUserMenuOpen(false);
+    setMobileMenuOpen((prev) => !prev);
+  };
+
+  const openSearchModal = () => {
+    setLangDropdownOpen(false);
+    setUserMenuOpen(false);
+    setMobileMenuOpen(false);
+    setSearchModalOpen(true);
+  };
+
+  const closeAllMenus = () => {
+    setLangDropdownOpen(false);
+    setUserMenuOpen(false);
+    setMobileMenuOpen(false);
+  };
+
+  useEffect(() => {
+    closeAllMenus();
+  }, [location.pathname]);
+
   useEffect(() => {
     let ticking = false;
     const handleScroll = () => {
@@ -63,8 +100,16 @@ const Navbar = () => {
           const y = window.scrollY || 0;
           setIsScrolled((prev) => {
             // Hysteresis deadband: trigger scrolled state when past 45px, revert only when within 15px of top
-            if (!prev && y > 45) return true;
-            if (prev && y < 15) return false;
+            if (!prev && y > 45) {
+              setLangDropdownOpen(false);
+              setUserMenuOpen(false);
+              return true;
+            }
+            if (prev && y < 15) {
+              setLangDropdownOpen(false);
+              setUserMenuOpen(false);
+              return false;
+            }
             return prev;
           });
           ticking = false;
@@ -76,8 +121,6 @@ const Navbar = () => {
     handleScroll();
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
-
-  const isUserLoggedIn = isAuthenticated();
 
   const isActive = (path) => location.pathname === path;
 
@@ -155,7 +198,7 @@ const Navbar = () => {
           <>
             <div className={`transition-all duration-300 ease-[cubic-bezier(0.16,1,0.3,1)] pointer-events-auto ${
               isScrolled
-                ? 'max-w-6xl mx-auto rounded-full bg-[#03091e]/95 backdrop-blur-2xl border-2 border-[#0062ff] shadow-[0_12px_40px_rgba(0,0,0,0.92),0_0_28px_rgba(0,98,255,0.35)] ring-1 ring-white/10 px-2.5 sm:px-4 h-12 sm:h-14 relative overflow-visible'
+                ? 'max-w-md sm:max-w-lg md:max-w-xl mx-auto rounded-full bg-[#03091e]/95 backdrop-blur-2xl border-2 border-[#0062ff] shadow-[0_12px_40px_rgba(0,0,0,0.92),0_0_28px_rgba(0,98,255,0.35)] ring-1 ring-white/10 px-2 sm:px-4 h-12 sm:h-14 relative overflow-visible'
                 : 'max-w-7xl mx-auto rounded-2xl bg-transparent px-1 sm:px-2 h-12 sm:h-14 relative'
             }`}>
             <div className="flex items-center justify-between h-full">
@@ -174,12 +217,16 @@ const Navbar = () => {
                 <SmartSearchBar isMobile={false} />
               </div>
 
-              {/* Right: Actions (Capsule Pills) */}
-              <div className="flex items-center gap-1.5 sm:gap-2 select-none shrink-0">
+              {/* Actions (Capsule Pills) - Evenly distributed across capsule when scrolled */}
+              <div className={`flex items-center select-none ${
+                isScrolled
+                  ? 'w-full justify-between px-1 sm:px-2'
+                  : 'gap-1.5 sm:gap-2 shrink-0'
+              }`}>
                 {/* Search Button matching Reference Image 2 */}
                 <button
                   type="button"
-                  onClick={() => setSearchModalOpen(true)}
+                  onClick={openSearchModal}
                   className="w-9 h-9 sm:w-10 sm:h-10 rounded-full border border-[#0055ff]/40 bg-[#081329]/90 hover:bg-[#0e204c] hover:border-cyan-400 text-cyan-400 hover:text-white flex items-center justify-center transition-all duration-200 active:scale-95 shadow-sm cursor-pointer shrink-0 group"
                   title={language === 'km' ? 'ស្វែងរកហ្គេម' : 'Search Games'}
                   aria-label="Search"
@@ -208,7 +255,7 @@ const Navbar = () => {
                 <div className="relative z-[100]">
                   <button
                     type="button"
-                    onClick={() => setLangDropdownOpen(!langDropdownOpen)}
+                    onClick={toggleLangDropdown}
                     className={`h-9 px-2 sm:h-10 sm:px-3 rounded-full border transition-all duration-200 text-xs font-bold flex items-center gap-1.5 sm:gap-2 shadow-sm active:scale-95 whitespace-nowrap cursor-pointer ${
                       langDropdownOpen
                         ? 'bg-[#0e204c] border-2 border-cyan-400 text-white ring-2 ring-cyan-400/25 shadow-[0_0_18px_rgba(0,229,255,0.4)]'
@@ -233,349 +280,353 @@ const Navbar = () => {
                     </svg>
                   </button>
 
-              {langDropdownOpen && (
-                <>
-                  {/* Invisible Dismiss Overlay */}
-                  <div
-                    className="fixed inset-0 z-[90]"
-                    onClick={() => setLangDropdownOpen(false)}
-                  />
-
-                  {/* High-End Cyber Gaming Dropdown Card with Smooth Spring Transition */}
-                  <div className="absolute right-0 mt-3 w-72 sm:w-80 rounded-[22px] bg-[#040816] border-2 border-[#0055ff]/80 shadow-[0_15px_50px_rgba(0,0,0,0.95),0_0_28px_rgba(0,85,255,0.3)] p-2.5 z-[100] animate-profileDropdown font-khmer select-none">
-                    {/* Top Caret Pointer Triangle */}
-                    <div className="absolute -top-2 right-6 sm:right-7 w-3.5 h-3.5 rotate-45 bg-[#0a1838] border-t-2 border-l-2 border-[#0055ff]/80 z-20 pointer-events-none" />
-
-                    {/* Dedicated Cosmic Gaming Artwork Background Layer */}
-                    <div className="absolute inset-[1px] rounded-[20px] overflow-hidden z-0 pointer-events-none">
-                      <div className="absolute inset-0 bg-[#040816]" />
-                      <img 
-                        src="/images/banner_starlight_cosmic.jpg" 
-                        alt="Cosmic Background"
-                        className="w-full h-full object-cover object-center opacity-45 scale-105 filter brightness-110 contrast-125"
+                  {langDropdownOpen && (
+                    <>
+                      {/* Invisible Dismiss Overlay */}
+                      <div
+                        className="fixed inset-0 z-[90]"
+                        onClick={closeAllMenus}
                       />
-                      <div className="absolute inset-0 bg-gradient-to-b from-[#040816]/80 via-[#040816]/50 to-[#040816]/90" />
-                      <div className="absolute inset-0 shadow-[inset_0_0_35px_rgba(0,112,255,0.35)]" />
-                    </div>
 
-                    <div className="relative z-10">
-                      {/* Dropdown Header */}
-                      <div className="flex items-center justify-between px-2.5 py-2 border-b border-blue-900/40 mb-2">
-                        <div className="flex items-center gap-2">
-                          <div className="w-5.5 h-5.5 rounded-lg bg-cyan-500/20 border border-cyan-400/40 flex items-center justify-center text-xs text-cyan-300 shadow-[0_0_8px_rgba(6,182,212,0.3)]">
-                            🌐
-                          </div>
-                          <span className="text-[11px] font-black text-slate-200 uppercase tracking-wider">
-                            Language / ភាសា
-                          </span>
+                      {/* High-End Cyber Gaming Dropdown Card with viewport safety clamping */}
+                      <div className="fixed sm:absolute left-3 right-3 sm:left-auto sm:right-0 top-16 sm:top-full mt-2 w-auto max-w-sm sm:w-80 mx-auto rounded-[22px] bg-[#040816] border-2 border-[#0055ff]/80 shadow-[0_15px_50px_rgba(0,0,0,0.95),0_0_28px_rgba(0,85,255,0.3)] p-2.5 z-[100] animate-profileDropdown font-khmer select-none">
+                        {/* Top Caret Pointer Triangle on desktop */}
+                        <div className="hidden sm:block absolute -top-2 right-6 sm:right-7 w-3.5 h-3.5 rotate-45 bg-[#0a1838] border-t-2 border-l-2 border-[#0055ff]/80 z-20 pointer-events-none" />
+
+                        {/* Dedicated Cosmic Gaming Artwork Background Layer */}
+                        <div className="absolute inset-[1px] rounded-[20px] overflow-hidden z-0 pointer-events-none">
+                          <div className="absolute inset-0 bg-[#040816]" />
+                          <img 
+                            src="/images/banner_starlight_cosmic.jpg" 
+                            alt="Cosmic Background"
+                            className="w-full h-full object-cover object-center opacity-45 scale-105 filter brightness-110 contrast-125"
+                          />
+                          <div className="absolute inset-0 bg-gradient-to-b from-[#040816]/80 via-[#040816]/50 to-[#040816]/90" />
+                          <div className="absolute inset-0 shadow-[inset_0_0_35px_rgba(0,112,255,0.35)]" />
                         </div>
-                        <span className="text-[10px] font-extrabold px-2.5 py-0.5 rounded-full bg-cyan-950/90 border border-cyan-400/50 text-cyan-300 shadow-[0_0_10px_rgba(6,182,212,0.25)]">
-                          {languages.length} Available
-                        </span>
-                      </div>
 
-                      {/* Language Options */}
-                      <div className="space-y-1.5">
-                        {languages.map((l) => {
-                          const isSelected = language === l.code;
-                          return (
-                            <button
-                              key={l.code}
-                              type="button"
-                              onClick={() => {
-                                setLanguage(l.code);
-                                setLangDropdownOpen(false);
-                              }}
-                              className={`w-full text-left px-3 py-2.5 rounded-xl transition-all duration-200 flex items-center justify-between cursor-pointer group ${
-                                isSelected
-                                  ? 'bg-gradient-to-r from-[#003882]/85 via-[#002860]/90 to-[#001c44]/95 border-2 border-[#00d0ff] shadow-[0_0_18px_rgba(0,208,255,0.35),inset_0_0_12px_rgba(0,180,255,0.2)] text-white scale-[1.01]'
-                                  : 'bg-[#060e20]/65 hover:bg-[#0c1a3e]/85 backdrop-blur-sm border border-slate-700/60 hover:border-blue-500/50 text-slate-300 hover:text-white hover:scale-[1.01]'
-                              }`}
-                            >
-                              <div className="flex items-center gap-3 min-w-0">
-                                {/* Flag Squircle */}
-                                <div className={`w-8 h-5.5 rounded-md overflow-hidden shadow-sm border shrink-0 flex items-center justify-center transition-all ${
-                                  isSelected 
-                                    ? 'border-cyan-300 ring-2 ring-cyan-400/50 shadow-[0_0_10px_rgba(0,229,255,0.5)]' 
-                                    : 'border-white/20 group-hover:border-white/50'
-                                }`}>
-                                  <span className={`fi fi-${l.flagCode || 'kh'} w-full h-full object-cover leading-none`} />
-                                </div>
-                                
-                                {/* Text */}
-                                <div className="flex flex-col min-w-0">
-                                  <span className={`text-xs font-bold leading-tight truncate ${
-                                    isSelected ? 'text-white font-black drop-shadow-[0_0_6px_rgba(255,255,255,0.4)]' : 'text-slate-200 group-hover:text-white'
-                                  }`}>
-                                    {l.name}
-                                  </span>
-                                  <span className={`text-[10px] font-medium leading-tight mt-0.5 truncate ${
-                                    isSelected ? 'text-cyan-200' : 'text-slate-400 group-hover:text-slate-300'
-                                  }`}>
-                                    {l.sub}
-                                  </span>
-                                </div>
+                        <div className="relative z-10">
+                          {/* Dropdown Header */}
+                          <div className="flex items-center justify-between px-2.5 py-2 border-b border-blue-900/40 mb-2">
+                            <div className="flex items-center gap-2">
+                              <div className="w-5.5 h-5.5 rounded-lg bg-cyan-500/20 border border-cyan-400/40 flex items-center justify-center text-xs text-cyan-300 shadow-[0_0_8px_rgba(6,182,212,0.3)]">
+                                🌐
                               </div>
+                              <span className="text-[11px] font-black text-slate-200 uppercase tracking-wider">
+                                Language / ភាសា
+                              </span>
+                            </div>
+                            <span className="text-[10px] font-extrabold px-2.5 py-0.5 rounded-full bg-cyan-950/90 border border-cyan-400/50 text-cyan-300 shadow-[0_0_10px_rgba(6,182,212,0.25)]">
+                              {languages.length} Available
+                            </span>
+                          </div>
 
-                              {/* Right Indicator */}
-                              {isSelected ? (
-                                <div className="w-5.5 h-5.5 rounded-full bg-cyan-400 border-2 border-white text-slate-950 flex items-center justify-center text-xs font-black shrink-0 shadow-[0_0_12px_rgba(0,229,255,0.8)]">
-                                  ✓
-                                </div>
-                              ) : (
-                                <div className="w-5 h-5 rounded-full border border-slate-700/80 group-hover:border-blue-400/60 flex items-center justify-center text-slate-500 group-hover:text-cyan-400 text-xs transition-colors">
-                                  ›
-                                </div>
-                              )}
-                            </button>
-                          );
-                        })}
-                      </div>
+                          {/* Language Options */}
+                          <div className="space-y-1.5">
+                            {languages.map((l) => {
+                              const isSelected = language === l.code;
+                              return (
+                                <button
+                                  key={l.code}
+                                  type="button"
+                                  onClick={() => {
+                                    setLanguage(l.code);
+                                    closeAllMenus();
+                                  }}
+                                  className={`w-full text-left px-3 py-2.5 rounded-xl transition-all duration-200 flex items-center justify-between cursor-pointer group ${
+                                    isSelected
+                                      ? 'bg-gradient-to-r from-[#003882]/85 via-[#002860]/90 to-[#001c44]/95 border-2 border-[#00d0ff] shadow-[0_0_18px_rgba(0,208,255,0.35),inset_0_0_12px_rgba(0,180,255,0.2)] text-white scale-[1.01]'
+                                      : 'bg-[#060e20]/65 hover:bg-[#0c1a3e]/85 backdrop-blur-sm border border-slate-700/60 hover:border-blue-500/50 text-slate-300 hover:text-white hover:scale-[1.01]'
+                                  }`}
+                                >
+                                  <div className="flex items-center gap-3 min-w-0">
+                                    {/* Flag Squircle */}
+                                    <div className={`w-8 h-5.5 rounded-md overflow-hidden shadow-sm border shrink-0 flex items-center justify-center transition-all ${
+                                      isSelected 
+                                        ? 'border-cyan-300 ring-2 ring-cyan-400/50 shadow-[0_0_10px_rgba(0,229,255,0.5)]' 
+                                        : 'border-white/20 group-hover:border-white/50'
+                                    }`}>
+                                      <span className={`fi fi-${l.flagCode || 'kh'} w-full h-full object-cover leading-none`} />
+                                    </div>
+                                    
+                                    {/* Text */}
+                                    <div className="flex flex-col min-w-0">
+                                      <span className={`text-xs font-bold leading-tight truncate ${
+                                        isSelected ? 'text-white font-black drop-shadow-[0_0_6px_rgba(255,255,255,0.4)]' : 'text-slate-200 group-hover:text-white'
+                                      }`}>
+                                        {l.name}
+                                      </span>
+                                      <span className={`text-[10px] font-medium leading-tight mt-0.5 truncate ${
+                                        isSelected ? 'text-cyan-200' : 'text-slate-400 group-hover:text-slate-300'
+                                      }`}>
+                                        {l.sub}
+                                      </span>
+                                    </div>
+                                  </div>
 
-                      {/* Footer */}
-                      <div className="mt-2 pt-2 border-t border-blue-900/40 px-2 py-0.5 flex items-center justify-between text-[10px] font-medium">
-                        <div className="flex items-center gap-1.5 text-amber-400 font-semibold drop-shadow-[0_0_6px_rgba(251,191,36,0.3)]">
-                          <span>⚡</span>
-                          <span>Instant Switch</span>
+                                  {/* Right Indicator */}
+                                  {isSelected ? (
+                                    <div className="w-5.5 h-5.5 rounded-full bg-cyan-400 border-2 border-white text-slate-950 flex items-center justify-center text-xs font-black shrink-0 shadow-[0_0_12px_rgba(0,229,255,0.8)]">
+                                      ✓
+                                    </div>
+                                  ) : (
+                                    <div className="w-5 h-5 rounded-full border border-slate-700/80 group-hover:border-blue-400/60 flex items-center justify-center text-slate-500 group-hover:text-cyan-400 text-xs transition-colors">
+                                      ›
+                                    </div>
+                                  )}
+                                </button>
+                              );
+                            })}
+                          </div>
+
+                          {/* Footer */}
+                          <div className="mt-2 pt-2 border-t border-blue-900/40 px-2 py-0.5 flex items-center justify-between text-[10px] font-medium">
+                            <div className="flex items-center gap-1.5 text-amber-400 font-semibold drop-shadow-[0_0_6px_rgba(251,191,36,0.3)]">
+                              <span>⚡</span>
+                              <span>Instant Switch</span>
+                            </div>
+                            <span className="text-emerald-400 flex items-center gap-1.5 font-bold drop-shadow-[0_0_6px_rgba(52,211,153,0.3)]">
+                              <span className="w-2 h-2 rounded-full bg-emerald-400 shadow-[0_0_8px_#34d399] animate-pulse" />
+                              Active
+                            </span>
+                          </div>
                         </div>
-                        <span className="text-emerald-400 flex items-center gap-1.5 font-bold drop-shadow-[0_0_6px_rgba(52,211,153,0.3)]">
-                          <span className="w-2 h-2 rounded-full bg-emerald-400 shadow-[0_0_8px_#34d399] animate-pulse" />
-                          Active
-                        </span>
                       </div>
-                    </div>
-                  </div>
-                </>
-              )}
-            </div>
-
-            {/* User Login or Profile / Sign Out Control (Visible on Mobile & Desktop) */}
-            {!isUserLoggedIn ? (
-              <button
-                type="button"
-                onClick={() => window.dispatchEvent(new CustomEvent('open-player-login'))}
-                className="h-9 px-2.5 sm:h-10 sm:px-3.5 rounded-full bg-gradient-to-r from-blue-600 via-sky-600 to-cyan-500 hover:from-blue-500 hover:to-cyan-400 text-white text-xs font-bold flex items-center gap-1.5 shadow-[0_2px_10px_rgba(14,165,233,0.3)] transition-all active:scale-95 cursor-pointer whitespace-nowrap"
-                title="Login with Player ID & Server ID"
-              >
-                <svg className="w-3.5 h-3.5 sm:w-4 sm:h-4 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
-                </svg>
-                <span className="font-bold">{language === 'km' ? 'ចូលគណនី' : 'Login'}</span>
-              </button>
-            ) : (
-              <div className="relative">
-                <button
-                  type="button"
-                  onClick={() => setUserMenuOpen(!userMenuOpen)}
-                  className={`h-9 px-2 sm:h-10 sm:px-3 rounded-full border transition-all duration-200 text-xs font-bold flex items-center gap-1.5 sm:gap-2 shadow-sm active:scale-95 cursor-pointer ${
-                    userMenuOpen
-                      ? 'bg-[#0e204c] border-2 border-cyan-400 text-white ring-2 ring-cyan-400/25 shadow-[0_0_18px_rgba(0,229,255,0.4)]'
-                      : 'bg-[#081329]/90 hover:bg-[#0e204c] border-[#0055ff]/40 hover:border-[#0088ff]/70 text-slate-200'
-                  }`}
-                  title="Player Account Menu"
-                >
-                  {/* Golden Crown Squircle Medallion matching Reference Image 1 */}
-                  <div className="w-6.5 h-6.5 sm:w-7.5 sm:h-7.5 rounded-xl border-2 border-amber-400 bg-gradient-to-b from-[#2e1805] via-[#160c02] to-[#0a0501] shadow-[0_0_12px_rgba(251,191,36,0.65)] flex items-center justify-center overflow-hidden shrink-0">
-                    <svg className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-amber-400 drop-shadow-[0_1px_3px_rgba(0,0,0,0.9)]" viewBox="0 0 24 24" fill="currentColor">
-                      <path d="M5 16L3 5l5.5 5L12 4l3.5 6L21 5l-2 11H5zm14 3c0 .6-.4 1-1 1H6c-.6 0-1-.4-1-1v-1h14v1z"/>
-                      <circle cx="12" cy="11.5" r="1.5" fill="#38bdf8"/>
-                    </svg>
-                  </div>
-                  {!isScrolled && (
-                    <span className="hidden md:inline font-bold max-w-[85px] truncate text-[11px]">
-                      {playerAccount?.realName || user?.name || playerAccount?.playerId}
-                    </span>
+                    </>
                   )}
-                  <span className="w-2.5 h-2.5 rounded-full bg-[#10e396] shadow-[0_0_8px_#10e396] animate-pulse shrink-0" />
-                </button>
+                </div>
 
-                {userMenuOpen && (
-                  <>
-                    <div className="fixed inset-0 z-40" onClick={() => setUserMenuOpen(false)} />
-                    <div className="absolute right-0 mt-3 w-72 sm:w-80 rounded-[22px] bg-[#040816] border-2 border-[#0055ff]/80 shadow-[0_15px_50px_rgba(0,0,0,0.95),0_0_28px_rgba(0,85,255,0.3)] p-2.5 z-50 animate-profileDropdown font-khmer select-none">
-                      {/* Top Caret Pointer Triangle matching Reference Image 1 */}
-                      <div className="absolute -top-2 right-6 w-3.5 h-3.5 rotate-45 bg-[#0a1838] border-t-2 border-l-2 border-[#0055ff]/80 z-20 pointer-events-none" />
-
-                      {/* Dedicated Cosmic Gaming Artwork Background Layer */}
-                      <div className="absolute inset-[1px] rounded-[20px] overflow-hidden z-0 pointer-events-none">
-                        <div className="absolute inset-0 bg-[#040816]" />
-                        <img 
-                          src="/images/banner_starlight_cosmic.jpg" 
-                          alt="Cosmic Background"
-                          className="w-full h-full object-cover object-center opacity-45 scale-105 filter brightness-110 contrast-125"
-                        />
-                        <div className="absolute inset-0 bg-gradient-to-b from-[#040816]/80 via-[#040816]/50 to-[#040816]/90" />
-                        <div className="absolute inset-0 shadow-[inset_0_0_35px_rgba(0,112,255,0.35)]" />
+                {/* User Login or Profile / Sign Out Control (Visible on Mobile & Desktop) */}
+                {!isUserLoggedIn ? (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      closeAllMenus();
+                      window.dispatchEvent(new CustomEvent('open-player-login'));
+                    }}
+                    className="h-9 px-2.5 sm:h-10 sm:px-3.5 rounded-full bg-gradient-to-r from-blue-600 via-sky-600 to-cyan-500 hover:from-blue-500 hover:to-cyan-400 text-white text-xs font-bold flex items-center gap-1.5 shadow-[0_2px_10px_rgba(14,165,233,0.3)] transition-all active:scale-95 cursor-pointer whitespace-nowrap"
+                    title="Login with Player ID & Server ID"
+                  >
+                    <svg className="w-3.5 h-3.5 sm:w-4 sm:h-4 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                    </svg>
+                    <span className={`${isScrolled ? 'hidden sm:inline' : ''} font-bold`}>{language === 'km' ? 'ចូលគណនី' : 'Login'}</span>
+                  </button>
+                ) : (
+                  <div className="relative">
+                    <button
+                      type="button"
+                      onClick={toggleUserMenu}
+                      className={`h-9 px-2 sm:h-10 sm:px-3 rounded-full border transition-all duration-200 text-xs font-bold flex items-center gap-1.5 sm:gap-2 shadow-sm active:scale-95 cursor-pointer ${
+                        userMenuOpen
+                          ? 'bg-[#0e204c] border-2 border-cyan-400 text-white ring-2 ring-cyan-400/25 shadow-[0_0_18px_rgba(0,229,255,0.4)]'
+                          : 'bg-[#081329]/90 hover:bg-[#0e204c] border-[#0055ff]/40 hover:border-[#0088ff]/70 text-slate-200'
+                      }`}
+                      title="Player Account Menu"
+                    >
+                      {/* Golden Crown Squircle Medallion matching Reference Image 1 */}
+                      <div className="w-6.5 h-6.5 sm:w-7.5 sm:h-7.5 rounded-xl border-2 border-amber-400 bg-gradient-to-b from-[#2e1805] via-[#160c02] to-[#0a0501] shadow-[0_0_12px_rgba(251,191,36,0.65)] flex items-center justify-center overflow-hidden shrink-0">
+                        <svg className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-amber-400 drop-shadow-[0_1px_3px_rgba(0,0,0,0.9)]" viewBox="0 0 24 24" fill="currentColor">
+                          <path d="M5 16L3 5l5.5 5L12 4l3.5 6L21 5l-2 11H5zm14 3c0 .6-.4 1-1 1H6c-.6 0-1-.4-1-1v-1h14v1z"/>
+                          <circle cx="12" cy="11.5" r="1.5" fill="#38bdf8"/>
+                        </svg>
                       </div>
+                      {!isScrolled && (
+                        <span className="hidden md:inline font-bold max-w-[85px] truncate text-[11px]">
+                          {playerAccount?.realName || user?.name || playerAccount?.playerId}
+                        </span>
+                      )}
+                      <span className="w-2.5 h-2.5 rounded-full bg-[#10e396] shadow-[0_0_8px_#10e396] animate-pulse shrink-0" />
+                    </button>
 
-                      <div className="relative z-10">
-                        {/* Top Header Card - Exact Match to Reference Image 1 */}
-                        <div className="relative overflow-hidden rounded-2xl bg-gradient-to-r from-[#0a1838] via-[#091530] to-[#0a1226] border border-blue-500/40 p-3 mb-2 shadow-inner">
-                          {/* Ambient Golden Glow on Left */}
-                          <div className="absolute -left-10 -top-10 w-32 h-32 bg-amber-500/15 rounded-full blur-2xl pointer-events-none" />
-                          
-                          {/* Specular Top Sheen */}
-                          <div className="absolute top-0 inset-x-0 h-[1px] bg-gradient-to-r from-amber-400/50 via-blue-400/30 to-transparent pointer-events-none" />
+                    {userMenuOpen && (
+                      <>
+                        <div className="fixed inset-0 z-40" onClick={closeAllMenus} />
+                        <div className="fixed sm:absolute left-3 right-3 sm:left-auto sm:right-0 top-16 sm:top-full mt-2 w-auto max-w-sm sm:w-80 mx-auto rounded-[22px] bg-[#040816] border-2 border-[#0055ff]/80 shadow-[0_15px_50px_rgba(0,0,0,0.95),0_0_28px_rgba(0,85,255,0.3)] p-2.5 z-50 animate-profileDropdown font-khmer select-none">
+                          {/* Top Caret Pointer Triangle matching Reference Image 1 on desktop */}
+                          <div className="hidden sm:block absolute -top-2 right-6 w-3.5 h-3.5 rotate-45 bg-[#0a1838] border-t-2 border-l-2 border-[#0055ff]/80 z-20 pointer-events-none" />
 
-                          {/* Faint Crown Watermark in Background on Right */}
-                          <div className="absolute -right-2 -bottom-2 text-white/5 pointer-events-none select-none">
-                            <svg className="w-20 h-20 fill-current" viewBox="0 0 24 24">
-                              <path d="M5 16L3 5l5.5 5L12 4l3.5 6L21 5l-2 11H5zm14 3c0 .6-.4 1-1 1H6c-.6 0-1-.4-1-1v-1h14v1z" />
-                            </svg>
+                          {/* Dedicated Cosmic Gaming Artwork Background Layer */}
+                          <div className="absolute inset-[1px] rounded-[20px] overflow-hidden z-0 pointer-events-none">
+                            <div className="absolute inset-0 bg-[#040816]" />
+                            <img 
+                              src="/images/banner_starlight_cosmic.jpg" 
+                              alt="Cosmic Background"
+                              className="w-full h-full object-cover object-center opacity-45 scale-105 filter brightness-110 contrast-125"
+                            />
+                            <div className="absolute inset-0 bg-gradient-to-b from-[#040816]/80 via-[#040816]/50 to-[#040816]/90" />
+                            <div className="absolute inset-0 shadow-[inset_0_0_35px_rgba(0,112,255,0.35)]" />
                           </div>
 
-                          <div className="relative z-10 flex items-center justify-between gap-2.5">
-                            {/* Left: Glowing Gold Squircle Avatar */}
-                            <div className="relative shrink-0">
-                              <div className="w-13 h-13 sm:w-14 sm:h-14 rounded-2xl p-[2px] bg-gradient-to-br from-amber-300 via-amber-500 to-yellow-600 shadow-[0_0_18px_rgba(245,158,11,0.55)]">
-                                <div className="w-full h-full rounded-[14px] bg-gradient-to-b from-[#2a1705] via-[#140b02] to-[#0a0501] flex items-center justify-center overflow-hidden">
-                                  <GamerAvatar 
-                                    avatarId={playerAccount?.avatar || user?.avatar || 'crown'} 
-                                    name={playerAccount?.realName || user?.name || playerAccount?.playerId} 
-                                    size="sm" 
-                                    showGlow={false} 
-                                  />
+                          <div className="relative z-10">
+                            {/* Top Header Card - Exact Match to Reference Image 1 */}
+                            <div className="relative overflow-hidden rounded-2xl bg-gradient-to-r from-[#0a1838] via-[#091530] to-[#0a1226] border border-blue-500/40 p-3 mb-2 shadow-inner">
+                              {/* Ambient Golden Glow on Left */}
+                              <div className="absolute -left-10 -top-10 w-32 h-32 bg-amber-500/15 rounded-full blur-2xl pointer-events-none" />
+                              
+                              {/* Specular Top Sheen */}
+                              <div className="absolute top-0 inset-x-0 h-[1px] bg-gradient-to-r from-amber-400/50 via-blue-400/30 to-transparent pointer-events-none" />
+
+                              {/* Faint Crown Watermark in Background on Right */}
+                              <div className="absolute -right-2 -bottom-2 text-white/5 pointer-events-none select-none">
+                                <svg className="w-20 h-20 fill-current" viewBox="0 0 24 24">
+                                  <path d="M5 16L3 5l5.5 5L12 4l3.5 6L21 5l-2 11H5zm14 3c0 .6-.4 1-1 1H6c-.6 0-1-.4-1-1v-1h14v1z" />
+                                </svg>
+                              </div>
+
+                              <div className="relative z-10 flex items-center justify-between gap-2.5">
+                                {/* Left: Glowing Gold Squircle Avatar */}
+                                <div className="relative shrink-0">
+                                  <div className="w-13 h-13 sm:w-14 sm:h-14 rounded-2xl p-[2px] bg-gradient-to-br from-amber-300 via-amber-500 to-yellow-600 shadow-[0_0_18px_rgba(245,158,11,0.55)]">
+                                    <div className="w-full h-full rounded-[14px] bg-gradient-to-b from-[#2a1705] via-[#140b02] to-[#0a0501] flex items-center justify-center overflow-hidden">
+                                      <GamerAvatar 
+                                        avatarId={playerAccount?.avatar || user?.avatar || 'crown'} 
+                                        name={playerAccount?.realName || user?.name || playerAccount?.playerId} 
+                                        size="sm" 
+                                        showGlow={false} 
+                                      />
+                                    </div>
+                                  </div>
                                 </div>
+
+                                {/* Middle: User Identity & Active Status */}
+                                <div className="min-w-0 flex-1 pl-1">
+                                  <h4 className="text-sm sm:text-base font-black text-white tracking-wide truncate font-sans">
+                                    {playerAccount?.realName || user?.name || 'Pu Deth'}
+                                  </h4>
+                                  <div className="text-xs font-bold text-slate-300 font-mono mt-0.5 truncate flex items-center gap-1">
+                                    <span className="text-slate-400 font-sans">ID:</span>
+                                    <span className="text-[#00e5ff] font-mono tracking-tight font-extrabold">
+                                      {playerAccount?.playerId || user?.email?.split('@')[0] || '1225368571'}
+                                    </span>
+                                  </div>
+                                  <div className="text-[11px] text-[#00f59b] font-bold mt-0.5 flex items-center gap-1.5 font-sans tracking-tight">
+                                    <span className="w-2 h-2 rounded-full bg-[#00f59b] shadow-[0_0_8px_#00f59b] animate-pulse shrink-0" />
+                                    <span className="truncate">
+                                      {playerAccount?.serverId ? `Zone: ${playerAccount.serverId} • Active` : 'Zone: 11446 • Active'}
+                                    </span>
+                                  </div>
+                                </div>
+
+                                {/* Right: Sleek Edit Icon Button */}
+                                <button
+                                  type="button"
+                                  onClick={() => {
+                                    closeAllMenus();
+                                    window.dispatchEvent(new CustomEvent('open-player-profile'));
+                                  }}
+                                  className="w-8 h-8 rounded-xl bg-[#0e1d3e] hover:bg-[#162a56] border border-blue-500/50 hover:border-cyan-400 text-blue-200 hover:text-white flex items-center justify-center transition-all cursor-pointer shadow-sm active:scale-95 shrink-0 self-start"
+                                  title={language === 'km' ? 'កែសម្រួល Profile' : 'Edit Profile'}
+                                >
+                                  <svg className="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                                    <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" />
+                                    <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" />
+                                  </svg>
+                                </button>
                               </div>
                             </div>
 
-                            {/* Middle: User Identity & Active Status */}
-                            <div className="min-w-0 flex-1 pl-1">
-                              <h4 className="text-sm sm:text-base font-black text-white tracking-wide truncate font-sans">
-                                {playerAccount?.realName || user?.name || 'Pu Deth'}
-                              </h4>
-                              <div className="text-xs font-bold text-slate-300 font-mono mt-0.5 truncate flex items-center gap-1">
-                                <span className="text-slate-400 font-sans">ID:</span>
-                                <span className="text-[#00e5ff] font-mono tracking-tight font-extrabold">
-                                  {playerAccount?.playerId || user?.email?.split('@')[0] || '1225368571'}
-                                </span>
-                              </div>
-                              <div className="text-[11px] text-[#00f59b] font-bold mt-0.5 flex items-center gap-1.5 font-sans tracking-tight">
-                                <span className="w-2 h-2 rounded-full bg-[#00f59b] shadow-[0_0_8px_#00f59b] animate-pulse shrink-0" />
-                                <span className="truncate">
-                                  {playerAccount?.serverId ? `Zone: ${playerAccount.serverId} • Active` : 'Zone: 11446 • Active'}
-                                </span>
-                              </div>
-                            </div>
-
-                            {/* Right: Sleek Edit Icon Button */}
+                            {/* 1. Profile & Edit Info Row Button */}
                             <button
                               type="button"
                               onClick={() => {
-                                setUserMenuOpen(false);
+                                closeAllMenus();
                                 window.dispatchEvent(new CustomEvent('open-player-profile'));
                               }}
-                              className="w-8 h-8 rounded-xl bg-[#0e1d3e] hover:bg-[#162a56] border border-blue-500/50 hover:border-cyan-400 text-blue-200 hover:text-white flex items-center justify-center transition-all cursor-pointer shadow-sm active:scale-95 shrink-0 self-start"
-                              title={language === 'km' ? 'កែសម្រួល Profile' : 'Edit Profile'}
+                              className="w-full flex items-center justify-between p-2.5 sm:p-3 rounded-xl bg-[#0c152e]/80 hover:bg-[#122046]/95 backdrop-blur-sm border border-blue-500/25 hover:border-blue-400/60 transition-all duration-200 cursor-pointer group mb-1.5 shadow-sm active:scale-[0.99]"
                             >
-                              <svg className="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                                <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" />
-                                <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" />
+                              <div className="flex items-center gap-3 min-w-0">
+                                <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-[#1e1b4b] to-[#1e293b] border border-indigo-500/40 text-indigo-300 flex items-center justify-center shrink-0 shadow-sm group-hover:scale-105 transition-transform">
+                                  <svg className="w-4 h-4 fill-current" viewBox="0 0 24 24">
+                                    <path d="M12 12c2.7 0 4.8-2.1 4.8-4.8S14.7 2.4 12 2.4 7.2 4.5 7.2 7.2 9.3 12 12 12zm0 2.4c-3.2 0-9.6 1.6-9.6 4.8v2.4h19.2v-2.4c0-3.2-6.4-4.8-9.6-4.8z"/>
+                                  </svg>
+                                </div>
+                                <span className="text-xs sm:text-[13px] font-black text-white group-hover:text-cyan-300 transition-colors font-khmer truncate">
+                                  {language === 'km' ? 'ព័ត៌មាន Profile & ពិនិត្យ' : 'Profile & Edit Info'}
+                                </span>
+                              </div>
+                              <svg className="w-4 h-4 text-slate-400 group-hover:text-cyan-300 group-hover:translate-x-0.5 transition-all shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+                                <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
+                              </svg>
+                            </button>
+
+                            {/* 2. Order History Row Button */}
+                            <Link
+                              to="/order-history"
+                              onClick={closeAllMenus}
+                              className="w-full flex items-center justify-between p-2.5 sm:p-3 rounded-xl bg-[#0c152e]/80 hover:bg-[#122046]/95 backdrop-blur-sm border border-blue-500/25 hover:border-blue-400/60 transition-all duration-200 cursor-pointer group mb-1.5 shadow-sm active:scale-[0.99]"
+                            >
+                              <div className="flex items-center gap-3 min-w-0">
+                                <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-[#0c2340] to-[#0f172a] border border-cyan-500/40 text-cyan-300 flex items-center justify-center shrink-0 shadow-sm group-hover:scale-105 transition-transform">
+                                  <svg className="w-4 h-4 fill-none" stroke="currentColor" strokeWidth={2.2} viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                                  </svg>
+                                </div>
+                                <span className="text-xs sm:text-[13px] font-black text-white group-hover:text-cyan-300 transition-colors font-khmer truncate">
+                                  {language === 'km' ? 'ប្រវត្តិបញ្ជាទិញ' : 'Order History'}
+                                </span>
+                              </div>
+                              <svg className="w-4 h-4 text-slate-400 group-hover:text-cyan-300 group-hover:translate-x-0.5 transition-all shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+                                <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
+                              </svg>
+                            </Link>
+
+                            {/* 3. Sign Out Row Button */}
+                            <button
+                              type="button"
+                              onClick={() => {
+                                closeAllMenus();
+                                logout();
+                              }}
+                              className="w-full flex items-center justify-between p-2.5 sm:p-3 rounded-xl bg-gradient-to-r from-[#200c14]/90 via-[#18080f]/90 to-[#12050b]/95 hover:from-[#2c0e1b] hover:to-[#1a0710] border border-rose-500/40 hover:border-rose-400/70 transition-all duration-200 cursor-pointer group shadow-sm active:scale-[0.99]"
+                            >
+                              <div className="flex items-center gap-3 min-w-0">
+                                <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-rose-950/80 to-red-950/80 border border-rose-500/50 text-rose-400 flex items-center justify-center shrink-0 shadow-sm group-hover:scale-105 transition-transform">
+                                  <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.2}>
+                                    <path strokeLinecap="round" strokeLinejoin="round" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+                                  </svg>
+                                </div>
+                                <span className="text-xs sm:text-[13px] font-black text-[#ff3366] group-hover:text-rose-200 transition-colors font-khmer truncate">
+                                  {language === 'km' ? 'ចាកចេញ (Sign Out)' : 'Sign Out'}
+                                </span>
+                              </div>
+                              <svg className="w-4 h-4 text-rose-400/70 group-hover:text-rose-300 group-hover:translate-x-0.5 transition-all shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+                                <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
                               </svg>
                             </button>
                           </div>
                         </div>
-
-                        {/* 1. Profile & Edit Info Row Button */}
-                        <button
-                          type="button"
-                          onClick={() => {
-                            setUserMenuOpen(false);
-                            window.dispatchEvent(new CustomEvent('open-player-profile'));
-                          }}
-                          className="w-full flex items-center justify-between p-2.5 sm:p-3 rounded-xl bg-[#0c152e]/80 hover:bg-[#122046]/95 backdrop-blur-sm border border-blue-500/25 hover:border-blue-400/60 transition-all duration-200 cursor-pointer group mb-1.5 shadow-sm active:scale-[0.99]"
-                        >
-                          <div className="flex items-center gap-3 min-w-0">
-                            <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-[#1e1b4b] to-[#1e293b] border border-indigo-500/40 text-indigo-300 flex items-center justify-center shrink-0 shadow-sm group-hover:scale-105 transition-transform">
-                              <svg className="w-4 h-4 fill-current" viewBox="0 0 24 24">
-                                <path d="M12 12c2.7 0 4.8-2.1 4.8-4.8S14.7 2.4 12 2.4 7.2 4.5 7.2 7.2 9.3 12 12 12zm0 2.4c-3.2 0-9.6 1.6-9.6 4.8v2.4h19.2v-2.4c0-3.2-6.4-4.8-9.6-4.8z"/>
-                              </svg>
-                            </div>
-                            <span className="text-xs sm:text-[13px] font-black text-white group-hover:text-cyan-300 transition-colors font-khmer truncate">
-                              {language === 'km' ? 'ព័ត៌មាន Profile & ពិនិត្យ' : 'Profile & Edit Info'}
-                            </span>
-                          </div>
-                          <svg className="w-4 h-4 text-slate-400 group-hover:text-cyan-300 group-hover:translate-x-0.5 transition-all shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
-                            <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
-                          </svg>
-                        </button>
-
-                        {/* 2. Order History Row Button */}
-                        <Link
-                          to="/order-history"
-                          onClick={() => setUserMenuOpen(false)}
-                          className="w-full flex items-center justify-between p-2.5 sm:p-3 rounded-xl bg-[#0c152e]/80 hover:bg-[#122046]/95 backdrop-blur-sm border border-blue-500/25 hover:border-blue-400/60 transition-all duration-200 cursor-pointer group mb-1.5 shadow-sm active:scale-[0.99]"
-                        >
-                          <div className="flex items-center gap-3 min-w-0">
-                            <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-[#0c2340] to-[#0f172a] border border-cyan-500/40 text-cyan-300 flex items-center justify-center shrink-0 shadow-sm group-hover:scale-105 transition-transform">
-                              <svg className="w-4 h-4 fill-none" stroke="currentColor" strokeWidth={2.2} viewBox="0 0 24 24">
-                                <path strokeLinecap="round" strokeLinejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                              </svg>
-                            </div>
-                            <span className="text-xs sm:text-[13px] font-black text-white group-hover:text-cyan-300 transition-colors font-khmer truncate">
-                              {language === 'km' ? 'ប្រវត្តិបញ្ជាទិញ' : 'Order History'}
-                            </span>
-                          </div>
-                          <svg className="w-4 h-4 text-slate-400 group-hover:text-cyan-300 group-hover:translate-x-0.5 transition-all shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
-                            <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
-                          </svg>
-                        </Link>
-
-                        {/* 3. Sign Out Row Button */}
-                        <button
-                          type="button"
-                          onClick={() => {
-                            setUserMenuOpen(false);
-                            logout();
-                          }}
-                          className="w-full flex items-center justify-between p-2.5 sm:p-3 rounded-xl bg-gradient-to-r from-[#200c14]/90 via-[#18080f]/90 to-[#12050b]/95 hover:from-[#2c0e1b] hover:to-[#1a0710] border border-rose-500/40 hover:border-rose-400/70 transition-all duration-200 cursor-pointer group shadow-sm active:scale-[0.99]"
-                        >
-                          <div className="flex items-center gap-3 min-w-0">
-                            <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-rose-950/80 to-red-950/80 border border-rose-500/50 text-rose-400 flex items-center justify-center shrink-0 shadow-sm group-hover:scale-105 transition-transform">
-                              <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.2}>
-                                <path strokeLinecap="round" strokeLinejoin="round" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
-                              </svg>
-                            </div>
-                            <span className="text-xs sm:text-[13px] font-black text-[#ff3366] group-hover:text-rose-200 transition-colors font-khmer truncate">
-                              {language === 'km' ? 'ចាកចេញ (Sign Out)' : 'Sign Out'}
-                            </span>
-                          </div>
-                          <svg className="w-4 h-4 text-rose-400/70 group-hover:text-rose-300 group-hover:translate-x-0.5 transition-all shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
-                            <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
-                          </svg>
-                        </button>
-                      </div>
-                    </div>
-                  </>
+                      </>
+                    )}
+                  </div>
                 )}
-              </div>
-            )}
 
-            {/* 4. Quick Games & Categories 4-Square Grid Button matching Reference Image 1 */}
-            <button
-              type="button"
-              onClick={() => {
-                const gamesSection = document.getElementById('games-section');
-                if (gamesSection) {
-                  gamesSection.scrollIntoView({ behavior: 'smooth' });
-                } else {
-                  setMobileMenuOpen(!mobileMenuOpen);
-                }
-              }}
-              className="w-9 h-9 sm:w-10 sm:h-10 rounded-full border border-[#0055ff]/50 bg-[#081329]/90 hover:bg-[#0e204c] hover:border-[#0088ff]/80 text-white flex items-center justify-center transition-all duration-200 active:scale-95 shadow-sm cursor-pointer group shrink-0"
-              title="All Games & Categories / ហ្គេមទាំងអស់"
-              aria-label="Toggle all games menu"
-            >
-              <svg className="w-3.5 h-3.5 sm:w-4 sm:h-4 fill-white group-hover:scale-110 transition-transform" viewBox="0 0 24 24">
-                <rect x="3.5" y="3.5" width="7" height="7" rx="2" />
-                <rect x="13.5" y="3.5" width="7" height="7" rx="2" />
-                <rect x="3.5" y="13.5" width="7" height="7" rx="2" />
-                <rect x="13.5" y="13.5" width="7" height="7" rx="2" />
-              </svg>
-            </button>
+                {/* 4. Quick Games & Categories 4-Square Grid Button matching Reference Image 1 */}
+                <button
+                  type="button"
+                  onClick={() => {
+                    closeAllMenus();
+                    const gamesSection = document.getElementById('games-section');
+                    if (gamesSection) {
+                      gamesSection.scrollIntoView({ behavior: 'smooth' });
+                    } else {
+                      toggleMobileMenu();
+                    }
+                  }}
+                  className="w-9 h-9 sm:w-10 sm:h-10 rounded-full border border-[#0055ff]/50 bg-[#081329]/90 hover:bg-[#0e204c] hover:border-[#0088ff]/80 text-white flex items-center justify-center transition-all duration-200 active:scale-95 shadow-sm cursor-pointer group shrink-0"
+                  title="All Games & Categories / ហ្គេមទាំងអស់"
+                  aria-label="Toggle all games menu"
+                >
+                  <svg className="w-3.5 h-3.5 sm:w-4 sm:h-4 fill-white group-hover:scale-110 transition-transform" viewBox="0 0 24 24">
+                    <rect x="3.5" y="3.5" width="7" height="7" rx="2" />
+                    <rect x="13.5" y="3.5" width="7" height="7" rx="2" />
+                    <rect x="3.5" y="13.5" width="7" height="7" rx="2" />
+                    <rect x="13.5" y="13.5" width="7" height="7" rx="2" />
+                  </svg>
+                </button>
+              </div>
+            </div>
           </div>
-        </div>
-      </div>
 
 
       {/* Ultra Clean & Smooth Animated Mobile Drawer */}
