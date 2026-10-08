@@ -717,138 +717,81 @@ const AiAssistant = () => {
       )}
 
       {/* Flexible Draggable Floating AI Trigger - Always Forward Layer */}
-      {/* Flexible Draggable Floating AI Trigger - Always Forward Layer */}
+      {/* Flexible Draggable Floating AI Trigger - Cyber HUD Pod Style matching Reference Image */}
       {(() => {
-        const isDockedLeft = pos ? pos.x < ((typeof window !== 'undefined' ? window.innerWidth : 1000) / 2) : false;
+        const isDockedLeft = pos ? pos.x < ((typeof window !== 'undefined' ? window.innerWidth : 1000) / 2) : true;
         return (
-          <>
-            {/* 1. Main Floating Bot (Full Companion Mode - Static & Clean, No Bobbing Animation) */}
-            <div
-              style={
-                pos
-                  ? {
-                      left: `${pos.x}px`,
-                      top: `${pos.y}px`,
-                      right: 'auto',
-                      bottom: 'auto',
-                      zIndex: 999999,
-                    }
-                  : {
-                      zIndex: 999999,
-                    }
+          <div
+            ref={btnRef}
+            onClick={(e) => {
+              resetHideTimer();
+              handleClick(e);
+            }}
+            onMouseEnter={resetHideTimer}
+            onMouseMove={resetHideTimer}
+            onDoubleClick={() => {
+              setPos(null);
+              try {
+                localStorage.removeItem('ai_assistant_pos');
+              } catch (e) {}
+            }}
+            onMouseDown={(e) => {
+              resetHideTimer();
+              if (e.button === 0) handleDragStart(e.clientX, e.clientY);
+            }}
+            onTouchStart={(e) => {
+              resetHideTimer();
+              if (e.touches && e.touches[0]) {
+                handleDragStart(e.touches[0].clientX, e.touches[0].clientY);
               }
-              className={`ai-assistant-widget fixed select-none transition-all duration-400 ease-[cubic-bezier(0.16,1,0.3,1)] ${
-                pos ? '' : 'bottom-28 right-3.5 sm:bottom-10 sm:right-6'
-              } ${
-                isHidden && !isOpen
-                  ? (isDockedLeft ? '-translate-x-12 scale-0 opacity-0 pointer-events-none' : 'translate-x-12 scale-0 opacity-0 pointer-events-none')
-                  : 'translate-x-0 scale-100 opacity-100 pointer-events-auto'
-              }`}
-            >
-              {/* Quick Hide Button Pill on Top of Bot */}
-              <button
-                type="button"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  setIsHidden(true);
-                }}
-                className="absolute -top-1 -right-1 z-20 w-5 h-5 rounded-full bg-[#0a162e] border border-cyan-400/80 text-cyan-300 hover:text-white hover:bg-rose-500 hover:border-rose-400 flex items-center justify-center text-[10px] font-bold shadow-md transition-all active:scale-90"
-                title="Hide / លាក់"
-                aria-label="Hide assistant"
-              >
-                ✕
-              </button>
-
-              {/* Bot Trigger Button (Static, No continuous bobbing animation) */}
-              <button
-                ref={btnRef}
-                type="button"
-                onClick={(e) => {
-                  resetHideTimer();
-                  handleClick(e);
-                }}
-                onMouseEnter={resetHideTimer}
-                onMouseMove={resetHideTimer}
-                onDoubleClick={() => {
-                  setPos(null);
-                  try {
-                    localStorage.removeItem('ai_assistant_pos');
-                  } catch (e) {}
-                }}
-                onMouseDown={(e) => {
-                  resetHideTimer();
-                  if (e.button === 0) handleDragStart(e.clientX, e.clientY);
-                }}
-                onTouchStart={(e) => {
-                  resetHideTimer();
-                  if (e.touches && e.touches[0]) {
-                    handleDragStart(e.touches[0].clientX, e.touches[0].clientY);
+            }}
+            onTouchMove={resetHideTimer}
+            style={
+              pos
+                ? {
+                    left: `${pos.x}px`,
+                    top: `${pos.y}px`,
+                    right: 'auto',
+                    bottom: 'auto',
+                    touchAction: 'none',
+                    zIndex: 999999,
                   }
-                }}
-                onTouchMove={resetHideTimer}
-                className={`w-14 h-14 sm:w-16 sm:h-16 md:w-20 md:h-20 cursor-grab active:cursor-grabbing bg-transparent border-0 outline-none p-0 transition-transform duration-200 ${
-                  isDragging ? 'scale-110 opacity-95' : 'hover:scale-105 active:scale-95'
-                }`}
-                aria-label="Open AI Assistant"
-                title="Drag to move anywhere • Double-click to reset / ចុចឬអូសផ្លាស់ប្តូរទីតាំង"
-              >
-                <div className="relative w-full h-full pointer-events-none flex items-center justify-center">
-                  <img
-                    src="/ai-bot-icon.png"
-                    alt="AI Assistant"
-                    className="w-full h-full object-contain filter drop-shadow-[0_4px_16px_rgba(0,160,255,0.65)] transition-all duration-300"
-                  />
-                </div>
-              </button>
-            </div>
+                : {
+                    top: '42%',
+                    [isDockedLeft ? 'left' : 'right']: 0,
+                    touchAction: 'none',
+                    zIndex: 999999,
+                  }
+            }
+            className={`ai-assistant-widget fixed z-[99999] select-none cursor-grab active:cursor-grabbing outline-none transition-all duration-300 ease-out ${
+              isHidden && !isOpen
+                ? (isDockedLeft ? '-translate-x-[62%] opacity-40 hover:translate-x-0 hover:opacity-100 hover:scale-105' : 'translate-x-[62%] opacity-40 hover:translate-x-0 hover:opacity-100 hover:scale-105')
+                : 'translate-x-0 opacity-100'
+            } ${isDragging ? 'scale-105 opacity-90' : 'hover:scale-105 active:scale-95'}`}
+            aria-label="Open AI Assistant"
+            title="Drag to move anywhere • Double-click to reset / ចុចឬអូសផ្លាស់ប្តូរទីតាំង"
+          >
+            {/* Cyber HUD Edge Pod Container - Pixel-matched to Reference Image */}
+            <div className={`relative w-[56px] sm:w-[64px] h-[80px] sm:h-[88px] flex items-center justify-center bg-[#040a1b]/92 backdrop-blur-xl border-y-2 border-[#00e5ff] shadow-[0_0_22px_rgba(0,229,255,0.45),inset_0_0_15px_rgba(0,229,255,0.12)] group transition-all duration-300 ${
+              isDockedLeft
+                ? 'rounded-r-[30px] border-r-2 pl-1 pr-2.5'
+                : 'rounded-l-[30px] border-l-2 pl-2.5 pr-1'
+            }`}>
+              {/* Iconic Glowing Orbital Node sitting on the curve arc */}
+              <span className={`absolute top-2.5 w-3 h-3 rounded-full bg-[#00e5ff] shadow-[0_0_10px_#00f0ff] ring-2 ring-[#040a1b] animate-pulse z-20 pointer-events-none ${
+                isDockedLeft ? '-right-1.5' : '-left-1.5'
+              }`} />
 
-            {/* 2. Sleek Peeking Cyber Medallion Hide Button (Flush at edge when 10s expire) */}
-            {isHidden && !isOpen && (
-              <div
-                onClick={() => {
-                  resetHideTimer();
-                  setIsOpen(true);
-                }}
-                onMouseEnter={resetHideTimer}
-                onTouchStart={resetHideTimer}
-                style={
-                  pos
-                    ? {
-                        top: `${Math.max(80, Math.min(pos.y, (typeof window !== 'undefined' ? window.innerHeight : 800) - 80))}px`,
-                        [isDockedLeft ? 'left' : 'right']: 0,
-                        zIndex: 999999,
-                      }
-                    : {
-                        [isDockedLeft ? 'left' : 'right']: 0,
-                        zIndex: 999999,
-                      }
-                }
-                className={`fixed z-[999999] select-none cursor-pointer transition-all duration-300 ${
-                  pos ? '' : 'bottom-28 sm:bottom-10'
-                }`}
-                aria-label="Open AI Assistant"
-                title="Tap to open AI Assistant / ចុចដើម្បីបើកជំនួយការ"
-              >
-                {/* Half-circle Peeking Cyber Medallion */}
-                <div className={`h-12 sm:h-14 flex items-center bg-gradient-to-b from-[#051026]/95 via-[#08183a]/95 to-[#040c1e]/95 backdrop-blur-2xl border-y-2 border-cyan-400/90 shadow-[0_4px_25px_rgba(0,180,255,0.5),0_0_20px_rgba(0,240,255,0.3)] transition-all duration-300 group hover:brightness-125 ${
-                  isDockedLeft
-                    ? 'w-11 sm:w-13 rounded-r-full border-r-2 pl-1 pr-2 hover:w-14'
-                    : 'w-11 sm:w-13 rounded-l-full border-l-2 pl-2 pr-1 hover:w-14'
-                }`}>
-                  {/* Peeking Bot Face with soft pulse aura */}
-                  <div className="relative w-8 h-8 sm:w-9 sm:h-9 shrink-0 flex items-center justify-center">
-                    <img
-                      src="/ai-bot-icon.png"
-                      alt="AI Assistant"
-                      className="w-full h-full object-contain filter drop-shadow-[0_0_10px_rgba(0,210,255,0.9)] group-hover:scale-110 transition-transform"
-                    />
-                    {/* Live cyan pulsing jewel on the peek */}
-                    <span className="absolute -top-0.5 -right-0.5 w-2 h-2 rounded-full bg-cyan-400 shadow-[0_0_8px_#00f0ff] animate-pulse" />
-                  </div>
-                </div>
+              {/* Static Blue Bot Avatar Medallion */}
+              <div className="relative w-11 h-11 sm:w-12 sm:h-12 shrink-0 flex items-center justify-center pointer-events-none">
+                <img
+                  src="/ai-bot-icon.png"
+                  alt="AI Assistant"
+                  className="w-full h-full object-contain filter drop-shadow-[0_2px_10px_rgba(0,180,255,0.7)] group-hover:scale-110 transition-transform duration-300"
+                />
               </div>
-            )}
-          </>
+            </div>
+          </div>
         );
       })()}
 
