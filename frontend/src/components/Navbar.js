@@ -103,13 +103,13 @@ const Navbar = () => {
                 onClick={() => setLangDropdownOpen(!langDropdownOpen)}
                 className={`h-10 px-3 sm:px-3.5 rounded-xl border transition-all duration-200 text-xs font-bold flex items-center gap-2 shadow-sm active:scale-95 whitespace-nowrap cursor-pointer ${
                   langDropdownOpen
-                    ? 'bg-slate-800 border-cyan-500/60 text-white ring-2 ring-cyan-500/20 shadow-[0_0_15px_rgba(6,182,212,0.25)]'
+                    ? 'bg-[#0a1838] border-2 border-cyan-400 text-white ring-2 ring-cyan-400/25 shadow-[0_0_18px_rgba(0,229,255,0.4)]'
                     : 'bg-slate-900/95 hover:bg-slate-800/95 border-slate-700/80 hover:border-slate-600 text-slate-200'
                 }`}
                 aria-expanded={langDropdownOpen}
                 aria-label="Select Language"
               >
-                <span className="w-5 h-3.5 rounded-[3px] overflow-hidden shadow-xs border border-white/25 shrink-0 inline-flex items-center justify-center">
+                <span className="w-5.5 h-4 rounded-[4px] overflow-hidden shadow-xs border border-white/25 shrink-0 inline-flex items-center justify-center">
                   <span className={`fi fi-${currentLang.flagCode || 'kh'} w-full h-full object-cover leading-none`} />
                 </span>
                 <span className="hidden sm:inline font-bold tracking-wide">{currentLang.short}</span>
@@ -130,24 +130,31 @@ const Navbar = () => {
                     onClick={() => setLangDropdownOpen(false)}
                   />
 
-                  {/* High-End Gaming / Fintech Dropdown Card (Completely Opaque to eliminate bleed-through) */}
-                  <div className="absolute right-0 mt-2.5 w-64 bg-[#0b101c] border border-slate-700/90 rounded-2xl p-2 shadow-[0_25px_60px_rgba(0,0,0,0.95),0_0_30px_rgba(6,182,212,0.12)] ring-1 ring-white/10 z-[100] animate-fadeIn font-khmer select-none">
-                    
+                  {/* High-End Cyber Gaming Dropdown Card with Smooth Spring Transition */}
+                  <div className="absolute right-0 mt-3 w-72 sm:w-80 rounded-[22px] bg-[#040816]/98 backdrop-blur-2xl border-2 border-[#0055ff]/80 shadow-[0_15px_50px_rgba(0,0,0,0.92),0_0_28px_rgba(0,85,255,0.25)] p-2.5 z-[100] animate-profileDropdown font-khmer select-none">
+                    {/* Top Caret Pointer Triangle */}
+                    <div className="absolute -top-2 right-6 sm:right-7 w-3.5 h-3.5 rotate-45 bg-[#0a1838] border-t-2 border-l-2 border-[#0055ff]/80 z-20 pointer-events-none" />
+
+                    {/* Ambient Neon Glare */}
+                    <div className="absolute -right-8 -top-8 w-28 h-28 bg-cyan-500/10 rounded-full blur-2xl pointer-events-none" />
+
                     {/* Dropdown Header */}
-                    <div className="flex items-center justify-between px-2.5 py-2 border-b border-slate-800/90 mb-1.5">
-                      <div className="flex items-center gap-1.5">
-                        <span className="text-xs">🌐</span>
-                        <span className="text-[10px] font-black text-slate-400 uppercase tracking-wider">
+                    <div className="relative flex items-center justify-between px-2.5 py-2 border-b border-blue-900/40 mb-2">
+                      <div className="flex items-center gap-2">
+                        <div className="w-5.5 h-5.5 rounded-lg bg-cyan-500/20 border border-cyan-400/40 flex items-center justify-center text-xs text-cyan-300 shadow-[0_0_8px_rgba(6,182,212,0.3)]">
+                          🌐
+                        </div>
+                        <span className="text-[11px] font-black text-slate-200 uppercase tracking-wider">
                           Language / ភាសា
                         </span>
                       </div>
-                      <span className="text-[9px] font-bold px-2 py-0.5 rounded-full bg-cyan-950/80 border border-cyan-500/30 text-cyan-300">
+                      <span className="text-[10px] font-extrabold px-2.5 py-0.5 rounded-full bg-cyan-950/90 border border-cyan-400/50 text-cyan-300 shadow-[0_0_10px_rgba(6,182,212,0.25)]">
                         {languages.length} Available
                       </span>
                     </div>
 
                     {/* Language Options */}
-                    <div className="space-y-1">
+                    <div className="relative space-y-1.5">
                       {languages.map((l) => {
                         const isSelected = language === l.code;
                         return (
@@ -158,31 +165,45 @@ const Navbar = () => {
                               setLanguage(l.code);
                               setLangDropdownOpen(false);
                             }}
-                            className={`w-full text-left px-3 py-2.5 rounded-xl transition-all duration-150 flex items-center justify-between cursor-pointer group ${
+                            className={`w-full text-left px-3 py-2.5 rounded-xl transition-all duration-200 flex items-center justify-between cursor-pointer group ${
                               isSelected
-                                ? 'bg-gradient-to-r from-cyan-950/80 via-slate-900 to-slate-900 border border-cyan-500/50 shadow-sm text-white'
-                                : 'hover:bg-slate-800/80 border border-transparent hover:border-slate-700/60 text-slate-300 hover:text-white'
+                                ? 'bg-gradient-to-r from-[#003882]/85 via-[#002860]/90 to-[#001c44]/95 border-2 border-[#00d0ff] shadow-[0_0_18px_rgba(0,208,255,0.35),inset_0_0_12px_rgba(0,180,255,0.2)] text-white scale-[1.01]'
+                                : 'bg-[#060e20]/60 hover:bg-[#0c1a3e]/80 border border-slate-700/60 hover:border-blue-500/50 text-slate-300 hover:text-white hover:scale-[1.01]'
                             }`}
                           >
                             <div className="flex items-center gap-3 min-w-0">
-                              <div className={`w-6 h-4.5 rounded-[4px] overflow-hidden shadow-sm border shrink-0 flex items-center justify-center transition-transform group-hover:scale-105 ${
-                                isSelected ? 'border-cyan-400/80 ring-1 ring-cyan-400/40' : 'border-white/20'
+                              {/* Flag Squircle */}
+                              <div className={`w-8 h-5.5 rounded-md overflow-hidden shadow-sm border shrink-0 flex items-center justify-center transition-all ${
+                                isSelected 
+                                  ? 'border-cyan-300 ring-2 ring-cyan-400/50 shadow-[0_0_10px_rgba(0,229,255,0.5)]' 
+                                  : 'border-white/20 group-hover:border-white/50'
                               }`}>
-                                <span className={`fi fi-${l.flagCode || 'kh'} w-full h-full object-cover text-sm leading-none`} />
+                                <span className={`fi fi-${l.flagCode || 'kh'} w-full h-full object-cover leading-none`} />
                               </div>
+                              
+                              {/* Text */}
                               <div className="flex flex-col min-w-0">
-                                <span className={`text-xs font-bold leading-tight truncate ${isSelected ? 'text-cyan-200' : 'text-slate-200 group-hover:text-white'}`}>
+                                <span className={`text-xs font-bold leading-tight truncate ${
+                                  isSelected ? 'text-white font-black drop-shadow-[0_0_6px_rgba(255,255,255,0.4)]' : 'text-slate-200 group-hover:text-white'
+                                }`}>
                                   {l.name}
                                 </span>
-                                <span className="text-[10px] text-slate-400 font-medium leading-tight mt-0.5 truncate">
+                                <span className={`text-[10px] font-medium leading-tight mt-0.5 truncate ${
+                                  isSelected ? 'text-cyan-200' : 'text-slate-400 group-hover:text-slate-300'
+                                }`}>
                                   {l.sub}
                                 </span>
                               </div>
                             </div>
 
-                            {isSelected && (
-                              <div className="w-5 h-5 rounded-full bg-cyan-500/20 border border-cyan-400 text-cyan-300 flex items-center justify-center text-[11px] font-black shrink-0 shadow-[0_0_10px_rgba(6,182,212,0.4)]">
+                            {/* Right Indicator */}
+                            {isSelected ? (
+                              <div className="w-5.5 h-5.5 rounded-full bg-cyan-400 border-2 border-white text-slate-950 flex items-center justify-center text-xs font-black shrink-0 shadow-[0_0_12px_rgba(0,229,255,0.8)]">
                                 ✓
+                              </div>
+                            ) : (
+                              <div className="w-5 h-5 rounded-full border border-slate-700/80 group-hover:border-blue-400/60 flex items-center justify-center text-slate-500 group-hover:text-cyan-400 text-xs transition-colors">
+                                ›
                               </div>
                             )}
                           </button>
@@ -190,10 +211,14 @@ const Navbar = () => {
                       })}
                     </div>
 
-                    <div className="mt-1.5 pt-1.5 border-t border-slate-800/80 px-2 py-0.5 flex items-center justify-between text-[10px] text-slate-400 font-medium">
-                      <span>⚡ Instant Switch</span>
-                      <span className="text-emerald-400 flex items-center gap-1 font-semibold">
-                        <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span>
+                    {/* Footer */}
+                    <div className="relative mt-2 pt-2 border-t border-blue-900/40 px-2 py-0.5 flex items-center justify-between text-[10px] font-medium">
+                      <div className="flex items-center gap-1.5 text-amber-400 font-semibold drop-shadow-[0_0_6px_rgba(251,191,36,0.3)]">
+                        <span>⚡</span>
+                        <span>Instant Switch</span>
+                      </div>
+                      <span className="text-emerald-400 flex items-center gap-1.5 font-bold drop-shadow-[0_0_6px_rgba(52,211,153,0.3)]">
+                        <span className="w-2 h-2 rounded-full bg-emerald-400 shadow-[0_0_8px_#34d399] animate-pulse" />
                         Active
                       </span>
                     </div>
