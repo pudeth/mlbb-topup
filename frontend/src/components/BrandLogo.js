@@ -28,13 +28,13 @@ export const BrandLogo = ({
   const isLarge = size === 'lg';
 
   const avatarSize = isSmall
-    ? 'w-9 h-9 sm:w-10 sm:h-10'
+    ? 'w-8 h-8 sm:w-10 sm:h-10'
     : isLarge
     ? 'w-13 h-13 sm:w-15 sm:h-15'
     : 'w-10 h-10 sm:w-11 sm:h-11';
 
   const titleHeightClass = isSmall
-    ? 'h-[32px] sm:h-[36px]'
+    ? 'h-[27px] sm:h-[36px]'
     : isLarge
     ? 'h-[46px] sm:h-[54px]'
     : 'h-[38px] sm:h-[42px]';
@@ -63,7 +63,7 @@ export const BrandLogo = ({
   };
 
   return (
-    <div className={`flex items-center select-none ${hideTitle ? 'gap-0' : 'gap-2.5 sm:gap-3'} ${className}`}>
+    <div className={`flex items-center select-none ${hideTitle ? 'gap-0' : 'gap-1.5 sm:gap-2.5'} ${className}`}>
       {/* Frameless Brand Logo Avatar */}
       <div className={`relative ${avatarSize} shrink-0 flex items-center justify-center`}>
         <img

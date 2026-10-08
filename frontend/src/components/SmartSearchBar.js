@@ -4,7 +4,7 @@ import { useLanguage } from '../context/LanguageContext';
 import { getStoredGames, fetchStoredGames } from '../services/gamesConfig';
 
 // Standard comprehensive list of all searchable games & services
-const BASE_GAMES_CATALOG = [
+export const BASE_GAMES_CATALOG = [
   {
     id: 'mlbb',
     name: 'Mobile Legends: Bang Bang',

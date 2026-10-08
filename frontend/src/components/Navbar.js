@@ -1,18 +1,59 @@
 import React, { useState, useEffect } from 'react';
-import { Link, useLocation } from 'react-router-dom';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { useLanguage } from '../context/LanguageContext';
 import { BrandLogo } from './BrandLogo';
-import { SmartSearchBar } from './SmartSearchBar';
+import { SmartSearchBar, BASE_GAMES_CATALOG } from './SmartSearchBar';
+import { getStoredGames } from '../services/gamesConfig';
 import GamerAvatar from './GamerAvatar';
+
 const Navbar = () => {
   const { user, playerAccount, logout, isAuthenticated, isAdmin } = useAuth();
   const { language, setLanguage, t } = useLanguage();
   const location = useLocation();
+  const navigate = useNavigate();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [langDropdownOpen, setLangDropdownOpen] = useState(false);
   const [userMenuOpen, setUserMenuOpen] = useState(false);
   const [isScrolled, setIsScrolled] = useState(false);
+  const [searchModalOpen, setSearchModalOpen] = useState(false);
+  const [searchModalQuery, setSearchModalQuery] = useState('');
+  const [allGames, setAllGames] = useState(BASE_GAMES_CATALOG || []);
+
+  useEffect(() => {
+    try {
+      const stored = getStoredGames();
+      if (stored && Array.isArray(stored) && stored.length > 0) {
+        const merged = [...(BASE_GAMES_CATALOG || [])];
+        stored.forEach((sg) => {
+          if (!merged.some((m) => m.id === sg.id || m.name?.toLowerCase() === sg.name?.toLowerCase())) {
+            merged.push({
+              id: sg.id,
+              name: sg.name,
+              genre: sg.category || 'Game Top-Up',
+              category: sg.category || 'Service top-up',
+              badge: sg.badge || 'NEW',
+              image: sg.image || '/mlbb-logo.png',
+              route: sg.route || `/topup?game=${sg.id}`
+            });
+          }
+        });
+        setAllGames(merged);
+      }
+    } catch (e) {}
+  }, []);
+
+  const modalTrimmed = searchModalQuery.trim().toLowerCase();
+  const filteredModalGames = modalTrimmed
+    ? allGames.filter((g) => {
+        return (
+          g.name?.toLowerCase().includes(modalTrimmed) ||
+          g.genre?.toLowerCase().includes(modalTrimmed) ||
+          g.category?.toLowerCase().includes(modalTrimmed) ||
+          g.alias?.toLowerCase().includes(modalTrimmed)
+        );
+      })
+    : allGames.slice(0, 10);
 
   useEffect(() => {
     let ticking = false;
@@ -59,14 +100,21 @@ const Navbar = () => {
 
   return (
     <>
-      {/* Top micro moving marquee announcement bar (Natural document flow at top of page, scrolls naturally away) */}
+      {/* Top micro moving marquee announcement bar (Safe-Area aware for Dynamic Island & phone status frames) */}
       {!isAuthPage && (
-        <div className={`bg-gradient-to-r from-cyan-950 via-slate-900 to-indigo-950 border-b border-cyan-500/20 overflow-hidden relative select-none transition-all duration-300 ${
-          isScrolled ? 'opacity-0 pointer-events-none' : 'opacity-100'
-        }`}>
-          <div className="flex items-center gap-2 py-1.5">
+        <div 
+          style={{
+            paddingTop: 'max(4px, env(safe-area-inset-top, 0px))',
+            paddingLeft: 'max(8px, env(safe-area-inset-left, 0px))',
+            paddingRight: 'max(8px, env(safe-area-inset-right, 0px))'
+          }}
+          className={`bg-gradient-to-r from-cyan-950 via-slate-900 to-indigo-950 border-b border-cyan-500/20 overflow-hidden relative select-none transition-all duration-300 ${
+            isScrolled ? 'opacity-0 pointer-events-none' : 'opacity-100'
+          }`}
+        >
+          <div className="flex items-center gap-2 py-1.5 sm:py-2">
             {/* Live pulsing dot */}
-            <div className="pl-3 sm:pl-4 pr-1 flex items-center gap-1.5 shrink-0 z-10 bg-gradient-to-r from-cyan-950 via-cyan-950/90 to-transparent">
+            <div className="pl-2 sm:pl-4 pr-1 flex items-center gap-1.5 shrink-0 z-10 bg-gradient-to-r from-cyan-950 via-cyan-950/90 to-transparent">
               <span className="flex h-2 w-2 relative">
                 <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
                 <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
@@ -90,66 +138,70 @@ const Navbar = () => {
         </div>
       )}
 
-      <header className={`sticky top-0 z-[9995] transition-all duration-300 ease-[cubic-bezier(0.16,1,0.3,1)] ${
+      <header 
+        style={{
+          paddingTop: (isScrolled || isAuthPage)
+            ? 'calc(max(8px, env(safe-area-inset-top, 0px)) + 6px)'
+            : undefined,
+          paddingLeft: 'max(8px, env(safe-area-inset-left, 0px))',
+          paddingRight: 'max(8px, env(safe-area-inset-right, 0px))'
+        }}
+        className={`sticky top-0 z-[9995] transition-all duration-300 ease-[cubic-bezier(0.16,1,0.3,1)] ${
         isAuthPage 
           ? '' 
           : isScrolled
-          ? 'pt-2 sm:pt-3 px-3 sm:px-4 pb-1.5 pointer-events-none bg-gradient-to-b from-[#020617]/95 via-[#020617]/80 to-transparent'
-          : 'pt-2 sm:pt-2.5 pb-2 px-3 sm:px-6 bg-dark-bg/90 backdrop-blur-xl border-b border-slate-800/80 shadow-2xl pointer-events-auto'
+          ? 'pt-2 sm:pt-3 px-2 sm:px-4 pb-1.5 pointer-events-none bg-gradient-to-b from-[#020617]/95 via-[#020617]/80 to-transparent'
+          : 'pt-2 sm:pt-2.5 pb-2 px-2 sm:px-6 bg-dark-bg/90 backdrop-blur-xl border-b border-slate-800/80 shadow-2xl pointer-events-auto'
       }`}>
         {!isAuthPage && (
           <>
             <div className={`transition-all duration-300 ease-[cubic-bezier(0.16,1,0.3,1)] pointer-events-auto ${
               isScrolled
-                ? 'max-w-6xl mx-auto rounded-full bg-[#03091e]/95 backdrop-blur-2xl border-2 border-[#0062ff] shadow-[0_12px_40px_rgba(0,0,0,0.92),0_0_28px_rgba(0,98,255,0.35)] ring-1 ring-white/10 px-3.5 sm:px-4 h-13 sm:h-14 relative overflow-visible'
-                : 'max-w-7xl mx-auto rounded-2xl bg-transparent px-1 sm:px-2 h-13 sm:h-14 relative'
+                ? 'max-w-6xl mx-auto rounded-full bg-[#03091e]/95 backdrop-blur-2xl border-2 border-[#0062ff] shadow-[0_12px_40px_rgba(0,0,0,0.92),0_0_28px_rgba(0,98,255,0.35)] ring-1 ring-white/10 px-2.5 sm:px-4 h-12 sm:h-14 relative overflow-visible'
+                : 'max-w-7xl mx-auto rounded-2xl bg-transparent px-1 sm:px-2 h-12 sm:h-14 relative'
             }`}>
             <div className="flex items-center justify-between h-full">
           
-              {/* Logo (Avatar Medallion + Title) - On desktop, shown only when scrolled in floating capsule to avoid duplicate with sidebar */}
-              <div className={`${isScrolled ? 'flex items-center select-none pl-1 sm:pl-2' : 'flex lg:hidden items-center select-none'}`}>
-                <Link to="/" className="group flex items-center">
-                  <BrandLogo size="sm" hideTitle={isScrolled} />
-                </Link>
-              </div>
+              {/* Logo (Avatar Medallion + Title) - Hidden when isScrolled per user request */}
+              {!isScrolled && (
+                <div className="flex items-center select-none min-w-0 pr-1">
+                  <Link to="/" className="group flex items-center">
+                    <BrandLogo size="sm" hideTitle={false} />
+                  </Link>
+                </div>
+              )}
 
-              {/* Desktop Central Smart Search Bar (Always visible on desktop across all scroll states) */}
-              <div className="hidden lg:flex items-center flex-1 max-w-xl mx-2 sm:mx-4">
+              {/* Desktop Central Smart Search Bar (Visible on desktop when unscrolled) */}
+              <div className={`hidden lg:flex items-center flex-1 max-w-xl mx-2 sm:mx-4 ${isScrolled ? 'hidden' : ''}`}>
                 <SmartSearchBar isMobile={false} />
               </div>
 
               {/* Right: Actions (Capsule Pills) */}
-              <div className="flex items-center gap-2 select-none">
-                {/* Mobile Search Button (Quick search on phone/tablet) */}
+              <div className="flex items-center gap-1.5 sm:gap-2 select-none shrink-0">
+                {/* Search Button matching Reference Image 2 */}
                 <button
                   type="button"
-                  onClick={() => {
-                    const searchInput = document.querySelector('input[placeholder*="Search games"], input[placeholder*="ស្វែងរកហ្គេម"]');
-                    if (searchInput) {
-                      searchInput.scrollIntoView({ behavior: 'smooth', block: 'center' });
-                      setTimeout(() => searchInput.focus(), 300);
-                    } else {
-                      const gamesSec = document.getElementById('games-section');
-                      if (gamesSec) gamesSec.scrollIntoView({ behavior: 'smooth' });
-                    }
-                  }}
-                  className="lg:hidden w-10 h-10 rounded-full border border-[#0055ff]/40 bg-[#081329]/90 hover:bg-[#0e204c] text-slate-200 hover:text-white flex items-center justify-center transition-all duration-200 active:scale-95 shadow-sm cursor-pointer shrink-0"
-                  title="Search Games / ស្វែងរកហ្គេម"
+                  onClick={() => setSearchModalOpen(true)}
+                  className="w-9 h-9 sm:w-10 sm:h-10 rounded-full border border-[#0055ff]/40 bg-[#081329]/90 hover:bg-[#0e204c] hover:border-cyan-400 text-cyan-400 hover:text-white flex items-center justify-center transition-all duration-200 active:scale-95 shadow-sm cursor-pointer shrink-0 group"
+                  title={language === 'km' ? 'ស្វែងរកហ្គេម' : 'Search Games'}
                   aria-label="Search"
                 >
-                  <span className="text-sm">🔍</span>
+                  <svg className="w-4 h-4 sm:w-5 sm:h-5 text-cyan-400 group-hover:scale-110 transition-transform" viewBox="0 0 24 24" fill="none">
+                    <circle cx="11" cy="11" r="6.5" stroke="currentColor" strokeWidth="2.3" strokeLinecap="round" />
+                    <path d="M16 16L21 21" stroke="currentColor" strokeWidth="2.3" strokeLinecap="round" />
+                  </svg>
                 </button>
 
                 {/* 1. Notification Bell with Red Badge 1 */}
                 <button
                   type="button"
                   title="Notifications"
-                  className="relative w-10 h-10 rounded-full border border-[#0055ff]/40 bg-[#081329]/90 hover:bg-[#0e204c] hover:border-[#0088ff]/70 text-slate-200 hover:text-white flex items-center justify-center transition-all duration-200 active:scale-95 shadow-sm cursor-pointer shrink-0"
+                  className="relative w-9 h-9 sm:w-10 sm:h-10 rounded-full border border-[#0055ff]/40 bg-[#081329]/90 hover:bg-[#0e204c] hover:border-[#0088ff]/70 text-slate-200 hover:text-white flex items-center justify-center transition-all duration-200 active:scale-95 shadow-sm cursor-pointer shrink-0"
                 >
-                  <svg className="w-5 h-5 text-white/95" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <svg className="w-4 h-4 sm:w-5 sm:h-5 text-white/95" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
                   </svg>
-                  <span className="absolute -top-1 -right-0.5 min-w-[18px] h-[18px] px-1 rounded-full bg-[#ff3b5c] text-white font-black text-[10px] flex items-center justify-center shadow-[0_0_10px_rgba(255,59,92,0.8)] border border-white/20 animate-pulse">
+                  <span className="absolute -top-1 -right-0.5 min-w-[17px] h-[17px] px-1 rounded-full bg-[#ff3b5c] text-white font-black text-[9px] sm:text-[10px] flex items-center justify-center shadow-[0_0_10px_rgba(255,59,92,0.8)] border border-white/20 animate-pulse">
                     1
                   </span>
                 </button>
@@ -159,7 +211,7 @@ const Navbar = () => {
                   <button
                     type="button"
                     onClick={() => setLangDropdownOpen(!langDropdownOpen)}
-                    className={`h-10 px-3 rounded-full border transition-all duration-200 text-xs font-bold flex items-center gap-2 shadow-sm active:scale-95 whitespace-nowrap cursor-pointer ${
+                    className={`h-9 px-2 sm:h-10 sm:px-3 rounded-full border transition-all duration-200 text-xs font-bold flex items-center gap-1.5 sm:gap-2 shadow-sm active:scale-95 whitespace-nowrap cursor-pointer ${
                       langDropdownOpen
                         ? 'bg-[#0e204c] border-2 border-cyan-400 text-white ring-2 ring-cyan-400/25 shadow-[0_0_18px_rgba(0,229,255,0.4)]'
                         : 'bg-[#081329]/90 hover:bg-[#0e204c] border-[#0055ff]/40 hover:border-[#0088ff]/70 text-slate-200'
@@ -167,7 +219,7 @@ const Navbar = () => {
                     aria-expanded={langDropdownOpen}
                     aria-label="Select Language"
                   >
-                    <span className="w-5.5 h-4 rounded-[3px] overflow-hidden shadow-sm shrink-0 inline-flex items-center justify-center">
+                    <span className="w-5 h-3.5 sm:w-5.5 sm:h-4 rounded-[3px] overflow-hidden shadow-sm shrink-0 inline-flex items-center justify-center">
                       <span className={`fi fi-${currentLang.flagCode || 'kh'} w-full h-full object-cover`} />
                     </span>
                     {!isScrolled && (
@@ -304,10 +356,10 @@ const Navbar = () => {
               <button
                 type="button"
                 onClick={() => window.dispatchEvent(new CustomEvent('open-player-login'))}
-                className="h-10 px-3.5 rounded-full bg-gradient-to-r from-blue-600 via-sky-600 to-cyan-500 hover:from-blue-500 hover:to-cyan-400 text-white text-xs font-bold flex items-center gap-1.5 shadow-[0_2px_10px_rgba(14,165,233,0.3)] transition-all active:scale-95 cursor-pointer whitespace-nowrap"
+                className="h-9 px-2.5 sm:h-10 sm:px-3.5 rounded-full bg-gradient-to-r from-blue-600 via-sky-600 to-cyan-500 hover:from-blue-500 hover:to-cyan-400 text-white text-xs font-bold flex items-center gap-1.5 shadow-[0_2px_10px_rgba(14,165,233,0.3)] transition-all active:scale-95 cursor-pointer whitespace-nowrap"
                 title="Login with Player ID & Server ID"
               >
-                <svg className="w-4 h-4 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                <svg className="w-3.5 h-3.5 sm:w-4 sm:h-4 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                   <path strokeLinecap="round" strokeLinejoin="round" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
                 </svg>
                 <span className="font-bold">{language === 'km' ? 'ចូលគណនី' : 'Login'}</span>
@@ -317,7 +369,7 @@ const Navbar = () => {
                 <button
                   type="button"
                   onClick={() => setUserMenuOpen(!userMenuOpen)}
-                  className={`h-10 px-2.5 sm:px-3 rounded-full border transition-all duration-200 text-xs font-bold flex items-center gap-2 shadow-sm active:scale-95 cursor-pointer ${
+                  className={`h-9 px-2 sm:h-10 sm:px-3 rounded-full border transition-all duration-200 text-xs font-bold flex items-center gap-1.5 sm:gap-2 shadow-sm active:scale-95 cursor-pointer ${
                     userMenuOpen
                       ? 'bg-[#0e204c] border-2 border-cyan-400 text-white ring-2 ring-cyan-400/25 shadow-[0_0_18px_rgba(0,229,255,0.4)]'
                       : 'bg-[#081329]/90 hover:bg-[#0e204c] border-[#0055ff]/40 hover:border-[#0088ff]/70 text-slate-200'
@@ -325,8 +377,8 @@ const Navbar = () => {
                   title="Player Account Menu"
                 >
                   {/* Golden Crown Squircle Medallion matching Reference Image 1 */}
-                  <div className="w-7.5 h-7.5 rounded-xl border-2 border-amber-400 bg-gradient-to-b from-[#2e1805] via-[#160c02] to-[#0a0501] shadow-[0_0_12px_rgba(251,191,36,0.65)] flex items-center justify-center overflow-hidden shrink-0">
-                    <svg className="w-4 h-4 text-amber-400 drop-shadow-[0_1px_3px_rgba(0,0,0,0.9)]" viewBox="0 0 24 24" fill="currentColor">
+                  <div className="w-6.5 h-6.5 sm:w-7.5 sm:h-7.5 rounded-xl border-2 border-amber-400 bg-gradient-to-b from-[#2e1805] via-[#160c02] to-[#0a0501] shadow-[0_0_12px_rgba(251,191,36,0.65)] flex items-center justify-center overflow-hidden shrink-0">
+                    <svg className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-amber-400 drop-shadow-[0_1px_3px_rgba(0,0,0,0.9)]" viewBox="0 0 24 24" fill="currentColor">
                       <path d="M5 16L3 5l5.5 5L12 4l3.5 6L21 5l-2 11H5zm14 3c0 .6-.4 1-1 1H6c-.6 0-1-.4-1-1v-1h14v1z"/>
                       <circle cx="12" cy="11.5" r="1.5" fill="#38bdf8"/>
                     </svg>
@@ -512,11 +564,11 @@ const Navbar = () => {
                   setMobileMenuOpen(!mobileMenuOpen);
                 }
               }}
-              className="w-10 h-10 rounded-full border border-[#0055ff]/50 bg-[#081329]/90 hover:bg-[#0e204c] hover:border-[#0088ff]/80 text-white flex items-center justify-center transition-all duration-200 active:scale-95 shadow-sm cursor-pointer group shrink-0"
+              className="w-9 h-9 sm:w-10 sm:h-10 rounded-full border border-[#0055ff]/50 bg-[#081329]/90 hover:bg-[#0e204c] hover:border-[#0088ff]/80 text-white flex items-center justify-center transition-all duration-200 active:scale-95 shadow-sm cursor-pointer group shrink-0"
               title="All Games & Categories / ហ្គេមទាំងអស់"
               aria-label="Toggle all games menu"
             >
-              <svg className="w-4 h-4 fill-white group-hover:scale-110 transition-transform" viewBox="0 0 24 24">
+              <svg className="w-3.5 h-3.5 sm:w-4 sm:h-4 fill-white group-hover:scale-110 transition-transform" viewBox="0 0 24 24">
                 <rect x="3.5" y="3.5" width="7" height="7" rx="2" />
                 <rect x="13.5" y="3.5" width="7" height="7" rx="2" />
                 <rect x="3.5" y="13.5" width="7" height="7" rx="2" />
@@ -727,6 +779,163 @@ const Navbar = () => {
             if (el) el.scrollIntoView({ behavior: 'smooth' });
           }}
         />
+      </div>
+    )}
+
+    {/* Global Quick Cyber Search Modal */}
+    {searchModalOpen && (
+      <div 
+        style={{
+          paddingTop: 'calc(max(20px, env(safe-area-inset-top, 0px)) + 16px)',
+          paddingLeft: 'max(14px, env(safe-area-inset-left, 0px))',
+          paddingRight: 'max(14px, env(safe-area-inset-right, 0px))'
+        }}
+        className="fixed inset-0 z-[99999] bg-black/85 backdrop-blur-md flex flex-col items-center px-3.5 sm:px-4 font-khmer animate-fadeIn"
+      >
+        {/* Dismiss Backdrop */}
+        <div
+          className="fixed inset-0 -z-10"
+          onClick={() => {
+            setSearchModalOpen(false);
+            setSearchModalQuery('');
+          }}
+        />
+
+        {/* Search Modal Card */}
+        <div className="relative w-full max-w-lg bg-[#060b1b] border-2 border-cyan-400/90 rounded-[28px] shadow-[0_20px_70px_rgba(0,0,0,0.95),0_0_35px_rgba(0,229,255,0.35)] overflow-hidden">
+          {/* Top Specular Sheen */}
+          <div className="absolute top-0 inset-x-0 h-[2px] bg-gradient-to-r from-transparent via-cyan-400 to-transparent pointer-events-none" />
+
+          {/* Header / Input Box */}
+          <div className="p-3.5 sm:p-4 border-b border-blue-900/40">
+            <div className="flex items-center gap-2.5">
+              <div className="relative flex-1 flex items-center">
+                <span className="absolute left-3.5 text-cyan-400 text-base pointer-events-none select-none">
+                  🔍
+                </span>
+                <input
+                  type="text"
+                  autoFocus
+                  value={searchModalQuery}
+                  placeholder={language === 'km' ? 'ស្វែងរកហ្គេម ឬប្រភេទ...' : 'Search games or categories...'}
+                  onChange={(e) => {
+                    const val = e.target.value;
+                    setSearchModalQuery(val);
+                    window.dispatchEvent(new CustomEvent('filterGames', { detail: val }));
+                  }}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Escape') {
+                      setSearchModalOpen(false);
+                    }
+                    if (e.key === 'Enter' && filteredModalGames.length > 0) {
+                      navigate(filteredModalGames[0].route);
+                      setSearchModalOpen(false);
+                      setSearchModalQuery('');
+                    }
+                  }}
+                  className="w-full bg-[#0b142c] border border-cyan-500/50 rounded-2xl pl-10 pr-9 py-2.5 text-sm text-white font-bold placeholder-slate-400 focus:outline-none focus:border-cyan-400 focus:ring-2 focus:ring-cyan-400/30 transition-all shadow-inner"
+                />
+                {searchModalQuery.length > 0 && (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setSearchModalQuery('');
+                      window.dispatchEvent(new CustomEvent('filterGames', { detail: '' }));
+                    }}
+                    className="absolute right-3 w-5 h-5 rounded-full bg-slate-800 hover:bg-slate-700 text-slate-200 flex items-center justify-center text-xs font-bold cursor-pointer"
+                  >
+                    ✕
+                  </button>
+                )}
+              </div>
+
+              <button
+                type="button"
+                onClick={() => {
+                  setSearchModalOpen(false);
+                  setSearchModalQuery('');
+                }}
+                className="h-10 px-3.5 rounded-2xl bg-[#0e1d3e] border border-slate-700 hover:border-rose-400/60 text-slate-300 hover:text-white text-xs font-bold shrink-0 transition-colors cursor-pointer"
+              >
+                {language === 'km' ? 'បិទ' : 'Close'}
+              </button>
+            </div>
+
+            {/* Quick Trending Tags */}
+            <div className="flex items-center gap-1.5 mt-2.5 overflow-x-auto no-scrollbar py-0.5 text-[11px]">
+              <span className="text-slate-400 shrink-0 font-medium text-[10px]">🔥 Popular:</span>
+              {[
+                { label: 'Mobile Legends', query: 'mlbb' },
+                { label: 'Free Fire', query: 'freefire' },
+                { label: 'PUBG', query: 'pubg' },
+                { label: 'Telegram Stars', query: 'telegram' },
+                { label: 'Steam', query: 'steam' },
+              ].map((tag) => (
+                <button
+                  key={tag.query}
+                  type="button"
+                  onClick={() => {
+                    setSearchModalQuery(tag.query);
+                    window.dispatchEvent(new CustomEvent('filterGames', { detail: tag.query }));
+                  }}
+                  className="px-2.5 py-1 rounded-lg bg-[#0e1d3e]/80 hover:bg-cyan-500/20 border border-blue-500/30 hover:border-cyan-400/60 text-cyan-200 hover:text-white text-[11px] font-bold shrink-0 transition-all active:scale-95 whitespace-nowrap cursor-pointer"
+                >
+                  {tag.label}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {/* Results List */}
+          <div className="max-h-[60vh] overflow-y-auto p-2 sm:p-3 divide-y divide-blue-900/20 space-y-1">
+            {filteredModalGames.length > 0 ? (
+              filteredModalGames.map((game) => (
+                <div
+                  key={game.id}
+                  onClick={() => {
+                    navigate(game.route);
+                    setSearchModalOpen(false);
+                    setSearchModalQuery('');
+                  }}
+                  className="flex items-center justify-between p-2.5 rounded-xl hover:bg-gradient-to-r hover:from-cyan-950/40 hover:to-blue-950/60 border border-transparent hover:border-cyan-400/40 transition-all cursor-pointer group"
+                >
+                  <div className="flex items-center gap-3 min-w-0">
+                    <div className="w-11 h-11 rounded-xl overflow-hidden bg-slate-900 border border-slate-700/80 shrink-0 group-hover:scale-105 transition-transform">
+                      <img src={game.image} alt={game.name} className="w-full h-full object-cover" />
+                    </div>
+                    <div className="min-w-0 flex-1">
+                      <div className="flex items-center gap-2">
+                        <span className="text-xs sm:text-sm font-black text-white group-hover:text-cyan-300 transition-colors truncate">
+                          {game.name}
+                        </span>
+                        {game.badge && (
+                          <span className={`px-1.5 py-0.2 rounded text-[9px] font-black uppercase ${
+                            game.badge === 'HOT' ? 'bg-red-500/20 border border-red-500/50 text-red-400' : 'bg-emerald-500/20 border border-emerald-500/50 text-emerald-400'
+                          }`}>
+                            {game.badge}
+                          </span>
+                        )}
+                      </div>
+                      <span className="text-[10px] text-slate-400 truncate block mt-0.5">
+                        {game.genre || game.category}
+                      </span>
+                    </div>
+                  </div>
+
+                  <div className="flex items-center gap-1.5 shrink-0 pl-2">
+                    <span className="text-[11px] font-bold text-cyan-400 group-hover:text-cyan-200">
+                      Top Up ›
+                    </span>
+                  </div>
+                </div>
+              ))
+            ) : (
+              <div className="py-8 text-center text-slate-400 text-xs">
+                {language === 'km' ? 'រកមិនឃើញហ្គេមដែលត្រូវគ្នាទេ' : 'No matching games found'}
+              </div>
+            )}
+          </div>
+        </div>
       </div>
     )}
     </>
