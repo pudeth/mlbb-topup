@@ -17,19 +17,22 @@ public class AdminController : BaseController
     private readonly ITopUpService _topUpService;
     private readonly ApplicationDbContext _context;
     private readonly ISupplierGatewayManager _gatewayManager;
+    private readonly IConfiguration _configuration;
 
     public AdminController(
         IOrderService orderService,
         IPaymentService paymentService,
         ITopUpService topUpService,
         ApplicationDbContext context,
-        ISupplierGatewayManager gatewayManager)
+        ISupplierGatewayManager gatewayManager,
+        IConfiguration configuration)
     {
         _orderService = orderService;
         _paymentService = paymentService;
         _topUpService = topUpService;
         _context = context;
         _gatewayManager = gatewayManager;
+        _configuration = configuration;
     }
 
     private static object _storeBranding = new
@@ -1114,15 +1117,173 @@ public class AdminController : BaseController
             .Include(o => o.Product)
             .ToListAsync();
 
-        var totalGrossRevenue = paidOrders.Sum(o => o.Amount);
+        var products = await _context.Products.ToListAsync();
 
-        // Calculate COGS based on product cost or estimated 85% wholesale
-        var totalSupplierCogs = paidOrders.Sum(o =>
-            (o.Product != null && o.Product.CostPrice > 0)
+        // Accurate wholesale provider cost resolver
+        decimal ResolveProviderWholesaleCost(string? pkgName, decimal sellPrice, int? diamondAmt)
+        {
+            var pLower = (pkgName ?? string.Empty).ToLower();
+            if (pLower.Contains("25 diamond") || diamondAmt == 25) return 0.24m;
+            if (pLower.Contains("50 diamond") || diamondAmt == 50) return 0.36m;
+            if (pLower.Contains("55 diamond") || diamondAmt == 55) return 0.74m;
+            if (pLower.Contains("86 diamond") || diamondAmt == 86) return 1.17m;
+            if (pLower.Contains("90 token") || diamondAmt == 90) return 1.11m;
+            if (pLower.Contains("100 diamond") || diamondAmt == 100) return 0.90m;
+            if (pLower.Contains("110 diamond") || diamondAmt == 110) return 1.45m;
+            if (pLower.Contains("165 diamond") || diamondAmt == 165) return 2.22m;
+            if (pLower.Contains("172 diamond") || diamondAmt == 172) return 2.31m;
+            if (pLower.Contains("200 diamond") || diamondAmt == 200) return 1.73m;
+            if (pLower.Contains("210 diamond") || diamondAmt == 210) return 1.45m;
+            if (pLower.Contains("240 token") || diamondAmt == 240) return 2.30m;
+            if (pLower.Contains("257 diamond") || diamondAmt == 257) return 3.34m;
+            if (pLower.Contains("275 diamond") || diamondAmt == 275) return 3.55m;
+            if (pLower.Contains("310 diamond") || diamondAmt == 310) return 2.74m;
+            if (pLower.Contains("343 diamond") || diamondAmt == 343) return 4.25m;
+            if (pLower.Contains("400 token") || diamondAmt == 400) return 3.90m;
+            if (pLower.Contains("429 diamond") || diamondAmt == 429) return 5.68m;
+            if (pLower.Contains("514 diamond") || diamondAmt == 514) return 6.28m;
+            if (pLower.Contains("520 diamond") || diamondAmt == 520) return 4.59m;
+            if (pLower.Contains("706 diamond") || diamondAmt == 706) return 9.08m;
+            if (pLower.Contains("800 token") || diamondAmt == 800) return 7.80m;
+            if (pLower.Contains("1050 diamond") || diamondAmt == 1050) return 13.20m;
+            if (pLower.Contains("2195 diamond") || diamondAmt == 2195) return 27.49m;
+            if (pLower.Contains("3688 diamond") || diamondAmt == 3688) return 45.86m;
+            if (pLower.Contains("5532 diamond") || diamondAmt == 5532) return 69.24m;
+            if (pLower.Contains("9288 diamond") || diamondAmt == 9288) return 115.00m;
+            if (pLower.Contains("level 6") || pLower.Contains("level up")) return 0.29m;
+            if (pLower.Contains("weekly lite") || pLower.Contains("weeklylite")) return 0.32m;
+            if (pLower.Contains("weekly") || pLower.Contains("wdp")) return 1.57m;
+            if (pLower.Contains("monthly")) return 7.76m;
+
+            var matchProd = products.FirstOrDefault(p =>
+                (diamondAmt.HasValue && p.DiamondAmount == diamondAmt.Value) ||
+                (!string.IsNullOrEmpty(pkgName) && p.Description != null && p.Description.Contains(pkgName, StringComparison.OrdinalIgnoreCase)));
+            if (matchProd != null && matchProd.CostPrice > 0) return matchProd.CostPrice;
+
+            return Math.Round(sellPrice * 0.82m, 2);
+        }
+
+        var ledgerList = new List<object>();
+        var seenKeys = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+
+        decimal totalGrossRevenue = 0m;
+        decimal totalSupplierCogs = 0m;
+
+        // 1. Process SQLite orders
+        foreach (var o in paidOrders)
+        {
+            var key = $"ORD-{o.OrderId}";
+            seenKeys.Add(key);
+            var sell = o.Amount;
+            var pkg = o.Product?.Description ?? $"{o.DiamondAmount} Diamonds";
+            var prov = (o.Product != null && o.Product.CostPrice > 0)
                 ? o.Product.CostPrice
-                : (o.Amount * 0.85m));
+                : ResolveProviderWholesaleCost(pkg, sell, o.DiamondAmount);
+            var profit = Math.Round(sell - prov, 2);
+            var margin = sell > 0 ? Math.Round((profit / sell) * 100, 1) : 0;
 
-        var totalNetProfit = totalGrossRevenue - totalSupplierCogs;
+            totalGrossRevenue += sell;
+            totalSupplierCogs += prov;
+
+            ledgerList.Add(new
+            {
+                billNumber = key,
+                orderId = o.OrderId,
+                gameName = !string.IsNullOrWhiteSpace(o.GameName) ? o.GameName : "Mobile Legends",
+                packageName = pkg,
+                playerId = o.PlayerID ?? "N/A",
+                serverId = o.ServerID ?? "Global",
+                sellerPrice = sell,
+                providerPrice = prov,
+                netProfit = profit,
+                marginPct = margin,
+                date = o.CreatedAt.ToString("yyyy-MM-dd HH:mm:ss"),
+                status = o.TopupStatus ?? "Completed"
+            });
+        }
+
+        // 2. Query persistent MongoDB Atlas payments collection
+        try
+        {
+            var mongoUri = _configuration["MongoDB:ConnectionString"]
+                ?? "mongodb+srv://peakmao007_db_user:DNelqTteMX30a7PX@pudeth.olrum6s.mongodb.net/?appName=pudeth&retryWrites=true&w=majority";
+            var dbName = _configuration["MongoDB:DatabaseName"] ?? "mlbbtopup";
+
+            var mongoClient = new MongoDB.Driver.MongoClient(mongoUri);
+            var mongoDb = mongoClient.GetDatabase(dbName);
+            var paymentsCol = mongoDb.GetCollection<MongoDB.Bson.BsonDocument>("payments");
+
+            var filter = MongoDB.Driver.Builders<MongoDB.Bson.BsonDocument>.Filter.Or(
+                MongoDB.Driver.Builders<MongoDB.Bson.BsonDocument>.Filter.Eq("status", "PAID"),
+                MongoDB.Driver.Builders<MongoDB.Bson.BsonDocument>.Filter.Eq("payment_status", "APPROVED")
+            );
+
+            var mongoDocs = await paymentsCol.Find(filter).SortByDescending(d => d["_id"]).ToListAsync();
+            foreach (var doc in mongoDocs)
+            {
+                var bill = doc.Contains("bill_number") && !doc["bill_number"].IsBsonNull ? doc["bill_number"].AsString : string.Empty;
+                var tran = doc.Contains("transaction_id") && !doc["transaction_id"].IsBsonNull ? doc["transaction_id"].AsString : string.Empty;
+                var key = !string.IsNullOrEmpty(bill) ? bill : (!string.IsNullOrEmpty(tran) ? tran : doc["_id"].ToString() ?? string.Empty);
+
+                if (string.IsNullOrEmpty(key) || seenKeys.Contains(key)) continue;
+                seenKeys.Add(key);
+
+                decimal rawAmt = 0m;
+                if (doc.Contains("amount"))
+                {
+                    if (doc["amount"].IsDouble) rawAmt = (decimal)doc["amount"].AsDouble;
+                    else if (doc["amount"].IsInt32) rawAmt = doc["amount"].AsInt32;
+                    else if (doc["amount"].IsInt64) rawAmt = doc["amount"].AsInt64;
+                    else if (doc["amount"].IsDecimal128) rawAmt = (decimal)doc["amount"].AsDecimal128;
+                }
+
+                var curr = doc.Contains("currency") && !doc["currency"].IsBsonNull ? doc["currency"].AsString : "USD";
+                var sell = (curr.Equals("KHR", StringComparison.OrdinalIgnoreCase))
+                    ? Math.Round(rawAmt / 4100m, 2)
+                    : rawAmt;
+
+                if (sell <= 0) continue;
+
+                var game = doc.Contains("game_name") && !doc["game_name"].IsBsonNull ? doc["game_name"].AsString : "Mobile Legends";
+                var pkg = doc.Contains("package_name") && !doc["package_name"].IsBsonNull ? doc["package_name"].AsString : "55 Diamonds";
+                var pid = doc.Contains("player_id") && !doc["player_id"].IsBsonNull ? doc["player_id"].AsString : "N/A";
+                var sid = doc.Contains("server_id") && !doc["server_id"].IsBsonNull ? doc["server_id"].AsString : "Global";
+                var dateStr = doc.Contains("created_at") && !doc["created_at"].IsBsonNull ? doc["created_at"].ToString()! :
+                              doc.Contains("paid_at") && !doc["paid_at"].IsBsonNull ? doc["paid_at"].ToString()! :
+                              DateTime.UtcNow.ToString("yyyy-MM-dd HH:mm:ss");
+
+                var prov = ResolveProviderWholesaleCost(pkg, sell, null);
+                var profit = Math.Round(sell - prov, 2);
+                var margin = sell > 0 ? Math.Round((profit / sell) * 100, 1) : 0;
+
+                totalGrossRevenue += sell;
+                totalSupplierCogs += prov;
+
+                ledgerList.Add(new
+                {
+                    billNumber = key,
+                    orderId = 0,
+                    gameName = game,
+                    packageName = pkg,
+                    playerId = pid,
+                    serverId = sid,
+                    sellerPrice = sell,
+                    providerPrice = prov,
+                    netProfit = profit,
+                    marginPct = margin,
+                    date = dateStr,
+                    status = "Completed"
+                });
+            }
+        }
+        catch { }
+
+        totalGrossRevenue = Math.Round(totalGrossRevenue, 2);
+        totalSupplierCogs = Math.Round(totalSupplierCogs, 2);
+        var totalNetProfit = Math.Round(totalGrossRevenue - totalSupplierCogs, 2);
+        var totalGrossRevenueKHR = Math.Round(totalGrossRevenue * 4100m);
+        var totalSupplierCogsKHR = Math.Round(totalSupplierCogs * 4100m);
+        var totalNetProfitKHR = Math.Round(totalNetProfit * 4100m);
         var overallMarginPct = totalGrossRevenue > 0
             ? Math.Round((totalNetProfit / totalGrossRevenue) * 100, 1)
             : 0;
@@ -1137,7 +1298,7 @@ public class AdminController : BaseController
         {
             var dayOrders = paidOrders.Where(o => o.CreatedAt.Date == day).ToList();
             var rev = dayOrders.Sum(o => o.Amount);
-            var cost = dayOrders.Sum(o => (o.Product != null && o.Product.CostPrice > 0) ? o.Product.CostPrice : (o.Amount * 0.85m));
+            var cost = dayOrders.Sum(o => (o.Product != null && o.Product.CostPrice > 0) ? o.Product.CostPrice : ResolveProviderWholesaleCost(o.Product?.Description, o.Amount, o.DiamondAmount));
             var profit = rev - cost;
             var margin = rev > 0 ? Math.Round((profit / rev) * 100, 1) : 0;
 
@@ -1153,10 +1314,9 @@ public class AdminController : BaseController
         }).ToList();
 
         // Product profitability leaderboard
-        var products = await _context.Products.ToListAsync();
         var packageProfitability = products.Select(p =>
         {
-            var cost = p.CostPrice > 0 ? p.CostPrice : Math.Round(p.Price * 0.85m, 2);
+            var cost = p.CostPrice > 0 ? p.CostPrice : ResolveProviderWholesaleCost(p.Description, p.Price, p.DiamondAmount);
             var reseller = p.ResellerPrice > 0 ? p.ResellerPrice : Math.Round(p.Price * 0.92m, 2);
             var retailProfit = p.Price - cost;
             var resellerProfit = reseller - cost;
@@ -1183,11 +1343,15 @@ public class AdminController : BaseController
         return Ok(new
         {
             totalGrossRevenue,
+            totalGrossRevenueKHR,
             totalSupplierCogs,
+            totalSupplierCogsKHR,
             totalNetProfit,
+            totalNetProfitKHR,
             overallMarginPct,
             dailyProfitTrend,
-            packageProfitability
+            packageProfitability,
+            salesLedger = ledgerList
         });
     }
 

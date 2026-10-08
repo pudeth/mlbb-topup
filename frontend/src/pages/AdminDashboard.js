@@ -24,6 +24,7 @@ import {
   deleteCustomProvider,
   updateProviderBalance
 } from '../services/supplierGateway';
+import { getLocalOrders, mergeOrders, updateLocalOrderStatus } from '../utils/orderStorage';
 
 const AdminDashboard = () => {
 
@@ -292,7 +293,7 @@ const PRICING_GAMES = [
   });
   const [resellers, setResellers] = useState([]);
   const [failedTransactions, setFailedTransactions] = useState([]);
-  const [orders, setOrders] = useState([]);
+  const [orders, setOrders] = useState(() => getLocalOrders());
   const [pendingOrders, setPendingOrders] = useState([]);
   const [pendingBalanceOrders, setPendingBalanceOrders] = useState([]); // paid but provider had no balance
   const [products, setProducts] = useState([]);
@@ -411,6 +412,14 @@ const PRICING_GAMES = [
     status: 'Active',
     order: 1
   });
+
+  // Financials & Profit Analytics Tab States
+  const [financialsSearch, setFinancialsSearch] = useState('');
+  const [financialsGameFilter, setFinancialsGameFilter] = useState('ALL');
+  const [financialsTimeFilter, setFinancialsTimeFilter] = useState('ALL');
+  const [financialsSubTab, setFinancialsSubTab] = useState('ledger'); // 'ledger' | 'packages' | 'trends'
+  const [financialsPage, setFinancialsPage] = useState(1);
+  const [financialsPageSize, setFinancialsPageSize] = useState(15);
 
   // Sync event banners from cloud MongoDB on Admin load & auto-seed if cloud is empty
   useEffect(() => {
@@ -1015,7 +1024,10 @@ const PRICING_GAMES = [
         setPendingBalanceOrders(balRes.data?.orders || []);
       } else if (activeTab === 'orders') {
         const ordersRes = await adminAPI.getAllOrders().catch(() => ({ data: [] }));
-        setOrders(ordersRes.data || []);
+        const remoteOrders = Array.isArray(ordersRes?.data) ? ordersRes.data : [];
+        const localOrders = getLocalOrders();
+        const combined = mergeOrders(remoteOrders, localOrders);
+        setOrders(combined);
       } else if (activeTab === 'provider') {
         const [provRes, suppRes] = await Promise.all([
           adminAPI.getProviderSettings().catch(() => ({ data: null })),
@@ -1188,12 +1200,15 @@ const PRICING_GAMES = [
     try {
       const res = await adminAPI.processTopUp(orderId);
       showToast('success', res.data?.message || `Diamonds delivered successfully for Order #${orderId}`);
+      updateLocalOrderStatus(orderId, { topupStatus: 'Completed' });
+      setOrders(prev => prev.map(o => Number(o.orderId) === Number(orderId) ? { ...o, topupStatus: 'Completed' } : o));
+      if (selectedOrder) setSelectedOrder({ ...selectedOrder, topupStatus: 'Completed' });
       if (deliveryModalOrder) setDeliveryModalOrder(null);
       loadData(true);
     } catch (err) {
       const errMsg = err.response?.data?.message || err.message || 'Failed to deliver diamonds';
       showToast('error', errMsg);
-      const targetOrder = pendingOrders.find((o) => o.orderId === orderId) || selectedOrder;
+      const targetOrder = orders.find((o) => Number(o.orderId) === Number(orderId)) || pendingOrders.find((o) => Number(o.orderId) === Number(orderId)) || selectedOrder;
       if (targetOrder) {
         setDeliveryModalOrder(targetOrder);
       }
@@ -1207,6 +1222,8 @@ const PRICING_GAMES = [
     try {
       const res = await adminAPI.manualCompleteTopUp(orderId);
       showToast('success', res.data?.message || `Order #${orderId} marked as Completed!`);
+      updateLocalOrderStatus(orderId, { topupStatus: 'Completed' });
+      setOrders(prev => prev.map(o => Number(o.orderId) === Number(orderId) ? { ...o, topupStatus: 'Completed' } : o));
       if (selectedOrder) setSelectedOrder({ ...selectedOrder, topupStatus: 'Completed' });
       if (deliveryModalOrder) setDeliveryModalOrder(null);
       loadData(true);
@@ -2286,35 +2303,51 @@ const PRICING_GAMES = [
     setExportModalOpen(false);
   };
 
-  // ==================== FILTERING & PAGINATION ====================
-
   const filteredOrders = orders.filter((order) => {
-    const matchSearch =
-      orderSearch === '' ||
-      order.orderId?.toString().includes(orderSearch) ||
-      order.playerID?.toLowerCase().includes(orderSearch.toLowerCase()) ||
-      order.serverID?.includes(orderSearch);
+    if (!order) return false;
+    const pId = String(order.playerID || order.playerId || '');
+    const sId = String(order.serverID || order.serverId || '');
+    const oId = String(order.orderId || '');
+    const accName = String(order.accountName || order.customerName || '');
+    const gName = String(order.gameName || '');
+    const sQuery = orderSearch.trim().toLowerCase();
 
-    const matchPayment = paymentFilter === 'ALL' || order.paymentStatus === paymentFilter;
-    const matchTopup = topupFilter === 'ALL' || order.topupStatus === topupFilter;
+    const matchSearch =
+      !sQuery ||
+      oId.includes(sQuery) ||
+      pId.toLowerCase().includes(sQuery) ||
+      sId.toLowerCase().includes(sQuery) ||
+      accName.toLowerCase().includes(sQuery) ||
+      gName.toLowerCase().includes(sQuery);
+
+    const payStatus = order.paymentStatus || 'Pending';
+    const topStatus = order.topupStatus || 'Pending';
+
+    const matchPayment = paymentFilter === 'ALL' || payStatus.toLowerCase() === paymentFilter.toLowerCase();
+    const matchTopup = topupFilter === 'ALL' || topStatus.toLowerCase() === topupFilter.toLowerCase();
 
     let matchDate = true;
     if (dateFilter === 'TODAY') {
       const today = new Date().toISOString().slice(0, 10);
-      matchDate = order.createdAt?.startsWith(today);
+      matchDate = String(order.createdAt || '').slice(0, 10) === today;
     } else if (dateFilter === '7DAYS') {
       const past7 = new Date();
       past7.setDate(past7.getDate() - 7);
-      matchDate = new Date(order.createdAt) >= past7;
+      matchDate = new Date(order.createdAt || 0) >= past7;
+    } else if (dateFilter === '30DAYS') {
+      const past30 = new Date();
+      past30.setDate(past30.getDate() - 30);
+      matchDate = new Date(order.createdAt || 0) >= past30;
     }
 
     return matchSearch && matchPayment && matchTopup && matchDate;
   });
 
   const totalPages = Math.ceil(filteredOrders.length / pageSize) || 1;
+  const safeCurrentPage = Math.min(Math.max(1, currentPage), totalPages);
   const paginatedOrders = filteredOrders.slice(
-    (currentPage - 1) * pageSize,
-    currentPage * pageSize
+    (safeCurrentPage - 1) * pageSize,
+    safeCurrentPage * pageSize
   );
 
   const menuCategories = [
@@ -4639,132 +4672,452 @@ const PRICING_GAMES = [
         {/* ========================================================= */}
         {!loading && activeTab === 'orders' && (
           <div className="space-y-6 animate-fadeIn">
+            {/* Header + Stats Bar */}
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
               <div>
                 <h2 className="text-2xl sm:text-3xl font-black text-white flex items-center gap-2">
                   <span>📦</span> Orders & Transactions Ledger
                 </h2>
                 <p className="text-xs sm:text-sm text-slate-400 mt-1">
-                  Complete history of customer orders, payments, and delivery statuses.
+                  Complete real-time history of customer orders, payments, and live delivery statuses.
                 </p>
               </div>
 
-              <button
-                onClick={handleExportCSV}
-                className="btn btn-secondary text-xs py-2 px-3 flex items-center gap-1.5"
-              >
-                <span>📥</span>
-                <span>Export CSV</span>
-              </button>
+              <div className="flex items-center gap-2">
+                <button
+                  type="button"
+                  onClick={() => loadData(true)}
+                  disabled={refreshing}
+                  className="btn btn-secondary text-xs py-2 px-3 flex items-center gap-1.5 cursor-pointer"
+                  title="Refresh orders from server"
+                >
+                  <span className={refreshing ? 'animate-spin' : ''}>↻</span>
+                  <span>{refreshing ? 'Refreshing...' : 'Refresh'}</span>
+                </button>
+                <button
+                  onClick={handleExportCSV}
+                  className="btn btn-secondary text-xs py-2 px-3 flex items-center gap-1.5 bg-emerald-950/40 hover:bg-emerald-900/60 border border-emerald-500/40 text-emerald-300 font-bold cursor-pointer"
+                >
+                  <span>📥</span>
+                  <span>Export CSV</span>
+                </button>
+              </div>
+            </div>
+
+            {/* Quick KPI Counters */}
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+              <div className="card p-3 rounded-2xl bg-dark-card/90 border border-slate-800 flex items-center gap-3">
+                <div className="w-10 h-10 rounded-xl bg-cyan-500/10 text-cyan-400 border border-cyan-500/20 flex items-center justify-center text-lg">
+                  📦
+                </div>
+                <div>
+                  <span className="text-[10px] uppercase font-bold text-slate-400 block">Total Orders</span>
+                  <span className="text-lg font-black text-white font-mono">{orders.length}</span>
+                </div>
+              </div>
+
+              <div className="card p-3 rounded-2xl bg-dark-card/90 border border-emerald-500/30 flex items-center gap-3">
+                <div className="w-10 h-10 rounded-xl bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 flex items-center justify-center text-lg">
+                  ✅
+                </div>
+                <div>
+                  <span className="text-[10px] uppercase font-bold text-emerald-400 block">Delivered</span>
+                  <span className="text-lg font-black text-emerald-300 font-mono">
+                    {orders.filter(o => o.topupStatus === 'Completed').length}
+                  </span>
+                </div>
+              </div>
+
+              <div className="card p-3 rounded-2xl bg-dark-card/90 border border-amber-500/30 flex items-center gap-3">
+                <div className="w-10 h-10 rounded-xl bg-amber-500/10 text-amber-400 border border-amber-500/20 flex items-center justify-center text-lg">
+                  ⏳
+                </div>
+                <div>
+                  <span className="text-[10px] uppercase font-bold text-amber-400 block">Pending Delivery</span>
+                  <span className="text-lg font-black text-amber-300 font-mono">
+                    {orders.filter(o => o.topupStatus === 'Pending' || o.topupStatus === 'Processing' || o.topupStatus === 'AwaitingBalance').length}
+                  </span>
+                </div>
+              </div>
+
+              <div className="card p-3 rounded-2xl bg-dark-card/90 border border-rose-500/30 flex items-center gap-3">
+                <div className="w-10 h-10 rounded-xl bg-rose-500/10 text-rose-400 border border-rose-500/20 flex items-center justify-center text-lg">
+                  ❌
+                </div>
+                <div>
+                  <span className="text-[10px] uppercase font-bold text-rose-400 block">Failed / Need Attention</span>
+                  <span className="text-lg font-black text-rose-300 font-mono">
+                    {orders.filter(o => o.topupStatus === 'Failed').length}
+                  </span>
+                </div>
+              </div>
             </div>
 
             {/* Filter Bar */}
-            <div className="card p-4 grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-3 text-xs rounded-2xl">
-              <input
-                type="text"
-                placeholder="Search Order ID / Player ID..."
-                value={orderSearch}
-                onChange={(e) => setOrderSearch(e.target.value)}
-                className="input text-xs py-2"
-              />
-              <select
-                value={paymentFilter}
-                onChange={(e) => setPaymentFilter(e.target.value)}
-                className="input text-xs py-2"
-              >
-                <option value="ALL">Payment: All</option>
-                <option value="Paid">Payment: Paid</option>
-                <option value="Pending">Payment: Pending</option>
-                <option value="Failed">Payment: Failed</option>
-              </select>
-              <select
-                value={topupFilter}
-                onChange={(e) => setTopupFilter(e.target.value)}
-                className="input text-xs py-2"
-              >
-                <option value="ALL">Top-Up: All</option>
-                <option value="Completed">Top-Up: Completed</option>
-                <option value="Pending">Top-Up: Pending</option>
-                <option value="Processing">Top-Up: Processing</option>
-                <option value="Failed">Top-Up: Failed</option>
-              </select>
-              <select
-                value={dateFilter}
-                onChange={(e) => setDateFilter(e.target.value)}
-                className="input text-xs py-2"
-              >
-                <option value="ALL">Date: All Time</option>
-                <option value="TODAY">Date: Today</option>
-                <option value="7DAYS">Date: Last 7 Days</option>
-              </select>
+            <div className="card p-3.5 grid grid-cols-1 sm:grid-cols-2 md:grid-cols-5 gap-2.5 text-xs rounded-2xl bg-dark-card/90 border border-slate-800">
+              <div className="md:col-span-2">
+                <input
+                  type="text"
+                  placeholder="Search Order ID, Player ID, Game, Customer..."
+                  value={orderSearch}
+                  onChange={(e) => {
+                    setOrderSearch(e.target.value);
+                    setCurrentPage(1);
+                  }}
+                  className="input text-xs py-2 w-full"
+                />
+              </div>
+              <div>
+                <select
+                  value={paymentFilter}
+                  onChange={(e) => {
+                    setPaymentFilter(e.target.value);
+                    setCurrentPage(1);
+                  }}
+                  className="input text-xs py-2 w-full"
+                >
+                  <option value="ALL">Payment: All</option>
+                  <option value="Paid">Payment: Paid (KHQR/ABA)</option>
+                  <option value="Pending">Payment: Unpaid / Pending</option>
+                  <option value="Failed">Payment: Failed</option>
+                </select>
+              </div>
+              <div>
+                <select
+                  value={topupFilter}
+                  onChange={(e) => {
+                    setTopupFilter(e.target.value);
+                    setCurrentPage(1);
+                  }}
+                  className="input text-xs py-2 w-full"
+                >
+                  <option value="ALL">Delivery: All</option>
+                  <option value="Completed">Delivery: Completed (Delivered)</option>
+                  <option value="Pending">Delivery: Pending</option>
+                  <option value="Processing">Delivery: Processing</option>
+                  <option value="AwaitingBalance">Delivery: Low Balance</option>
+                  <option value="Failed">Delivery: Failed</option>
+                </select>
+              </div>
+              <div>
+                <select
+                  value={dateFilter}
+                  onChange={(e) => {
+                    setDateFilter(e.target.value);
+                    setCurrentPage(1);
+                  }}
+                  className="input text-xs py-2 w-full"
+                >
+                  <option value="ALL">Date: All Time</option>
+                  <option value="TODAY">Date: Today</option>
+                  <option value="7DAYS">Date: Last 7 Days</option>
+                  <option value="30DAYS">Date: Last 30 Days</option>
+                </select>
+              </div>
             </div>
 
             {/* Orders Table */}
-            <div className="card space-y-4 rounded-2xl shadow-xl overflow-hidden">
+            <div className="card rounded-2xl shadow-xl overflow-hidden border border-slate-800 bg-[#0B0F19]">
               <div className="overflow-x-auto">
-                <table className="w-full text-left text-xs min-w-[650px]">
-                  <thead className="bg-dark-input/80 text-slate-400 uppercase text-[10px] tracking-wider border-b border-slate-800">
+                <table className="w-full text-left text-xs min-w-[850px]">
+                  <thead className="bg-[#111728] text-slate-400 uppercase text-[10px] tracking-wider border-b border-slate-800 font-bold">
                     <tr>
                       <th className="p-3">Order</th>
                       <th className="p-3">Player / Zone</th>
-                      <th className="p-3">Diamonds / Units</th>
+                      <th className="p-3">Item / Package</th>
                       <th className="p-3">Amount</th>
                       <th className="p-3">Payment</th>
-                      <th className="p-3">Delivery</th>
+                      <th className="p-3">Current Delivery Status</th>
                       <th className="p-3">Date</th>
                       <th className="p-3 text-right">Actions</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-slate-800/60 font-mono">
-                    {paginatedOrders.map((order) => (
-                      <tr key={order.orderId} className="hover:bg-slate-800/30">
-                        <td className="p-3 font-bold text-white">#{order.orderId}</td>
-                        <td className="p-3 font-sans">
-                          <span className="font-bold text-cyan-300">{order.playerID}</span>{' '}
-                          <span className="text-slate-400">({order.serverID})</span>
-                        </td>
-                        <td className="p-3 font-sans font-bold text-amber-300">
-                          {order.diamondAmount} Diamonds / Units
-                        </td>
-                        <td className="p-3 text-emerald-400 font-bold">${order.amount?.toFixed(2)}</td>
-                        <td className="p-3 font-sans">
-                          <span
-                            className={`badge ${
-                              order.paymentStatus === 'Paid' ? 'badge-success' : 'badge-warning'
-                            }`}
-                          >
-                            {order.paymentStatus}
-                          </span>
-                        </td>
-                        <td className="p-3 font-sans">
-                          <span
-                            className={`badge ${
-                              order.topupStatus === 'Completed'
-                                ? 'badge-success'
-                                : order.topupStatus === 'Failed'
-                                ? 'badge-danger'
-                                : 'badge-warning'
-                            }`}
-                          >
-                            {order.topupStatus}
-                          </span>
-                        </td>
-                        <td className="p-3 text-slate-400 font-sans">
-                          {order.createdAt ? new Date(order.createdAt).toLocaleDateString() : 'N/A'}
-                        </td>
-                        <td className="p-3 text-right">
-                          <button
-                            onClick={() => setSelectedOrder(order)}
-                            className="btn btn-secondary text-xs py-1 px-2.5 font-sans"
-                          >
-                            Audit
-                          </button>
+                    {paginatedOrders.length === 0 ? (
+                      <tr>
+                        <td colSpan={8} className="p-12 text-center text-slate-400 font-sans">
+                          <div className="max-w-sm mx-auto space-y-3">
+                            <div className="w-14 h-14 rounded-2xl bg-slate-800/80 border border-slate-700 flex items-center justify-center text-2xl mx-auto">
+                              📭
+                            </div>
+                            <h4 className="font-bold text-white text-sm">No Orders Found</h4>
+                            <p className="text-xs text-slate-500 leading-relaxed">
+                              {orderSearch || paymentFilter !== 'ALL' || topupFilter !== 'ALL' || dateFilter !== 'ALL'
+                                ? 'No orders match your current filters. Try resetting the filters to view all orders.'
+                                : 'There are currently no orders registered in the system.'}
+                            </p>
+                            {(orderSearch || paymentFilter !== 'ALL' || topupFilter !== 'ALL' || dateFilter !== 'ALL') && (
+                              <button
+                                type="button"
+                                onClick={() => {
+                                  setOrderSearch('');
+                                  setPaymentFilter('ALL');
+                                  setTopupFilter('ALL');
+                                  setDateFilter('ALL');
+                                  setCurrentPage(1);
+                                }}
+                                className="px-3 py-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-cyan-400 text-xs font-bold border border-slate-700 transition-all cursor-pointer"
+                              >
+                                ✕ Reset All Filters
+                              </button>
+                            )}
+                          </div>
                         </td>
                       </tr>
-                    ))}
+                    ) : (
+                      paginatedOrders.map((order) => {
+                        const isDelivered = order.topupStatus === 'Completed';
+                        const isProcessing = order.topupStatus === 'Processing';
+                        const isFailed = order.topupStatus === 'Failed';
+                        const isAwaitingBal = order.topupStatus === 'AwaitingBalance';
+                        const isPendingDelivery = !isDelivered && !isProcessing && !isFailed && !isAwaitingBal;
+
+                        const isPaid = order.paymentStatus === 'Paid';
+
+                        return (
+                          <tr key={order.orderId} className="hover:bg-slate-800/40 transition-colors">
+                            {/* ORDER */}
+                            <td className="p-3">
+                              <div className="flex flex-col">
+                                <span className="font-bold text-white font-mono text-sm">
+                                  #{order.orderId}
+                                </span>
+                                <span className="text-[10px] text-amber-400/90 font-sans font-semibold truncate max-w-[140px]">
+                                  {order.gameName || 'Mobile Legends'}
+                                </span>
+                              </div>
+                            </td>
+
+                            {/* PLAYER / ZONE */}
+                            <td className="p-3 font-sans">
+                              <div className="space-y-1">
+                                <div className="flex items-center gap-1.5">
+                                  <span className="font-mono font-black text-cyan-300 text-xs">
+                                    {order.playerID || order.playerId}
+                                  </span>
+                                  <button
+                                    type="button"
+                                    onClick={() => handleCopyText(order.playerID || order.playerId, `p-${order.orderId}`)}
+                                    className="p-1 hover:bg-slate-800 rounded text-slate-400 hover:text-white transition-all text-[10px] cursor-pointer"
+                                    title="Copy Player ID"
+                                  >
+                                    {copiedId === `p-${order.orderId}` ? '✅' : '📋'}
+                                  </button>
+                                </div>
+                                <div className="text-[11px] text-slate-400">
+                                  Zone / Server:{' '}
+                                  <span className="font-mono text-slate-300 font-bold">
+                                    {order.serverID || order.serverId || 'Global'}
+                                  </span>
+                                </div>
+                                {order.accountName && order.accountName !== '??????????' && (
+                                  <div className="text-[10px] text-slate-500 truncate max-w-[160px]">
+                                    {order.accountName}
+                                  </div>
+                                )}
+                              </div>
+                            </td>
+
+                            {/* DIAMONDS / UNITS */}
+                            <td className="p-3 font-sans">
+                              <div className="font-bold text-amber-300 text-xs flex items-center gap-1">
+                                <span>💎</span>
+                                <span>
+                                  {order.productName || (order.diamondAmount ? `${order.diamondAmount} Diamonds` : 'Diamonds')}
+                                </span>
+                              </div>
+                              {order.diamondAmount && order.productName && !order.productName.includes(String(order.diamondAmount)) && (
+                                <span className="text-[10px] text-slate-400">
+                                  ({order.diamondAmount} Units)
+                                </span>
+                              )}
+                            </td>
+
+                            {/* AMOUNT */}
+                            <td className="p-3">
+                              <div className="font-bold text-emerald-400 text-xs font-mono">
+                                ${Number(order.amount || order.price || 0).toFixed(2)}
+                              </div>
+                              <span className="text-[10px] text-slate-500 font-mono">
+                                ~{Math.round(Number(order.amount || order.price || 0) * 4100).toLocaleString()} ៛
+                              </span>
+                            </td>
+
+                            {/* PAYMENT */}
+                            <td className="p-3 font-sans">
+                              {isPaid ? (
+                                <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-xl bg-emerald-500/10 text-emerald-400 border border-emerald-500/30 text-[11px] font-bold">
+                                  <span>✅</span>
+                                  <span>Paid</span>
+                                </span>
+                              ) : (
+                                <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-xl bg-amber-500/10 text-amber-400 border border-amber-500/30 text-[11px] font-bold">
+                                  <span>⏳</span>
+                                  <span>{order.paymentStatus || 'Pending'}</span>
+                                </span>
+                              )}
+                            </td>
+
+                            {/* CURRENT DELIVERY STATUS */}
+                            <td className="p-3 font-sans">
+                              {isDelivered && (
+                                <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-xl bg-emerald-500/15 text-emerald-300 border border-emerald-500/40 text-xs font-black shadow-sm shadow-emerald-500/10">
+                                  <span>✅</span>
+                                  <span>Delivered</span>
+                                </div>
+                              )}
+                              {isProcessing && (
+                                <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-xl bg-cyan-500/15 text-cyan-300 border border-cyan-500/40 text-xs font-bold animate-pulse">
+                                  <span className="w-1.5 h-1.5 rounded-full bg-cyan-400 animate-ping" />
+                                  <span>Delivering...</span>
+                                </div>
+                              )}
+                              {isPendingDelivery && (
+                                <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-xl bg-amber-500/15 text-amber-300 border border-amber-500/40 text-xs font-bold">
+                                  <span>⏳</span>
+                                  <span>Pending Delivery</span>
+                                </div>
+                              )}
+                              {isAwaitingBal && (
+                                <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-xl bg-orange-500/15 text-orange-300 border border-orange-500/40 text-xs font-bold">
+                                  <span>⚠️</span>
+                                  <span>Low Supplier Funds</span>
+                                </div>
+                              )}
+                              {isFailed && (
+                                <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-xl bg-rose-500/15 text-rose-300 border border-rose-500/40 text-xs font-bold">
+                                  <span>❌</span>
+                                  <span>Delivery Failed</span>
+                                </div>
+                              )}
+                            </td>
+
+                            {/* DATE */}
+                            <td className="p-3 text-slate-400 font-sans text-[11px]">
+                              {order.createdAt ? (
+                                <div>
+                                  <div className="text-white font-medium">
+                                    {new Date(order.createdAt).toLocaleDateString()}
+                                  </div>
+                                  <div className="text-[10px] text-slate-500">
+                                    {new Date(order.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                                  </div>
+                                </div>
+                              ) : (
+                                'N/A'
+                              )}
+                            </td>
+
+                            {/* ACTIONS */}
+                            <td className="p-3 text-right font-sans">
+                              <div className="flex items-center justify-end gap-1.5">
+                                {!isDelivered ? (
+                                  <>
+                                    <button
+                                      type="button"
+                                      onClick={() => handleManualComplete(order.orderId)}
+                                      disabled={processingOrderId === order.orderId}
+                                      className="px-2.5 py-1.5 rounded-lg bg-emerald-600/90 hover:bg-emerald-500 text-white font-bold text-[11px] flex items-center gap-1 shadow-sm transition-all cursor-pointer disabled:opacity-50"
+                                      title="Mark order as Delivered"
+                                    >
+                                      <span>✅</span>
+                                      <span className="hidden sm:inline">Delivered</span>
+                                    </button>
+
+                                    <button
+                                      type="button"
+                                      onClick={() => handleProcessSingleTopUp(order.orderId)}
+                                      disabled={processingOrderId === order.orderId}
+                                      className="px-2.5 py-1.5 rounded-lg bg-amber-500 hover:bg-amber-400 text-black font-black text-[11px] flex items-center gap-1 shadow-sm transition-all cursor-pointer disabled:opacity-50"
+                                      title="Trigger automated dispatch via Provider API"
+                                    >
+                                      <span>⚡</span>
+                                      <span className="hidden sm:inline">{processingOrderId === order.orderId ? '...' : 'Auto'}</span>
+                                    </button>
+
+                                    <button
+                                      type="button"
+                                      onClick={() => setDeliveryModalOrder(order)}
+                                      className="p-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-cyan-300 font-bold text-[11px] border border-slate-700 transition-all cursor-pointer"
+                                      title="Open Delivery Assistant"
+                                    >
+                                      🛠️
+                                    </button>
+                                  </>
+                                ) : (
+                                  <button
+                                    type="button"
+                                    onClick={() => setSelectedOrder(order)}
+                                    className="px-3 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-200 hover:text-white text-[11px] font-bold border border-slate-700 transition-all cursor-pointer flex items-center gap-1"
+                                  >
+                                    <span>🔍</span>
+                                    <span>Audit</span>
+                                  </button>
+                                )}
+                              </div>
+                            </td>
+                          </tr>
+                        );
+                      })
+                    )}
                   </tbody>
                 </table>
               </div>
+
+              {/* Pagination Bar */}
+              {filteredOrders.length > 0 && (
+                <div className="p-3.5 bg-[#0e1322] border-t border-slate-800 flex flex-col sm:flex-row items-center justify-between gap-3 text-xs font-sans">
+                  <div className="text-slate-400">
+                    Showing <strong className="text-white">{(safeCurrentPage - 1) * pageSize + 1}</strong> to{' '}
+                    <strong className="text-white">{Math.min(safeCurrentPage * pageSize, filteredOrders.length)}</strong> of{' '}
+                    <strong className="text-white">{filteredOrders.length}</strong> orders
+                  </div>
+
+                  <div className="flex items-center gap-1.5">
+                    <button
+                      type="button"
+                      onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+                      disabled={safeCurrentPage <= 1}
+                      className="px-3 py-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 disabled:opacity-30 disabled:pointer-events-none text-slate-300 font-bold border border-slate-700 transition-all cursor-pointer"
+                    >
+                      ← Prev
+                    </button>
+
+                    <div className="flex items-center gap-1 px-1">
+                      {Array.from({ length: Math.min(5, totalPages) }, (_, idx) => {
+                        let pageNum = idx + 1;
+                        if (totalPages > 5 && safeCurrentPage > 3) {
+                          pageNum = safeCurrentPage - 2 + idx;
+                          if (pageNum > totalPages) pageNum = totalPages - (4 - idx);
+                        }
+                        return (
+                          <button
+                            key={pageNum}
+                            type="button"
+                            onClick={() => setCurrentPage(pageNum)}
+                            className={`w-7 h-7 rounded-lg font-bold text-xs transition-all cursor-pointer ${
+                              safeCurrentPage === pageNum
+                                ? 'bg-amber-500 text-black shadow-md shadow-amber-500/20'
+                                : 'bg-slate-800/80 hover:bg-slate-700 text-slate-300'
+                            }`}
+                          >
+                            {pageNum}
+                          </button>
+                        );
+                      })}
+                    </div>
+
+                    <button
+                      type="button"
+                      onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
+                      disabled={safeCurrentPage >= totalPages}
+                      className="px-3 py-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 disabled:opacity-30 disabled:pointer-events-none text-slate-300 font-bold border border-slate-700 transition-all cursor-pointer"
+                    >
+                      Next →
+                    </button>
+                  </div>
+                </div>
+              )}
             </div>
           </div>
         )}
@@ -4794,41 +5147,456 @@ const PRICING_GAMES = [
               </button>
             </div>
 
-            {/* Profit KPI Cards */}
+            {/* Core Financials KPI Cards */}
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-              <div className="card bg-gradient-to-br from-dark-card to-dark-card/60 border-emerald-500/40 rounded-2xl shadow-xl">
-                <span className="text-xs text-slate-400 font-semibold uppercase">Total Net Profit</span>
-                <div className="text-3xl font-black text-emerald-400 mt-1">
+              {/* Income / Total Net Profit */}
+              <div className="card bg-gradient-to-br from-dark-card to-dark-card/80 border-emerald-500/50 rounded-2xl shadow-xl p-5 relative overflow-hidden group hover:border-emerald-400 transition-all">
+                <div className="flex items-center justify-between">
+                  <span className="text-[11px] font-black uppercase tracking-wider text-emerald-300">Income (Net Profit)</span>
+                  <span className="w-8 h-8 rounded-xl bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 flex items-center justify-center text-sm shadow-sm">💎</span>
+                </div>
+                <div className="text-3xl sm:text-4xl font-black text-emerald-400 mt-2 tracking-tight">
                   ${financials?.totalNetProfit?.toFixed(2) || '0.00'}
                 </div>
-                <div className="text-xs text-slate-400 mt-1 font-semibold">
-                  ៛{financials?.totalNetProfitKHR?.toLocaleString() || '0'} KHR
+                <div className="flex items-center justify-between mt-2 pt-2 border-t border-slate-800/80 text-xs">
+                  <span className="text-slate-400 font-bold">៛{financials?.totalNetProfitKHR?.toLocaleString() || '0'} KHR</span>
+                  <span className="text-emerald-400/90 text-[10px] font-black bg-emerald-500/10 px-2 py-0.5 rounded-full border border-emerald-500/20">Earnings After Costs</span>
                 </div>
               </div>
 
-              <div className="card bg-gradient-to-br from-dark-card to-dark-card/60 border-cyan-500/40 rounded-2xl shadow-xl">
-                <span className="text-xs text-slate-400 font-semibold uppercase">Gross Revenue</span>
-                <div className="text-3xl font-black text-cyan-300 mt-1">
+              {/* Total Seller (Gross Revenue) */}
+              <div className="card bg-gradient-to-br from-dark-card to-dark-card/80 border-cyan-500/50 rounded-2xl shadow-xl p-5 relative overflow-hidden group hover:border-cyan-400 transition-all">
+                <div className="flex items-center justify-between">
+                  <span className="text-[11px] font-black uppercase tracking-wider text-cyan-300">Total Seller (Revenue)</span>
+                  <span className="w-8 h-8 rounded-xl bg-cyan-500/10 border border-cyan-500/30 text-cyan-300 flex items-center justify-center text-sm shadow-sm">💰</span>
+                </div>
+                <div className="text-3xl sm:text-4xl font-black text-cyan-300 mt-2 tracking-tight">
                   ${financials?.totalGrossRevenue?.toFixed(2) || '0.00'}
                 </div>
-                <div className="text-xs text-slate-400 mt-1 font-semibold">Total customer payments</div>
+                <div className="flex items-center justify-between mt-2 pt-2 border-t border-slate-800/80 text-xs">
+                  <span className="text-slate-400 font-bold">៛{financials?.totalGrossRevenueKHR?.toLocaleString() || Math.round((financials?.totalGrossRevenue || 0) * 4100).toLocaleString()} KHR</span>
+                  <span className="text-cyan-400/90 text-[10px] font-black bg-cyan-500/10 px-2 py-0.5 rounded-full border border-cyan-500/20">Total Customer Paid</span>
+                </div>
               </div>
 
-              <div className="card bg-gradient-to-br from-dark-card to-dark-card/60 border-rose-500/40 rounded-2xl shadow-xl">
-                <span className="text-xs text-slate-400 font-semibold uppercase">Supplier COGS</span>
-                <div className="text-3xl font-black text-rose-400 mt-1">
+              {/* Total Provider Price (Supplier Wholesale COGS) */}
+              <div className="card bg-gradient-to-br from-dark-card to-dark-card/80 border-rose-500/50 rounded-2xl shadow-xl p-5 relative overflow-hidden group hover:border-rose-400 transition-all">
+                <div className="flex items-center justify-between">
+                  <span className="text-[11px] font-black uppercase tracking-wider text-rose-300">Total Provider Price</span>
+                  <span className="w-8 h-8 rounded-xl bg-rose-500/10 border border-rose-500/30 text-rose-400 flex items-center justify-center text-sm shadow-sm">⚡</span>
+                </div>
+                <div className="text-3xl sm:text-4xl font-black text-rose-400 mt-2 tracking-tight">
                   ${financials?.totalSupplierCogs?.toFixed(2) || '0.00'}
                 </div>
-                <div className="text-xs text-slate-400 mt-1 font-semibold">Wholesale costs paid</div>
+                <div className="flex items-center justify-between mt-2 pt-2 border-t border-slate-800/80 text-xs">
+                  <span className="text-slate-400 font-bold">៛{financials?.totalSupplierCogsKHR?.toLocaleString() || Math.round((financials?.totalSupplierCogs || 0) * 4100).toLocaleString()} KHR</span>
+                  <span className="text-rose-400/90 text-[10px] font-black bg-rose-500/10 px-2 py-0.5 rounded-full border border-rose-500/20">KhmerTopUp / Fazer</span>
+                </div>
               </div>
 
-              <div className="card bg-gradient-to-br from-dark-card to-dark-card/60 border-amber-500/40 rounded-2xl shadow-xl">
-                <span className="text-xs text-slate-400 font-semibold uppercase">Gross Margin</span>
-                <div className="text-3xl font-black text-amber-300 mt-1">
+              {/* Profit Margin */}
+              <div className="card bg-gradient-to-br from-dark-card to-dark-card/80 border-amber-500/50 rounded-2xl shadow-xl p-5 relative overflow-hidden group hover:border-amber-400 transition-all">
+                <div className="flex items-center justify-between">
+                  <span className="text-[11px] font-black uppercase tracking-wider text-amber-300">Net Profit Margin</span>
+                  <span className="w-8 h-8 rounded-xl bg-amber-500/10 border border-amber-500/30 text-amber-300 flex items-center justify-center text-sm shadow-sm">📈</span>
+                </div>
+                <div className="text-3xl sm:text-4xl font-black text-amber-300 mt-2 tracking-tight">
                   {financials?.overallMarginPct || 0}%
                 </div>
-                <div className="text-xs text-slate-400 mt-1 font-semibold">Average profit margin</div>
+                <div className="flex items-center justify-between mt-2 pt-2 border-t border-slate-800/80 text-xs">
+                  <span className="text-slate-400 font-bold">Average Profit %</span>
+                  <span className="text-amber-400/90 text-[10px] font-black bg-amber-500/10 px-2 py-0.5 rounded-full border border-amber-500/20">{(financials?.overallMarginPct || 0) > 15 ? '🔥 High Return' : 'Standard'}</span>
+                </div>
               </div>
+            </div>
+
+            {/* Sub-Tabs Navigation & Quick Filters */}
+            <div className="card bg-[#0B0F19] border border-slate-800 rounded-2xl p-3 sm:p-4 shadow-xl space-y-4">
+              <div className="flex flex-col md:flex-row md:items-center justify-between gap-3">
+                {/* Sub-view switcher */}
+                <div className="flex items-center gap-1.5 p-1 bg-slate-900/90 rounded-xl border border-slate-800 w-fit">
+                  <button
+                    type="button"
+                    onClick={() => setFinancialsSubTab('ledger')}
+                    className={`px-3.5 py-1.5 rounded-lg text-xs font-bold transition-all flex items-center gap-2 cursor-pointer ${
+                      financialsSubTab === 'ledger'
+                        ? 'bg-amber-500 text-slate-950 font-black shadow-md'
+                        : 'text-slate-400 hover:text-white hover:bg-slate-800/60'
+                    }`}
+                  >
+                    <span>📑</span>
+                    <span>Sales & Profit Ledger ({(financials?.salesLedger || []).length})</span>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setFinancialsSubTab('packages')}
+                    className={`px-3.5 py-1.5 rounded-lg text-xs font-bold transition-all flex items-center gap-2 cursor-pointer ${
+                      financialsSubTab === 'packages'
+                        ? 'bg-amber-500 text-slate-950 font-black shadow-md'
+                        : 'text-slate-400 hover:text-white hover:bg-slate-800/60'
+                    }`}
+                  >
+                    <span>💎</span>
+                    <span>Package Profitability ({(financials?.packageProfitability || []).length})</span>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setFinancialsSubTab('trends')}
+                    className={`px-3.5 py-1.5 rounded-lg text-xs font-bold transition-all flex items-center gap-2 cursor-pointer ${
+                      financialsSubTab === 'trends'
+                        ? 'bg-amber-500 text-slate-950 font-black shadow-md'
+                        : 'text-slate-400 hover:text-white hover:bg-slate-800/60'
+                    }`}
+                  >
+                    <span>📊</span>
+                    <span>7-Day Daily Trend</span>
+                  </button>
+                </div>
+
+                {/* Filter and Search controls */}
+                <div className="flex items-center gap-2.5 flex-wrap">
+                  {/* Search box */}
+                  <div className="relative min-w-[200px] flex-1 sm:flex-initial">
+                    <span className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-xs">🔍</span>
+                    <input
+                      type="text"
+                      placeholder="Search bill, player ID, package..."
+                      value={financialsSearch}
+                      onChange={(e) => {
+                        setFinancialsSearch(e.target.value);
+                        setFinancialsPage(1);
+                      }}
+                      className="input text-xs pl-8 pr-3 py-1.5 w-full bg-slate-950/80 border-slate-700/80 rounded-xl"
+                    />
+                  </div>
+
+                  {/* Game filter dropdown */}
+                  <select
+                    value={financialsGameFilter}
+                    onChange={(e) => {
+                      setFinancialsGameFilter(e.target.value);
+                      setFinancialsPage(1);
+                    }}
+                    className="input text-xs py-1.5 px-3 bg-slate-950/80 border-slate-700/80 rounded-xl font-bold text-slate-200"
+                  >
+                    <option value="ALL">🎮 All Games</option>
+                    <option value="mlbb">⚔️ Mobile Legends</option>
+                    <option value="freefire">🔥 Free Fire</option>
+                    <option value="hok">👑 Honor of Kings</option>
+                    <option value="pubgm">🎯 PUBG Mobile</option>
+                  </select>
+
+                  {/* Quick Export CSV Button */}
+                  <button
+                    type="button"
+                    onClick={() => {
+                      const ledger = financials?.salesLedger || [];
+                      if (ledger.length === 0) {
+                        showToast('error', 'No ledger data available to export.');
+                        return;
+                      }
+                      const headers = ['Bill / Transaction', 'Game', 'Package', 'Player ID', 'Server / Zone', 'Seller Price (USD)', 'Provider Cost (USD)', 'Net Profit (USD)', 'Margin %', 'Date', 'Status'];
+                      const csvRows = [headers.join(',')];
+                      ledger.forEach(item => {
+                        csvRows.push([
+                          `"${item.billNumber || ''}"`,
+                          `"${item.gameName || ''}"`,
+                          `"${item.packageName || ''}"`,
+                          `"${item.playerId || ''}"`,
+                          `"${item.serverId || ''}"`,
+                          Number(item.sellerPrice || 0).toFixed(2),
+                          Number(item.providerPrice || 0).toFixed(2),
+                          Number(item.netProfit || 0).toFixed(2),
+                          `${Number(item.marginPct || 0).toFixed(1)}%`,
+                          `"${item.date || ''}"`,
+                          `"${item.status || ''}"`
+                        ].join(','));
+                      });
+                      const blob = new Blob([csvRows.join('\n')], { type: 'text/csv;charset=utf-8;' });
+                      const url = URL.createObjectURL(blob);
+                      const link = document.createElement('a');
+                      link.href = url;
+                      link.setAttribute('download', `Profit_and_Sales_Ledger_${new Date().toISOString().slice(0, 10)}.csv`);
+                      document.body.appendChild(link);
+                      link.click();
+                      document.body.removeChild(link);
+                      showToast('success', `Exported ${ledger.length} financial transactions to CSV!`);
+                    }}
+                    className="btn btn-secondary text-xs py-1.5 px-3 rounded-xl border-emerald-500/40 text-emerald-300 hover:bg-emerald-950/60 font-bold flex items-center gap-1.5 cursor-pointer"
+                  >
+                    <span>📥</span>
+                    <span>Export CSV</span>
+                  </button>
+                </div>
+              </div>
+
+              {/* SUB-VIEW 1: SALES & PROFIT LEDGER */}
+              {financialsSubTab === 'ledger' && (() => {
+                const ledger = financials?.salesLedger || [];
+                const filteredLedger = ledger.filter(item => {
+                  if (!item) return false;
+                  const q = financialsSearch.trim().toLowerCase();
+                  const matchQuery = !q ||
+                    String(item.billNumber || '').toLowerCase().includes(q) ||
+                    String(item.playerId || '').toLowerCase().includes(q) ||
+                    String(item.packageName || '').toLowerCase().includes(q) ||
+                    String(item.gameName || '').toLowerCase().includes(q);
+
+                  if (!matchQuery) return false;
+
+                  if (financialsGameFilter !== 'ALL') {
+                    const g = String(item.gameName || '').toLowerCase();
+                    if (financialsGameFilter === 'freefire' && !g.includes('free') && !g.includes('ff')) return false;
+                    if (financialsGameFilter === 'mlbb' && !g.includes('legend') && !g.includes('mlbb')) return false;
+                    if (financialsGameFilter === 'hok' && !g.includes('honor') && !g.includes('hok')) return false;
+                    if (financialsGameFilter === 'pubgm' && !g.includes('pubg')) return false;
+                  }
+
+                  return true;
+                });
+
+                const totalPages = Math.ceil(filteredLedger.length / financialsPageSize) || 1;
+                const startIndex = (financialsPage - 1) * financialsPageSize;
+                const paginatedLedger = filteredLedger.slice(startIndex, startIndex + financialsPageSize);
+
+                return (
+                  <div className="space-y-3">
+                    <div className="overflow-x-auto rounded-xl border border-slate-800/80 bg-slate-950/40">
+                      <table className="w-full text-left text-xs min-w-[900px]">
+                        <thead className="bg-[#111728] text-slate-400 uppercase text-[10px] tracking-wider border-b border-slate-800 font-bold">
+                          <tr>
+                            <th className="p-3">Bill / Tx ID</th>
+                            <th className="p-3">Game & Package</th>
+                            <th className="p-3">Player ID</th>
+                            <th className="p-3 text-right">Total Seller</th>
+                            <th className="p-3 text-right">Provider Price</th>
+                            <th className="p-3 text-right">Net Income</th>
+                            <th className="p-3 text-center">Margin %</th>
+                            <th className="p-3">Date</th>
+                            <th className="p-3 text-center">Status</th>
+                          </tr>
+                        </thead>
+                        <tbody className="divide-y divide-slate-800/60 font-mono">
+                          {paginatedLedger.length === 0 ? (
+                            <tr>
+                              <td colSpan={9} className="p-10 text-center text-slate-400 font-sans">
+                                <div className="space-y-2">
+                                  <div className="text-3xl">📭</div>
+                                  <p className="font-bold text-white text-sm">No transactions match your filters</p>
+                                  <p className="text-xs text-slate-500">When orders are fulfilled, each sale with seller price and provider wholesale cost will appear here.</p>
+                                </div>
+                              </td>
+                            </tr>
+                          ) : (
+                            paginatedLedger.map((row, idx) => {
+                              const isFF = (row.gameName || '').toLowerCase().includes('free') || (row.gameName || '').toLowerCase().includes('ff');
+                              const isML = (row.gameName || '').toLowerCase().includes('legend') || (row.gameName || '').toLowerCase().includes('mlbb');
+                              const gameBadge = isFF ? { text: 'Free Fire', color: 'bg-amber-500/20 text-amber-300 border-amber-500/40' }
+                                : isML ? { text: 'MLBB', color: 'bg-cyan-500/20 text-cyan-300 border-cyan-500/40' }
+                                : { text: row.gameName || 'Game', color: 'bg-purple-500/20 text-purple-300 border-purple-500/40' };
+
+                              return (
+                                <tr key={row.billNumber || idx} className="hover:bg-slate-900/60 transition-colors">
+                                  {/* Bill # */}
+                                  <td className="p-3">
+                                    <div className="flex items-center gap-1.5">
+                                      <span className="font-bold text-slate-200">{row.billNumber}</span>
+                                      <button
+                                        type="button"
+                                        onClick={() => handleCopyText(row.billNumber, `fin-${row.billNumber}`)}
+                                        className="text-[10px] text-slate-500 hover:text-amber-400 transition-colors"
+                                        title="Copy transaction ID"
+                                      >
+                                        {copiedId === `fin-${row.billNumber}` ? '✓' : '📋'}
+                                      </button>
+                                    </div>
+                                  </td>
+
+                                  {/* Game & Package */}
+                                  <td className="p-3">
+                                    <div className="flex items-center gap-2">
+                                      <span className={`px-2 py-0.5 rounded-md text-[10px] font-bold border ${gameBadge.color} shrink-0`}>
+                                        {gameBadge.text}
+                                      </span>
+                                      <span className="font-bold text-white font-sans truncate max-w-[170px]" title={row.packageName}>
+                                        {row.packageName}
+                                      </span>
+                                    </div>
+                                  </td>
+
+                                  {/* Player ID */}
+                                  <td className="p-3">
+                                    <div className="text-slate-300">
+                                      <span>{row.playerId}</span>
+                                      {row.serverId && row.serverId !== 'Global' && (
+                                        <span className="text-[10px] text-slate-500 ml-1">({row.serverId})</span>
+                                      )}
+                                    </div>
+                                  </td>
+
+                                  {/* Total Seller (Customer Sell Price) */}
+                                  <td className="p-3 text-right">
+                                    <span className="font-black text-cyan-300 text-sm">
+                                      ${Number(row.sellerPrice || 0).toFixed(2)}
+                                    </span>
+                                  </td>
+
+                                  {/* Total Provider Price (Wholesale COGS) */}
+                                  <td className="p-3 text-right">
+                                    <span className="font-black text-rose-300 text-sm">
+                                      ${Number(row.providerPrice || 0).toFixed(2)}
+                                    </span>
+                                  </td>
+
+                                  {/* Net Income / Profit */}
+                                  <td className="p-3 text-right">
+                                    <span className="inline-block px-2.5 py-1 rounded-lg bg-emerald-500/15 border border-emerald-500/30 text-emerald-400 font-black text-xs">
+                                      +${Number(row.netProfit || 0).toFixed(2)}
+                                    </span>
+                                  </td>
+
+                                  {/* Margin % */}
+                                  <td className="p-3 text-center">
+                                    <span className="text-amber-300 font-bold text-xs">
+                                      {Number(row.marginPct || 0).toFixed(1)}%
+                                    </span>
+                                  </td>
+
+                                  {/* Date */}
+                                  <td className="p-3 text-slate-400 text-[11px] font-sans">
+                                    {row.date ? String(row.date).slice(0, 16).replace('T', ' ') : 'Just now'}
+                                  </td>
+
+                                  {/* Status */}
+                                  <td className="p-3 text-center">
+                                    <span className="px-2 py-0.5 rounded-full text-[10px] font-black bg-emerald-500/15 text-emerald-400 border border-emerald-500/30 font-sans">
+                                      Delivered ✓
+                                    </span>
+                                  </td>
+                                </tr>
+                              );
+                            })
+                          )}
+                        </tbody>
+                      </table>
+                    </div>
+
+                    {/* Pagination Bar */}
+                    {filteredLedger.length > financialsPageSize && (
+                      <div className="flex items-center justify-between pt-2 px-1 text-xs">
+                        <span className="text-slate-400 font-sans">
+                          Showing <span className="text-white font-bold">{startIndex + 1}</span> to <span className="text-white font-bold">{Math.min(startIndex + financialsPageSize, filteredLedger.length)}</span> of <span className="text-white font-bold">{filteredLedger.length}</span> transactions
+                        </span>
+                        <div className="flex items-center gap-1.5">
+                          <button
+                            type="button"
+                            onClick={() => setFinancialsPage(p => Math.max(1, p - 1))}
+                            disabled={financialsPage === 1}
+                            className="btn btn-secondary text-xs py-1 px-3 disabled:opacity-40"
+                          >
+                            Previous
+                          </button>
+                          <span className="px-3 py-1 bg-slate-900 border border-slate-800 rounded-lg text-slate-300 font-bold">
+                            {financialsPage} / {totalPages}
+                          </span>
+                          <button
+                            type="button"
+                            onClick={() => setFinancialsPage(p => Math.min(totalPages, p + 1))}
+                            disabled={financialsPage === totalPages}
+                            className="btn btn-secondary text-xs py-1 px-3 disabled:opacity-40"
+                          >
+                            Next
+                          </button>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                );
+              })()}
+
+              {/* SUB-VIEW 2: PACKAGE PROFITABILITY LEADERBOARD */}
+              {financialsSubTab === 'packages' && (() => {
+                const pkgs = financials?.packageProfitability || [];
+                return (
+                  <div className="space-y-3">
+                    <div className="overflow-x-auto rounded-xl border border-slate-800/80 bg-slate-950/40">
+                      <table className="w-full text-left text-xs min-w-[800px]">
+                        <thead className="bg-[#111728] text-slate-400 uppercase text-[10px] tracking-wider border-b border-slate-800 font-bold">
+                          <tr>
+                            <th className="p-3">Package / Diamonds</th>
+                            <th className="p-3 text-right">Seller Retail</th>
+                            <th className="p-3 text-right">Provider Cost</th>
+                            <th className="p-3 text-right">Reseller Wholesale</th>
+                            <th className="p-3 text-right">Unit Net Profit</th>
+                            <th className="p-3 text-center">Margin %</th>
+                            <th className="p-3 text-center">Units Sold</th>
+                            <th className="p-3 text-right">Total Profit</th>
+                          </tr>
+                        </thead>
+                        <tbody className="divide-y divide-slate-800/60 font-mono">
+                          {pkgs.map((p, idx) => (
+                            <tr key={p.productId || idx} className="hover:bg-slate-900/60 transition-colors">
+                              <td className="p-3 font-sans font-bold text-white flex items-center gap-2">
+                                <span className="text-amber-400">💎</span>
+                                <span>{p.diamondAmount} Diamonds</span>
+                                {p.status === 'Inactive' && (
+                                  <span className="text-[9px] px-1.5 py-0.5 rounded bg-slate-800 text-slate-400 border border-slate-700">Inactive</span>
+                                )}
+                              </td>
+                              <td className="p-3 text-right font-black text-cyan-300">${Number(p.price || 0).toFixed(2)}</td>
+                              <td className="p-3 text-right font-black text-rose-300">${Number(p.costPrice || 0).toFixed(2)}</td>
+                              <td className="p-3 text-right font-bold text-purple-300">${Number(p.resellerPrice || 0).toFixed(2)}</td>
+                              <td className="p-3 text-right">
+                                <span className="px-2 py-0.5 rounded bg-emerald-500/15 text-emerald-400 border border-emerald-500/30 font-black">
+                                  +${Number(p.retailProfit || 0).toFixed(2)}
+                                </span>
+                              </td>
+                              <td className="p-3 text-center font-bold text-amber-300">{Number(p.retailMarginPct || 0).toFixed(1)}%</td>
+                              <td className="p-3 text-center font-bold text-slate-300">{p.totalSoldCount || 0}</td>
+                              <td className="p-3 text-right font-black text-emerald-400">
+                                ${(Number(p.totalProfit || 0)).toFixed(2)}
+                              </td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+                  </div>
+                );
+              })()}
+
+              {/* SUB-VIEW 3: 7-DAY DAILY PERFORMANCE TRENDS */}
+              {financialsSubTab === 'trends' && (() => {
+                const trends = financials?.dailyProfitTrend || [];
+                return (
+                  <div className="space-y-4">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 lg:grid-cols-7 gap-3">
+                      {trends.map((day, idx) => (
+                        <div key={day.date || idx} className="card bg-slate-950/80 border border-slate-800 rounded-xl p-3.5 space-y-2 text-center hover:border-amber-500/40 transition-all">
+                          <div className="text-xs font-black text-slate-300 uppercase">{day.date}</div>
+                          <div className="text-xl font-black text-emerald-400">
+                            +${Number(day.netProfit || 0).toFixed(2)}
+                          </div>
+                          <div className="text-[10px] space-y-1 text-slate-400 border-t border-slate-800/80 pt-2 font-mono">
+                            <div className="flex justify-between">
+                              <span>Seller:</span>
+                              <span className="text-cyan-300 font-bold">${Number(day.grossRevenue || 0).toFixed(2)}</span>
+                            </div>
+                            <div className="flex justify-between">
+                              <span>Provider:</span>
+                              <span className="text-rose-300 font-bold">${Number(day.supplierCost || 0).toFixed(2)}</span>
+                            </div>
+                            <div className="flex justify-between">
+                              <span>Orders:</span>
+                              <span className="text-amber-300 font-bold">{day.ordersCount || 0}</span>
+                            </div>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                );
+              })()}
             </div>
           </div>
         )}
