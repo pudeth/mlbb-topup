@@ -149,10 +149,12 @@ public class RealTopUpProviderClient : ITopUpProviderClient
         string playerId,
         string serverId,
         int diamondAmount,
-        string orderId)
+        string orderId,
+        string? gameName = null,
+        string? productName = null)
     {
         var settings = _gatewayManager.GetSettings();
-        var provider = !string.IsNullOrWhiteSpace(settings.ActiveProvider) ? settings.ActiveProvider : (_configuration["TopUpProvider:Provider"] ?? "FazerCards");
+        var provider = !string.IsNullOrWhiteSpace(settings.ActiveProvider) ? settings.ActiveProvider : (_configuration["TopUpProvider:Provider"] ?? "KhmerTopUp");
         var activeKey = provider.Equals("KhmerTopUp", StringComparison.OrdinalIgnoreCase)
             ? settings.KhmerTopUpApiKey
             : settings.FazerCardsApiKey;
@@ -167,21 +169,21 @@ public class RealTopUpProviderClient : ITopUpProviderClient
         var cleanServerId = serverId?.Trim() ?? string.Empty;
 
         _logger.LogInformation(
-            "Initiating REAL Mobile Legends Top-Up | Active Supplier: {Provider} | Order #{OrderId} | Player: {PlayerId} ({ServerId}) | Diamonds: {DiamondAmount}",
-            provider, orderId, cleanPlayerId, cleanServerId, diamondAmount);
+            "Initiating REAL Top-Up | Active Supplier: {Provider} | Order #{OrderId} | Player: {PlayerId} ({ServerId}) | Game: {Game} | Diamonds: {DiamondAmount}",
+            provider, orderId, cleanPlayerId, cleanServerId, gameName ?? "Auto", diamondAmount);
 
-        if (string.IsNullOrWhiteSpace(cleanPlayerId) || string.IsNullOrWhiteSpace(cleanServerId))
+        if (string.IsNullOrWhiteSpace(cleanPlayerId))
         {
             return new TopUpResult
             {
                 Success = false,
-                ErrorMessage = "Invalid Mobile Legends Player ID or Server (Zone) ID."
+                ErrorMessage = "Invalid Player ID / UID."
             };
         }
 
         // Get product SKU mapping
         ProductCatalog.TryGetValue(diamondAmount, out var productInfo);
-        var sku = !string.IsNullOrEmpty(productInfo.Sku) ? productInfo.Sku : $"mlbb_{diamondAmount}";
+        var sku = !string.IsNullOrEmpty(productInfo.Sku) ? productInfo.Sku : $"pkg_{diamondAmount}";
         var fazerOfferId = ResolveFazerOfferId(diamondAmount);
 
         // Check environment mode (Sandbox / Demo / Production)
@@ -192,12 +194,12 @@ public class RealTopUpProviderClient : ITopUpProviderClient
         if (isSandbox)
         {
             _logger.LogInformation(
-                "[Sandbox / Demo Mode] Executing simulated Real MLBB Direct Top-Up: {Diamonds} Diamonds delivered to {PlayerId}({ServerId}) for Order {OrderId}",
+                "[Sandbox / Demo Mode] Executing simulated Direct Top-Up: {Diamonds} Diamonds delivered to {PlayerId}({ServerId}) for Order {OrderId}",
                 diamondAmount, cleanPlayerId, cleanServerId, orderId);
 
             await Task.Delay(1000);
 
-            var demoTxId = $"MLBB-REAL-{DateTime.UtcNow:yyyyMMddHHmmss}-{orderId}";
+            var demoTxId = $"TOPUP-REAL-{DateTime.UtcNow:yyyyMMddHHmmss}-{orderId}";
             return new TopUpResult
             {
                 Success = true,
@@ -212,7 +214,7 @@ public class RealTopUpProviderClient : ITopUpProviderClient
             TopUpResult result;
             if (provider.Equals("KhmerTopUp", StringComparison.OrdinalIgnoreCase))
             {
-                result = await ProcessKhmerTopUpAsync(cleanPlayerId, cleanServerId, diamondAmount, sku, orderId, merchantId, settings.KhmerTopUpApiKey, secretKey, settings.KhmerTopUpApiUrl);
+                result = await ProcessKhmerTopUpAsync(cleanPlayerId, cleanServerId, diamondAmount, sku, orderId, merchantId, settings.KhmerTopUpApiKey, secretKey, settings.KhmerTopUpApiUrl, gameName, productName);
 
                 if (!result.Success && settings.AutoFailoverEnabled && IsFailoverCandidate(result.ErrorMessage))
                 {
@@ -233,7 +235,7 @@ public class RealTopUpProviderClient : ITopUpProviderClient
                 if (!result.Success && settings.AutoFailoverEnabled && IsFailoverCandidate(result.ErrorMessage))
                 {
                     _logger.LogWarning("FazerCards reported '{Reason}'. Automatically failing over to KhmerTopUp for Order #{OrderId}...", result.ErrorMessage, orderId);
-                    var ktBackup = await ProcessKhmerTopUpAsync(cleanPlayerId, cleanServerId, diamondAmount, sku, orderId, merchantId, settings.KhmerTopUpApiKey, secretKey, settings.KhmerTopUpApiUrl);
+                    var ktBackup = await ProcessKhmerTopUpAsync(cleanPlayerId, cleanServerId, diamondAmount, sku, orderId, merchantId, settings.KhmerTopUpApiKey, secretKey, settings.KhmerTopUpApiUrl, gameName, productName);
                     if (ktBackup.Success)
                     {
                         _logger.LogInformation("Order #{OrderId} fulfilled successfully via backup provider KhmerTopUp!", orderId);
@@ -354,17 +356,45 @@ public class RealTopUpProviderClient : ITopUpProviderClient
         string? merchantId,
         string? apiKey,
         string? secretKey,
-        string? apiUrl)
+        string? apiUrl,
+        string? gameName = null,
+        string? productName = null)
     {
         var targetUrl = "https://khmer-topup.com/api/v1/orders";
         var activeKey = !string.IsNullOrWhiteSpace(apiKey) ? apiKey : "kt_28c2640c86717199395d973670cf039a30ba2716";
 
-        // Map diamond amount and SKU to official Khmer TopUp package_id
-        int packageId;
-        bool isFreeFire = (sku?.Contains("freefire", StringComparison.OrdinalIgnoreCase) == true) ||
-                          (sku?.Contains("ff", StringComparison.OrdinalIgnoreCase) == true) ||
-                          string.IsNullOrWhiteSpace(serverId) || serverId.Equals("FREEFIRE", StringComparison.OrdinalIgnoreCase);
+        var cleanServer = serverId?.Trim() ?? string.Empty;
+        var isNumericServer = System.Text.RegularExpressions.Regex.IsMatch(cleanServer, @"^\d{3,6}$");
 
+        // Comprehensive Free Fire detection
+        bool isFreeFire = (gameName?.Contains("freefire", StringComparison.OrdinalIgnoreCase) == true) ||
+                          (gameName?.Contains("free fire", StringComparison.OrdinalIgnoreCase) == true) ||
+                          (gameName?.Contains("ff", StringComparison.OrdinalIgnoreCase) == true) ||
+                          (productName?.Contains("freefire", StringComparison.OrdinalIgnoreCase) == true) ||
+                          (productName?.Contains("weeklylite", StringComparison.OrdinalIgnoreCase) == true) ||
+                          (productName?.Contains("evo", StringComparison.OrdinalIgnoreCase) == true) ||
+                          (sku?.Contains("freefire", StringComparison.OrdinalIgnoreCase) == true) ||
+                          (sku?.Contains("ff", StringComparison.OrdinalIgnoreCase) == true) ||
+                          string.IsNullOrWhiteSpace(cleanServer) ||
+                          cleanServer.Equals("FREEFIRE", StringComparison.OrdinalIgnoreCase) ||
+                          cleanServer.Equals("FF", StringComparison.OrdinalIgnoreCase) ||
+                          cleanServer.Equals("SG", StringComparison.OrdinalIgnoreCase) ||
+                          cleanServer.Equals("SGMY", StringComparison.OrdinalIgnoreCase) ||
+                          cleanServer.Equals("KH", StringComparison.OrdinalIgnoreCase) ||
+                          cleanServer.Equals("KH/SG", StringComparison.OrdinalIgnoreCase) ||
+                          cleanServer.Equals("GLOBAL", StringComparison.OrdinalIgnoreCase) ||
+                          cleanServer.Equals("BR", StringComparison.OrdinalIgnoreCase) ||
+                          cleanServer.Equals("US", StringComparison.OrdinalIgnoreCase) ||
+                          cleanServer.Equals("IND", StringComparison.OrdinalIgnoreCase) ||
+                          cleanServer.Equals("ID", StringComparison.OrdinalIgnoreCase) ||
+                          cleanServer.Equals("TH", StringComparison.OrdinalIgnoreCase) ||
+                          cleanServer.Equals("VN", StringComparison.OrdinalIgnoreCase) ||
+                          cleanServer.Equals("BD", StringComparison.OrdinalIgnoreCase) ||
+                          cleanServer.Equals("MENA", StringComparison.OrdinalIgnoreCase) ||
+                          cleanServer.Equals("ME", StringComparison.OrdinalIgnoreCase) ||
+                          !isNumericServer; // In Mobile Legends, server is strictly numeric! If it's letters like "SG", it's Free Fire!
+
+        int packageId;
         if (int.TryParse(sku, out var parsedSku) && parsedSku > 100)
         {
             packageId = parsedSku;
@@ -372,51 +402,58 @@ public class RealTopUpProviderClient : ITopUpProviderClient
         else if (isFreeFire)
         {
             // Free Fire Official Packages (khmer-topup.com slug: freefire-sgmy)
-            if (sku?.Contains("level", StringComparison.OrdinalIgnoreCase) == true)
+            var passContext = $"{sku} {productName}".ToLower();
+            if (passContext.Contains("level"))
             {
-                if (sku.Contains("30")) packageId = 389;      // Level 30 ($0.90)
-                else if (sku.Contains("25")) packageId = 388; // Level 25 ($0.61)
-                else if (sku.Contains("20")) packageId = 387; // Level 20 ($0.61)
-                else if (sku.Contains("15")) packageId = 386; // Level 15 ($0.61)
-                else if (sku.Contains("10")) packageId = 385; // Level 10 ($0.61)
-                else packageId = 390;                         // Level 6  ($0.29)
+                if (passContext.Contains("30")) packageId = 389;      // Level 30 ($0.90)
+                else if (passContext.Contains("25")) packageId = 388; // Level 25 ($0.61)
+                else if (passContext.Contains("20")) packageId = 387; // Level 20 ($0.61)
+                else if (passContext.Contains("15")) packageId = 386; // Level 15 ($0.61)
+                else if (passContext.Contains("10")) packageId = 385; // Level 10 ($0.61)
+                else packageId = 390;                                 // Level 6  ($0.29)
             }
-            else if (sku?.Contains("evo", StringComparison.OrdinalIgnoreCase) == true)
+            else if (passContext.Contains("evo"))
             {
-                if (sku.Contains("30")) packageId = 5303;
-                else if (sku.Contains("7")) packageId = 5302;
+                if (passContext.Contains("30")) packageId = 5303;
+                else if (passContext.Contains("7")) packageId = 5302;
                 else packageId = 5301;
             }
-            else if (sku?.Contains("weeklylite", StringComparison.OrdinalIgnoreCase) == true || sku?.Contains("lite", StringComparison.OrdinalIgnoreCase) == true)
+            else if (passContext.Contains("weeklylite") || passContext.Contains("weekly lite") || passContext.Contains("weekly lit") || passContext.Contains("lite"))
             {
-                packageId = 384; // Weekly Lite ($0.32)
+                if (passContext.Contains("3") || passContext.Contains("x3")) packageId = 5029; // Weekly Lite x3 ($0.94)
+                else if (passContext.Contains("2") || passContext.Contains("x2")) packageId = 5028; // Weekly Lite x2 ($0.63)
+                else packageId = 384; // Weekly Lite ($0.32)
             }
-            else if (sku?.Contains("monthly", StringComparison.OrdinalIgnoreCase) == true || diamondAmount == 2600)
+            else if (passContext.Contains("monthly") || diamondAmount == 2600)
             {
-                packageId = 4852; // Monthly Membership ($7.76)
+                if (passContext.Contains("3") || passContext.Contains("x3")) packageId = 5022; // Monthly x3 ($22.55)
+                else if (passContext.Contains("2") || passContext.Contains("x2")) packageId = 5021; // Monthly x2 ($15.03)
+                else packageId = 4852; // Monthly Membership ($7.76)
             }
-            else if (sku?.Contains("weekly", StringComparison.OrdinalIgnoreCase) == true || diamondAmount == 450)
+            else if (passContext.Contains("weekly") || diamondAmount == 450)
             {
-                packageId = 383; // Weekly Membership ($1.57)
+                if (passContext.Contains("3") || passContext.Contains("x3")) packageId = 5025; // Weekly x3 ($4.67)
+                else if (passContext.Contains("2") || passContext.Contains("x2")) packageId = 5024; // Weekly x2 ($3.12)
+                else packageId = 383; // Weekly Membership ($1.57)
             }
             else
             {
                 packageId = diamondAmount switch
                 {
                     <= 25 => 374,   // 25 Diamonds ($0.24)
-                    <= 50 => 5293,  // 50 Diamonds ($0.36)
-                    <= 100 => 391,  // 100 Diamonds ($0.90)
-                    <= 205 => 5295, // 200 Diamonds ($1.73)
+                    <= 50 => 5293,  // 40/50 Diamonds ($0.36)
+                    <= 100 => 391,  // 100 Diamonds ($0.90) - OFFICIAL
+                    <= 205 => 5295, // 205 Diamonds ($1.73)
                     <= 310 => 376,  // 310 Diamonds ($2.74)
                     <= 520 => 377,  // 520 Diamonds ($4.59)
                     <= 830 => 5299, // 830 Diamonds
-                    <= 1060 => 378, // 1060 Diamonds ($9.01)
+                    <= 1060 => 378, // 1060 Diamonds ($9.02)
                     <= 1600 => 5146,// 1580 Diamonds
-                    <= 2180 => 379, // 2180 Diamonds ($18.21)
+                    <= 2180 => 379, // 2180 Diamonds ($18.22)
                     <= 3300 => 5147,// 3240 Diamonds
-                    <= 5600 => 380, // 5600 Diamonds ($45.07)
+                    <= 5600 => 380, // 5600 Diamonds ($45.09)
                     <= 8400 => 5148,// 7780 Diamonds
-                    _ => 381        // 11500 Diamonds ($92.82)
+                    _ => 381        // 11500 Diamonds ($92.86)
                 };
             }
         }
@@ -440,11 +477,11 @@ public class RealTopUpProviderClient : ITopUpProviderClient
                  sku?.Contains("weekly", StringComparison.OrdinalIgnoreCase) == true || 
                  diamondAmount == 210)
         {
-            packageId = 371; // Weekly Pass ($1.55)
+            packageId = 371; // Weekly Pass ($1.54)
         }
         else if (sku?.Contains("twilight", StringComparison.OrdinalIgnoreCase) == true || diamondAmount == 500)
         {
-            packageId = 370; // Twilight Pass ($8.14)
+            packageId = 370; // Twilight Pass ($8.10)
         }
         else
         {
@@ -453,11 +490,11 @@ public class RealTopUpProviderClient : ITopUpProviderClient
                 <= 15 => 569,   // 14 Diamonds Special ($0.25)
                 <= 30 => 570,   // 28 Diamonds Special ($0.49)
                 <= 45 => 571,   // 42 Diamonds Special ($0.73)
-                <= 60 => 268,   // 55 Diamonds Main ($0.76)
+                <= 60 => 268,   // 55 Diamonds Main ($0.79)
                 <= 95 => 269,   // 86 Diamonds Main ($1.25)
-                <= 125 => 4726, // 112 Diamonds Main ($1.62)
-                <= 168 => 270,  // 165 Diamonds Main ($2.28)
-                <= 200 => 271,  // 172 Diamonds Main ($2.47)
+                <= 125 => 269,  // 86 Diamonds Main ($1.25)
+                <= 168 => 270,  // 165 Diamonds Main ($2.36)
+                <= 200 => 271,  // 172 Diamonds Main ($2.46)
                 <= 260 => 272,  // 257 Diamonds Main ($3.55)
                 <= 300 => 273,  // 275 Diamonds Main ($3.69)
                 <= 350 => 274,  // 343 Diamonds Main ($4.78)
@@ -467,20 +504,33 @@ public class RealTopUpProviderClient : ITopUpProviderClient
                 <= 650 => 281,  // 600 Diamonds Main ($8.32)
                 <= 800 => 283,  // 706 Diamonds Main ($9.70)
                 <= 1200 => 288, // 1050 Diamonds Main ($14.63)
-                <= 2500 => 300, // 2195 Diamonds Main ($29.36)
-                <= 4000 => 316, // 3688 Diamonds Main ($48.96)
-                <= 6000 => 337, // 5532 Diamonds Main ($73.91)
-                _ => 350        // 9288 Diamonds Main ($122.77)
+                <= 2500 => 300, // 2195 Diamonds Main ($29.17)
+                <= 4000 => 316, // 3688 Diamonds Main ($48.68)
+                <= 6000 => 337, // 5532 Diamonds Main ($73.49)
+                _ => 350        // 9288 Diamonds Main ($122.05)
             };
         }
 
-        var payload = new
+        object payload;
+        if (isFreeFire)
         {
-            package_id = packageId,
-            player_id = playerId,
-            server_id = serverId,
-            reference = $"ORD-{orderId}-{DateTimeOffset.UtcNow.ToUnixTimeSeconds()}"
-        };
+            payload = new
+            {
+                package_id = packageId,
+                player_id = playerId,
+                reference = $"ORD-{orderId}-{DateTimeOffset.UtcNow.ToUnixTimeSeconds()}"
+            };
+        }
+        else
+        {
+            payload = new
+            {
+                package_id = packageId,
+                player_id = playerId,
+                server_id = serverId,
+                reference = $"ORD-{orderId}-{DateTimeOffset.UtcNow.ToUnixTimeSeconds()}"
+            };
+        }
 
         using var request = new HttpRequestMessage(HttpMethod.Post, targetUrl);
         request.Headers.Add("Authorization", $"Bearer {activeKey}");

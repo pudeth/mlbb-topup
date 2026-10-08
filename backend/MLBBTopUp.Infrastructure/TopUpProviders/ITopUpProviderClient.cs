@@ -5,7 +5,7 @@ public interface ITopUpProviderClient
     /// <summary>
     /// Send top-up request to provider
     /// </summary>
-    Task<TopUpResult> SendTopUpAsync(string playerId, string serverId, int diamondAmount, string orderId);
+    Task<TopUpResult> SendTopUpAsync(string playerId, string serverId, int diamondAmount, string orderId, string? gameName = null, string? productName = null);
     
     /// <summary>
     /// Get top-up status from provider

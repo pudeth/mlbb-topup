@@ -22,7 +22,9 @@ public class MockTopUpProvider : ITopUpProviderClient
         string playerId, 
         string serverId, 
         int diamondAmount, 
-        string orderId)
+        string orderId,
+        string? gameName = null,
+        string? productName = null)
     {
         _logger.LogInformation(
             "Mock Top-Up Provider: Sending {DiamondAmount} diamonds to Player {PlayerId} (Server: {ServerId})",

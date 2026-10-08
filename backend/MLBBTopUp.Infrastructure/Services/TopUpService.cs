@@ -240,7 +240,23 @@ public class TopUpService : ITopUpService
     {
         try
         {
-            var providerResult = await _topUpProviderClient.SendTopUpAsync(playerId, serverId, diamondAmount, orderId.ToString());
+            string? gameName = null;
+            string? productName = null;
+            if (orderId > 0)
+            {
+                try
+                {
+                    var order = await _orderService.GetOrderByIdAsync(orderId);
+                    if (order != null)
+                    {
+                        gameName = order.GameName;
+                        productName = order.ProductName;
+                    }
+                }
+                catch { }
+            }
+
+            var providerResult = await _topUpProviderClient.SendTopUpAsync(playerId, serverId, diamondAmount, orderId.ToString(), gameName, productName);
             return new TopUpExecutionResult
             {
                 Success = providerResult.Success,
