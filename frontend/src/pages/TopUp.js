@@ -1864,11 +1864,15 @@ const TopUp = () => {
                 {/* Price bar */}
                 <div className={`relative mt-2 w-full flex items-center justify-between rounded-lg pl-2 pr-0.5 py-0.5 border ${isSelected ? 'bg-amber-400/10 border-amber-400/40' : 'bg-slate-950/70 border-slate-800'}`}>
                   <div className="flex flex-col text-left leading-tight min-w-0">
-                    <span className={`font-black font-mono text-xs sm:text-[13px] tracking-tight ${isSelected ? 'text-amber-300' : 'text-[#00F5B8]'}`}>
-                      ${pkg.price.toFixed(2)}
+                    <span className={`font-black font-mono text-xs sm:text-[13px] tracking-tight whitespace-nowrap ${isSelected ? 'text-amber-300' : 'text-[#00F5B8]'}`}>
+                      {currency === 'KHR'
+                        ? `${Math.round(pkg.price * 4100).toLocaleString()} ៛`
+                        : `$${pkg.price.toFixed(2)}`}
                     </span>
-                    <span className="text-[8px] font-mono text-slate-400 truncate">
-                      ~{Math.round(pkg.price * 4100).toLocaleString()} ៛
+                    <span className="text-[8px] font-mono text-slate-400 whitespace-nowrap truncate">
+                      {currency === 'KHR'
+                        ? `~$${pkg.price.toFixed(2)}`
+                        : `~${Math.round(pkg.price * 4100).toLocaleString()} ៛`}
                     </span>
                   </div>
                   <span className={`w-6 h-6 rounded-md flex items-center justify-center transition-colors shrink-0 ${isSelected ? 'bg-amber-400 text-slate-950' : 'bg-[#00E599] text-slate-950 group-hover:bg-[#00F5B8]'}`}>
@@ -1952,11 +1956,15 @@ const TopUp = () => {
                 {/* Price Bar */}
                 <div className={`mt-3 w-full flex items-center justify-between rounded-xl p-2 border ${isSelected ? 'bg-amber-400/10 border-amber-400/50' : 'bg-slate-950/80 border-slate-800'}`}>
                   <div className="flex flex-col items-start min-w-0 pl-1 text-left">
-                    <span className={`font-black font-mono text-sm sm:text-base leading-none tracking-tight ${isSelected ? 'text-amber-300' : 'text-[#00F5B8]'}`}>
-                      ${pkg.price.toFixed(2)}
+                    <span className={`font-black font-mono text-sm sm:text-base leading-none tracking-tight whitespace-nowrap ${isSelected ? 'text-amber-300' : 'text-[#00F5B8]'}`}>
+                      {currency === 'KHR'
+                        ? `${Math.round(pkg.price * 4100).toLocaleString()} ៛`
+                        : `$${pkg.price.toFixed(2)}`}
                     </span>
-                    <span className="text-[8.5px] sm:text-[9.5px] font-mono font-medium text-slate-400 mt-0.5 truncate">
-                      ~{Math.round(pkg.price * 4100).toLocaleString()} ៛
+                    <span className="text-[8.5px] sm:text-[9.5px] font-mono font-medium text-slate-400 mt-0.5 whitespace-nowrap truncate">
+                      {currency === 'KHR'
+                        ? `~$${pkg.price.toFixed(2)}`
+                        : `~${Math.round(pkg.price * 4100).toLocaleString()} ៛`}
                     </span>
                   </div>
                   <div className={`h-7 px-2.5 sm:px-3 rounded-lg flex items-center justify-center gap-1 text-[10px] sm:text-[11px] font-black transition-all shrink-0 ${isSelected ? 'bg-gradient-to-r from-amber-400 to-yellow-400 text-slate-950' : 'bg-gradient-to-r from-[#00E599] to-[#00F5B8] text-slate-950 group-hover:scale-105'}`}>
@@ -2011,34 +2019,39 @@ const TopUp = () => {
               )}
 
               {/* Left Side: Artwork + Info */}
-              <div className="flex items-center gap-3 sm:gap-4 min-w-0 flex-1 pr-2 pt-1">
-                <div className="relative w-12 h-12 sm:w-14 sm:h-14 rounded-xl bg-slate-950/70 border border-slate-800 flex items-center justify-center shrink-0 p-1">
+              <div className="flex items-center gap-2.5 sm:gap-3.5 min-w-0 flex-1 pr-2">
+                <div className="relative w-11 h-11 sm:w-13 sm:h-13 rounded-xl bg-slate-950/70 border border-slate-800 flex items-center justify-center shrink-0 p-1">
                   <ProductPackageImage pkg={pkg} size="md" className="transition-transform duration-300 group-hover:scale-110 drop-shadow-md" />
                 </div>
                 <div className="min-w-0 flex-1">
                   <h3 className={`text-xs sm:text-sm font-black truncate transition-colors ${isSelected ? 'text-amber-300' : 'text-white group-hover:text-sky-300'}`}>
                     {pkg.name}
                   </h3>
-                  <div className="flex items-center gap-2 mt-0.5 text-[10px] sm:text-xs font-semibold text-slate-400">
+                  <div className="flex items-center gap-1.5 mt-0.5 text-[10px] sm:text-xs font-semibold text-slate-400">
                     {isPass ? (
-                      <span className="text-amber-400 font-bold">⚡ Daily Pass Rewards</span>
+                      <span className="text-amber-400 font-bold truncate">⚡ Daily Pass Rewards</span>
                     ) : (
-                      <span className="text-cyan-300 font-bold">💎 {pkg.diamondAmount} Diamonds</span>
+                      <span className="text-cyan-300 font-bold truncate">💎 {pkg.diamondAmount} Diamonds</span>
                     )}
-                    <span className="text-slate-600">•</span>
-                    <span className="text-slate-400 font-mono">~{Math.round(pkg.price * 4100).toLocaleString()} ៛</span>
                   </div>
                 </div>
               </div>
 
-              {/* Right Side: Price + Action Button */}
-              <div className="flex items-center gap-2.5 sm:gap-3.5 shrink-0">
-                <div className="text-right">
-                  <span className={`font-mono font-black text-sm sm:text-base block leading-none ${isSelected ? 'text-amber-300' : 'text-[#00F5B8]'}`}>
-                    ${pkg.price.toFixed(2)}
+              {/* Right Side: Stacked Price + Action Button */}
+              <div className="flex items-center gap-2 sm:gap-3 shrink-0">
+                <div className="text-right flex flex-col justify-center leading-tight">
+                  <span className={`font-mono font-black text-xs sm:text-sm md:text-base block whitespace-nowrap leading-none tracking-tight ${isSelected ? 'text-amber-300' : 'text-[#00F5B8]'}`}>
+                    {currency === 'KHR'
+                      ? `${Math.round(pkg.price * 4100).toLocaleString()} ៛`
+                      : `$${pkg.price.toFixed(2)}`}
+                  </span>
+                  <span className="text-[9px] sm:text-[10px] font-mono font-medium text-slate-400 whitespace-nowrap block mt-1">
+                    {currency === 'KHR'
+                      ? `~$${pkg.price.toFixed(2)} USD`
+                      : `~${Math.round(pkg.price * 4100).toLocaleString()} ៛`}
                   </span>
                 </div>
-                <div className={`h-8 sm:h-8.5 px-2.5 sm:px-3 rounded-xl flex items-center justify-center gap-1.5 text-[11px] sm:text-xs font-black transition-all ${isSelected ? 'bg-gradient-to-r from-amber-400 to-yellow-400 text-slate-950' : 'bg-gradient-to-r from-[#00E599] to-[#00F5B8] text-slate-950 group-hover:scale-105 active:scale-95'}`}>
+                <div className={`h-7 sm:h-8.5 px-2.5 sm:px-3 rounded-xl flex items-center justify-center gap-1.5 text-[11px] sm:text-xs font-black transition-all shrink-0 ${isSelected ? 'bg-gradient-to-r from-amber-400 to-yellow-400 text-slate-950' : 'bg-gradient-to-r from-[#00E599] to-[#00F5B8] text-slate-950 group-hover:scale-105 active:scale-95'}`}>
                   <svg className="w-3.5 h-3.5 fill-current shrink-0" viewBox="0 0 24 24"><path d="M7 18c-1.1 0-1.99.9-1.99 2S5.9 22 7 22s2-.9 2-2-.9-2-2-2zM1 2v2h2l3.6 7.59-1.35 2.45c-.16.28-.25.61-.25.96 0 1.1.9 2 2 2h12v-2H7.42c-.14 0-.25-.11-.25-.25l.03-.12.9-1.63h7.45c.75 0 1.41-.41 1.75-1.03l3.58-6.49c.08-.14.12-.31.12-.48 0-.55-.45-1-1-1H5.21l-.94-2H1zm16 16c-1.1 0-1.99.9-1.99 2s.89 2 1.99 2 2-.9 2-2-.9-2-2-2z" /></svg>
                   <span className="font-khmer">{language === 'km' ? 'ទិញ' : 'Select'}</span>
                 </div>
