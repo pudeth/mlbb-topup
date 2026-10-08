@@ -104,11 +104,10 @@ const Navbar = () => {
       {!isAuthPage && (
         <div 
           style={{
-            paddingTop: 'max(4px, env(safe-area-inset-top, 0px))',
             paddingLeft: 'max(8px, env(safe-area-inset-left, 0px))',
             paddingRight: 'max(8px, env(safe-area-inset-right, 0px))'
           }}
-          className={`bg-gradient-to-r from-cyan-950 via-slate-900 to-indigo-950 border-b border-cyan-500/20 overflow-hidden relative select-none transition-all duration-300 ${
+          className={`marquee-safe-top bg-gradient-to-r from-cyan-950 via-slate-900 to-indigo-950 border-b border-cyan-500/20 overflow-hidden relative select-none transition-all duration-300 ${
             isScrolled ? 'opacity-0 pointer-events-none' : 'opacity-100'
           }`}
         >
@@ -140,17 +139,16 @@ const Navbar = () => {
 
       <header 
         style={{
-          paddingTop: (isScrolled || isAuthPage)
-            ? 'calc(max(8px, env(safe-area-inset-top, 0px)) + 6px)'
-            : undefined,
           paddingLeft: 'max(8px, env(safe-area-inset-left, 0px))',
           paddingRight: 'max(8px, env(safe-area-inset-right, 0px))'
         }}
         className={`sticky top-0 z-[9995] transition-all duration-300 ease-[cubic-bezier(0.16,1,0.3,1)] ${
+        (isScrolled || isAuthPage) ? 'header-scrolled-padding' : ''
+      } ${
         isAuthPage 
           ? '' 
           : isScrolled
-          ? 'pt-2 sm:pt-3 px-2 sm:px-4 pb-1.5 pointer-events-none bg-gradient-to-b from-[#020617]/95 via-[#020617]/80 to-transparent'
+          ? 'px-2 sm:px-4 pb-2 pointer-events-none bg-gradient-to-b from-[#020617]/95 via-[#020617]/80 to-transparent'
           : 'pt-2 sm:pt-2.5 pb-2 px-2 sm:px-6 bg-dark-bg/90 backdrop-blur-xl border-b border-slate-800/80 shadow-2xl pointer-events-auto'
       }`}>
         {!isAuthPage && (

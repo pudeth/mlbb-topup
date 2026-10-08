@@ -645,4 +645,25 @@ body.full-display-open nav {
   animation: edgeDockSlideIn 0.35s cubic-bezier(0.16, 1, 0.3, 1) forwards;
 }
 
+/* Dynamic Island & Mobile Phone Camera Hardware Clearance */
+.header-scrolled-padding {
+  padding-top: max(58px, calc(env(safe-area-inset-top, 0px) + 10px)) !important;
+}
+
+@media (min-width: 640px) {
+  .header-scrolled-padding {
+    padding-top: max(10px, calc(env(safe-area-inset-top, 0px) + 6px)) !important;
+  }
+}
+
+.marquee-safe-top {
+  padding-top: max(48px, env(safe-area-inset-top, 0px)) !important;
+}
+
+@media (min-width: 640px) {
+  .marquee-safe-top {
+    padding-top: max(4px, env(safe-area-inset-top, 0px)) !important;
+  }
+}
+
 
