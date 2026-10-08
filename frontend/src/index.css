@@ -557,3 +557,11 @@ body.modal-open .ai-assistant-widget {
 .aba-checkout-desktop .aba-checkout-content iframe {
   border-radius: 20px !important;
 }
+
+/* Hide website header, mobile nav and mobile pay bar when Full Display package selection is open */
+body.full-display-open header.sticky,
+body.full-display-open aside[aria-label="Mobile Payment Bar"],
+body.full-display-open .mobile-bottom-nav,
+body.full-display-open nav {
+  display: none !important;
+}

@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useCallback, useRef, useTransition } from 'react';
+import { createPortal } from 'react-dom';
 import { useSearchParams, useNavigate, Link } from 'react-router-dom';
 import { useLanguage } from '../context/LanguageContext';
 import { ordersAPI, topupAPI, paywayAPI, productsAPI, authAPI } from '../services/api';
@@ -764,15 +765,15 @@ const TopUp = () => {
   const [showPackageModal, setShowPackageModal] = useState(false);
   const [modalSearchQuery, setModalSearchQuery] = useState('');
 
-  // Lock scroll when package selection full display modal is active
+  // Lock scroll and hide website header when package selection full display modal is active
   useEffect(() => {
     if (showPackageModal) {
-      document.body.classList.add('modal-open');
+      document.body.classList.add('modal-open', 'full-display-open');
     } else {
-      document.body.classList.remove('modal-open');
+      document.body.classList.remove('modal-open', 'full-display-open');
     }
     return () => {
-      document.body.classList.remove('modal-open');
+      document.body.classList.remove('modal-open', 'full-display-open');
     };
   }, [showPackageModal]);
 
@@ -3220,44 +3221,90 @@ const TopUp = () => {
 
       {/* ======================================================== */}
             {/* ======================================================== */}
-      {/* FULL DISPLAY PACKAGE SELECTION MODAL (z-[9999])           */}
+      {/* FULL DISPLAY PACKAGE SELECTION MODAL (Portalled to body)   */}
       {/* "Press to Select - Full Display with Easy Scrolling & Close" */}
       {/* ======================================================== */}
-      {showPackageModal && (
-        <div className="fixed inset-0 z-[9999] bg-[#030713]/95 backdrop-blur-2xl flex flex-col animate-fadeIn select-none overflow-hidden h-[100dvh] w-full">
-          {/* 1. Modal Top Bar (Sticky) */}
-          <header className="shrink-0 px-3 sm:px-6 py-2.5 sm:py-3.5 bg-gradient-to-b from-[#091124] to-[#060c1c] border-b border-slate-800/90 shadow-xl flex items-center justify-between gap-3">
-            {/* Left: Game & Title */}
-            <div className="flex items-center gap-2.5 min-w-0">
-              <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-slate-900 border border-amber-400/50 p-1 flex items-center justify-center overflow-hidden shrink-0 shadow-md">
-                <img
-                  src={selectedGame.image || selectedGame.fallbackImage || '/mlbb-logo.png'}
-                  alt={selectedGame.name}
-                  className="w-full h-full object-cover rounded-lg"
-                  onError={(e) => { e.currentTarget.src = '/mlbb-logo.png'; }}
-                />
-              </div>
-              <div className="min-w-0">
-                <div className="flex items-center gap-1.5 flex-wrap">
-                  <h2 className="text-xs sm:text-base font-black text-white truncate font-khmer">
-                    {language === 'km' ? 'ចុចដើម្បីជ្រើសរើសកញ្ចប់' : 'Press to Select Package'}
-                  </h2>
-                  <span className="px-2 py-0.5 rounded-full bg-amber-400/20 border border-amber-400/40 text-[9px] sm:text-[10px] font-black text-amber-300 shrink-0">
-                    {language === 'km' ? 'ពេញអេក្រង់' : 'Full Display'}
-                  </span>
+      {showPackageModal && typeof document !== 'undefined' && createPortal(
+        <div className="fixed inset-0 z-[999999] bg-[#030713] flex flex-col select-none overflow-hidden h-[100dvh] w-full animate-fadeIn font-khmer">
+          {/* 1. Modal Top Bar (Sticky, Safe-Area Top Aware) */}
+          <header
+            className="shrink-0 px-3 sm:px-6 py-2 sm:py-2.5 bg-[#060e22] border-b border-slate-800/90 shadow-xl flex items-center justify-between gap-2 z-20"
+            style={{ paddingTop: 'max(8px, env(safe-area-inset-top, 0px))' }}
+          >
+            {/* Left Group: Back Button + Category Dropdown + Layout Mode Dropdown (KEEP THIS BUTTON) */}
+            <div className="flex items-center gap-1.5 sm:gap-2 min-w-0 flex-wrap">
+              {/* Back / Close button */}
+              <button
+                type="button"
+                onClick={() => setShowPackageModal(false)}
+                className="flex items-center gap-1.5 py-1.5 px-2.5 sm:px-3 rounded-xl bg-slate-900/95 hover:bg-slate-800 border border-slate-700/80 hover:border-rose-400/50 text-rose-300 hover:text-white text-xs font-black transition-all cursor-pointer active:scale-95 shadow-sm shrink-0"
+                aria-label="Close full display"
+              >
+                <svg className="w-3.5 h-3.5 text-rose-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M19 12H5M12 19l-7-7 7-7" />
+                </svg>
+                <span className="hidden xs:inline">{language === 'km' ? 'ត្រឡប់' : 'Back'}</span>
+              </button>
+
+              {/* Category Dropdown List */}
+              <div className="relative inline-flex items-center">
+                <select
+                  value={productCategoryTab}
+                  onChange={(e) => setProductCategoryTab(e.target.value)}
+                  className="appearance-none bg-[#0a1024] hover:bg-[#0f1733] border border-slate-700/80 hover:border-slate-600 focus:border-cyan-400 text-slate-200 text-xs font-bold rounded-xl pl-2.5 pr-7 py-1.5 cursor-pointer focus:outline-none focus:ring-1 focus:ring-cyan-400/40 transition-all font-khmer shadow-sm max-w-[130px] sm:max-w-none truncate"
+                  aria-label="Filter packages category"
+                >
+                  <option value="all" className="bg-slate-900 text-white">
+                    🌐 {t('tab_all_pkgs')} ({products.length})
+                  </option>
+                  <option value="passes" className="bg-slate-900 text-white">
+                    🔥 {isFreefire ? 'Beat seller' : t('tab_pass_pkgs')} ({getFilteredPackages('passes').length})
+                  </option>
+                  {isFreefire && (
+                    <option value="level_pass" className="bg-slate-900 text-white">
+                      🎖️ {language === 'km' ? 'កញ្ចប់ Level Pass' : 'Level Pass'} ({getFilteredPackages('level_pass').length})
+                    </option>
+                  )}
+                  <option value="diamonds" className="bg-slate-900 text-white">
+                    💎 {isFreefire ? 'Other Packages' : t('tab_diamond_pkgs')} ({getFilteredPackages('diamonds').length})
+                  </option>
+                </select>
+                <div className="pointer-events-none absolute right-2 top-1/2 -translate-y-1/2 text-slate-400">
+                  <svg className="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                    <polyline points="6 9 12 15 18 9"></polyline>
+                  </svg>
                 </div>
-                <p className="text-[10px] sm:text-xs text-slate-400 truncate flex items-center gap-1.5">
-                  <span className="font-bold text-sky-300">{selectedGame.name}</span>
-                  <span>•</span>
-                  <span>{modalFilteredProducts.length} {language === 'km' ? 'កញ្ចប់' : 'packages'}</span>
-                </p>
+              </div>
+
+              {/* KEEP THIS BUTTON: Layout Mode Dropdown List (Tiles / Large / List) */}
+              <div className="relative inline-flex items-center">
+                <select
+                  value={layoutMode}
+                  onChange={(e) => setLayoutMode(e.target.value)}
+                  className="appearance-none bg-[#0a1024] hover:bg-[#0f1733] border border-slate-700/80 hover:border-slate-600 focus:border-cyan-400 text-cyan-300 text-xs font-bold rounded-xl pl-2.5 pr-7 py-1.5 cursor-pointer focus:outline-none focus:ring-1 focus:ring-cyan-400/40 transition-all font-khmer shadow-sm"
+                  aria-label="Select layout size"
+                >
+                  <option value="tiles" className="bg-slate-900 text-white">
+                    ⊞ {language === 'km' ? 'ក្រឡា (Tiles)' : 'Tiles View'}
+                  </option>
+                  <option value="grid" className="bg-slate-900 text-white">
+                    ⊟ {language === 'km' ? 'រូបធំ (Large)' : 'Large View'}
+                  </option>
+                  <option value="list" className="bg-slate-900 text-white">
+                    ≡ {language === 'km' ? 'បញ្ជី (List)' : 'List View'}
+                  </option>
+                </select>
+                <div className="pointer-events-none absolute right-2 top-1/2 -translate-y-1/2 text-cyan-400">
+                  <svg className="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                    <polyline points="6 9 12 15 18 9"></polyline>
+                  </svg>
+                </div>
               </div>
             </div>
 
-            {/* Right: Currency Switcher & Button Close Display */}
-            <div className="flex items-center gap-2 shrink-0">
-              {/* Currency Switcher */}
-              <div className="hidden xs:flex items-center p-0.5 bg-slate-900/90 rounded-xl border border-slate-700/80">
+            {/* Right Group: Currency Switcher & Close Icon */}
+            <div className="flex items-center gap-1.5 sm:gap-2 shrink-0">
+              <div className="flex items-center p-0.5 bg-slate-900/90 rounded-xl border border-slate-700/80">
                 <button
                   type="button"
                   onClick={() => handleSwitchCurrency('USD')}
@@ -3267,7 +3314,7 @@ const TopUp = () => {
                       : 'text-slate-400 hover:text-white'
                   }`}
                 >
-                  USD ($)
+                  USD
                 </button>
                 <button
                   type="button"
@@ -3278,136 +3325,42 @@ const TopUp = () => {
                       : 'text-slate-400 hover:text-white'
                   }`}
                 >
-                  KHR (៛)
+                  KHR
                 </button>
               </div>
 
-              {/* BUTTON CLOSE DISPLAY */}
+              {/* Close Icon button */}
               <button
                 type="button"
                 onClick={() => setShowPackageModal(false)}
-                className="flex items-center gap-1.5 py-1.5 px-3 sm:py-2 sm:px-4 rounded-xl bg-gradient-to-r from-rose-500/20 to-red-600/30 hover:from-rose-500/40 hover:to-red-600/50 border border-rose-500/60 text-rose-200 hover:text-white text-xs sm:text-sm font-black transition-all cursor-pointer shadow-lg shadow-rose-950/50 active:scale-95"
-                aria-label="Close full display"
+                className="w-7 h-7 rounded-xl bg-slate-800/90 hover:bg-rose-500/30 text-slate-400 hover:text-rose-300 flex items-center justify-center transition-all cursor-pointer border border-slate-700 text-xs font-bold"
+                aria-label="Close"
               >
-                <svg className="w-4 h-4 text-rose-400 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                  <line x1="18" y1="6" x2="6" y2="18"></line>
-                  <line x1="6" y1="6" x2="18" y2="18"></line>
-                </svg>
-                <span className="font-khmer">{language === 'km' ? 'បិទ' : 'Close'}</span>
+                ✕
               </button>
             </div>
           </header>
 
-          {/* 2. Modal Sub-Header: Search + Categories + View Switcher */}
-          <div className="shrink-0 bg-[#070e20]/95 border-b border-slate-800/80 px-3 sm:px-6 py-2.5 space-y-2 backdrop-blur-md">
-            {/* Row A: Search Bar + Layout Switcher */}
-            <div className="flex items-center gap-2 justify-between">
-              {/* Search */}
-              <div className="relative flex-1 max-w-md">
-                <input
-                  type="text"
-                  value={modalSearchQuery}
-                  onChange={(e) => setModalSearchQuery(e.target.value)}
-                  placeholder={language === 'km' ? 'ស្វែងរកកញ្ចប់ (ឧ. Weekly, 50, 100)...' : 'Search packages (e.g. Weekly, 100)...'}
-                  className="w-full bg-slate-900/90 border border-slate-700/80 rounded-xl pl-8 pr-7 py-1.5 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-cyan-400 focus:ring-1 focus:ring-cyan-400 transition-all font-khmer"
-                />
-                <svg className="w-3.5 h-3.5 text-slate-400 absolute left-2.5 top-1/2 -translate-y-1/2 pointer-events-none" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
-                {modalSearchQuery && (
-                  <button
-                    type="button"
-                    onClick={() => setModalSearchQuery('')}
-                    className="absolute right-2 top-1/2 -translate-y-1/2 text-slate-400 hover:text-white text-xs w-4 h-4 rounded-full flex items-center justify-center cursor-pointer"
-                  >
-                    ✕
-                  </button>
-                )}
-              </div>
-
-              {/* Layout Switcher inside Modal as a Dropdown List */}
-              <div className="relative inline-flex items-center shrink-0">
-                <select
-                  value={layoutMode}
-                  onChange={(e) => setLayoutMode(e.target.value)}
-                  className="appearance-none bg-slate-900/90 hover:bg-slate-800 border border-slate-700/80 hover:border-slate-600 focus:border-cyan-400 text-cyan-300 text-xs font-bold rounded-xl pl-2.5 pr-7 py-1.5 cursor-pointer focus:outline-none focus:ring-1 focus:ring-cyan-400/40 transition-all font-khmer shadow-sm"
-                  aria-label="Modal layout mode"
-                >
-                  <option value="tiles" className="bg-slate-900 text-white">⊞ {t('layout_tiles')}</option>
-                  <option value="grid" className="bg-slate-900 text-white">⊟ {language === 'km' ? 'រូបធំ' : 'Large'}</option>
-                  <option value="list" className="bg-slate-900 text-white">≡ {t('layout_list')}</option>
-                </select>
-                <div className="pointer-events-none absolute right-2 top-1/2 -translate-y-1/2 text-cyan-400">
-                  <svg className="w-3 h-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
-                    <polyline points="6 9 12 15 18 9"></polyline>
-                  </svg>
-                </div>
-              </div>
-            </div>
-
-            {/* Row B: Horizontal scrollable Category Tabs */}
-            <div className="flex items-center gap-1.5 overflow-x-auto no-scrollbar py-0.5">
-              <button
-                type="button"
-                onClick={() => setProductCategoryTab('all')}
-                className={`py-1.5 px-3 rounded-xl text-xs font-bold transition-all whitespace-nowrap flex items-center gap-1 cursor-pointer shrink-0 ${
-                  productCategoryTab === 'all'
-                    ? 'bg-amber-400 text-slate-950 font-black shadow-md'
-                    : 'bg-slate-900/80 text-slate-400 hover:text-white border border-slate-800'
-                }`}
-              >
-                <span>🌐</span>
-                <span>{t('tab_all_pkgs')}</span>
-                <span className="text-[10px] opacity-75 font-mono">({products.length})</span>
-              </button>
-
-              <button
-                type="button"
-                onClick={() => setProductCategoryTab('passes')}
-                className={`py-1.5 px-3 rounded-xl text-xs font-bold transition-all whitespace-nowrap flex items-center gap-1 cursor-pointer shrink-0 ${
-                  productCategoryTab === 'passes'
-                    ? 'bg-cyan-400 text-slate-950 font-black shadow-md'
-                    : 'bg-slate-900/80 text-cyan-300 hover:text-white border border-slate-800'
-                }`}
-              >
-                <span>🔥</span>
-                <span>{isFreefire ? 'Beat seller' : t('tab_pass_pkgs')}</span>
-                <span className="text-[10px] px-1.5 py-0.2 rounded-full bg-slate-950/40 font-mono font-bold">
-                  {products.filter(p => isFreefire ? (p.category === 'Beat seller') : (!p.isLevelPass && isPassItem(p))).length}
-                </span>
-              </button>
-
-              {isFreefire && (
+          {/* 2. Compact Search Bar inside Full Display */}
+          <div className="shrink-0 bg-[#050b1a] border-b border-slate-800/80 px-3 sm:px-6 py-2">
+            <div className="relative max-w-md mx-auto">
+              <input
+                type="text"
+                value={modalSearchQuery}
+                onChange={(e) => setModalSearchQuery(e.target.value)}
+                placeholder={language === 'km' ? 'ស្វែងរកកញ្ចប់ (ឧ. Weekly, 50, 100)...' : 'Search packages (e.g. Weekly, 100)...'}
+                className="w-full bg-slate-900/90 border border-slate-700/80 rounded-xl pl-8 pr-7 py-1.5 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-cyan-400 focus:ring-1 focus:ring-cyan-400 transition-all font-khmer"
+              />
+              <svg className="w-3.5 h-3.5 text-slate-400 absolute left-2.5 top-1/2 -translate-y-1/2 pointer-events-none" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+              {modalSearchQuery && (
                 <button
                   type="button"
-                  onClick={() => setProductCategoryTab('level_pass')}
-                  className={`py-1.5 px-3 rounded-xl text-xs font-bold transition-all whitespace-nowrap flex items-center gap-1 cursor-pointer shrink-0 ${
-                    productCategoryTab === 'level_pass'
-                      ? 'bg-emerald-400 text-slate-950 font-black shadow-md'
-                      : 'bg-slate-900/80 text-emerald-300 hover:text-white border border-slate-800'
-                  }`}
+                  onClick={() => setModalSearchQuery('')}
+                  className="absolute right-2 top-1/2 -translate-y-1/2 text-slate-400 hover:text-white text-xs w-4 h-4 rounded-full flex items-center justify-center cursor-pointer"
                 >
-                  <span>🎖️</span>
-                  <span>{language === 'km' ? 'កញ្ចប់ Level Pass' : 'Level Pass'}</span>
-                  <span className="text-[10px] px-1.5 py-0.2 rounded-full bg-slate-950/40 font-mono font-bold">
-                    {products.filter(p => p.isLevelPass || p.name?.toLowerCase().includes('level up')).length}
-                  </span>
+                  ✕
                 </button>
               )}
-
-              <button
-                type="button"
-                onClick={() => setProductCategoryTab('diamonds')}
-                className={`py-1.5 px-3 rounded-xl text-xs font-bold transition-all whitespace-nowrap flex items-center gap-1 cursor-pointer shrink-0 ${
-                  productCategoryTab === 'diamonds'
-                    ? 'bg-purple-400 text-slate-950 font-black shadow-md'
-                    : 'bg-slate-900/80 text-purple-300 hover:text-white border border-slate-800'
-                }`}
-              >
-                <span>💎</span>
-                <span>{isFreefire ? 'Other Packages' : t('tab_diamond_pkgs')}</span>
-                <span className="text-[10px] px-1.5 py-0.2 rounded-full bg-slate-950/40 font-mono font-bold">
-                  {products.filter(p => isFreefire ? (p.category === 'Other Packages') : (!p.isLevelPass && !isPassItem(p))).length}
-                </span>
-              </button>
             </div>
           </div>
 
@@ -3432,8 +3385,11 @@ const TopUp = () => {
             )}
           </div>
 
-          {/* 4. Modal Bottom Sticky Footer Bar */}
-          <footer className="shrink-0 bg-[#071126]/98 backdrop-blur-xl border-t border-slate-800/90 p-3 sm:px-6 shadow-2xl flex items-center justify-between gap-3">
+          {/* 4. Modal Bottom Sticky Footer Bar (Safe-Area Bottom Aware) */}
+          <footer
+            className="shrink-0 bg-[#071126]/98 backdrop-blur-xl border-t border-slate-800/90 p-3 sm:px-6 shadow-2xl flex items-center justify-between gap-3"
+            style={{ paddingBottom: 'max(12px, calc(env(safe-area-inset-bottom, 0px) + 8px))' }}
+          >
             {/* Selected Item Info */}
             <div className="flex items-center gap-2.5 min-w-0">
               <div className="w-10 h-10 rounded-xl bg-slate-900/80 border border-amber-400/50 p-0.5 flex items-center justify-center shrink-0">
@@ -3479,7 +3435,8 @@ const TopUp = () => {
               </button>
             </div>
           </footer>
-        </div>
+        </div>,
+        document.body
       )}
 
 
