@@ -249,6 +249,11 @@ export const translations = {
     tab_diamond_pkgs: "Diamond",
     checkout_selected_total: "Selected Item & Total",
     checkout_click_hint: "Click any item to select and proceed to instant checkout.",
+    press_to_select: "Press to Select",
+    press_to_select_full: "Press to Select (Full Display)",
+    close_display: "Close",
+    easy_scroll_hint: "Full display • Easy scrolling",
+    confirm_package_selection: "Confirm Selection",
 
     // Status Notice Banners
     status_notice_badge: "System Notice",
@@ -508,6 +513,11 @@ export const translations = {
     tab_diamond_pkgs: "ពេជ្រ",
     checkout_selected_total: "ទំនិញដែលបានជ្រើសរើស និងសរុប",
     checkout_click_hint: "ចុចលើកញ្ចប់ណាមួយដើម្បីជ្រើសរើស និងបន្តការទូទាត់ភ្លាមៗ។",
+    press_to_select: "ចុចដើម្បីជ្រើសរើស (Press to Select)",
+    press_to_select_full: "ចុចដើម្បីជ្រើសរើស (ពេញអេក្រង់)",
+    close_display: "បិទ (Close)",
+    easy_scroll_hint: "បើកផ្ទាំងពេញអេក្រង់ • អូសស្រួល",
+    confirm_package_selection: "យល់ព្រមជ្រើសរើស",
 
     // Status Notice Banners
     status_notice_badge: "ដំណឹងប្រព័ន្ធ",
@@ -767,6 +777,11 @@ export const translations = {
     tab_diamond_pkgs: "钻石",
     checkout_selected_total: "已选商品与总计",
     checkout_click_hint: "点击任意套餐以选择并进入快速结账。",
+    press_to_select: "点击选择 (Press to Select)",
+    press_to_select_full: "点击选择套餐 (全屏浏览)",
+    close_display: "关闭 (Close)",
+    easy_scroll_hint: "全屏浏览 • 流畅滑动",
+    confirm_package_selection: "确认选择",
 
     // Status Notice Banners
     status_notice_badge: "系统公告",

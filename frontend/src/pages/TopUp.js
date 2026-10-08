@@ -4,7 +4,6 @@ import { useLanguage } from '../context/LanguageContext';
 import { ordersAPI, topupAPI, paywayAPI, productsAPI, authAPI } from '../services/api';
 import { saveLocalOrder, updateLocalOrderStatus } from '../utils/orderStorage';
 import { getStoredGames, getMasterTopupStatus, fetchStoredGames, fetchMasterTopupStatus } from '../services/gamesConfig';
-import { CambodiaFlagFrame } from '../components/CambodiaFlagBadge';
 import ProductPackageImage from '../components/ProductPackageImage';
 import { AbaKhqrLogo } from '../components/AbaPaymentLogos';
 import WeAcceptPayments from '../components/WeAcceptPayments';
@@ -760,6 +759,33 @@ const TopUp = () => {
     setListScroll({ atTop: true, atBottom: max <= 4, progress: max > 0 ? 0 : 1 });
   }, [productCategoryTab, layoutMode, selectedGame.id, products.length]);
   const checkoutSectionRef = useRef(null);
+
+  // Full Display Package Selection Modal
+  const [showPackageModal, setShowPackageModal] = useState(false);
+  const [modalSearchQuery, setModalSearchQuery] = useState('');
+
+  // Lock scroll when package selection full display modal is active
+  useEffect(() => {
+    if (showPackageModal) {
+      document.body.classList.add('modal-open');
+    } else {
+      document.body.classList.remove('modal-open');
+    }
+    return () => {
+      document.body.classList.remove('modal-open');
+    };
+  }, [showPackageModal]);
+
+  // Handle ESC key to close package selection modal
+  useEffect(() => {
+    const handleKeyDown = (e) => {
+      if (e.key === 'Escape' && showPackageModal) {
+        setShowPackageModal(false);
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [showPackageModal]);
 
   const handleSwitchCurrency = async (newCurr) => {
     if (newCurr === currency && paymentData?.currency === newCurr) return;
@@ -1718,6 +1744,310 @@ const TopUp = () => {
   const isSteam = selectedGame.id.startsWith('steam');
   const isGiftCard = selectedGame.id === 'giftcards' || selectedGame.category === 'Gift cards';
   const isFreefire = selectedGame.id.startsWith('freefire') || selectedGame.id.includes('free_fire') || selectedGame.id === 'ff';
+  const isPassItem = useCallback((p) => (
+    p?.isPass ||
+    p?.name?.toLowerCase().includes('pass') ||
+    p?.name?.toLowerCase().includes('bundle') ||
+    [210, 440, 660, 880, 1100, 1320, 605, 500].includes(p?.diamondAmount)
+  ), []);
+
+  const formatTagText = useCallback((rawTag) => {
+    if (!rawTag) return '';
+    if (rawTag.includes('220') && rawTag.includes('70')) return '+70 Aurora ⭐';
+    if (rawTag.includes('440') && rawTag.includes('140')) return '+140 Aurora ⭐';
+    return rawTag;
+  }, []);
+
+  const getFilteredPackages = useCallback((categoryTab, query = '') => {
+    return products.filter(pkg => {
+      if (categoryTab === 'level_pass') {
+        if (!(pkg.isLevelPass || pkg.name?.toLowerCase().includes('level up'))) return false;
+      } else if (categoryTab === 'passes') {
+        const isPass = isFreefire ? (pkg.category === 'Beat seller') : (!pkg.isLevelPass && isPassItem(pkg));
+        if (!isPass) return false;
+      } else if (categoryTab === 'diamonds') {
+        const isDiamond = isFreefire ? (pkg.category === 'Other Packages') : (!pkg.isLevelPass && !isPassItem(pkg));
+        if (!isDiamond) return false;
+      }
+
+      if (query && query.trim()) {
+        const q = query.trim().toLowerCase();
+        const matchName = pkg.name?.toLowerCase().includes(q);
+        const matchDiamonds = String(pkg.diamondAmount || '').includes(q);
+        const matchPrice = String(pkg.price || '').includes(q);
+        const matchTag = (pkg.tag || '').toLowerCase().includes(q);
+        if (!matchName && !matchDiamonds && !matchPrice && !matchTag) return false;
+      }
+      return true;
+    });
+  }, [isFreefire, isPassItem, products]);
+
+  const inlineFilteredProducts = getFilteredPackages(productCategoryTab);
+  const modalFilteredProducts = getFilteredPackages(productCategoryTab, modalSearchQuery);
+
+  const renderProductCards = (itemsList, isInsideModal = false) => {
+    if (itemsList.length === 0) {
+      return (
+        <div className="py-12 text-center text-slate-500 text-xs font-medium font-khmer">
+          {language === 'km' ? 'មិនមានកញ្ចប់នៅក្នុងផ្នែកនេះទេ' : 'No packages found in this category.'}
+        </div>
+      );
+    }
+
+    // MODE 1: TILES VIEW (COMPACT 2-3 COLUMNS)
+    if (layoutMode === 'tiles') {
+      return (
+        <div className={`grid ${isInsideModal ? 'grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-2.5 sm:gap-3.5' : 'grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-2 sm:gap-2.5'}`}>
+          {itemsList.map((pkg) => {
+            const isSelected = selectedProduct?.productId === pkg.productId;
+            const isPass = isPassItem(pkg);
+            const tagLower = (pkg.tag || '').toLowerCase();
+            const isPopular = pkg.productId === 2 || pkg.diamondAmount === 55 || tagLower.includes('popular') || tagLower.includes('starter');
+            const isRecommend = !isPopular && (pkg.productId === 3 || pkg.diamondAmount === 86 || tagLower.includes('bonus') || tagLower.includes('recommend') || tagLower.includes('best'));
+            const isLevelPassTag = pkg.isLevelPass || pkg.name?.toLowerCase().includes('level up');
+            const isPurpleTag = isFreefire && (pkg.tag?.includes('ទទួលបាន') || pkg.tag?.toLowerCase().includes('discount') || pkg.category === 'Beat seller' || (pkg.isPass && !pkg.isLevelPass));
+            const ribbon = isLevelPassTag
+              ? { text: pkg.tag || 'LEVEL PASS 🎖️', cls: 'from-emerald-500 to-teal-600 text-white shadow-sm' }
+              : isPurpleTag
+              ? { text: pkg.tag || 'PASS', cls: 'from-[#a855f7] to-[#7c3aed] text-white shadow-sm' }
+              : isPopular
+              ? { text: 'Popular', cls: 'from-orange-500 to-amber-500 text-white' }
+              : isRecommend
+                ? { text: 'Recommend', cls: 'from-amber-300 to-yellow-500 text-slate-950' }
+                : pkg.tag
+                  ? { text: formatTagText(pkg.tag), cls: 'from-sky-600 to-indigo-600 text-white' }
+                  : null;
+
+            return (
+              <button
+                type="button"
+                key={pkg.productId}
+                onClick={() => setSelectedProduct(pkg)}
+                className={`group relative rounded-2xl p-2.5 pt-3 sm:p-3 sm:pt-3.5 flex flex-col items-center text-center select-none transition-all duration-200 cursor-pointer overflow-hidden active:scale-[0.97] ${
+                  isSelected
+                    ? 'bg-gradient-to-b from-[#1a1530] to-[#0a0a1a] border-2 border-amber-400 ring-2 ring-amber-400/50 shadow-lg shadow-amber-500/20'
+                    : 'bg-gradient-to-b from-[#0b1430] to-[#050a1a] border border-sky-500/20 hover:border-sky-400/60 hover:-translate-y-0.5'
+                }`}
+              >
+                {/* Ribbon tag */}
+                {ribbon && (
+                  <span className={`absolute top-0 left-0 max-w-[80%] truncate px-2 py-0.5 rounded-br-xl bg-gradient-to-r ${ribbon.cls} text-[8.5px] sm:text-[9.5px] font-extrabold uppercase tracking-wide z-20`}>
+                    {ribbon.text}
+                  </span>
+                )}
+
+                {/* Selected check */}
+                {isSelected && (
+                  <span className="absolute top-1 right-1 w-4 h-4 rounded-full bg-amber-400 text-slate-950 flex items-center justify-center z-20 shadow-sm animate-scaleUp">
+                    <svg className="w-2.5 h-2.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="4" strokeLinecap="round" strokeLinejoin="round"><path d="M20 6L9 17l-5-5" /></svg>
+                  </span>
+                )}
+
+                {/* Artwork: Big prominent 3D Diamond / Pass Image */}
+                <div className="relative w-full h-16 sm:h-20 flex items-center justify-center my-1">
+                  <ProductPackageImage
+                    pkg={pkg}
+                    size="lg"
+                    className="relative z-10 transition-transform duration-300 group-hover:scale-110"
+                  />
+                </div>
+
+                {/* Name + sub */}
+                <h3 className={`relative mt-1 w-full text-[11px] sm:text-xs font-extrabold leading-tight line-clamp-1 transition-colors ${isSelected ? 'text-amber-300' : 'text-white group-hover:text-sky-200'}`}>
+                  {pkg.name}
+                </h3>
+                <span className="relative text-[9px] sm:text-[10px] font-semibold text-slate-400 leading-tight mt-0.5 truncate w-full">
+                  {isPass ? '⚡ Daily Pass' : `💎 ${pkg.diamondAmount}`}
+                </span>
+
+                {/* Price bar */}
+                <div className={`relative mt-2 w-full flex items-center justify-between rounded-lg pl-2 pr-0.5 py-0.5 border ${isSelected ? 'bg-amber-400/10 border-amber-400/40' : 'bg-slate-950/70 border-slate-800'}`}>
+                  <div className="flex flex-col text-left leading-tight min-w-0">
+                    <span className={`font-black font-mono text-xs sm:text-[13px] tracking-tight ${isSelected ? 'text-amber-300' : 'text-[#00F5B8]'}`}>
+                      ${pkg.price.toFixed(2)}
+                    </span>
+                    <span className="text-[8px] font-mono text-slate-400 truncate">
+                      ~{Math.round(pkg.price * 4100).toLocaleString()} ៛
+                    </span>
+                  </div>
+                  <span className={`w-6 h-6 rounded-md flex items-center justify-center transition-colors shrink-0 ${isSelected ? 'bg-amber-400 text-slate-950' : 'bg-[#00E599] text-slate-950 group-hover:bg-[#00F5B8]'}`}>
+                    <svg className="w-3.5 h-3.5 fill-current" viewBox="0 0 24 24"><path d="M7 18c-1.1 0-1.99.9-1.99 2S5.9 22 7 22s2-.9 2-2-.9-2-2-2zM1 2v2h2l3.6 7.59-1.35 2.45c-.16.28-.25.61-.25.96 0 1.1.9 2 2 2h12v-2H7.42c-.14 0-.25-.11-.25-.25l.03-.12.9-1.63h7.45c.75 0 1.41-.41 1.75-1.03l3.58-6.49c.08-.14.12-.31.12-.48 0-.55-.45-1-1-1H5.21l-.94-2H1zm16 16c-1.1 0-1.99.9-1.99 2s.89 2 1.99 2 2-.9 2-2-.9-2-2-2z" /></svg>
+                  </span>
+                </div>
+              </button>
+            );
+          })}
+        </div>
+      );
+    }
+
+    // MODE 2: LARGE ICONS / GRID VIEW
+    if (layoutMode === 'grid') {
+      return (
+        <div className={`grid ${isInsideModal ? 'grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3' : 'grid-cols-2 sm:grid-cols-3 md:grid-cols-3 lg:grid-cols-4 gap-2.5 sm:gap-3'}`}>
+          {itemsList.map((pkg) => {
+            const isSelected = selectedProduct?.productId === pkg.productId;
+            const isPass = isPassItem(pkg);
+            const tagLower = (pkg.tag || '').toLowerCase();
+            const isPopular = pkg.productId === 2 || pkg.diamondAmount === 55 || tagLower.includes('popular') || tagLower.includes('starter');
+            const isRecommend = !isPopular && (pkg.productId === 3 || pkg.diamondAmount === 86 || tagLower.includes('bonus') || tagLower.includes('recommend') || tagLower.includes('best'));
+            const isLevelPassTag = pkg.isLevelPass || pkg.name?.toLowerCase().includes('level up');
+            const isPurpleTag = isFreefire && (pkg.tag?.includes('ទទួលបាន') || pkg.tag?.toLowerCase().includes('discount') || pkg.category === 'Beat seller' || (pkg.isPass && !pkg.isLevelPass));
+            const ribbon = isLevelPassTag
+              ? { text: pkg.tag || 'LEVEL PASS 🎖️', cls: 'from-emerald-500 to-teal-600 text-white shadow-sm' }
+              : isPurpleTag
+              ? { text: pkg.tag || 'PASS', cls: 'from-[#a855f7] to-[#7c3aed] text-white shadow-sm' }
+              : isPopular
+              ? { text: 'Popular', cls: 'from-orange-500 to-amber-500 text-white' }
+              : isRecommend
+                ? { text: 'Recommend', cls: 'from-amber-300 to-yellow-500 text-slate-950' }
+                : pkg.tag
+                  ? { text: formatTagText(pkg.tag), cls: 'from-sky-600 to-indigo-600 text-white' }
+                  : null;
+
+            return (
+              <div
+                key={pkg.productId}
+                onClick={() => setSelectedProduct(pkg)}
+                className={`group relative rounded-2xl p-3 sm:p-4 cursor-pointer select-none transition-all duration-300 flex flex-col items-center text-center justify-between overflow-hidden ${
+                  isSelected
+                    ? 'bg-gradient-to-b from-[#24173d] via-[#170f28] to-[#0b0816] border-2 border-amber-400 ring-2 ring-amber-400/50 scale-[1.02] -translate-y-1 z-10 shadow-xl shadow-amber-500/20'
+                    : 'bg-gradient-to-b from-[#0f172a]/95 via-[#0b1220]/95 to-[#070b14]/98 border border-slate-700/70 hover:border-sky-400/60 hover:-translate-y-1'
+                }`}
+              >
+                {/* Ribbon Tag */}
+                {ribbon && (
+                  <span className={`absolute top-0 left-0 max-w-[85%] truncate px-2.5 py-0.5 rounded-br-2xl bg-gradient-to-r ${ribbon.cls} text-[9px] sm:text-[10px] font-black uppercase tracking-wider z-20 shadow-md`}>
+                    {ribbon.text}
+                  </span>
+                )}
+
+                {/* Selected Check Badge */}
+                {isSelected && (
+                  <span className="absolute top-2 right-2 w-5 h-5 rounded-full bg-amber-400 text-slate-950 flex items-center justify-center z-20 shadow-md">
+                    <svg className="w-3 h-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3.5" strokeLinecap="round" strokeLinejoin="round"><path d="M20 6L9 17l-5-5" /></svg>
+                  </span>
+                )}
+
+                {/* Main Artwork */}
+                <div className="relative w-full h-24 sm:h-28 flex items-center justify-center my-2 sm:my-3">
+                  <ProductPackageImage pkg={pkg} size="lg" className="relative z-10 transition-transform duration-300 group-hover:scale-110 drop-shadow-2xl" />
+                </div>
+
+                {/* Package Titles */}
+                <div className="w-full space-y-1 my-1">
+                  <h3 className={`text-xs sm:text-sm font-black tracking-wide line-clamp-1 transition-colors ${isSelected ? 'text-amber-300' : 'text-white group-hover:text-sky-300'}`}>
+                    {pkg.name}
+                  </h3>
+                  <div className="flex items-center justify-center gap-1.5 text-[10px] sm:text-xs font-semibold text-slate-400">
+                    {isPass ? (
+                      <span className="text-amber-400">⚡ Daily Pass Rewards</span>
+                    ) : (
+                      <span className="text-cyan-300">💎 {pkg.diamondAmount} Diamonds</span>
+                    )}
+                  </div>
+                </div>
+
+                {/* Price Bar */}
+                <div className={`mt-3 w-full flex items-center justify-between rounded-xl p-2 border ${isSelected ? 'bg-amber-400/10 border-amber-400/50' : 'bg-slate-950/80 border-slate-800'}`}>
+                  <div className="flex flex-col items-start min-w-0 pl-1 text-left">
+                    <span className={`font-black font-mono text-sm sm:text-base leading-none tracking-tight ${isSelected ? 'text-amber-300' : 'text-[#00F5B8]'}`}>
+                      ${pkg.price.toFixed(2)}
+                    </span>
+                    <span className="text-[8.5px] sm:text-[9.5px] font-mono font-medium text-slate-400 mt-0.5 truncate">
+                      ~{Math.round(pkg.price * 4100).toLocaleString()} ៛
+                    </span>
+                  </div>
+                  <div className={`h-7 px-2.5 sm:px-3 rounded-lg flex items-center justify-center gap-1 text-[10px] sm:text-[11px] font-black transition-all shrink-0 ${isSelected ? 'bg-gradient-to-r from-amber-400 to-yellow-400 text-slate-950' : 'bg-gradient-to-r from-[#00E599] to-[#00F5B8] text-slate-950 group-hover:scale-105'}`}>
+                    <svg className="w-3.5 h-3.5 fill-current" viewBox="0 0 24 24"><path d="M7 18c-1.1 0-1.99.9-1.99 2S5.9 22 7 22s2-.9 2-2-.9-2-2-2zM1 2v2h2l3.6 7.59-1.35 2.45c-.16.28-.25.61-.25.96 0 1.1.9 2 2 2h12v-2H7.42c-.14 0-.25-.11-.25-.25l.03-.12.9-1.63h7.45c.75 0 1.41-.41 1.75-1.03l3.58-6.49c.08-.14.12-.31.12-.48 0-.55-.45-1-1-1H5.21l-.94-2H1zm16 16c-1.1 0-1.99.9-1.99 2s.89 2 1.99 2 2-.9 2-2-.9-2-2-2z" /></svg>
+                    <span className="hidden xs:inline">ទិញ</span>
+                  </div>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      );
+    }
+
+    // MODE 3: COMPACT LIST ROWS
+    return (
+      <div className="space-y-2 sm:space-y-2.5">
+        {itemsList.map((pkg) => {
+          const isSelected = selectedProduct?.productId === pkg.productId;
+          const isPass = isPassItem(pkg);
+          const tagLower = (pkg.tag || '').toLowerCase();
+          const isPopular = pkg.productId === 2 || pkg.diamondAmount === 55 || tagLower.includes('popular') || tagLower.includes('starter');
+          const isRecommend = !isPopular && (pkg.productId === 3 || pkg.diamondAmount === 86 || tagLower.includes('bonus') || tagLower.includes('recommend') || tagLower.includes('best'));
+          const isLevelPassTag = pkg.isLevelPass || pkg.name?.toLowerCase().includes('level up');
+          const isPurpleTag = isFreefire && (pkg.tag?.includes('ទទួលបាន') || pkg.tag?.toLowerCase().includes('discount') || pkg.category === 'Beat seller' || (pkg.isPass && !pkg.isLevelPass));
+          const ribbon = isLevelPassTag
+            ? { text: pkg.tag || 'LEVEL PASS 🎖️', cls: 'from-emerald-500 to-teal-600 text-white' }
+            : isPurpleTag
+            ? { text: pkg.tag || 'PASS', cls: 'from-[#a855f7] to-[#7c3aed] text-white' }
+            : isPopular
+            ? { text: 'Popular', cls: 'from-orange-500 to-amber-500 text-white' }
+            : isRecommend
+              ? { text: 'Recommend', cls: 'from-amber-300 to-yellow-500 text-slate-950' }
+              : pkg.tag
+                ? { text: formatTagText(pkg.tag), cls: 'from-sky-600 to-indigo-600 text-white' }
+                : null;
+
+          return (
+            <div
+              key={pkg.productId}
+              onClick={() => setSelectedProduct(pkg)}
+              className={`group relative flex items-center justify-between p-2.5 sm:p-3 rounded-2xl cursor-pointer select-none transition-all duration-200 overflow-hidden ${
+                isSelected
+                  ? 'bg-gradient-to-r from-[#24173d] via-[#170f28] to-[#0c0817] border-2 border-amber-400 ring-2 ring-amber-400/50 scale-[1.01] z-10 shadow-lg shadow-amber-500/20'
+                  : 'bg-gradient-to-r from-[#0f172a]/95 via-[#0b1220]/95 to-[#070b14]/98 border border-slate-800/90 hover:border-sky-400/60 hover:bg-[#131d33]/90 hover:translate-x-0.5'
+              }`}
+            >
+              {ribbon && (
+                <span className={`absolute top-0 left-0 px-2 py-0.5 rounded-br-xl bg-gradient-to-r ${ribbon.cls} text-[8.5px] sm:text-[9.5px] font-black uppercase tracking-wider z-20`}>
+                  {ribbon.text}
+                </span>
+              )}
+
+              {/* Left Side: Artwork + Info */}
+              <div className="flex items-center gap-3 sm:gap-4 min-w-0 flex-1 pr-2 pt-1">
+                <div className="relative w-12 h-12 sm:w-14 sm:h-14 rounded-xl bg-slate-950/70 border border-slate-800 flex items-center justify-center shrink-0 p-1">
+                  <ProductPackageImage pkg={pkg} size="md" className="transition-transform duration-300 group-hover:scale-110 drop-shadow-md" />
+                </div>
+                <div className="min-w-0 flex-1">
+                  <h3 className={`text-xs sm:text-sm font-black truncate transition-colors ${isSelected ? 'text-amber-300' : 'text-white group-hover:text-sky-300'}`}>
+                    {pkg.name}
+                  </h3>
+                  <div className="flex items-center gap-2 mt-0.5 text-[10px] sm:text-xs font-semibold text-slate-400">
+                    {isPass ? (
+                      <span className="text-amber-400 font-bold">⚡ Daily Pass Rewards</span>
+                    ) : (
+                      <span className="text-cyan-300 font-bold">💎 {pkg.diamondAmount} Diamonds</span>
+                    )}
+                    <span className="text-slate-600">•</span>
+                    <span className="text-slate-400 font-mono">~{Math.round(pkg.price * 4100).toLocaleString()} ៛</span>
+                  </div>
+                </div>
+              </div>
+
+              {/* Right Side: Price + Action Button */}
+              <div className="flex items-center gap-2.5 sm:gap-3.5 shrink-0">
+                <div className="text-right">
+                  <span className={`font-mono font-black text-sm sm:text-base block leading-none ${isSelected ? 'text-amber-300' : 'text-[#00F5B8]'}`}>
+                    ${pkg.price.toFixed(2)}
+                  </span>
+                </div>
+                <div className={`h-8 sm:h-8.5 px-2.5 sm:px-3 rounded-xl flex items-center justify-center gap-1.5 text-[11px] sm:text-xs font-black transition-all ${isSelected ? 'bg-gradient-to-r from-amber-400 to-yellow-400 text-slate-950' : 'bg-gradient-to-r from-[#00E599] to-[#00F5B8] text-slate-950 group-hover:scale-105 active:scale-95'}`}>
+                  <svg className="w-3.5 h-3.5 fill-current shrink-0" viewBox="0 0 24 24"><path d="M7 18c-1.1 0-1.99.9-1.99 2S5.9 22 7 22s2-.9 2-2-.9-2-2-2zM1 2v2h2l3.6 7.59-1.35 2.45c-.16.28-.25.61-.25.96 0 1.1.9 2 2 2h12v-2H7.42c-.14 0-.25-.11-.25-.25l.03-.12.9-1.63h7.45c.75 0 1.41-.41 1.75-1.03l3.58-6.49c.08-.14.12-.31.12-.48 0-.55-.45-1-1-1H5.21l-.94-2H1zm16 16c-1.1 0-1.99.9-1.99 2s.89 2 1.99 2 2-.9 2-2-.9-2-2-2z" /></svg>
+                  <span className="font-khmer">{language === 'km' ? 'ទិញ' : 'Select'}</span>
+                </div>
+              </div>
+            </div>
+          );
+        })}
+      </div>
+    );
+  };
 
 
   return (
@@ -2127,17 +2457,49 @@ const TopUp = () => {
                   <span className="absolute -bottom-0.5 -right-0.5 w-3.5 h-3.5 rounded-full border-2 border-[#060d21] bg-emerald-400 shadow-[0_0_8px_#34d399]" />
                 </div>
                 <div className="min-w-0 flex-1">
-                  <div className="flex items-center gap-2 flex-wrap">
-                    <h4 className="font-black text-white text-sm sm:text-base tracking-wide truncate">
-                      {verifiedAccount.name && !verifiedAccount.name.startsWith('Player_') && !verifiedAccount.name.includes('Player #') && verifiedAccount.name !== 'Verified Player'
-                        ? verifiedAccount.name
-                        : (KNOWN_REAL_NAMES[verifiedAccount.id] || (language === 'km' ? `អ្នកលេង ${selectedGame.name} (${verifiedAccount.id})` : `${selectedGame.name} Player (${verifiedAccount.id})`))}
-                    </h4>
-                    <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[8.5px] sm:text-[9px] font-black uppercase tracking-wider bg-emerald-500/20 text-emerald-300 border border-emerald-500/40">
-                      <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
-                      REAL NAME
-                    </span>
-                  </div>
+                    {isEditingRealName ? (
+                      <form onSubmit={handleSaveCustomRealName} className="flex items-center gap-1.5 py-0.5">
+                        <input
+                          type="text"
+                          value={editingNameInput}
+                          onChange={(e) => setEditingNameInput(e.target.value)}
+                          placeholder="Edit display name"
+                          className="h-7 px-2 text-xs bg-[#030817] border border-pink-400 rounded text-white font-bold focus:outline-none"
+                          autoFocus
+                        />
+                        <button type="submit" className="h-7 px-2.5 text-[10.5px] font-bold bg-emerald-500 hover:bg-emerald-400 text-slate-950 rounded transition-colors cursor-pointer">
+                          {language === 'km' ? 'រក្សាទុក' : 'Save'}
+                        </button>
+                        <button type="button" onClick={() => setIsEditingRealName(false)} className="h-7 px-1.5 text-[10px] text-slate-400 hover:text-white cursor-pointer">
+                          ✕
+                        </button>
+                      </form>
+                    ) : (
+                      <div className="flex items-center gap-2 flex-wrap">
+                        <h4 className="font-black text-white text-sm sm:text-base tracking-wide truncate">
+                          {verifiedAccount.name && !verifiedAccount.name.startsWith('Player_') && !verifiedAccount.name.includes('Player #') && verifiedAccount.name !== 'Verified Player'
+                            ? verifiedAccount.name
+                            : (KNOWN_REAL_NAMES[verifiedAccount.id] || (language === 'km' ? `អ្នកលេង ${selectedGame.name} (${verifiedAccount.id})` : `${selectedGame.name} Player (${verifiedAccount.id})`))}
+                        </h4>
+                        <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[8.5px] sm:text-[9px] font-black uppercase tracking-wider bg-emerald-500/20 text-emerald-300 border border-emerald-500/40">
+                          <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
+                          REAL NAME
+                        </span>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setIsEditingRealName(true);
+                            setEditingNameInput(verifiedAccount.name || '');
+                          }}
+                          className="text-slate-400 hover:text-pink-300 p-0.5 transition-colors cursor-pointer"
+                          title="Edit display name"
+                        >
+                          <svg className="w-3 h-3" viewBox="0 0 20 20" fill="currentColor">
+                            <path d="M13.586 3.586a2 2 0 112.828 2.828l-.793.793-2.828-2.828.793-.793zM11.379 5.793L3 14.172V17h2.828l8.38-8.379-2.83-2.828z" />
+                          </svg>
+                        </button>
+                      </div>
+                    )}
                   <div className="flex items-center gap-2 text-xs text-slate-400 pt-0.5">
                     <span className="text-cyan-300 font-mono font-bold">ID: {verifiedAccount.id}</span>
                     <span>•</span>
@@ -2187,11 +2549,23 @@ const TopUp = () => {
                 <span className="px-2 py-0.5 rounded-md bg-gradient-to-r from-cyan-400 to-blue-500 text-slate-950 font-black text-[9px] sm:text-[11px] uppercase tracking-wider shadow-sm">
                   {language === 'km' ? 'ជំហានទី ២' : 'STEP 2'}
                 </span>
-                <span className="text-xs sm:text-sm font-black text-white flex items-center gap-1.5">
+                <span className="text-xs sm:text-sm font-black text-white flex items-center gap-1.5 font-khmer">
                   <svg className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-cyan-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><path d="M6 3h12l4 6-10 12L2 9z" /><path d="M2 9h20M12 21L8 9l4-6 4 6-4 12" /></svg>
                   <span>{language === 'km' ? 'ជ្រើសរើសចំនួនពេជ្រ & កញ្ចប់' : 'Select Diamond Package'}</span>
                 </span>
               </div>
+
+              {/* Quick Button: Press to Select */}
+              <button
+                type="button"
+                onClick={() => setShowPackageModal(true)}
+                className="inline-flex items-center gap-1.5 py-1 px-2.5 sm:px-3 rounded-xl bg-gradient-to-r from-amber-400 via-yellow-400 to-amber-500 hover:from-amber-300 hover:to-yellow-300 text-slate-950 font-black text-[11px] sm:text-xs shadow-md shadow-amber-400/20 transition-all cursor-pointer active:scale-95 border border-amber-300"
+                title="Press to select (Full display)"
+              >
+                <svg className="w-3.5 h-3.5 fill-current" viewBox="0 0 24 24"><path d="M7 18c-1.1 0-1.99.9-1.99 2S5.9 22 7 22s2-.9 2-2-.9-2-2-2zM1 2v2h2l3.6 7.59-1.35 2.45c-.16.28-.25.61-.25.96 0 1.1.9 2 2 2h12v-2H7.42c-.14 0-.25-.11-.25-.25l.03-.12.9-1.63h7.45c.75 0 1.41-.41 1.75-1.03l3.58-6.49c.08-.14.12-.31.12-.48 0-.55-.45-1-1-1H5.21l-.94-2H1zm16 16c-1.1 0-1.99.9-1.99 2s.89 2 1.99 2 2-.9 2-2-.9-2-2-2z" /></svg>
+                <span className="font-khmer">{language === 'km' ? 'ចុចដើម្បីជ្រើសរើស' : 'Press to Select'}</span>
+                <span className="text-[10px] opacity-75 font-mono">⛶</span>
+              </button>
             </div>
 
             {/* Header: Row 1 - Category Sub-Tabs (All / Weekly Pass / Level Pass / Diamond Package) */}
@@ -2261,6 +2635,38 @@ const TopUp = () => {
               </button>
             </div>
 
+            {/* Quick Action Banner: Button name "Press to Select" */}
+            <div className="pt-0.5">
+              <button
+                type="button"
+                onClick={() => setShowPackageModal(true)}
+                className="w-full py-2.5 px-3.5 sm:py-3 sm:px-4 rounded-2xl bg-gradient-to-r from-amber-400 via-yellow-400 to-amber-500 hover:from-amber-300 hover:to-yellow-300 text-slate-950 font-black text-xs sm:text-sm shadow-lg shadow-amber-400/25 flex items-center justify-between gap-3 transition-all duration-200 active:scale-[0.98] group cursor-pointer border border-amber-300/80"
+              >
+                <div className="flex items-center gap-2 sm:gap-2.5">
+                  <span className="w-7 h-7 sm:w-8 sm:h-8 rounded-xl bg-slate-950/20 flex items-center justify-center text-slate-950 group-hover:scale-110 transition-transform shrink-0">
+                    <svg className="w-4 h-4 fill-current" viewBox="0 0 24 24"><path d="M7 18c-1.1 0-1.99.9-1.99 2S5.9 22 7 22s2-.9 2-2-.9-2-2-2zM1 2v2h2l3.6 7.59-1.35 2.45c-.16.28-.25.61-.25.96 0 1.1.9 2 2 2h12v-2H7.42c-.14 0-.25-.11-.25-.25l.03-.12.9-1.63h7.45c.75 0 1.41-.41 1.75-1.03l3.58-6.49c.08-.14.12-.31.12-.48 0-.55-.45-1-1-1H5.21l-.94-2H1zm16 16c-1.1 0-1.99.9-1.99 2s.89 2 1.99 2 2-.9 2-2-.9-2-2-2z" /></svg>
+                  </span>
+                  <div className="text-left leading-tight font-khmer">
+                    <div className="font-black text-slate-950 flex items-center gap-1.5 flex-wrap">
+                      <span>{language === 'km' ? 'ចុចដើម្បីជ្រើសរើស' : 'Press to Select'}</span>
+                      <span className="text-[10px] sm:text-[11px] font-bold opacity-85">(Press to Select)</span>
+                    </div>
+                    <div className="text-[10px] sm:text-[11px] font-semibold text-slate-900/85">
+                      {language === 'km' ? 'បើកផ្ទាំងពេញអេក្រង់ • អូសស្រួល' : 'Full display popup • Easy scrolling'}
+                    </div>
+                  </div>
+                </div>
+                <div className="flex items-center gap-1.5 sm:gap-2 shrink-0">
+                  <span className="text-[10px] sm:text-xs font-black px-2 py-0.5 rounded-lg bg-slate-950/15 text-slate-950 font-khmer">
+                    {products.length} {language === 'km' ? 'កញ្ចប់' : 'Pkgs'}
+                  </span>
+                  <span className="w-7 h-7 sm:w-8 sm:h-8 rounded-xl bg-slate-950 text-amber-300 flex items-center justify-center group-hover:scale-105 transition-transform shadow-sm">
+                    <svg className="w-3.5 h-3.5 sm:w-4 sm:h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M15 3h6v6M9 21H3v-6M21 3l-7 7M3 21l7-7"/></svg>
+                  </span>
+                </div>
+              </button>
+            </div>
+
             {/* Header: Row 2 - Controls & Layout Switcher */}
             <div className="flex items-center justify-between gap-2 pt-2 pb-0.5 border-t border-slate-800/80">
               <div className="flex items-center gap-1.5 text-xs font-black text-slate-300 shrink-0">
@@ -2268,51 +2674,63 @@ const TopUp = () => {
                 <span className="tracking-tight uppercase text-[11px] text-slate-400">{language === 'km' ? 'ទម្រង់' : 'Layout'}:</span>
               </div>
 
-              {/* View Layout Switcher (Tiles vs Large Icons vs List) */}
-              <div className="inline-flex items-center p-1 bg-gradient-to-b from-[#0a0f1d] to-[#060a14] rounded-2xl border border-slate-800/90 shadow-sm backdrop-blur-sm gap-0.5">
+              {/* View Layout Switcher (Tiles vs Large Icons vs List) + Press to Select button */}
+              <div className="flex items-center gap-1.5 flex-wrap justify-end">
                 <button
                   type="button"
-                  onClick={() => setLayoutMode('tiles')}
-                  className={`py-1.5 px-2.5 sm:px-3 rounded-xl text-xs font-black flex items-center gap-1.5 transition-all duration-200 cursor-pointer select-none whitespace-nowrap ${
-                    layoutMode === 'tiles'
-                      ? 'bg-sky-500/20 text-cyan-300 border border-cyan-400/50 scale-[1.02]'
-                      : 'text-slate-400 hover:text-slate-200 hover:bg-slate-800/50 border border-transparent'
-                  }`}
-                  title="Tiles View"
+                  onClick={() => setShowPackageModal(true)}
+                  className="py-1.5 px-2.5 rounded-xl text-xs font-black flex items-center gap-1.5 bg-amber-400/15 hover:bg-amber-400/25 text-amber-300 border border-amber-400/50 hover:border-amber-400 transition-all cursor-pointer select-none active:scale-95"
+                  title="Press to Select (Full Display)"
                 >
-                  <svg className="w-3.5 h-3.5 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/></svg>
-                  <span className="text-[11px] font-extrabold">{t('layout_tiles')}</span>
+                  <svg className="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M15 3h6v6M9 21H3v-6M21 3l-7 7M3 21l7-7"/></svg>
+                  <span className="text-[11px] font-extrabold font-khmer">{language === 'km' ? 'ចុចដើម្បីជ្រើសរើស' : 'Press to Select'}</span>
                 </button>
 
-                <button
-                  type="button"
-                  onClick={() => setLayoutMode('grid')}
-                  className={`py-1.5 px-2.5 sm:px-3 rounded-xl text-xs font-black flex items-center gap-1.5 transition-all duration-200 cursor-pointer select-none whitespace-nowrap ${
-                    layoutMode === 'grid'
-                      ? 'bg-sky-500/20 text-cyan-300 border border-cyan-400/50 scale-[1.02]'
-                      : 'text-slate-400 hover:text-slate-200 hover:bg-slate-800/50 border border-transparent'
-                  }`}
-                  title="Large Icons View"
-                >
-                  <svg className="w-3.5 h-3.5 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><path d="M3 9h18"/><path d="M9 21V9"/></svg>
-                  <span className="text-[11px] font-extrabold whitespace-nowrap">
-                    {language === 'km' ? 'រូបធំ' : 'Large'}<span className="hidden sm:inline"> icons</span>
-                  </span>
-                </button>
+                <div className="inline-flex items-center p-1 bg-gradient-to-b from-[#0a0f1d] to-[#060a14] rounded-2xl border border-slate-800/90 shadow-sm backdrop-blur-sm gap-0.5">
+                  <button
+                    type="button"
+                    onClick={() => setLayoutMode('tiles')}
+                    className={`py-1.5 px-2.5 sm:px-3 rounded-xl text-xs font-black flex items-center gap-1.5 transition-all duration-200 cursor-pointer select-none whitespace-nowrap ${
+                      layoutMode === 'tiles'
+                        ? 'bg-sky-500/20 text-cyan-300 border border-cyan-400/50 scale-[1.02]'
+                        : 'text-slate-400 hover:text-slate-200 hover:bg-slate-800/50 border border-transparent'
+                    }`}
+                    title="Tiles View"
+                  >
+                    <svg className="w-3.5 h-3.5 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/></svg>
+                    <span className="text-[11px] font-extrabold">{t('layout_tiles')}</span>
+                  </button>
 
-                <button
-                  type="button"
-                  onClick={() => setLayoutMode('list')}
-                  className={`py-1.5 px-2.5 sm:px-3 rounded-xl text-xs font-black flex items-center gap-1.5 transition-all duration-200 cursor-pointer select-none whitespace-nowrap ${
-                    layoutMode === 'list'
-                      ? 'bg-sky-500/20 text-cyan-300 border border-cyan-400/50 scale-[1.02]'
-                      : 'text-slate-400 hover:text-slate-200 hover:bg-slate-800/50 border border-transparent'
-                  }`}
-                  title="List Rows View"
-                >
-                  <svg className="w-3.5 h-3.5 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg>
-                  <span className="text-[11px] font-extrabold">{t('layout_list')}</span>
-                </button>
+                  <button
+                    type="button"
+                    onClick={() => setLayoutMode('grid')}
+                    className={`py-1.5 px-2.5 sm:px-3 rounded-xl text-xs font-black flex items-center gap-1.5 transition-all duration-200 cursor-pointer select-none whitespace-nowrap ${
+                      layoutMode === 'grid'
+                        ? 'bg-sky-500/20 text-cyan-300 border border-cyan-400/50 scale-[1.02]'
+                        : 'text-slate-400 hover:text-slate-200 hover:bg-slate-800/50 border border-transparent'
+                    }`}
+                    title="Large Icons View"
+                  >
+                    <svg className="w-3.5 h-3.5 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><path d="M3 9h18"/><path d="M9 21V9"/></svg>
+                    <span className="text-[11px] font-extrabold whitespace-nowrap">
+                      {language === 'km' ? 'រូបធំ' : 'Large'}<span className="hidden sm:inline"> icons</span>
+                    </span>
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => setLayoutMode('list')}
+                    className={`py-1.5 px-2.5 sm:px-3 rounded-xl text-xs font-black flex items-center gap-1.5 transition-all duration-200 cursor-pointer select-none whitespace-nowrap ${
+                      layoutMode === 'list'
+                        ? 'bg-sky-500/20 text-cyan-300 border border-cyan-400/50 scale-[1.02]'
+                        : 'text-slate-400 hover:text-slate-200 hover:bg-slate-800/50 border border-transparent'
+                    }`}
+                    title="List Rows View"
+                  >
+                    <svg className="w-3.5 h-3.5 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg>
+                    <span className="text-[11px] font-extrabold">{t('layout_list')}</span>
+                  </button>
+                </div>
               </div>
             </div>
   
@@ -2324,18 +2742,26 @@ const TopUp = () => {
                   <svg className="w-3.5 h-3.5 text-cyan-300" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><path d="M6 3h12l4 6-10 12L2 9z" /><path d="M2 9h20M12 21L8 9l4-6 4 6-4 12" /></svg>
                   <span>{language === 'km' ? 'កញ្ចប់' : 'Packages'}</span>
                   <span className="px-1.5 py-0.5 rounded-md bg-sky-500/15 border border-sky-400/30 text-[10px] font-mono text-sky-300">
-                    {products.filter(p => {
-                      if (productCategoryTab === 'all') return true;
-                      if (productCategoryTab === 'level_pass') return p.isLevelPass || p.name?.toLowerCase().includes('level up');
-                      if (productCategoryTab === 'passes') return isFreefire ? (p.category === 'Beat seller') : (!p.isLevelPass && (p.isPass || p.name?.toLowerCase().includes('pass') || p.name?.toLowerCase().includes('bundle') || [210, 440, 660, 880, 1100, 1320, 605, 500].includes(p.diamondAmount)));
-                      return isFreefire ? (p.category === 'Other Packages') : (!p.isLevelPass && !(p.isPass || p.name?.toLowerCase().includes('pass') || p.name?.toLowerCase().includes('bundle') || [210, 440, 660, 880, 1100, 1320, 605, 500].includes(p.diamondAmount)));
-                    }).length}
+                    {inlineFilteredProducts.length}
                   </span>
                 </span>
-                <span className={`flex items-center gap-1 text-[10px] font-semibold transition-opacity ${listScroll.atBottom && listScroll.atTop ? 'opacity-0' : 'opacity-100'} text-slate-400`}>
-                  <svg className="w-3 h-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M12 5v14M5 12l7 7 7-7" /></svg>
-                  <span>{language === 'km' ? 'អូសមើល' : 'Scroll'}</span>
-                </span>
+                
+                <div className="flex items-center gap-2">
+                  <button
+                    type="button"
+                    onClick={() => setShowPackageModal(true)}
+                    className="flex items-center gap-1 px-2.5 py-0.5 sm:py-1 rounded-lg bg-gradient-to-r from-amber-400 to-yellow-400 hover:from-amber-300 hover:to-yellow-300 text-slate-950 font-black text-[10px] sm:text-[11px] transition-all cursor-pointer shadow-sm active:scale-95 font-khmer"
+                    title="Press to Select (Full Display)"
+                  >
+                    <svg className="w-3 h-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M15 3h6v6M9 21H3v-6M21 3l-7 7M3 21l7-7"/></svg>
+                    <span>{language === 'km' ? 'ចុចដើម្បីជ្រើសរើស' : 'Press to Select'}</span>
+                  </button>
+
+                  <span className={`flex items-center gap-1 text-[10px] font-semibold transition-opacity ${listScroll.atBottom && listScroll.atTop ? 'opacity-0' : 'opacity-100'} text-slate-400 font-khmer`}>
+                    <svg className="w-3 h-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M12 5v14M5 12l7 7 7-7" /></svg>
+                    <span>{language === 'km' ? 'អូសមើល' : 'Scroll'}</span>
+                  </span>
+                </div>
               </div>
               {/* Scroll progress bar */}
               <div className="h-[2px] bg-slate-800/60">
@@ -2348,364 +2774,7 @@ const TopUp = () => {
                 onScroll={handleListScroll}
                 className="product-scroll-frame max-h-[56vh] sm:max-h-[600px] overflow-y-auto overscroll-contain p-2 sm:p-3"
               >
-              {(() => {
-                const isPassItem = (p) => p.isPass || p.name?.toLowerCase().includes('pass') || p.name?.toLowerCase().includes('bundle') || [210, 440, 660, 880, 1100, 1320, 605, 500].includes(p.diamondAmount);
-
-                const formatTagText = (rawTag) => {
-                  if (!rawTag) return '';
-                  if (rawTag.includes('220') && rawTag.includes('70')) return '+70 Aurora ⭐';
-                  if (rawTag.includes('440') && rawTag.includes('140')) return '+140 Aurora ⭐';
-                  return rawTag;
-                };
-
-                const filtered = products.filter(pkg => {
-                  if (productCategoryTab === 'level_pass') return pkg.isLevelPass || pkg.name?.toLowerCase().includes('level up');
-                  if (productCategoryTab === 'passes') return isFreefire ? (pkg.category === 'Beat seller') : (!pkg.isLevelPass && isPassItem(pkg));
-                  if (productCategoryTab === 'diamonds') return isFreefire ? (pkg.category === 'Other Packages') : (!pkg.isLevelPass && !isPassItem(pkg));
-                  return true;
-                });
-
-                if (filtered.length === 0) {
-                  return (
-                    <div className="py-12 text-center text-slate-500 text-xs font-medium">
-                      No packages found in this category.
-                    </div>
-                  );
-                }
-
-                // ==================== MODE 1: TILES VIEW (COMPACT 2-3 COLUMNS) ====================
-                // ==================== MODE 1: 100% POLISHED 2-COLUMN CYBER CARDS ====================
-                if (layoutMode === 'tiles') {
-                  return (
-                    <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-2 sm:gap-2.5">
-                      {filtered.map((pkg) => {
-                        const isSelected = selectedProduct.productId === pkg.productId;
-                        const isPass = isPassItem(pkg);
-                        const tagLower = (pkg.tag || '').toLowerCase();
-                        const isPopular = pkg.productId === 2 || pkg.diamondAmount === 55 || tagLower.includes('popular') || tagLower.includes('starter');
-                        const isRecommend = !isPopular && (pkg.productId === 3 || pkg.diamondAmount === 86 || tagLower.includes('bonus') || tagLower.includes('recommend') || tagLower.includes('best'));
-                        const isLevelPassTag = pkg.isLevelPass || pkg.name?.toLowerCase().includes('level up');
-                        const isPurpleTag = isFreefire && (pkg.tag?.includes('ទទួលបាន') || pkg.tag?.toLowerCase().includes('discount') || pkg.category === 'Beat seller' || (pkg.isPass && !pkg.isLevelPass));
-                        const ribbon = isLevelPassTag
-                          ? { text: pkg.tag || 'LEVEL PASS 🎖️', cls: 'from-emerald-500 to-teal-600 text-white shadow-sm' }
-                          : isPurpleTag
-                          ? { text: pkg.tag || 'PASS', cls: 'from-[#a855f7] to-[#7c3aed] text-white shadow-sm' }
-                          : isPopular
-                          ? { text: 'Popular', cls: 'from-orange-500 to-amber-500 text-white' }
-                          : isRecommend
-                            ? { text: 'Recommend', cls: 'from-amber-300 to-yellow-500 text-slate-950' }
-                            : pkg.tag
-                              ? { text: formatTagText(pkg.tag), cls: 'from-sky-600 to-indigo-600 text-white' }
-                              : null;
-
-                        return (
-                          <button
-                            type="button"
-                            key={pkg.productId}
-                            onClick={() => setSelectedProduct(pkg)}
-                            className={`group relative rounded-2xl p-2.5 pt-3 sm:p-3 sm:pt-3.5 flex flex-col items-center text-center select-none transition-all duration-200 cursor-pointer overflow-hidden active:scale-[0.97] ${
-                              isSelected
-                                ? 'bg-gradient-to-b from-[#1a1530] to-[#0a0a1a] border-2 border-amber-400'
-                                : 'bg-gradient-to-b from-[#0b1430] to-[#050a1a] border border-sky-500/20 hover:border-sky-400/60 hover:-translate-y-0.5'
-                            }`}
-                          >
-                            {/* Ribbon tag */}
-                            {ribbon && (
-                              <span className={`absolute top-0 left-0 max-w-[80%] truncate px-2 py-0.5 rounded-br-xl bg-gradient-to-r ${ribbon.cls} text-[8.5px] sm:text-[9.5px] font-extrabold uppercase tracking-wide z-20`}>
-                                {ribbon.text}
-                              </span>
-                            )}
-
-                            {/* Selected check */}
-                            {isSelected && (
-                              <span className="absolute top-1 right-1 w-4 h-4 rounded-full bg-amber-400 text-slate-950 flex items-center justify-center z-20">
-                                <svg className="w-2.5 h-2.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="4" strokeLinecap="round" strokeLinejoin="round"><path d="M20 6L9 17l-5-5" /></svg>
-                              </span>
-                            )}
-
-                            {/* Artwork: Big prominent 3D Diamond / Pass Image */}
-                            <div className="relative w-full h-16 sm:h-20 flex items-center justify-center my-1">
-                              <ProductPackageImage
-                                pkg={pkg}
-                                size="lg"
-                                className="relative z-10 transition-transform duration-300 group-hover:scale-110"
-                              />
-                            </div>
-
-                            {/* Name + sub */}
-                            <h3 className={`relative mt-1 w-full text-[11px] sm:text-xs font-extrabold leading-tight line-clamp-1 transition-colors ${isSelected ? 'text-amber-300' : 'text-white group-hover:text-sky-200'}`}>
-                              {pkg.name}
-                            </h3>
-                            <span className="relative text-[9px] sm:text-[10px] font-semibold text-slate-400 leading-tight mt-0.5 truncate w-full">
-                              {isPass ? '⚡ Daily Pass' : `💎 ${pkg.diamondAmount}`}
-                            </span>
-
-                            {/* Price bar */}
-                            <div className={`relative mt-2 w-full flex items-center justify-between rounded-lg pl-2 pr-0.5 py-0.5 border ${isSelected ? 'bg-amber-400/10 border-amber-400/40' : 'bg-slate-950/70 border-slate-800'}`}>
-                              <span className={`font-black font-mono text-xs sm:text-[13px] tracking-tight ${isSelected ? 'text-amber-300' : 'text-[#00F5B8]'}`}>
-                                ${pkg.price.toFixed(2)}
-                              </span>
-                              <span className={`w-6 h-6 rounded-md flex items-center justify-center transition-colors ${isSelected ? 'bg-amber-400 text-slate-950' : 'bg-[#00E599] text-slate-950 group-hover:bg-[#00F5B8]'}`}>
-                                <svg className="w-3.5 h-3.5 fill-current" viewBox="0 0 24 24"><path d="M7 18c-1.1 0-1.99.9-1.99 2S5.9 22 7 22s2-.9 2-2-.9-2-2-2zM1 2v2h2l3.6 7.59-1.35 2.45c-.16.28-.25.61-.25.96 0 1.1.9 2 2 2h12v-2H7.42c-.14 0-.25-.11-.25-.25l.03-.12.9-1.63h7.45c.75 0 1.41-.41 1.75-1.03l3.58-6.49c.08-.14.12-.31.12-.48 0-.55-.45-1-1-1H5.21l-.94-2H1zm16 16c-1.1 0-1.99.9-1.99 2s.89 2 1.99 2 2-.9 2-2-.9-2-2-2z" /></svg>
-                              </span>
-                            </div>
-                          </button>
-                        );
-                      })}
-                    </div>
-                  );
-                }
-
-                // ==================== MODE 2: LARGE ICONS / GRID VIEW ====================
-                if (layoutMode === 'grid') {
-                  return (
-                    <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-3 lg:grid-cols-4 gap-2.5 sm:gap-3">
-                      {filtered.map((pkg) => {
-                        const isSelected = selectedProduct.productId === pkg.productId;
-                        const isPass = isPassItem(pkg);
-                        const tagLower = (pkg.tag || '').toLowerCase();
-                        const isPopular = pkg.productId === 2 || pkg.diamondAmount === 55 || tagLower.includes('popular') || tagLower.includes('starter');
-                        const isRecommend = !isPopular && (pkg.productId === 3 || pkg.diamondAmount === 86 || tagLower.includes('bonus') || tagLower.includes('recommend') || tagLower.includes('best'));
-                        const isLevelPassTag = pkg.isLevelPass || pkg.name?.toLowerCase().includes('level up');
-                        const isPurpleTag = isFreefire && (pkg.tag?.includes('ទទួលបាន') || pkg.tag?.toLowerCase().includes('discount') || pkg.category === 'Beat seller' || (pkg.isPass && !pkg.isLevelPass));
-                        const ribbon = isLevelPassTag
-                          ? { text: pkg.tag || 'LEVEL PASS 🎖️', cls: 'from-emerald-500 to-teal-600 text-white shadow-sm' }
-                          : isPurpleTag
-                          ? { text: pkg.tag || 'PASS', cls: 'from-[#a855f7] to-[#7c3aed] text-white shadow-sm' }
-                          : isPopular
-                          ? { text: 'Popular', cls: 'from-orange-500 to-amber-500 text-white' }
-                          : isRecommend
-                            ? { text: 'Recommend', cls: 'from-amber-300 to-yellow-500 text-slate-950' }
-                            : pkg.tag
-                              ? { text: formatTagText(pkg.tag), cls: 'from-sky-600 to-indigo-600 text-white' }
-                              : null;
-
-                        return (
-                          <div
-                            key={pkg.productId}
-                            onClick={() => setSelectedProduct(pkg)}
-                            className={`group relative rounded-2xl p-3 sm:p-4 cursor-pointer select-none transition-all duration-300 flex flex-col items-center text-center justify-between overflow-hidden ${
-                              isSelected
-                                ? 'bg-gradient-to-b from-[#24173d] via-[#170f28] to-[#0b0816] border-2 border-amber-400 scale-[1.02] -translate-y-1 z-10'
-                                : 'bg-gradient-to-b from-[#0f172a]/95 via-[#0b1220]/95 to-[#070b14]/98 border border-slate-700/70 hover:border-sky-400/60 hover:-translate-y-1'
-                            }`}
-                          >
-                            {/* Top Ribbon Tag */}
-                            {ribbon && (
-                              <span
-                                className={`absolute top-0 left-0 max-w-[85%] truncate px-2.5 py-0.5 rounded-br-xl bg-gradient-to-r ${ribbon.cls} text-[8.5px] sm:text-[9.5px] font-black uppercase tracking-wider z-20`}
-                              >
-                                {ribbon.text}
-                              </span>
-                            )}
-
-                            {/* Selected Active Checkmark */}
-                            {isSelected && (
-                              <div className="absolute top-2 right-2 z-20 w-5 h-5 rounded-full bg-gradient-to-tr from-amber-400 to-yellow-300 text-slate-950 flex items-center justify-center font-black">
-                                <svg className="w-3 h-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="4" strokeLinecap="round" strokeLinejoin="round"><path d="M20 6L9 17l-5-5" /></svg>
-                              </div>
-                            )}
-
-                            {/* Truly Large 3D Artwork Centerpiece */}
-                            <div className="relative w-full h-24 sm:h-28 flex items-center justify-center my-2">
-                              <ProductPackageImage
-                                pkg={pkg}
-                                size="xl"
-                                className="relative z-10 group-hover:scale-110 transition-transform duration-300"
-                              />
-                            </div>
-
-                            {/* Title */}
-                            <h3
-                              className={`font-black text-xs sm:text-sm lg:text-[15px] leading-tight line-clamp-1 w-full transition-colors relative z-10 ${
-                                isSelected ? 'text-amber-300' : 'text-white group-hover:text-sky-200'
-                              }`}
-                            >
-                              {pkg.name}
-                            </h3>
-
-                            {/* Subtitle Pill (Diamond count or Pass) */}
-                            <div className="flex items-center justify-center gap-1.5 mt-1 mb-2 text-[10px] sm:text-[11px] font-bold relative z-10">
-                              {isPass ? (
-                                <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-amber-400/10 text-amber-300 border border-amber-400/20">
-                                  <span>⚡</span>
-                                  <span>Daily Pass</span>
-                                </span>
-                              ) : (
-                                <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-cyan-400/10 text-cyan-300 border border-cyan-400/20">
-                                  <span>💎</span>
-                                  <span>{pkg.diamondAmount} ពេជ្រ</span>
-                                </span>
-                              )}
-                            </div>
-
-                            {/* Price & Buy Action Capsule */}
-                            <div
-                              className={`mt-auto w-full rounded-xl p-2 transition-all duration-200 flex items-center justify-between border relative z-10 ${
-                                isSelected
-                                  ? 'bg-slate-950/90 border-amber-400/50'
-                                  : 'bg-slate-950/75 border-slate-800/90 group-hover:border-slate-700'
-                              }`}
-                            >
-                              {/* Price in USD and Riel */}
-                              <div className="flex flex-col items-start min-w-0 pl-1 text-left">
-                                <span
-                                  className={`font-black font-mono text-sm sm:text-base leading-none tracking-tight ${
-                                    isSelected
-                                      ? 'text-amber-300'
-                                      : 'text-[#00F5B8]'
-                                  }`}
-                                >
-                                  ${pkg.price.toFixed(2)}
-                                </span>
-                                <span className="text-[8.5px] sm:text-[9.5px] font-mono font-medium text-slate-400 mt-0.5 truncate">
-                                  ~{Math.round(pkg.price * 4100).toLocaleString()} ៛
-                                </span>
-                              </div>
-
-                              {/* Buy Button */}
-                              <div
-                                className={`h-7 px-2.5 sm:px-3 rounded-lg flex items-center justify-center gap-1 text-[10px] sm:text-[11px] font-black transition-all shrink-0 ${
-                                  isSelected
-                                    ? 'bg-gradient-to-r from-amber-400 to-yellow-400 text-slate-950'
-                                    : 'bg-gradient-to-r from-[#00E599] to-[#00F5B8] text-slate-950 group-hover:scale-105'
-                                }`}
-                              >
-                                <svg className="w-3.5 h-3.5 fill-current" viewBox="0 0 24 24">
-                                  <path d="M7 18c-1.1 0-1.99.9-1.99 2S5.9 22 7 22s2-.9 2-2-.9-2-2-2zM1 2v2h2l3.6 7.59-1.35 2.45c-.16.28-.25.61-.25.96 0 1.1.9 2 2 2h12v-2H7.42c-.14 0-.25-.11-.25-.25l.03-.12.9-1.63h7.45c.75 0 1.41-.41 1.75-1.03l3.58-6.49c.08-.14.12-.31.12-.48 0-.55-.45-1-1-1H5.21l-.94-2H1zm16 16c-1.1 0-1.99.9-1.99 2s.89 2 1.99 2 2-.9 2-2-.9-2-2-2z" />
-                                </svg>
-                                <span className="hidden xs:inline">ទិញ</span>
-                              </div>
-                            </div>
-                          </div>
-                        );
-                      })}
-                    </div>
-                  );
-                }
-
-                // ==================== MODE 3: COMPACT LIST ROWS ====================
-                return (
-                  <div className="space-y-2 sm:space-y-2.5">
-                    {filtered.map((pkg) => {
-                      const isSelected = selectedProduct.productId === pkg.productId;
-                      const isPass = isPassItem(pkg);
-                      const tagLower = (pkg.tag || '').toLowerCase();
-                      const isPopular = pkg.productId === 2 || pkg.diamondAmount === 55 || tagLower.includes('popular') || tagLower.includes('starter');
-                      const isRecommend = !isPopular && (pkg.productId === 3 || pkg.diamondAmount === 86 || tagLower.includes('bonus') || tagLower.includes('recommend') || tagLower.includes('best'));
-                      const isLevelPassTag = pkg.isLevelPass || pkg.name?.toLowerCase().includes('level up');
-                      const isPurpleTag = isFreefire && (pkg.tag?.includes('ទទួលបាន') || pkg.tag?.toLowerCase().includes('discount') || pkg.category === 'Beat seller' || (pkg.isPass && !pkg.isLevelPass));
-                      const ribbon = isLevelPassTag
-                        ? { text: pkg.tag || 'LEVEL PASS 🎖️', cls: 'from-emerald-500 to-teal-600 text-white' }
-                        : isPurpleTag
-                        ? { text: pkg.tag || 'PASS', cls: 'from-[#a855f7] to-[#7c3aed] text-white' }
-                        : isPopular
-                        ? { text: 'Popular', cls: 'from-orange-500 to-amber-500 text-white' }
-                        : isRecommend
-                          ? { text: 'Recommend', cls: 'from-amber-300 to-yellow-500 text-slate-950' }
-                          : pkg.tag
-                            ? { text: formatTagText(pkg.tag), cls: 'from-sky-600 to-indigo-600 text-white' }
-                            : null;
-
-                      return (
-                        <div
-                          key={pkg.productId}
-                          onClick={() => setSelectedProduct(pkg)}
-                          className={`group relative flex items-center justify-between p-2.5 sm:p-3 rounded-2xl cursor-pointer select-none transition-all duration-200 overflow-hidden ${
-                            isSelected
-                              ? 'bg-gradient-to-r from-[#24173d] via-[#170f28] to-[#0c0817] border-2 border-amber-400 scale-[1.01] z-10'
-                              : 'bg-gradient-to-r from-[#0f172a]/95 via-[#0b1220]/95 to-[#070b14]/98 border border-slate-800/90 hover:border-sky-400/60 hover:bg-[#131d33]/90 hover:translate-x-0.5'
-                          }`}
-                        >
-                          {/* Left Accent indicator for Selected */}
-                          {isSelected && (
-                            <div className="absolute left-0 top-0 bottom-0 w-1.5 bg-gradient-to-b from-amber-300 via-amber-400 to-yellow-500" />
-                          )}
-
-                          {/* Left Section: 3D Artwork */}
-                          <div className="flex items-center gap-3 sm:gap-3.5 relative z-10 min-w-0">
-                            <div className="relative w-12 h-12 sm:w-14 sm:h-14 shrink-0 flex items-center justify-center rounded-xl bg-slate-950/70 border border-slate-800/80 p-1 group-hover:border-slate-700 transition-colors">
-                              <ProductPackageImage
-                                pkg={pkg}
-                                size="md"
-                                className="relative z-10 transition-transform duration-300 group-hover:scale-110"
-                              />
-                            </div>
-
-                            {/* Middle Section: Title, Badges & Subtitle */}
-                            <div className="flex flex-col justify-center min-w-0">
-                              <div className="flex items-center gap-1.5 flex-wrap">
-                                <span
-                                  className={`font-black text-xs sm:text-sm leading-tight transition-colors line-clamp-1 ${
-                                    isSelected ? 'text-amber-300' : 'text-white group-hover:text-sky-200'
-                                  }`}
-                                >
-                                  {pkg.name}
-                                </span>
-                                {ribbon && (
-                                  <span
-                                    className={`inline-flex items-center px-1.5 sm:px-2 py-0.5 rounded-full text-[8px] sm:text-[9px] font-black uppercase tracking-wider bg-gradient-to-r ${ribbon.cls}`}
-                                  >
-                                    {ribbon.text}
-                                  </span>
-                                )}
-                              </div>
-
-                              {/* Subtitle details */}
-                              <div className="flex items-center gap-2 mt-1 text-[9.5px] sm:text-[10.5px] text-slate-400 font-semibold truncate">
-                                {isPass ? (
-                                  <span className="inline-flex items-center gap-0.5 text-amber-300 font-bold">
-                                    <span>⚡</span>
-                                    <span>Daily Pass</span>
-                                  </span>
-                                ) : (
-                                  <span className="inline-flex items-center gap-0.5 text-cyan-300 font-bold">
-                                    <span>💎</span>
-                                    <span>{pkg.diamondAmount} ពេជ្រ</span>
-                                  </span>
-                                )}
-                                <span className="text-slate-600 font-bold">•</span>
-                                <span className="font-mono text-slate-400 group-hover:text-slate-300">
-                                  ~{Math.round(pkg.price * 4100).toLocaleString()} ៛
-                                </span>
-                              </div>
-                            </div>
-                          </div>
-
-                          {/* Right Section: Price & Cart Action Button */}
-                          <div className="flex items-center gap-2 sm:gap-3 shrink-0 relative z-10 pl-2">
-                            <div className="flex flex-col items-end">
-                              <span
-                                className={`font-black font-mono text-sm sm:text-base tracking-tight leading-none ${
-                                  isSelected
-                                    ? 'text-amber-300'
-                                    : 'text-[#00F5B8]'
-                                }`}
-                              >
-                                ${pkg.price.toFixed(2)}
-                              </span>
-                            </div>
-
-                            {/* Buy Button Pill */}
-                            <div
-                              className={`h-8 sm:h-8.5 px-2.5 sm:px-3 rounded-xl flex items-center justify-center gap-1.5 text-[11px] sm:text-xs font-black transition-all ${
-                                isSelected
-                                  ? 'bg-gradient-to-r from-amber-400 to-yellow-400 text-slate-950'
-                                  : 'bg-gradient-to-r from-[#00E599] to-[#00F5B8] text-slate-950 group-hover:scale-105 active:scale-95'
-                              }`}
-                            >
-                              <svg className="w-3.5 h-3.5 fill-current shrink-0" viewBox="0 0 24 24">
-                                <path d="M7 18c-1.1 0-1.99.9-1.99 2S5.9 22 7 22s2-.9 2-2-.9-2-2-2zM1 2v2h2l3.6 7.59-1.35 2.45c-.16.28-.25.61-.25.96 0 1.1.9 2 2 2h12v-2H7.42c-.14 0-.25-.11-.25-.25l.03-.12.9-1.63h7.45c.75 0 1.41-.41 1.75-1.03l3.58-6.49c.08-.14.12-.31.12-.48 0-.55-.45-1-1-1H5.21l-.94-2H1zm16 16c-1.1 0-1.99.9-1.99 2s.89 2 1.99 2 2-.9 2-2-.9-2-2-2z" />
-                              </svg>
-                              <span>ទិញ</span>
-                            </div>
-                          </div>
-                        </div>
-                      );
-                    })}
-                  </div>
-                );
-                })()}
+                {renderProductCards(inlineFilteredProducts, false)}
               </div>
               {/* Bottom fade + scroll-down hint */}
               <div className={`pointer-events-none absolute left-0 right-0 bottom-0 h-14 z-10 bg-gradient-to-t from-[#030817] via-[#030817]/80 to-transparent flex items-end justify-center pb-1.5 transition-opacity duration-200 ${listScroll.atBottom ? 'opacity-0' : 'opacity-100'}`}>
@@ -2892,49 +2961,47 @@ const TopUp = () => {
       {/* MOBILE STICKY BOTTOM "PAY NOW" ACTION DOCK (lg:hidden)     */}
       {/* High-converting, sticky payment bar on mobile & tablet    */}
       {/* ======================================================== */}
-      <aside aria-label="Mobile Payment Bar" className="lg:hidden fixed bottom-2.5 sm:bottom-4 left-1/2 -translate-x-1/2 z-40 w-[94%] max-w-md select-none font-khmer">
-        <div className="relative flex items-center justify-between gap-2 sm:gap-2.5 p-2 sm:p-2.5 bg-[#090f1e]/95 backdrop-blur-2xl border border-sky-500/40 rounded-2xl sm:rounded-full shadow-[0_15px_40px_rgba(0,0,0,0.9),0_0_25px_rgba(14,165,233,0.25)] ring-1 ring-white/10">
+      <aside aria-label="Mobile Payment Bar" className="lg:hidden fixed bottom-2.5 sm:bottom-4 left-1/2 -translate-x-1/2 z-40 w-[95%] max-w-md select-none font-khmer">
+        <div className="relative overflow-hidden flex items-center justify-between gap-2 p-2 sm:p-2.5 bg-gradient-to-r from-[#031d1d]/95 via-[#042827]/95 to-[#02222e]/95 backdrop-blur-2xl border border-[#00F5A0]/50 rounded-2xl sm:rounded-full shadow-[0_15px_40px_rgba(0,0,0,0.95),0_0_28px_rgba(0,245,160,0.28),inset_0_1px_1px_rgba(0,245,160,0.4)] ring-1 ring-[#00F5A0]/25">
           
-          {/* Quick Back to Home icon */}
-          <Link
-            to="/"
-            onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
-            className="flex flex-col items-center justify-center w-10 sm:w-11 h-10 sm:h-11 rounded-xl bg-slate-900/90 hover:bg-slate-800 text-slate-300 hover:text-cyan-400 border border-white/10 shrink-0 transition-all active:scale-95 shadow-sm"
-            title={language === 'km' ? 'ត្រឡប់ទៅទំព័រដើម' : 'Home'}
-          >
-            <svg className="w-4 h-4 fill-current" viewBox="0 0 24 24">
-              <path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z" />
-            </svg>
-            <span className="text-[9px] font-bold mt-0.5 leading-none">
-              {language === 'km' ? 'ដើម' : 'Home'}
-            </span>
-          </Link>
+          {/* Ambient Highlight Glow Layers matching Pay Now button */}
+          <div className="absolute inset-0 bg-gradient-to-r from-[#00F5A0]/10 via-[#00E5B0]/5 to-[#00D4FF]/15 pointer-events-none rounded-2xl sm:rounded-full" />
+          <div className="absolute right-0 top-1/2 -translate-y-1/2 w-44 h-16 bg-[#00F5A0]/20 rounded-full blur-xl pointer-events-none" />
+          <div className="absolute left-1 top-1/2 -translate-y-1/2 w-28 h-12 bg-[#00D4FF]/15 rounded-full blur-xl pointer-events-none" />
 
-          {/* Selected Package & Total Price Summary */}
-          <div className="flex-1 flex flex-col justify-center min-w-0 pl-1">
-            <div className="flex items-center gap-1.5 min-w-0">
-              <span className="text-[11px] sm:text-xs font-bold text-slate-200 truncate">
-                {selectedProduct?.name || (language === 'km' ? 'ជ្រើសរើសកញ្ចប់' : 'Select Package')}
-              </span>
-              {selectedProduct?.tag && (
-                <span className="hidden xs:inline-block px-1.5 py-0.2 rounded bg-amber-500/20 text-amber-300 border border-amber-500/40 text-[9px] font-bold shrink-0">
-                  {selectedProduct.tag}
-                </span>
-              )}
+          {/* Selected Package Thumbnail & Total Price Summary */}
+          <div className="flex-1 flex items-center gap-2 min-w-0 pl-1 relative z-10">
+            {/* Mini Package Chest / Icon with matching highlight border */}
+            <div className="w-8 h-8 xs:w-9 xs:h-9 rounded-xl bg-[#021818]/90 border border-[#00F5A0]/40 p-0.5 flex items-center justify-center shrink-0 shadow-inner">
+              <ProductPackageImage pkg={selectedProduct || {}} size="xs" />
             </div>
-            <div className="flex items-baseline gap-1 mt-0.5">
-              <span className="text-[10px] text-slate-400 font-medium">
-                {language === 'km' ? 'សរុប:' : 'Total:'}
-              </span>
-              <span className="text-base sm:text-lg font-black text-emerald-400 tracking-tight leading-none drop-shadow-[0_0_8px_rgba(16,185,129,0.4)]">
-                {currency === 'KHR'
-                  ? `${Math.round((selectedProduct?.price || 0.95) * 4100).toLocaleString()} ៛`
-                  : `$${(selectedProduct?.price || 0.95).toFixed(2)}`}
-              </span>
+
+            {/* Package Name & Price */}
+            <div className="flex-1 min-w-0">
+              <div className="flex items-center gap-1.5 min-w-0">
+                <span className="text-[11px] sm:text-xs font-black text-white truncate">
+                  {selectedProduct?.name || (language === 'km' ? 'ជ្រើសរើសកញ្ចប់' : 'Select Package')}
+                </span>
+                {selectedProduct?.tag && (
+                  <span className="hidden xs:inline-block px-1.5 py-0.2 rounded bg-[#00F5A0]/20 text-[#00F5A0] border border-[#00F5A0]/40 text-[8.5px] font-black shrink-0">
+                    {selectedProduct.tag}
+                  </span>
+                )}
+              </div>
+              <div className="flex items-baseline gap-1 mt-0.5">
+                <span className="text-[10px] text-emerald-200/70 font-medium">
+                  {language === 'km' ? 'សរុប:' : 'Total:'}
+                </span>
+                <span className="text-sm sm:text-base font-black text-[#00F5A0] tracking-tight leading-none drop-shadow-[0_0_10px_rgba(0,245,160,0.6)] font-mono">
+                  {currency === 'KHR'
+                    ? `${Math.round((selectedProduct?.price || 0.95) * 4100).toLocaleString()} ៛`
+                    : `$${(selectedProduct?.price || 0.95).toFixed(2)}`}
+                </span>
+              </div>
             </div>
           </div>
 
-          {/* High-Converting Instant "Pay Now" Button */}
+          {/* High-Converting Instant "Pay Now" Button with Professional Emojis */}
           <button
             type="button"
             id="mobile_sticky_pay_button"
@@ -2952,35 +3019,32 @@ const TopUp = () => {
               handleProceedToPayment();
             }}
             disabled={loading || isTopupDisabled}
-            className={`px-3.5 sm:px-4 py-2 sm:py-2.5 rounded-xl sm:rounded-full font-black text-xs sm:text-sm uppercase tracking-wide flex items-center justify-center gap-1.5 shadow-lg transition-all active:scale-95 shrink-0 select-none ${
+            className={`relative z-10 px-3.5 xs:px-4 sm:px-5 py-2 xs:py-2.5 rounded-xl sm:rounded-full font-black text-xs sm:text-sm uppercase tracking-wide flex items-center justify-center gap-1.5 transition-all active:scale-95 shrink-0 select-none group border border-white/40 ${
               loading
                 ? 'bg-sky-600/70 text-white cursor-wait opacity-90'
                 : isTopupDisabled
                 ? 'bg-slate-700/80 text-slate-400 cursor-not-allowed'
-                : 'bg-gradient-to-r from-emerald-500 via-teal-500 to-cyan-500 hover:from-emerald-400 hover:to-cyan-400 text-slate-950 shadow-[0_0_20px_rgba(16,185,129,0.35)] cursor-pointer'
+                : 'bg-gradient-to-r from-[#00F5A0] via-[#00E5B0] to-[#00D4FF] hover:from-[#00F5B0] hover:to-[#00E5FF] text-slate-950 shadow-[0_4px_18px_rgba(0,245,160,0.42),inset_0_1px_0_rgba(255,255,255,0.7)] cursor-pointer'
             }`}
           >
             {loading ? (
               <div className="flex items-center gap-1.5 px-1">
-                <svg className="animate-spin w-4 h-4 text-white" viewBox="0 0 24 24" fill="none">
+                <svg className="animate-spin w-4 h-4 text-slate-950" viewBox="0 0 24 24" fill="none">
                   <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
                   <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z" />
                 </svg>
-                <span className="text-[11px] font-bold text-white">{language === 'km' ? 'កំពុងភ្ជាប់...' : 'Connecting...'}</span>
+                <span className="text-[11px] font-black text-slate-950">{language === 'km' ? 'កំពុងភ្ជាប់...' : 'Connecting...'}</span>
               </div>
             ) : (
-              <div className="flex items-center gap-1.5">
-                <div className="flex flex-col items-start leading-tight">
-                  <span className="font-black text-xs sm:text-sm text-slate-950 flex items-center gap-1">
-                    ⚡ {language === 'km' ? 'ទូទាត់ឥឡូវ' : 'Pay Now'}
-                  </span>
-                  <span className="text-[9px] font-bold text-slate-900/85">
-                    ABA KHQR
-                  </span>
-                </div>
-                <svg className="w-3.5 h-3.5 text-slate-950 shrink-0 ml-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M9 5l7 7-7 7" />
-                </svg>
+              <div className="flex items-center gap-1.5 sm:gap-2">
+                <span className="text-sm sm:text-base leading-none shrink-0 filter drop-shadow-sm">💳</span>
+                <span className="font-black text-xs sm:text-sm text-slate-950 tracking-wider">
+                  {language === 'km' ? 'ទូទាត់ឥឡូវ' : 'PAY NOW'}
+                </span>
+                <span className="text-xs leading-none text-slate-950/80">⚡</span>
+                <span className="w-4 h-4 xs:w-4.5 xs:h-4.5 rounded-full bg-slate-950/20 text-slate-950 flex items-center justify-center text-[11px] font-black shrink-0 transition-transform group-hover:translate-x-0.5">
+                  ›
+                </span>
               </div>
             )}
           </button>
@@ -3176,6 +3240,285 @@ const TopUp = () => {
 
 
       {/* ======================================================== */}
+            {/* ======================================================== */}
+      {/* FULL DISPLAY PACKAGE SELECTION MODAL (z-[9999])           */}
+      {/* "Press to Select - Full Display with Easy Scrolling & Close" */}
+      {/* ======================================================== */}
+      {showPackageModal && (
+        <div className="fixed inset-0 z-[9999] bg-[#030713]/95 backdrop-blur-2xl flex flex-col animate-fadeIn select-none overflow-hidden h-[100dvh] w-full">
+          {/* 1. Modal Top Bar (Sticky) */}
+          <header className="shrink-0 px-3 sm:px-6 py-2.5 sm:py-3.5 bg-gradient-to-b from-[#091124] to-[#060c1c] border-b border-slate-800/90 shadow-xl flex items-center justify-between gap-3">
+            {/* Left: Game & Title */}
+            <div className="flex items-center gap-2.5 min-w-0">
+              <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-slate-900 border border-amber-400/50 p-1 flex items-center justify-center overflow-hidden shrink-0 shadow-md">
+                <img
+                  src={selectedGame.image || selectedGame.fallbackImage || '/mlbb-logo.png'}
+                  alt={selectedGame.name}
+                  className="w-full h-full object-cover rounded-lg"
+                  onError={(e) => { e.currentTarget.src = '/mlbb-logo.png'; }}
+                />
+              </div>
+              <div className="min-w-0">
+                <div className="flex items-center gap-1.5 flex-wrap">
+                  <h2 className="text-xs sm:text-base font-black text-white truncate font-khmer">
+                    {language === 'km' ? 'ចុចដើម្បីជ្រើសរើសកញ្ចប់' : 'Press to Select Package'}
+                  </h2>
+                  <span className="px-2 py-0.5 rounded-full bg-amber-400/20 border border-amber-400/40 text-[9px] sm:text-[10px] font-black text-amber-300 shrink-0">
+                    {language === 'km' ? 'ពេញអេក្រង់' : 'Full Display'}
+                  </span>
+                </div>
+                <p className="text-[10px] sm:text-xs text-slate-400 truncate flex items-center gap-1.5">
+                  <span className="font-bold text-sky-300">{selectedGame.name}</span>
+                  <span>•</span>
+                  <span>{modalFilteredProducts.length} {language === 'km' ? 'កញ្ចប់' : 'packages'}</span>
+                </p>
+              </div>
+            </div>
+
+            {/* Right: Currency Switcher & Button Close Display */}
+            <div className="flex items-center gap-2 shrink-0">
+              {/* Currency Switcher */}
+              <div className="hidden xs:flex items-center p-0.5 bg-slate-900/90 rounded-xl border border-slate-700/80">
+                <button
+                  type="button"
+                  onClick={() => handleSwitchCurrency('USD')}
+                  className={`py-1 px-2 rounded-lg text-[10px] font-black transition-all cursor-pointer ${
+                    currency === 'USD'
+                      ? 'bg-amber-400 text-slate-950 font-black'
+                      : 'text-slate-400 hover:text-white'
+                  }`}
+                >
+                  USD ($)
+                </button>
+                <button
+                  type="button"
+                  onClick={() => handleSwitchCurrency('KHR')}
+                  className={`py-1 px-2 rounded-lg text-[10px] font-black transition-all cursor-pointer font-khmer ${
+                    currency === 'KHR'
+                      ? 'bg-emerald-400 text-slate-950 font-black'
+                      : 'text-slate-400 hover:text-white'
+                  }`}
+                >
+                  KHR (៛)
+                </button>
+              </div>
+
+              {/* BUTTON CLOSE DISPLAY */}
+              <button
+                type="button"
+                onClick={() => setShowPackageModal(false)}
+                className="flex items-center gap-1.5 py-1.5 px-3 sm:py-2 sm:px-4 rounded-xl bg-gradient-to-r from-rose-500/20 to-red-600/30 hover:from-rose-500/40 hover:to-red-600/50 border border-rose-500/60 text-rose-200 hover:text-white text-xs sm:text-sm font-black transition-all cursor-pointer shadow-lg shadow-rose-950/50 active:scale-95"
+                aria-label="Close full display"
+              >
+                <svg className="w-4 h-4 text-rose-400 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                  <line x1="18" y1="6" x2="6" y2="18"></line>
+                  <line x1="6" y1="6" x2="18" y2="18"></line>
+                </svg>
+                <span className="font-khmer">{language === 'km' ? 'បិទ' : 'Close'}</span>
+              </button>
+            </div>
+          </header>
+
+          {/* 2. Modal Sub-Header: Search + Categories + View Switcher */}
+          <div className="shrink-0 bg-[#070e20]/95 border-b border-slate-800/80 px-3 sm:px-6 py-2.5 space-y-2 backdrop-blur-md">
+            {/* Row A: Search Bar + Layout Switcher */}
+            <div className="flex items-center gap-2 justify-between">
+              {/* Search */}
+              <div className="relative flex-1 max-w-md">
+                <input
+                  type="text"
+                  value={modalSearchQuery}
+                  onChange={(e) => setModalSearchQuery(e.target.value)}
+                  placeholder={language === 'km' ? 'ស្វែងរកកញ្ចប់ (ឧ. Weekly, 50, 100)...' : 'Search packages (e.g. Weekly, 100)...'}
+                  className="w-full bg-slate-900/90 border border-slate-700/80 rounded-xl pl-8 pr-7 py-1.5 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-cyan-400 focus:ring-1 focus:ring-cyan-400 transition-all font-khmer"
+                />
+                <svg className="w-3.5 h-3.5 text-slate-400 absolute left-2.5 top-1/2 -translate-y-1/2 pointer-events-none" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+                {modalSearchQuery && (
+                  <button
+                    type="button"
+                    onClick={() => setModalSearchQuery('')}
+                    className="absolute right-2 top-1/2 -translate-y-1/2 text-slate-400 hover:text-white text-xs w-4 h-4 rounded-full flex items-center justify-center cursor-pointer"
+                  >
+                    ✕
+                  </button>
+                )}
+              </div>
+
+              {/* Layout Switcher inside Modal */}
+              <div className="inline-flex items-center p-0.5 bg-slate-900/90 rounded-xl border border-slate-800 gap-0.5 shrink-0">
+                <button
+                  type="button"
+                  onClick={() => setLayoutMode('tiles')}
+                  className={`py-1 px-2 rounded-lg text-xs font-bold transition-all cursor-pointer ${
+                    layoutMode === 'tiles' ? 'bg-cyan-500/20 text-cyan-300 border border-cyan-400/40' : 'text-slate-400 hover:text-white'
+                  }`}
+                  title="Tiles"
+                >
+                  <span className="text-[10px] font-extrabold">{t('layout_tiles')}</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setLayoutMode('grid')}
+                  className={`py-1 px-2 rounded-lg text-xs font-bold transition-all cursor-pointer ${
+                    layoutMode === 'grid' ? 'bg-cyan-500/20 text-cyan-300 border border-cyan-400/40' : 'text-slate-400 hover:text-white'
+                  }`}
+                  title="Large"
+                >
+                  <span className="text-[10px] font-extrabold">{language === 'km' ? 'រូបធំ' : 'Large'}</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setLayoutMode('list')}
+                  className={`py-1 px-2 rounded-lg text-xs font-bold transition-all cursor-pointer ${
+                    layoutMode === 'list' ? 'bg-cyan-500/20 text-cyan-300 border border-cyan-400/40' : 'text-slate-400 hover:text-white'
+                  }`}
+                  title="List"
+                >
+                  <span className="text-[10px] font-extrabold">{t('layout_list')}</span>
+                </button>
+              </div>
+            </div>
+
+            {/* Row B: Horizontal scrollable Category Tabs */}
+            <div className="flex items-center gap-1.5 overflow-x-auto no-scrollbar py-0.5">
+              <button
+                type="button"
+                onClick={() => setProductCategoryTab('all')}
+                className={`py-1.5 px-3 rounded-xl text-xs font-bold transition-all whitespace-nowrap flex items-center gap-1 cursor-pointer shrink-0 ${
+                  productCategoryTab === 'all'
+                    ? 'bg-amber-400 text-slate-950 font-black shadow-md'
+                    : 'bg-slate-900/80 text-slate-400 hover:text-white border border-slate-800'
+                }`}
+              >
+                <span>🌐</span>
+                <span>{t('tab_all_pkgs')}</span>
+                <span className="text-[10px] opacity-75 font-mono">({products.length})</span>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => setProductCategoryTab('passes')}
+                className={`py-1.5 px-3 rounded-xl text-xs font-bold transition-all whitespace-nowrap flex items-center gap-1 cursor-pointer shrink-0 ${
+                  productCategoryTab === 'passes'
+                    ? 'bg-cyan-400 text-slate-950 font-black shadow-md'
+                    : 'bg-slate-900/80 text-cyan-300 hover:text-white border border-slate-800'
+                }`}
+              >
+                <span>🔥</span>
+                <span>{isFreefire ? 'Beat seller' : t('tab_pass_pkgs')}</span>
+                <span className="text-[10px] px-1.5 py-0.2 rounded-full bg-slate-950/40 font-mono font-bold">
+                  {products.filter(p => isFreefire ? (p.category === 'Beat seller') : (!p.isLevelPass && isPassItem(p))).length}
+                </span>
+              </button>
+
+              {isFreefire && (
+                <button
+                  type="button"
+                  onClick={() => setProductCategoryTab('level_pass')}
+                  className={`py-1.5 px-3 rounded-xl text-xs font-bold transition-all whitespace-nowrap flex items-center gap-1 cursor-pointer shrink-0 ${
+                    productCategoryTab === 'level_pass'
+                      ? 'bg-emerald-400 text-slate-950 font-black shadow-md'
+                      : 'bg-slate-900/80 text-emerald-300 hover:text-white border border-slate-800'
+                  }`}
+                >
+                  <span>🎖️</span>
+                  <span>{language === 'km' ? 'កញ្ចប់ Level Pass' : 'Level Pass'}</span>
+                  <span className="text-[10px] px-1.5 py-0.2 rounded-full bg-slate-950/40 font-mono font-bold">
+                    {products.filter(p => p.isLevelPass || p.name?.toLowerCase().includes('level up')).length}
+                  </span>
+                </button>
+              )}
+
+              <button
+                type="button"
+                onClick={() => setProductCategoryTab('diamonds')}
+                className={`py-1.5 px-3 rounded-xl text-xs font-bold transition-all whitespace-nowrap flex items-center gap-1 cursor-pointer shrink-0 ${
+                  productCategoryTab === 'diamonds'
+                    ? 'bg-purple-400 text-slate-950 font-black shadow-md'
+                    : 'bg-slate-900/80 text-purple-300 hover:text-white border border-slate-800'
+                }`}
+              >
+                <span>💎</span>
+                <span>{isFreefire ? 'Other Packages' : t('tab_diamond_pkgs')}</span>
+                <span className="text-[10px] px-1.5 py-0.2 rounded-full bg-slate-950/40 font-mono font-bold">
+                  {products.filter(p => isFreefire ? (p.category === 'Other Packages') : (!p.isLevelPass && !isPassItem(p))).length}
+                </span>
+              </button>
+            </div>
+          </div>
+
+          {/* 3. Modal Scrollable Area (EASY SCROLLING) */}
+          <div className="flex-1 overflow-y-auto overscroll-contain p-3 sm:p-6 pb-28 product-scroll-frame bg-[#040816]">
+            {modalFilteredProducts.length === 0 ? (
+              <div className="py-20 text-center space-y-2">
+                <div className="text-3xl">🔍</div>
+                <div className="text-sm font-bold text-slate-300 font-khmer">
+                  {language === 'km' ? 'រកមិនឃើញកញ្ចប់នេះទេ' : 'No packages found matching your search.'}
+                </div>
+                <button
+                  type="button"
+                  onClick={() => { setModalSearchQuery(''); setProductCategoryTab('all'); }}
+                  className="px-3 py-1.5 rounded-xl bg-slate-800 text-xs text-sky-400 hover:bg-slate-700 cursor-pointer font-khmer"
+                >
+                  {language === 'km' ? 'បង្ហាញទាំងអស់ឡើងវិញ' : 'Reset filters'}
+                </button>
+              </div>
+            ) : (
+              renderProductCards(modalFilteredProducts, true)
+            )}
+          </div>
+
+          {/* 4. Modal Bottom Sticky Footer Bar */}
+          <footer className="shrink-0 bg-[#071126]/98 backdrop-blur-xl border-t border-slate-800/90 p-3 sm:px-6 shadow-2xl flex items-center justify-between gap-3">
+            {/* Selected Item Info */}
+            <div className="flex items-center gap-2.5 min-w-0">
+              <div className="w-10 h-10 rounded-xl bg-slate-900/80 border border-amber-400/50 p-0.5 flex items-center justify-center shrink-0">
+                <ProductPackageImage pkg={selectedProduct} size="xs" />
+              </div>
+              <div className="min-w-0">
+                <div className="text-[10px] text-slate-400 uppercase font-black tracking-wider truncate font-khmer">
+                  {language === 'km' ? 'បានជ្រើសរើស' : 'Selected'}:
+                </div>
+                <div className="text-xs sm:text-sm font-black text-amber-300 truncate font-khmer">
+                  {selectedProduct.name}
+                </div>
+                <div className="text-xs sm:text-sm font-black text-emerald-400 font-mono">
+                  {currency === 'KHR'
+                    ? `${Math.round(selectedProduct.price * 4100).toLocaleString()} ៛`
+                    : `$${selectedProduct.price.toFixed(2)} USD`}
+                </div>
+              </div>
+            </div>
+
+            {/* Buttons: Close & Confirm */}
+            <div className="flex items-center gap-2 shrink-0">
+              <button
+                type="button"
+                onClick={() => setShowPackageModal(false)}
+                className="py-2 px-3 sm:px-4 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white text-xs sm:text-sm font-black transition-all cursor-pointer active:scale-95 border border-slate-700 font-khmer"
+              >
+                {language === 'km' ? 'បិទ' : 'Close'}
+              </button>
+
+              <button
+                type="button"
+                onClick={() => {
+                  setShowPackageModal(false);
+                  if (checkoutSectionRef.current) {
+                    checkoutSectionRef.current.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                  }
+                }}
+                className="py-2 px-3.5 sm:px-5 rounded-xl bg-gradient-to-r from-emerald-400 to-teal-400 hover:from-emerald-300 hover:to-teal-300 text-slate-950 text-xs sm:text-sm font-black transition-all cursor-pointer active:scale-95 shadow-lg shadow-emerald-500/25 flex items-center gap-1.5 font-khmer"
+              >
+                <svg className="w-4 h-4 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3"><polyline points="20 6 9 17 4 12"/></svg>
+                <span>{language === 'km' ? 'ជ្រើសរើសរួចរាល់' : 'Done'}</span>
+              </button>
+            </div>
+          </footer>
+        </div>
+      )}
+
+
       {/* ID GUIDE MODAL (z-[9999]) */}
       {/* ======================================================== */}
       {showIdGuide && (
