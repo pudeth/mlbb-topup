@@ -58,7 +58,7 @@ export const DEFAULT_GAMES = [
     rating: '4.9 ⭐',
     deliveryTime: 'Instant 10s',
     route: '/topup?game=mlbb&tab=pass',
-    status: 'Paused',
+    status: 'Closed',
     isPopular: true,
     description: 'MLBB 515 ALLSTAR & Jujutsu Kaisen 29 Tickets Vouchers & Pre-Orders.'
   },
@@ -76,7 +76,7 @@ export const DEFAULT_GAMES = [
     rating: '5.0 ⭐',
     deliveryTime: '10 - 30s',
     route: '/topup?game=mlbb&tab=pass',
-    status: 'Active',
+    status: 'Closed',
     isPopular: true,
     description: 'Level Up Pass and Super Value Diamond Growth Bundles.'
   },
@@ -117,7 +117,7 @@ export const DEFAULT_GAMES = [
     rating: '4.8 ⭐',
     deliveryTime: '10 - 30s',
     route: '/topup?game=magic_chess',
-    status: 'Paused',
+    status: 'Closed',
     isPopular: true,
     description: 'Magic Chess Go Go Little Commander Skins and Battle Pass.'
   },
@@ -158,7 +158,7 @@ export const DEFAULT_GAMES = [
     rating: '4.9 ⭐',
     deliveryTime: '10s - 1m',
     route: '/topup?game=pubgm',
-    status: 'Active',
+    status: 'Closed',
     isPopular: true,
     description: 'Automated PUBG Mobile Global Unknown Cash (UC) and Royale Pass vouchers.'
   },
@@ -193,7 +193,7 @@ export const DEFAULT_GAMES = [
     rating: '4.9 ⭐',
     deliveryTime: '10 - 30s',
     route: '/topup?game=rov',
-    status: 'Active',
+    status: 'Closed',
     isPopular: true,
     description: 'Realm of Valor (ROV / Arena of Valor) coupons and elite pass top-up.'
   },
@@ -211,7 +211,7 @@ export const DEFAULT_GAMES = [
     rating: '5.0 ⭐',
     deliveryTime: 'Instant 10s',
     route: '/topup?game=steam',
-    status: 'Active',
+    status: 'Closed',
     isPopular: true,
     description: 'Steam Wallet USD global activation codes and direct store top-up.'
   },
@@ -229,7 +229,7 @@ export const DEFAULT_GAMES = [
     rating: '4.9 ⭐',
     deliveryTime: '10 - 30s',
     route: '/topup?game=minecraft',
-    status: 'Active',
+    status: 'Closed',
     isPopular: true,
     description: 'Official Minecraft Minecoins and Realm subscriptions.'
   },
@@ -247,7 +247,7 @@ export const DEFAULT_GAMES = [
     rating: '4.8 ⭐',
     deliveryTime: '10 - 30s',
     route: '/topup?game=onepiece',
-    status: 'Paused',
+    status: 'Closed',
     isPopular: true,
     description: 'One Piece Bounty Rush Rainbow Diamonds instant direct recharge.'
   },
@@ -336,7 +336,7 @@ export const DEFAULT_GAMES = [
     rating: '4.9 ⭐',
     deliveryTime: '10s - 1m',
     route: '/topup?game=zzz',
-    status: 'Active',
+    status: 'Closed',
     isPopular: true,
     description: 'Direct UID recharge for Monochromes and Inter-Knot Membership.'
   },
@@ -354,7 +354,7 @@ export const DEFAULT_GAMES = [
     rating: '4.9 ⭐',
     deliveryTime: 'Instant - 1m',
     route: '/topup?game=star_rail',
-    status: 'Active',
+    status: 'Closed',
     isPopular: true,
     description: 'Oneiric Shards and Express Supply Pass reload directly via player UID.'
   },
@@ -372,7 +372,7 @@ export const DEFAULT_GAMES = [
     rating: '4.9 ⭐',
     deliveryTime: '10s - 1m',
     route: '/topup?game=genshin',
-    status: 'Active',
+    status: 'Closed',
     isPopular: true,
     description: 'Genesis Crystals and Blessing of the Welkin Moon direct UID top-up.'
   },
@@ -390,7 +390,7 @@ export const DEFAULT_GAMES = [
     rating: '4.8 ⭐',
     deliveryTime: '10 - 30s',
     route: '/topup?game=hok',
-    status: 'Active',
+    status: 'Closed',
     isPopular: true,
     description: 'Honor of Kings Global & SEA server Tokens and Weekly Cards top-up.'
   },
@@ -407,7 +407,7 @@ export const DEFAULT_GAMES = [
     rating: '4.8 ⭐',
     deliveryTime: '10 - 45s',
     route: '/topup?game=brawlstars',
-    status: 'Active',
+    status: 'Closed',
     isPopular: false,
     description: 'Direct Supercell player tag top-up for Gems, Brawl Pass Plus, and Gold Pass.'
   },
@@ -424,7 +424,7 @@ export const DEFAULT_GAMES = [
     rating: '4.8 ⭐',
     deliveryTime: 'Instant Code',
     route: '/topup?game=roblox',
-    status: 'Active',
+    status: 'Closed',
     isPopular: true,
     description: 'Instant Robux top-up and digital gift card codes delivered with automatic verification.'
   },
@@ -446,7 +446,7 @@ export const DEFAULT_GAMES = [
     rating: '5.0 ⭐',
     deliveryTime: 'Instant API',
     route: '/topup?service=telegram_stars',
-    status: 'Active',
+    status: 'Closed',
     isPopular: true,
     description: 'Direct Telegram username top-up for Telegram Stars to use in mini-apps, bots, and digital media.'
   },
@@ -468,7 +468,7 @@ export const DEFAULT_GAMES = [
     rating: '5.0 ⭐',
     deliveryTime: 'Instant Balance',
     route: '/topup?service=steam',
-    status: 'Active',
+    status: 'Closed',
     isPopular: true,
     description: 'Direct login top-up for Steam accounts with zero commission.'
   },
@@ -485,7 +485,7 @@ export const DEFAULT_GAMES = [
     rating: '4.9 ⭐',
     deliveryTime: '1 - 3 mins',
     route: '/topup?service=steam_gift',
-    status: 'Active',
+    status: 'Closed',
     isPopular: false,
     description: 'Automated Steam bot sending gifts directly to your Steam friend profile.'
   },
@@ -506,7 +506,7 @@ export const DEFAULT_GAMES = [
     rating: '4.9 ⭐',
     deliveryTime: 'Instant Link',
     route: '/topup?service=discord',
-    status: 'Active',
+    status: 'Closed',
     isPopular: true,
     description: 'Discord Nitro monthly & yearly activation gift links with 2 free Server Boosts.'
   },
@@ -523,7 +523,7 @@ export const DEFAULT_GAMES = [
     rating: '4.9 ⭐',
     deliveryTime: 'Instant Code',
     route: '/topup?service=googleplay',
-    status: 'Active',
+    status: 'Closed',
     isPopular: true,
     description: 'Google Play digital balance cards for Android apps, game in-app purchases, and media.'
   },
@@ -540,7 +540,7 @@ export const DEFAULT_GAMES = [
     rating: '4.9 ⭐',
     deliveryTime: 'Instant Code',
     route: '/topup?service=apple',
-    status: 'Active',
+    status: 'Closed',
     isPopular: true,
     description: 'Direct Apple Store credit for iPhone/iPad game purchases, iCloud, and Apple Music.'
   },
@@ -557,23 +557,91 @@ export const DEFAULT_GAMES = [
     rating: '4.9 ⭐',
     deliveryTime: 'Instant PIN',
     route: '/topup?service=razergold',
-    status: 'Active',
+    status: 'Closed',
     isPopular: true,
     description: 'Unified virtual credits for over 42,000 games and digital entertainment titles worldwide.'
   }
 ];
 
-const STORAGE_KEY = 'mlbb_topup_custom_games_v7';
-const LEGACY_STORAGE_KEY = 'mlbb_topup_custom_games_v6';
+const STORAGE_KEY = 'mlbb_topup_custom_games_v8';
+const LEGACY_STORAGE_KEY = 'mlbb_topup_custom_games_v7';
+const STATUSES_STORAGE_KEY = 'mlbb_topup_game_statuses_v2';
+const LEGACY_STATUSES_KEY = 'mlbb_topup_game_statuses_v1';
+
+export const getSavedGameStatuses = () => {
+  try {
+    if (typeof localStorage !== 'undefined') {
+      const raw = localStorage.getItem(STATUSES_STORAGE_KEY) || localStorage.getItem(LEGACY_STATUSES_KEY);
+      if (raw) {
+        const parsed = JSON.parse(raw);
+        if (parsed && typeof parsed === 'object') return parsed;
+      }
+    }
+  } catch (e) {}
+  // Default factory setup: ONLY Mobile Legends and Free Fire are Active; all other games are Closed
+  return {
+    mlbb: 'Active',
+    freefire_kh: 'Active',
+    pubgm_auto: 'Closed',
+    level_up_pass: 'Closed',
+    mlbb_tickets: 'Closed',
+    magic_chess: 'Closed',
+    blood_strike: 'Closed',
+    rov: 'Closed',
+    steam_games: 'Closed',
+    minecraft: 'Closed',
+    roblox: 'Closed',
+    one_piece: 'Closed',
+    valorant: 'Closed',
+    mlbb_ph: 'Closed',
+    mlbb_id: 'Closed',
+    freefire_mena: 'Closed',
+    freefire_latam: 'Closed',
+    wuthering_waves: 'Closed',
+    zzz: 'Closed',
+    star_rail: 'Closed',
+    genshin: 'Closed',
+    hok: 'Closed',
+    brawlstars: 'Closed',
+    telegram_stars: 'Closed',
+    steam_topup_cis: 'Closed',
+    steam_gift_games: 'Closed',
+    discord_nitro: 'Closed',
+    google_play: 'Closed',
+    apple_itunes: 'Closed',
+    razer_gold: 'Closed',
+  };
+};
+
+export const saveGameStatusOverride = (gameId, newStatus) => {
+  try {
+    if (typeof localStorage === 'undefined') return;
+    const current = getSavedGameStatuses();
+    current[gameId] = newStatus;
+    localStorage.setItem(STATUSES_STORAGE_KEY, JSON.stringify(current));
+  } catch (e) {}
+};
+
+export const saveAllGameStatusOverrides = (statuses) => {
+  try {
+    if (typeof localStorage === 'undefined') return;
+    localStorage.setItem(STATUSES_STORAGE_KEY, JSON.stringify(statuses));
+  } catch (e) {}
+};
 
 const getApiUrls = () => {
   const isLocal = typeof window !== 'undefined' && (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1');
-  const base = process.env.REACT_APP_API_URL || (isLocal ? 'http://localhost:5000/api' : 'https://mlbb-backend-api.onrender.com/api');
-  const cleanBase = base.endsWith('/') ? base.slice(0, -1) : base;
+  const baseNet = process.env.REACT_APP_API_URL || (isLocal ? 'http://localhost:5000/api' : 'https://mlbb-backend-api.onrender.com/api');
+  const cleanNet = baseNet.endsWith('/') ? baseNet.slice(0, -1) : baseNet;
+
+  const basePython = process.env.REACT_APP_KHQR_URL || (isLocal ? 'http://localhost:5001/api' : 'https://mlbb-khqr-api.onrender.com/api');
+  const cleanPython = basePython.endsWith('/') ? basePython.slice(0, -1) : basePython;
 
   return [
-    `${cleanBase}/admin`,
-    cleanBase
+    cleanPython,          // 1. Direct MongoDB Atlas access!
+    `${cleanPython}/admin`,
+    cleanNet,             // 2. .NET API
+    `${cleanNet}/admin`
   ];
 };
 
@@ -653,6 +721,7 @@ export const normalizeGameFlags = (game) => {
 };
 
 export const getStoredGames = () => {
+  const savedStatuses = getSavedGameStatuses();
   try {
     let cached = localStorage.getItem(STORAGE_KEY);
     if (!cached) {
@@ -661,7 +730,13 @@ export const getStoredGames = () => {
     if (cached) {
       const parsed = JSON.parse(cached);
       if (Array.isArray(parsed) && parsed.length > 0) {
-        const normalized = parsed.map(g => normalizeGameFlags(g));
+        const normalized = parsed.map(g => {
+          const item = normalizeGameFlags(g);
+          if (savedStatuses && savedStatuses[item.id] !== undefined) {
+            item.status = savedStatuses[item.id];
+          }
+          return item;
+        });
         // Keep storage key synchronized with clean assets
         try {
           localStorage.setItem(STORAGE_KEY, JSON.stringify(normalized));
@@ -672,7 +747,13 @@ export const getStoredGames = () => {
   } catch (err) {
     console.warn('Error reading stored games:', err);
   }
-  const defaultNormalized = DEFAULT_GAMES.map(g => normalizeGameFlags(g));
+  const defaultNormalized = DEFAULT_GAMES.map(g => {
+    const item = normalizeGameFlags(g);
+    if (savedStatuses && savedStatuses[item.id] !== undefined) {
+      item.status = savedStatuses[item.id];
+    }
+    return item;
+  });
   try {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(defaultNormalized));
   } catch (e) {}
@@ -681,6 +762,8 @@ export const getStoredGames = () => {
 
 export const fetchStoredGames = async () => {
   const urls = getApiUrls();
+  const savedStatuses = getSavedGameStatuses();
+
   for (const base of urls) {
     try {
       const res = await fetch(`${base}/games?_t=${Date.now()}`, {
@@ -697,7 +780,14 @@ export const fetchStoredGames = async () => {
           : (Array.isArray(data?.games?.games) ? data.games.games : null);
 
         if (rawGames && rawGames.length > 0) {
-          const normalized = rawGames.map(g => normalizeGameFlags(g));
+          const normalized = rawGames.map(g => {
+            const item = normalizeGameFlags(g);
+            // Lock in saved status override chosen by user so backend cold defaults never revert it
+            if (savedStatuses && savedStatuses[item.id] !== undefined) {
+              item.status = savedStatuses[item.id];
+            }
+            return item;
+          });
           localStorage.setItem(STORAGE_KEY, JSON.stringify(normalized));
           if (typeof window !== 'undefined') {
             window.dispatchEvent(new Event('gamesConfigUpdated'));
@@ -713,13 +803,30 @@ export const fetchStoredGames = async () => {
 
 export const saveStoredGames = async (games) => {
   try {
-    const normalized = games.map(g => normalizeGameFlags(g));
+    // 1. Sync and persist explicit status overrides
+    const currentStatuses = getSavedGameStatuses();
+    games.forEach((g) => {
+      if (g.id && g.status) {
+        currentStatuses[g.id] = g.status;
+      }
+    });
+    saveAllGameStatusOverrides(currentStatuses);
+
+    // 2. Normalize and save to local storage
+    const normalized = games.map(g => {
+      const item = normalizeGameFlags(g);
+      if (currentStatuses[item.id] !== undefined) {
+        item.status = currentStatuses[item.id];
+      }
+      return item;
+    });
     localStorage.setItem(STORAGE_KEY, JSON.stringify(normalized));
     if (typeof window !== 'undefined') {
       window.dispatchEvent(new Event('gamesConfigUpdated'));
       window.dispatchEvent(new CustomEvent('gamesConfigUpdated', { detail: normalized }));
     }
-    // Broadcast to backend APIs
+
+    // 3. Broadcast to all backend APIs (MongoDB Atlas via Python microservice + .NET backend)
     const urls = getApiUrls();
     const token = typeof window !== 'undefined' ? localStorage.getItem('token') : null;
     const headers = { 'Content-Type': 'application/json' };
@@ -730,7 +837,7 @@ export const saveStoredGames = async (games) => {
         fetch(`${base}/games`, {
           method: 'POST',
           headers,
-          body: JSON.stringify({ games: normalized, list: normalized }),
+          body: JSON.stringify({ games: normalized, list: normalized, statuses: currentStatuses }),
         })
       )
     );
@@ -742,13 +849,15 @@ export const saveStoredGames = async (games) => {
 export const resetToDefaultGames = async () => {
   try {
     localStorage.removeItem(STORAGE_KEY);
+    localStorage.removeItem(STATUSES_STORAGE_KEY);
+    const defaults = DEFAULT_GAMES.map(g => normalizeGameFlags(g));
     const urls = getApiUrls();
     await Promise.allSettled(
       urls.map((base) =>
         fetch(`${base}/games`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ games: DEFAULT_GAMES }),
+          body: JSON.stringify({ games: defaults }),
         })
       )
     );

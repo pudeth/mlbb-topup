@@ -158,7 +158,7 @@ public class AdminController : BaseController
                 rating = "4.9 ⭐",
                 deliveryTime = "Instant 10s",
                 route = "/topup?game=mlbb&tab=pass",
-                status = "Active",
+                status = "Closed",
                 isPopular = true,
                 description = "MLBB 515 ALLSTAR & Jujutsu Kaisen 29 Tickets Vouchers & Pre-Orders."
             },
@@ -176,7 +176,7 @@ public class AdminController : BaseController
                 rating = "5.0 ⭐",
                 deliveryTime = "10 - 30s",
                 route = "/topup?game=mlbb&tab=pass",
-                status = "Active",
+                status = "Closed",
                 isPopular = true,
                 description = "Level Up Pass and Super Value Diamond Growth Bundles."
             },
@@ -194,7 +194,7 @@ public class AdminController : BaseController
                 rating = "4.9 ⭐",
                 deliveryTime = "10s - 1m",
                 route = "/topup?game=pubgm",
-                status = "Active",
+                status = "Closed",
                 isPopular = true,
                 description = "Automated PUBG Mobile Global Unknown Cash (UC) and Royale Pass vouchers."
             },
@@ -212,7 +212,7 @@ public class AdminController : BaseController
                 rating = "4.8 ⭐",
                 deliveryTime = "10 - 30s",
                 route = "/topup?game=magic_chess",
-                status = "Paused",
+                status = "Closed",
                 isPopular = true,
                 description = "Magic Chess Go Go Little Commander Skins and Battle Pass."
             },
@@ -247,7 +247,7 @@ public class AdminController : BaseController
                 rating = "4.9 ⭐",
                 deliveryTime = "10 - 30s",
                 route = "/topup?game=rov",
-                status = "Active",
+                status = "Closed",
                 isPopular = true,
                 description = "Realm of Valor (ROV / Arena of Valor) coupons and elite pass top-up."
             },
@@ -265,7 +265,7 @@ public class AdminController : BaseController
                 rating = "5.0 ⭐",
                 deliveryTime = "Instant 10s",
                 route = "/topup?game=steam",
-                status = "Active",
+                status = "Closed",
                 isPopular = true,
                 description = "Steam Wallet USD global activation codes and direct store top-up."
             },
@@ -283,7 +283,7 @@ public class AdminController : BaseController
                 rating = "4.9 ⭐",
                 deliveryTime = "10 - 30s",
                 route = "/topup?game=minecraft",
-                status = "Active",
+                status = "Closed",
                 isPopular = true,
                 description = "Official Minecraft Minecoins and Realm subscriptions."
             },
@@ -301,7 +301,7 @@ public class AdminController : BaseController
                 rating = "5.0 ⭐",
                 deliveryTime = "10 - 30s",
                 route = "/topup?game=roblox",
-                status = "Active",
+                status = "Closed",
                 isPopular = true,
                 description = "Roblox Robux and Premium Membership packages."
             },
@@ -319,7 +319,7 @@ public class AdminController : BaseController
                 rating = "4.8 ⭐",
                 deliveryTime = "10 - 30s",
                 route = "/topup?game=onepiece",
-                status = "Paused",
+                status = "Closed",
                 isPopular = true,
                 description = "One Piece Bounty Rush Rainbow Diamonds instant direct recharge."
             },
@@ -370,6 +370,28 @@ public class AdminController : BaseController
                     catch {}
                 }
             }
+        }
+
+        // Try syncing from MongoDB Atlas microservice if local memory is null
+        if (_gamesConfig == null)
+        {
+            try
+            {
+                using var client = new System.Net.Http.HttpClient { Timeout = TimeSpan.FromSeconds(3) };
+                var res = client.GetAsync("https://mlbb-khqr-api.onrender.com/api/games").GetAwaiter().GetResult();
+                if (res.IsSuccessStatusCode)
+                {
+                    var content = res.Content.ReadAsStringAsync().GetAwaiter().GetResult();
+                    using var doc = System.Text.Json.JsonDocument.Parse(content);
+                    if (doc.RootElement.TryGetProperty("games", out var gamesProp) &&
+                        gamesProp.ValueKind != System.Text.Json.JsonValueKind.Null &&
+                        gamesProp.ValueKind != System.Text.Json.JsonValueKind.Undefined)
+                    {
+                        _gamesConfig = System.Text.Json.JsonSerializer.Deserialize<object>(gamesProp.GetRawText());
+                    }
+                }
+            }
+            catch {}
         }
 
         if (_gamesConfig == null)
@@ -434,6 +456,21 @@ public class AdminController : BaseController
                 }
             }
             catch {}
+
+            // Async background broadcast to MongoDB Atlas Python microservice
+            _ = Task.Run(async () =>
+            {
+                try
+                {
+                    using var client = new System.Net.Http.HttpClient { Timeout = TimeSpan.FromSeconds(5) };
+                    var content = new System.Net.Http.StringContent(
+                        System.Text.Json.JsonSerializer.Serialize(new { games = data }),
+                        System.Text.Encoding.UTF8,
+                        "application/json");
+                    await client.PostAsync("https://mlbb-khqr-api.onrender.com/api/games", content);
+                }
+                catch {}
+            });
         }
         return GetGames();
     }

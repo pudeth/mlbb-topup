@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useLanguage } from '../context/LanguageContext';
-import { getStoredGames, getMasterTopupStatus, fetchStoredGames, fetchMasterTopupStatus } from '../services/gamesConfig';
+import { getStoredGames, getMasterTopupStatus, fetchStoredGames, fetchMasterTopupStatus, getSavedGameStatuses } from '../services/gamesConfig';
 
 // 12 Popular Games Preset matching desktop/laptop screenshot exactly
 const POPULAR_GAMES_PRESET = [
@@ -44,8 +44,8 @@ const POPULAR_GAMES_PRESET = [
     name: '(PUBG MOBILE)',
     genre: 'PUBG Mobile',
     category: 'PUBG Mobile',
-    badge: 'HOT',
-    badgeType: 'hot',
+    badge: 'CLOSED',
+    badgeType: 'closed',
     flagType: 'global',
     flagTitle: 'GLOBAL UC',
     flagSubtitle: 'PUBG',
@@ -53,7 +53,7 @@ const POPULAR_GAMES_PRESET = [
     flagFrameStyle: 'gold_cyber',
     image: 'https://res.cloudinary.com/dpz7vpmf8/image/upload/v1790944800/logo-game/ovdfdmru7jnhmwjvy6vy.jpg',
     fallbackImage: '/images/pubgm-banner.jpg',
-    status: 'Active',
+    status: 'Closed',
     route: '/topup?game=pubgm'
   },
   {
@@ -61,8 +61,8 @@ const POPULAR_GAMES_PRESET = [
     name: 'LEVEL UP PASS',
     genre: 'Event & Reward',
     category: 'Mobile Legends',
-    badge: 'NEW',
-    badgeType: 'new',
+    badge: 'CLOSED',
+    badgeType: 'closed',
     flagType: 'kh',
     flagTitle: 'សេវើខ្មែរ 5v5',
     flagSubtitle: '5V5',
@@ -70,7 +70,7 @@ const POPULAR_GAMES_PRESET = [
     flagFrameStyle: 'gold_cyber',
     image: 'https://images.unsplash.com/photo-1550745165-9bc0b252726f?w=500&auto=format&fit=crop&q=80',
     fallbackImage: '/mlbb-logo.png',
-    status: 'Active',
+    status: 'Closed',
     route: '/topup?game=mlbb&tab=pass'
   },
   {
@@ -78,8 +78,8 @@ const POPULAR_GAMES_PRESET = [
     name: 'MAGIC CHESS',
     genre: 'Auto Chess',
     category: 'Mobile Legends',
-    badge: 'PAUSED',
-    badgeType: 'paused',
+    badge: 'CLOSED',
+    badgeType: 'closed',
     flagType: 'kh',
     flagTitle: 'សេវើខ្មែរ 5v5',
     flagSubtitle: '5V5',
@@ -87,7 +87,7 @@ const POPULAR_GAMES_PRESET = [
     flagFrameStyle: 'gold_cyber',
     image: 'https://images.unsplash.com/photo-1566577739112-5180d4bf9390?w=500&auto=format&fit=crop&q=80',
     fallbackImage: '/mlbb-logo.png',
-    status: 'Paused',
+    status: 'Closed',
     route: '/topup?game=magic_chess'
   },
   {
@@ -107,11 +107,11 @@ const POPULAR_GAMES_PRESET = [
     name: 'ROV / ARENA OF VALOR',
     genre: 'MOBA',
     category: 'Service top-up',
-    badge: 'HOT',
-    badgeType: 'hot',
+    badge: 'CLOSED',
+    badgeType: 'closed',
     image: 'https://images.unsplash.com/photo-1542751371-adc38448a05e?w=500&auto=format&fit=crop&q=80',
     fallbackImage: '/mlbb-logo.png',
-    status: 'Active',
+    status: 'Closed',
     route: '/topup?game=rov'
   },
   {
@@ -119,11 +119,11 @@ const POPULAR_GAMES_PRESET = [
     name: 'STEAM GAMES',
     genre: 'Top PC Games',
     category: 'Steam',
-    badge: 'NEW',
-    badgeType: 'new',
+    badge: 'CLOSED',
+    badgeType: 'closed',
     image: '/images/steam-logo.png',
     fallbackImage: '/images/steam-logo.png',
-    status: 'Active',
+    status: 'Closed',
     route: '/topup?service=steam'
   },
   {
@@ -131,11 +131,11 @@ const POPULAR_GAMES_PRESET = [
     name: 'MINECRAFT',
     genre: 'Sandbox',
     category: 'Service top-up',
-    badge: 'NEW',
-    badgeType: 'new',
+    badge: 'CLOSED',
+    badgeType: 'closed',
     image: 'https://images.unsplash.com/photo-1627856013091-fed6e4e30025?w=500&auto=format&fit=crop&q=80',
     fallbackImage: '/images/banner_pubg.jpg',
-    status: 'Active',
+    status: 'Closed',
     route: '/topup?game=minecraft'
   },
   {
@@ -143,11 +143,11 @@ const POPULAR_GAMES_PRESET = [
     name: 'ROBLOX',
     genre: 'Adventure',
     category: 'Service top-up',
-    badge: 'HOT',
-    badgeType: 'hot',
+    badge: 'CLOSED',
+    badgeType: 'closed',
     image: 'https://images.unsplash.com/photo-1563089145-599997674d42?w=500&auto=format&fit=crop&q=80',
     fallbackImage: '/mlbb-logo.png',
-    status: 'Active',
+    status: 'Closed',
     route: '/topup?game=roblox'
   },
   {
@@ -155,11 +155,11 @@ const POPULAR_GAMES_PRESET = [
     name: 'ONE PIECE',
     genre: 'RPG Adventure',
     category: 'Service top-up',
-    badge: 'PAUSED',
-    badgeType: 'paused',
+    badge: 'CLOSED',
+    badgeType: 'closed',
     image: 'https://images.unsplash.com/photo-1578632767115-351597cf2477?w=500&auto=format&fit=crop&q=80',
     fallbackImage: '/images/banner_mlbb_aldous.jpg',
-    status: 'Paused',
+    status: 'Closed',
     route: '/topup?game=onepiece'
   },
   {
@@ -177,12 +177,39 @@ const POPULAR_GAMES_PRESET = [
 ];
 
 const mergeStoredWithPresets = (storedList) => {
+  const savedStatuses = typeof getSavedGameStatuses === 'function' ? getSavedGameStatuses() : {};
   if (!storedList || !Array.isArray(storedList) || storedList.length === 0) {
-    return POPULAR_GAMES_PRESET;
+    return POPULAR_GAMES_PRESET.map((p) => {
+      const st = savedStatuses[p.id] !== undefined ? savedStatuses[p.id] : p.status;
+      return {
+        ...p,
+        status: st,
+        badge: st === 'Closed' ? 'CLOSED' : st === 'Paused' ? 'PAUSED' : p.badge,
+        badgeType: st === 'Closed' ? 'closed' : st === 'Paused' ? 'paused' : p.badgeType
+      };
+    });
   }
   return POPULAR_GAMES_PRESET.map((p) => {
     const found = storedList.find((g) => g.id === p.id || g.name?.toLowerCase() === p.name.toLowerCase());
-    if (!found) return p;
+    const effectiveStatus = (savedStatuses[p.id] !== undefined)
+      ? savedStatuses[p.id]
+      : (found && savedStatuses[found.id] !== undefined)
+        ? savedStatuses[found.id]
+        : (found && found.status)
+          ? found.status
+          : p.status;
+
+    const effectiveBadge = effectiveStatus === 'Closed' ? 'CLOSED' : effectiveStatus === 'Paused' ? 'PAUSED' : (found?.badge || p.badge);
+    const effectiveBadgeType = effectiveStatus === 'Closed' ? 'closed' : effectiveStatus === 'Paused' ? 'paused' : (found?.badgeType || p.badgeType);
+
+    if (!found) {
+      return {
+        ...p,
+        status: effectiveStatus,
+        badge: effectiveBadge,
+        badgeType: effectiveBadgeType
+      };
+    }
     return {
       ...p,
       ...found,
@@ -190,7 +217,9 @@ const mergeStoredWithPresets = (storedList) => {
       category: p.category || found.category,
       image: found.image || p.image,
       fallbackImage: found.localFallbackImage || p.fallbackImage,
-      status: found.status || p.status,
+      status: effectiveStatus,
+      badge: effectiveBadge,
+      badgeType: effectiveBadgeType,
       flagType: found.flagType !== undefined ? found.flagType : p.flagType,
       flagTitle: found.flagTitle || p.flagTitle,
       flagSubtitle: found.flagSubtitle !== undefined ? found.flagSubtitle : p.flagSubtitle,

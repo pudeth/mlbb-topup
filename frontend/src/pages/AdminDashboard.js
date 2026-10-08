@@ -2,7 +2,7 @@ import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { adminAPI, bakongAPI, paywayAPI } from '../services/api';
-import { getStoredGames, saveStoredGames, resetToDefaultGames, getMasterTopupStatus, saveMasterTopupStatus, fetchStoredGames, fetchMasterTopupStatus } from '../services/gamesConfig';
+import { getStoredGames, saveStoredGames, resetToDefaultGames, getMasterTopupStatus, saveMasterTopupStatus, fetchStoredGames, fetchMasterTopupStatus, saveGameStatusOverride } from '../services/gamesConfig';
 import { useStoreBranding } from '../services/storeBranding';
 import { DEFAULT_EVENT_BANNERS, getAllStoredBanners, fetchStoredBanners, saveStoredBanners } from '../services/eventBanners';
 import { CambodiaFlagSvg, CambodiaFlagFrame, CambodiaCornerBadge, DynamicFlagMedallion, UniversalSphericalFlag, POPULAR_FLAGS, ALL_FLAG_OPTIONS } from '../components/CambodiaFlagBadge';
@@ -1565,6 +1565,7 @@ const PRICING_GAMES = [
   };
 
   const handleSetGameStatus = (gameId, newStatus) => {
+    saveGameStatusOverride(gameId, newStatus);
     const updated = gamesList.map((g) => {
       if (g.id === gameId) {
         return { ...g, status: newStatus };
@@ -1589,7 +1590,10 @@ const PRICING_GAMES = [
 
   const handleQuickPauseAllGames = (statusToSet = 'Paused') => {
     if (!window.confirm(`Are you sure you want to ${statusToSet === 'Closed' ? 'CLOSE' : 'PAUSE'} top-ups for ALL games?`)) return;
-    const updatedGames = gamesList.map((g) => ({ ...g, status: statusToSet }));
+    const updatedGames = gamesList.map((g) => {
+      saveGameStatusOverride(g.id, statusToSet);
+      return { ...g, status: statusToSet };
+    });
     setGamesList(updatedGames);
     saveStoredGames(updatedGames);
     handleSetMasterTopupStatus(statusToSet);
@@ -1599,7 +1603,10 @@ const PRICING_GAMES = [
 
   const handleOpenAllGames = () => {
     if (!window.confirm('Open & Activate top-up for ALL games?')) return;
-    const updatedGames = gamesList.map((g) => ({ ...g, status: 'Active' }));
+    const updatedGames = gamesList.map((g) => {
+      saveGameStatusOverride(g.id, 'Active');
+      return { ...g, status: 'Active' };
+    });
     setGamesList(updatedGames);
     saveStoredGames(updatedGames);
     handleSetMasterTopupStatus('Active');
