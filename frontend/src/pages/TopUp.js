@@ -2545,103 +2545,103 @@ const TopUp = () => {
           <div className="bg-slate-900/30 border border-slate-800/50 rounded-[24px] p-3.5 sm:p-5 shadow-2xl backdrop-blur-md space-y-5">
             
             {/* Step 2 Header Title */}
-            <div className="flex items-center justify-between gap-2 pb-0.5">
-              <div className="flex items-center gap-2">
-                <span className="px-2 py-0.5 rounded-md bg-gradient-to-r from-cyan-400 to-blue-500 text-slate-950 font-black text-[9px] sm:text-[11px] uppercase tracking-wider shadow-sm">
+            <div className="flex items-center justify-between gap-2 pb-1 flex-wrap">
+              <div className="flex items-center gap-2 min-w-0">
+                <span className="px-2 py-0.5 rounded-md bg-gradient-to-r from-cyan-400 to-blue-500 text-slate-950 font-black text-[9px] sm:text-[11px] uppercase tracking-wider shadow-sm shrink-0">
                   {language === 'km' ? 'ជំហានទី ២' : 'STEP 2'}
                 </span>
-                <span className="text-xs sm:text-sm font-black text-white flex items-center gap-1.5 font-khmer">
-                  <svg className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-cyan-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><path d="M6 3h12l4 6-10 12L2 9z" /><path d="M2 9h20M12 21L8 9l4-6 4 6-4 12" /></svg>
+                <span className="text-xs sm:text-sm font-black text-white flex items-center gap-1.5 font-khmer truncate">
+                  <svg className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-cyan-400 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><path d="M6 3h12l4 6-10 12L2 9z" /><path d="M2 9h20M12 21L8 9l4-6 4 6-4 12" /></svg>
                   <span>{language === 'km' ? 'ជ្រើសរើសចំនួនពេជ្រ & កញ្ចប់' : 'Select Diamond Package'}</span>
                 </span>
               </div>
-              <span className="text-[11px] font-semibold text-slate-400 font-mono">
-                {products.length} {language === 'km' ? 'កញ្ចប់' : 'items'}
-              </span>
+
+              <div className="flex items-center gap-2 shrink-0">
+                {/* Button Select Size (Quick Full Display Popup) */}
+                <button
+                  type="button"
+                  onClick={() => setShowPackageModal(true)}
+                  className="inline-flex items-center gap-1.5 py-1 px-2.5 sm:px-3 rounded-xl bg-slate-900/90 hover:bg-slate-800 border border-slate-700/80 hover:border-cyan-400/60 text-slate-200 hover:text-cyan-300 font-bold text-xs transition-all cursor-pointer shadow-sm active:scale-95 group font-khmer"
+                  title="Select Size / Full display"
+                >
+                  <svg className="w-3.5 h-3.5 text-cyan-400 group-hover:scale-110 transition-transform" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M15 3h6v6M9 21H3v-6M21 3l-7 7M3 21l7-7"/>
+                  </svg>
+                  <span>{language === 'km' ? 'ជ្រើសរើសទំហំ' : 'Select Size'}</span>
+                  <span className="hidden sm:inline text-[10px] text-cyan-400/80 font-mono">⛶</span>
+                </button>
+
+                <span className="text-[11px] font-semibold text-slate-400 font-mono">
+                  {products.length} {language === 'km' ? 'កញ្ចប់' : 'items'}
+                </span>
+              </div>
             </div>
 
-            {/* Controls Bar: Category Dropdown List + Layout Mode Dropdown List + Select Size Button */}
-            <div className="flex flex-wrap items-center justify-between gap-2 py-1">
-              {/* Left Group: Category Dropdown List & Layout Mode Dropdown List */}
-              <div className="flex items-center gap-2 flex-wrap">
-                {/* 1. Category Dropdown List */}
-                <div className="relative inline-flex items-center">
-                  <select
-                    value={productCategoryTab}
-                    onChange={(e) => setProductCategoryTab(e.target.value)}
-                    className="appearance-none bg-[#0a1024] hover:bg-[#0f1733] border border-slate-700/80 hover:border-slate-600 focus:border-cyan-400 text-slate-200 text-xs font-bold rounded-xl pl-3 pr-8 py-2 cursor-pointer focus:outline-none focus:ring-1 focus:ring-cyan-400/40 transition-all font-khmer shadow-sm"
-                    aria-label="Filter packages category"
-                  >
-                    <option value="all" className="bg-slate-900 text-white">
-                      🌐 {t('tab_all_pkgs')} ({products.length})
+            {/* Controls Bar: Symmetrical 50/50 2-Column Grid for Category & Layout Dropdowns */}
+            <div className="grid grid-cols-2 gap-2 py-0.5">
+              {/* 1. Category Dropdown List */}
+              <div className="relative">
+                <select
+                  value={productCategoryTab}
+                  onChange={(e) => setProductCategoryTab(e.target.value)}
+                  className="w-full appearance-none bg-[#0a1024] hover:bg-[#0f1733] border border-slate-700/80 hover:border-slate-600 focus:border-cyan-400 text-slate-200 text-xs font-bold rounded-xl pl-3 pr-7 py-2 cursor-pointer focus:outline-none focus:ring-1 focus:ring-cyan-400/40 transition-all font-khmer shadow-sm truncate"
+                  aria-label="Filter packages category"
+                >
+                  <option value="all" className="bg-slate-900 text-white">
+                    🌐 {t('tab_all_pkgs')} ({products.length})
+                  </option>
+                  <option value="passes" className="bg-slate-900 text-white">
+                    🔥 {isFreefire ? 'Beat seller' : t('tab_pass_pkgs')} ({getFilteredPackages('passes').length})
+                  </option>
+                  {isFreefire && (
+                    <option value="level_pass" className="bg-slate-900 text-white">
+                      🎖️ {language === 'km' ? 'កញ្ចប់ Level Pass' : 'Level Pass'} ({getFilteredPackages('level_pass').length})
                     </option>
-                    <option value="passes" className="bg-slate-900 text-white">
-                      🔥 {isFreefire ? 'Beat seller' : t('tab_pass_pkgs')} ({getFilteredPackages('passes').length})
-                    </option>
-                    {isFreefire && (
-                      <option value="level_pass" className="bg-slate-900 text-white">
-                        🎖️ {language === 'km' ? 'កញ្ចប់ Level Pass' : 'Level Pass'} ({getFilteredPackages('level_pass').length})
-                      </option>
-                    )}
-                    <option value="diamonds" className="bg-slate-900 text-white">
-                      💎 {isFreefire ? 'Other Packages' : t('tab_diamond_pkgs')} ({getFilteredPackages('diamonds').length})
-                    </option>
-                  </select>
-                  <div className="pointer-events-none absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400">
-                    <svg className="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                      <polyline points="6 9 12 15 18 9"></polyline>
-                    </svg>
-                  </div>
-                </div>
-
-                {/* 2. Layout & Size Mode Dropdown List */}
-                <div className="relative inline-flex items-center">
-                  <select
-                    value={layoutMode}
-                    onChange={(e) => {
-                      if (e.target.value === 'modal') {
-                        setShowPackageModal(true);
-                      } else {
-                        setLayoutMode(e.target.value);
-                      }
-                    }}
-                    className="appearance-none bg-[#0a1024] hover:bg-[#0f1733] border border-slate-700/80 hover:border-slate-600 focus:border-cyan-400 text-cyan-300 text-xs font-bold rounded-xl pl-3 pr-8 py-2 cursor-pointer focus:outline-none focus:ring-1 focus:ring-cyan-400/40 transition-all font-khmer shadow-sm"
-                    aria-label="Select layout size"
-                  >
-                    <option value="tiles" className="bg-slate-900 text-white">
-                      ⊞ {language === 'km' ? 'ក្រឡា (Tiles)' : 'Tiles View'}
-                    </option>
-                    <option value="grid" className="bg-slate-900 text-white">
-                      ⊟ {language === 'km' ? 'រូបធំ (Large)' : 'Large View'}
-                    </option>
-                    <option value="list" className="bg-slate-900 text-white">
-                      ≡ {language === 'km' ? 'បញ្ជី (List)' : 'List View'}
-                    </option>
-                    <option value="modal" className="bg-slate-900 text-cyan-300 font-bold">
-                      ↗ {language === 'km' ? 'ជ្រើសរើសទំហំ (ផ្ទាំងពេញ)' : 'Full Display (Modal)'}
-                    </option>
-                  </select>
-                  <div className="pointer-events-none absolute right-2.5 top-1/2 -translate-y-1/2 text-cyan-400">
-                    <svg className="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                      <polyline points="6 9 12 15 18 9"></polyline>
-                    </svg>
-                  </div>
+                  )}
+                  <option value="diamonds" className="bg-slate-900 text-white">
+                    💎 {isFreefire ? 'Other Packages' : t('tab_diamond_pkgs')} ({getFilteredPackages('diamonds').length})
+                  </option>
+                </select>
+                <div className="pointer-events-none absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400">
+                  <svg className="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                    <polyline points="6 9 12 15 18 9"></polyline>
+                  </svg>
                 </div>
               </div>
 
-              {/* Right Group: Direct Select Size / Full Display Modal Button */}
-              <button
-                type="button"
-                onClick={() => setShowPackageModal(true)}
-                className="inline-flex items-center gap-1.5 py-2 px-3 rounded-xl bg-slate-900/90 hover:bg-slate-800/90 border border-slate-700/80 hover:border-cyan-400/60 text-slate-200 hover:text-cyan-300 font-bold text-xs transition-all cursor-pointer shadow-sm active:scale-95 group font-khmer"
-                title="Select Size / Full display"
-              >
-                <svg className="w-3.5 h-3.5 text-cyan-400 group-hover:scale-110 transition-transform" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
-                  <path d="M15 3h6v6M9 21H3v-6M21 3l-7 7M3 21l7-7"/>
-                </svg>
-                <span>{language === 'km' ? 'ជ្រើសរើសទំហំ' : 'Select Size'}</span>
-                <span className="hidden sm:inline text-[10px] text-cyan-400/80 font-mono">⛶</span>
-              </button>
+              {/* 2. Layout & Size Mode Dropdown List */}
+              <div className="relative">
+                <select
+                  value={layoutMode}
+                  onChange={(e) => {
+                    if (e.target.value === 'modal') {
+                      setShowPackageModal(true);
+                    } else {
+                      setLayoutMode(e.target.value);
+                    }
+                  }}
+                  className="w-full appearance-none bg-[#0a1024] hover:bg-[#0f1733] border border-slate-700/80 hover:border-slate-600 focus:border-cyan-400 text-cyan-300 text-xs font-bold rounded-xl pl-3 pr-7 py-2 cursor-pointer focus:outline-none focus:ring-1 focus:ring-cyan-400/40 transition-all font-khmer shadow-sm truncate"
+                  aria-label="Select layout size"
+                >
+                  <option value="tiles" className="bg-slate-900 text-white">
+                    ⊞ {language === 'km' ? 'ក្រឡា (Tiles)' : 'Tiles View'}
+                  </option>
+                  <option value="grid" className="bg-slate-900 text-white">
+                    ⊟ {language === 'km' ? 'រូបធំ (Large)' : 'Large View'}
+                  </option>
+                  <option value="list" className="bg-slate-900 text-white">
+                    ≡ {language === 'km' ? 'បញ្ជី (List)' : 'List View'}
+                  </option>
+                  <option value="modal" className="bg-slate-900 text-cyan-300 font-bold">
+                    ↗ {language === 'km' ? 'ជ្រើសរើសទំហំ (ផ្ទាំងពេញ)' : 'Full Display (Modal)'}
+                  </option>
+                </select>
+                <div className="pointer-events-none absolute right-2.5 top-1/2 -translate-y-1/2 text-cyan-400">
+                  <svg className="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                    <polyline points="6 9 12 15 18 9"></polyline>
+                  </svg>
+                </div>
+              </div>
             </div>
   
             {/* ===== Scrollable Product Frame ===== */}
