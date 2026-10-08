@@ -37,6 +37,10 @@ const MobileBottomNav = () => {
   }, []);
 
   const pathname = location.pathname;
+  // Hide generic bottom nav on top-up pages to let dedicated sticky Pay Now action bar take over
+  if (pathname.startsWith('/topup')) {
+    return null;
+  }
   const hash = location.hash;
   const isHome = pathname === '/' && !hash;
   const isAllGames = pathname === '/' && hash === '#games-section';
