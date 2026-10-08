@@ -2145,7 +2145,7 @@ const TopUp = () => {
       {/* ======================================================== */}
       <div className="relative rounded-2xl sm:rounded-3xl bg-[#0b1329] border border-slate-800/90 shadow-2xl p-4 sm:p-5 overflow-hidden transition-all">
         {/* Subtle Ambient Background Artwork with Gradient Overlay */}
-        <div className="absolute inset-0 z-0 pointer-events-none opacity-20 sm:opacity-25 overflow-hidden">
+        <div className="absolute inset-0 z-0 pointer-events-none opacity-50 sm:opacity-55 overflow-hidden">
           <img
             src={
               selectedGame.id.startsWith('mlbb')
@@ -2155,10 +2155,10 @@ const TopUp = () => {
                   : (selectedGame.image || selectedGame.localFallbackImage || '/mlbb-logo.png')
             }
             alt=""
-            className="w-full h-full object-cover object-center filter blur-[1px]"
+            className="w-full h-full object-cover object-right sm:object-center"
           />
-          <div className="absolute inset-0 bg-gradient-to-r from-[#0b1329] via-[#0b1329]/90 to-[#0b1329]/75" />
-          <div className="absolute inset-0 bg-gradient-to-t from-[#0b1329] via-transparent to-black/30" />
+          <div className="absolute inset-0 bg-gradient-to-r from-[#0b1329] via-[#0b1329]/80 to-[#0b1329]/40" />
+          <div className="absolute inset-0 bg-gradient-to-t from-[#0b1329]/80 via-transparent to-black/20" />
         </div>
 
         {/* Card Content Row */}
