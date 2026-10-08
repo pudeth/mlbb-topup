@@ -151,7 +151,9 @@ public class RealTopUpProviderClient : ITopUpProviderClient
         int diamondAmount,
         string orderId,
         string? gameName = null,
-        string? productName = null)
+        string? productName = null,
+        int? productId = null,
+        decimal? orderAmount = null)
     {
         var settings = _gatewayManager.GetSettings();
         var provider = !string.IsNullOrWhiteSpace(settings.ActiveProvider) ? settings.ActiveProvider : (_configuration["TopUpProvider:Provider"] ?? "KhmerTopUp");
@@ -214,7 +216,7 @@ public class RealTopUpProviderClient : ITopUpProviderClient
             TopUpResult result;
             if (provider.Equals("KhmerTopUp", StringComparison.OrdinalIgnoreCase))
             {
-                result = await ProcessKhmerTopUpAsync(cleanPlayerId, cleanServerId, diamondAmount, sku, orderId, merchantId, settings.KhmerTopUpApiKey, secretKey, settings.KhmerTopUpApiUrl, gameName, productName);
+                result = await ProcessKhmerTopUpAsync(cleanPlayerId, cleanServerId, diamondAmount, sku, orderId, merchantId, settings.KhmerTopUpApiKey, secretKey, settings.KhmerTopUpApiUrl, gameName, productName, productId, orderAmount);
 
                 if (!result.Success && settings.AutoFailoverEnabled && IsFailoverCandidate(result.ErrorMessage))
                 {
@@ -235,7 +237,7 @@ public class RealTopUpProviderClient : ITopUpProviderClient
                 if (!result.Success && settings.AutoFailoverEnabled && IsFailoverCandidate(result.ErrorMessage))
                 {
                     _logger.LogWarning("FazerCards reported '{Reason}'. Automatically failing over to KhmerTopUp for Order #{OrderId}...", result.ErrorMessage, orderId);
-                    var ktBackup = await ProcessKhmerTopUpAsync(cleanPlayerId, cleanServerId, diamondAmount, sku, orderId, merchantId, settings.KhmerTopUpApiKey, secretKey, settings.KhmerTopUpApiUrl, gameName, productName);
+                    var ktBackup = await ProcessKhmerTopUpAsync(cleanPlayerId, cleanServerId, diamondAmount, sku, orderId, merchantId, settings.KhmerTopUpApiKey, secretKey, settings.KhmerTopUpApiUrl, gameName, productName, productId, orderAmount);
                     if (ktBackup.Success)
                     {
                         _logger.LogInformation("Order #{OrderId} fulfilled successfully via backup provider KhmerTopUp!", orderId);
@@ -358,7 +360,9 @@ public class RealTopUpProviderClient : ITopUpProviderClient
         string? secretKey,
         string? apiUrl,
         string? gameName = null,
-        string? productName = null)
+        string? productName = null,
+        int? productId = null,
+        decimal? orderAmount = null)
     {
         var targetUrl = "https://khmer-topup.com/api/v1/orders";
         var activeKey = !string.IsNullOrWhiteSpace(apiKey) ? apiKey : "kt_28c2640c86717199395d973670cf039a30ba2716";
@@ -394,18 +398,30 @@ public class RealTopUpProviderClient : ITopUpProviderClient
                           cleanServer.Equals("ME", StringComparison.OrdinalIgnoreCase) ||
                           !isNumericServer; // In Mobile Legends, server is strictly numeric! If it's letters like "SG", it's Free Fire!
 
+        var validFreeFirePackages = new HashSet<int> { 390, 384, 383, 385, 386, 387, 388, 389, 4852, 5021, 5022, 5024, 5025, 5028, 5029, 374, 391, 376, 377, 378, 379, 380, 381, 5292, 5293, 5294, 5295, 5298, 5299, 5296, 5297, 5301, 5302, 5303 };
+
         int packageId;
         if (int.TryParse(sku, out var parsedSku) && parsedSku > 100)
         {
             packageId = parsedSku;
         }
+        else if (isFreeFire && productId.HasValue && validFreeFirePackages.Contains(productId.Value))
+        {
+            packageId = productId.Value;
+        }
         else if (isFreeFire)
         {
             // Free Fire Official Packages (khmer-topup.com slug: freefire-sgmy)
             var passContext = $"{sku} {productName}".ToLower();
-            if (passContext.Contains("level"))
+
+            // Check for Level Up Packages (e.g. Level 6 pass is $0.29 for 200 diamonds)
+            bool isLevelPass = passContext.Contains("level") ||
+                               (orderAmount.HasValue && orderAmount.Value <= 0.35m && (diamondAmount == 200 || orderAmount.Value == 0.29m)) ||
+                               (productId.HasValue && productId.Value == 390);
+
+            if (isLevelPass)
             {
-                if (passContext.Contains("30")) packageId = 389;      // Level 30 ($0.90)
+                if (passContext.Contains("30") || (orderAmount.HasValue && orderAmount.Value >= 0.85m && orderAmount.Value <= 0.95m && passContext.Contains("level"))) packageId = 389;      // Level 30 ($0.90)
                 else if (passContext.Contains("25")) packageId = 388; // Level 25 ($0.61)
                 else if (passContext.Contains("20")) packageId = 387; // Level 20 ($0.61)
                 else if (passContext.Contains("15")) packageId = 386; // Level 15 ($0.61)

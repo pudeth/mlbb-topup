@@ -1516,7 +1516,8 @@ const TopUp = () => {
       const orderPayload = {
         playerID: pId,
         serverID: formData.serverID ? formData.serverID.trim() : 'Global',
-        productId: selectedProduct?.productId || 2,
+        productId: selectedProduct?.packageId || selectedProduct?.productId || 2,
+        productName: selectedProduct?.name || '',
         customDiamondAmount: effectiveDiamonds,
         price: rawPrice,
         amount: targetAmount,

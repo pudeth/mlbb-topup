@@ -62,6 +62,7 @@ public class OrderService : IOrderService
                 {
                     DiamondAmount = customDiamonds,
                     Price = calculatedPrice,
+                    Description = !string.IsNullOrWhiteSpace(request.ProductName) ? request.ProductName : $"{customDiamonds} Diamonds",
                     Status = "Active",
                     CreatedAt = DateTime.UtcNow
                 };
@@ -310,8 +311,8 @@ public class OrderService : IOrderService
             CustomerPhone = order.CustomerPhone,
             GameName = order.GameName,
             ProductId = order.ProductId,
-            ProductName = $"{order.Product.DiamondAmount} Diamonds",
-            DiamondAmount = order.Product.DiamondAmount,
+            ProductName = !string.IsNullOrWhiteSpace(order.Product?.Description) ? order.Product.Description : $"{order.Product?.DiamondAmount ?? 0} Diamonds",
+            DiamondAmount = order.Product?.DiamondAmount ?? 0,
             Amount = order.Amount,
             PaymentStatus = order.PaymentStatus,
             TopupStatus = order.TopupStatus,

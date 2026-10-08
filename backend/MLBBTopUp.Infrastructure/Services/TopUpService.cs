@@ -242,6 +242,8 @@ public class TopUpService : ITopUpService
         {
             string? gameName = null;
             string? productName = null;
+            int? productId = null;
+            decimal? orderAmount = null;
             if (orderId > 0)
             {
                 try
@@ -251,12 +253,14 @@ public class TopUpService : ITopUpService
                     {
                         gameName = order.GameName;
                         productName = order.ProductName;
+                        productId = order.ProductId;
+                        orderAmount = order.Amount;
                     }
                 }
                 catch { }
             }
 
-            var providerResult = await _topUpProviderClient.SendTopUpAsync(playerId, serverId, diamondAmount, orderId.ToString(), gameName, productName);
+            var providerResult = await _topUpProviderClient.SendTopUpAsync(playerId, serverId, diamondAmount, orderId.ToString(), gameName, productName, productId, orderAmount);
             return new TopUpExecutionResult
             {
                 Success = providerResult.Success,

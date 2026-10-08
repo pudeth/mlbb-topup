@@ -8,6 +8,7 @@ public class CreateOrderRequest
     public string? CustomerName { get; set; }
     public string? CustomerPhone { get; set; }
     public string? GameName { get; set; }
+    public string? ProductName { get; set; }
     public int? ProductId { get; set; }
     public int? CustomDiamondAmount { get; set; }
     public decimal? Price { get; set; }
