@@ -2544,7 +2544,7 @@ const TopUp = () => {
           <div className="bg-slate-900/30 border border-slate-800/50 rounded-[24px] p-3.5 sm:p-5 shadow-2xl backdrop-blur-md space-y-5">
             
             {/* Step 2 Header Title */}
-            <div className="flex items-center justify-between gap-2 pb-1">
+            <div className="flex items-center justify-between gap-2 pb-0.5">
               <div className="flex items-center gap-2">
                 <span className="px-2 py-0.5 rounded-md bg-gradient-to-r from-cyan-400 to-blue-500 text-slate-950 font-black text-[9px] sm:text-[11px] uppercase tracking-wider shadow-sm">
                   {language === 'km' ? 'ជំហានទី ២' : 'STEP 2'}
@@ -2554,180 +2554,105 @@ const TopUp = () => {
                   <span>{language === 'km' ? 'ជ្រើសរើសចំនួនពេជ្រ & កញ្ចប់' : 'Select Diamond Package'}</span>
                 </span>
               </div>
-
-              {/* Quick Button: Press to Select */}
-              <button
-                type="button"
-                onClick={() => setShowPackageModal(true)}
-                className="inline-flex items-center gap-1.5 py-1 px-2.5 sm:px-3 rounded-xl bg-gradient-to-r from-amber-400 via-yellow-400 to-amber-500 hover:from-amber-300 hover:to-yellow-300 text-slate-950 font-black text-[11px] sm:text-xs shadow-md shadow-amber-400/20 transition-all cursor-pointer active:scale-95 border border-amber-300"
-                title="Press to select (Full display)"
-              >
-                <svg className="w-3.5 h-3.5 fill-current" viewBox="0 0 24 24"><path d="M7 18c-1.1 0-1.99.9-1.99 2S5.9 22 7 22s2-.9 2-2-.9-2-2-2zM1 2v2h2l3.6 7.59-1.35 2.45c-.16.28-.25.61-.25.96 0 1.1.9 2 2 2h12v-2H7.42c-.14 0-.25-.11-.25-.25l.03-.12.9-1.63h7.45c.75 0 1.41-.41 1.75-1.03l3.58-6.49c.08-.14.12-.31.12-.48 0-.55-.45-1-1-1H5.21l-.94-2H1zm16 16c-1.1 0-1.99.9-1.99 2s.89 2 1.99 2 2-.9 2-2-.9-2-2-2z" /></svg>
-                <span className="font-khmer">{language === 'km' ? 'ចុចដើម្បីជ្រើសរើស' : 'Press to Select'}</span>
-                <span className="text-[10px] opacity-75 font-mono">⛶</span>
-              </button>
+              <span className="text-[11px] font-semibold text-slate-400 font-mono">
+                {products.length} {language === 'km' ? 'កញ្ចប់' : 'items'}
+              </span>
             </div>
 
-            {/* Header: Row 1 - Category Sub-Tabs (All / Weekly Pass / Level Pass / Diamond Package) */}
-            <div className={`grid ${isFreefire ? 'grid-cols-2 sm:grid-cols-4' : 'grid-cols-3'} gap-1.5 p-1 bg-slate-950/90 rounded-2xl border border-slate-800/90 shadow-inner`}>
-              <button
-                type="button"
-                onClick={() => setProductCategoryTab('all')}
-                className={`py-2 px-1.5 sm:px-2 rounded-xl text-xs font-bold transition-all text-center flex items-center justify-center gap-1 cursor-pointer ${
-                  productCategoryTab === 'all'
-                    ? 'bg-gradient-to-r from-amber-400 to-amber-500 text-black font-black shadow-md shadow-amber-500/20 scale-[1.02]'
-                    : 'text-slate-400 hover:text-white hover:bg-slate-900/60'
-                }`}
-              >
-                <span>🌐</span>
-                <span className="truncate">{t('tab_all_pkgs')}</span>
-                <span className="text-[10px] opacity-75 font-mono">({products.length})</span>
-              </button>
-
-              <button
-                type="button"
-                onClick={() => setProductCategoryTab('passes')}
-                className={`py-2 px-1.5 sm:px-2 rounded-xl text-xs font-bold transition-all text-center flex items-center justify-center gap-1 cursor-pointer ${
-                  productCategoryTab === 'passes'
-                    ? 'bg-gradient-to-r from-cyan-400 to-blue-500 text-black font-black shadow-md shadow-cyan-500/20 scale-[1.02]'
-                    : 'text-cyan-300 hover:text-white hover:bg-cyan-950/40'
-                }`}
-              >
-                <span>🔥</span>
-                <span className="truncate">{isFreefire ? 'Beat seller' : t('tab_pass_pkgs')}</span>
-                <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-cyan-900/50 text-cyan-200 font-mono font-bold">
-                  {products.filter(p => isFreefire ? (p.category === 'Beat seller') : (!p.isLevelPass && (p.isPass || p.name?.toLowerCase().includes('pass') || p.name?.toLowerCase().includes('bundle') || [210, 440, 660, 880, 1100, 1320, 605, 500].includes(p.diamondAmount)))).length}
-                </span>
-              </button>
-
-              {isFreefire && (
-                <button
-                  type="button"
-                  onClick={() => setProductCategoryTab('level_pass')}
-                  className={`py-2 px-1.5 sm:px-2 rounded-xl text-xs font-bold transition-all text-center flex items-center justify-center gap-1 cursor-pointer ${
-                    productCategoryTab === 'level_pass'
-                      ? 'bg-gradient-to-r from-emerald-400 to-teal-500 text-black font-black shadow-md shadow-emerald-500/20 scale-[1.02]'
-                      : 'text-emerald-300 hover:text-white hover:bg-emerald-950/40'
-                  }`}
-                >
-                  <span>🎖️</span>
-                  <span className="truncate">{language === 'km' ? 'កញ្ចប់ Level Pass' : 'Level Pass'}</span>
-                  <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-emerald-900/50 text-emerald-200 font-mono font-bold">
-                    {products.filter(p => p.isLevelPass || p.name?.toLowerCase().includes('level up')).length}
-                  </span>
-                </button>
-              )}
-
-              <button
-                type="button"
-                onClick={() => setProductCategoryTab('diamonds')}
-                className={`py-2 px-1.5 sm:px-2 rounded-xl text-xs font-bold transition-all text-center flex items-center justify-center gap-1 cursor-pointer ${
-                  productCategoryTab === 'diamonds'
-                    ? 'bg-gradient-to-r from-purple-400 to-pink-500 text-black font-black shadow-md shadow-purple-500/20 scale-[1.02]'
-                    : 'text-purple-300 hover:text-white hover:bg-purple-950/40'
-                }`}
-              >
-                <span>💎</span>
-                <span className="truncate">{isFreefire ? 'Other Packages' : t('tab_diamond_pkgs')}</span>
-                <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-purple-900/50 text-purple-200 font-mono font-bold">
-                  {products.filter(p => isFreefire ? (p.category === 'Other Packages') : (!p.isLevelPass && !(p.isPass || p.name?.toLowerCase().includes('pass') || p.name?.toLowerCase().includes('bundle') || [210, 440, 660, 880, 1100, 1320, 605, 500].includes(p.diamondAmount)))).length}
-                </span>
-              </button>
-            </div>
-
-            {/* Quick Action Banner: Button name "Press to Select" */}
-            <div className="pt-0.5">
-              <button
-                type="button"
-                onClick={() => setShowPackageModal(true)}
-                className="w-full py-2.5 px-3.5 sm:py-3 sm:px-4 rounded-2xl bg-gradient-to-r from-amber-400 via-yellow-400 to-amber-500 hover:from-amber-300 hover:to-yellow-300 text-slate-950 font-black text-xs sm:text-sm shadow-lg shadow-amber-400/25 flex items-center justify-between gap-3 transition-all duration-200 active:scale-[0.98] group cursor-pointer border border-amber-300/80"
-              >
-                <div className="flex items-center gap-2 sm:gap-2.5">
-                  <span className="w-7 h-7 sm:w-8 sm:h-8 rounded-xl bg-slate-950/20 flex items-center justify-center text-slate-950 group-hover:scale-110 transition-transform shrink-0">
-                    <svg className="w-4 h-4 fill-current" viewBox="0 0 24 24"><path d="M7 18c-1.1 0-1.99.9-1.99 2S5.9 22 7 22s2-.9 2-2-.9-2-2-2zM1 2v2h2l3.6 7.59-1.35 2.45c-.16.28-.25.61-.25.96 0 1.1.9 2 2 2h12v-2H7.42c-.14 0-.25-.11-.25-.25l.03-.12.9-1.63h7.45c.75 0 1.41-.41 1.75-1.03l3.58-6.49c.08-.14.12-.31.12-.48 0-.55-.45-1-1-1H5.21l-.94-2H1zm16 16c-1.1 0-1.99.9-1.99 2s.89 2 1.99 2 2-.9 2-2-.9-2-2-2z" /></svg>
-                  </span>
-                  <div className="text-left leading-tight font-khmer">
-                    <div className="font-black text-slate-950 flex items-center gap-1.5 flex-wrap">
-                      <span>{language === 'km' ? 'ចុចដើម្បីជ្រើសរើស' : 'Press to Select'}</span>
-                      <span className="text-[10px] sm:text-[11px] font-bold opacity-85">(Press to Select)</span>
-                    </div>
-                    <div className="text-[10px] sm:text-[11px] font-semibold text-slate-900/85">
-                      {language === 'km' ? 'បើកផ្ទាំងពេញអេក្រង់ • អូសស្រួល' : 'Full display popup • Easy scrolling'}
-                    </div>
+            {/* Controls Bar: Category Dropdown List + Select Size Button + Layout Mode Switcher */}
+            <div className="flex flex-wrap items-center justify-between gap-2.5 py-1">
+              {/* Left Group: Dropdown List & Button Select Size */}
+              <div className="flex items-center gap-2 flex-wrap">
+                {/* Category Dropdown List */}
+                <div className="relative inline-flex items-center">
+                  <select
+                    value={productCategoryTab}
+                    onChange={(e) => setProductCategoryTab(e.target.value)}
+                    className="appearance-none bg-[#0a1024] hover:bg-[#0f1733] border border-slate-700/80 hover:border-slate-600 focus:border-cyan-400 text-slate-200 text-xs font-bold rounded-xl pl-3 pr-8 py-2 cursor-pointer focus:outline-none focus:ring-1 focus:ring-cyan-400/40 transition-all font-khmer shadow-sm"
+                    aria-label="Filter packages category"
+                  >
+                    <option value="all" className="bg-slate-900 text-white">
+                      🌐 {t('tab_all_pkgs')} ({products.length})
+                    </option>
+                    <option value="passes" className="bg-slate-900 text-white">
+                      🔥 {isFreefire ? 'Beat seller' : t('tab_pass_pkgs')} ({getFilteredPackages('passes').length})
+                    </option>
+                    {isFreefire && (
+                      <option value="level_pass" className="bg-slate-900 text-white">
+                        🎖️ {language === 'km' ? 'កញ្ចប់ Level Pass' : 'Level Pass'} ({getFilteredPackages('level_pass').length})
+                      </option>
+                    )}
+                    <option value="diamonds" className="bg-slate-900 text-white">
+                      💎 {isFreefire ? 'Other Packages' : t('tab_diamond_pkgs')} ({getFilteredPackages('diamonds').length})
+                    </option>
+                  </select>
+                  <div className="pointer-events-none absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400">
+                    <svg className="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                      <polyline points="6 9 12 15 18 9"></polyline>
+                    </svg>
                   </div>
                 </div>
-                <div className="flex items-center gap-1.5 sm:gap-2 shrink-0">
-                  <span className="text-[10px] sm:text-xs font-black px-2 py-0.5 rounded-lg bg-slate-950/15 text-slate-950 font-khmer">
-                    {products.length} {language === 'km' ? 'កញ្ចប់' : 'Pkgs'}
-                  </span>
-                  <span className="w-7 h-7 sm:w-8 sm:h-8 rounded-xl bg-slate-950 text-amber-300 flex items-center justify-center group-hover:scale-105 transition-transform shadow-sm">
-                    <svg className="w-3.5 h-3.5 sm:w-4 sm:h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M15 3h6v6M9 21H3v-6M21 3l-7 7M3 21l7-7"/></svg>
-                  </span>
-                </div>
-              </button>
-            </div>
 
-            {/* Header: Row 2 - Controls & Layout Switcher */}
-            <div className="flex items-center justify-between gap-2 pt-2 pb-0.5 border-t border-slate-800/80">
-              <div className="flex items-center gap-1.5 text-xs font-black text-slate-300 shrink-0">
-                <span className="w-1 h-3 rounded-full bg-gradient-to-b from-sky-400 to-cyan-400" />
-                <span className="tracking-tight uppercase text-[11px] text-slate-400">{language === 'km' ? 'ទម្រង់' : 'Layout'}:</span>
-              </div>
-
-              {/* View Layout Switcher (Tiles vs Large Icons vs List) + Press to Select button */}
-              <div className="flex items-center gap-1.5 flex-wrap justify-end">
+                {/* Button Select Size (Normal dark fintech cyber style) */}
                 <button
                   type="button"
                   onClick={() => setShowPackageModal(true)}
-                  className="py-1.5 px-2.5 rounded-xl text-xs font-black flex items-center gap-1.5 bg-amber-400/15 hover:bg-amber-400/25 text-amber-300 border border-amber-400/50 hover:border-amber-400 transition-all cursor-pointer select-none active:scale-95"
-                  title="Press to Select (Full Display)"
+                  className="inline-flex items-center gap-1.5 py-2 px-3 rounded-xl bg-slate-900/90 hover:bg-slate-800/90 border border-slate-700/80 hover:border-cyan-400/60 text-slate-200 hover:text-cyan-300 font-bold text-xs transition-all cursor-pointer shadow-sm active:scale-95 group font-khmer"
+                  title="Select Size / Full display"
                 >
-                  <svg className="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M15 3h6v6M9 21H3v-6M21 3l-7 7M3 21l7-7"/></svg>
-                  <span className="text-[11px] font-extrabold font-khmer">{language === 'km' ? 'ចុចដើម្បីជ្រើសរើស' : 'Press to Select'}</span>
+                  <svg className="w-3.5 h-3.5 text-cyan-400 group-hover:scale-110 transition-transform" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M15 3h6v6M9 21H3v-6M21 3l-7 7M3 21l7-7"/>
+                  </svg>
+                  <span>{language === 'km' ? 'ជ្រើសរើសទំហំ' : 'Select Size'}</span>
+                  <span className="hidden sm:inline text-[10px] text-cyan-400/80 font-mono">⛶</span>
                 </button>
+              </div>
 
-                <div className="inline-flex items-center p-1 bg-gradient-to-b from-[#0a0f1d] to-[#060a14] rounded-2xl border border-slate-800/90 shadow-sm backdrop-blur-sm gap-0.5">
+              {/* Right Group: Layout Switcher (Tiles / Large Icons / List) */}
+              <div className="flex items-center gap-1.5">
+                <span className="hidden xs:inline-block text-[11px] font-extrabold uppercase tracking-wider text-slate-400 font-mono">
+                  {language === 'km' ? 'ទម្រង់' : 'Layout'}:
+                </span>
+                <div className="inline-flex items-center p-0.5 bg-slate-950/80 rounded-xl border border-slate-800/90 shadow-sm gap-0.5">
                   <button
                     type="button"
                     onClick={() => setLayoutMode('tiles')}
-                    className={`py-1.5 px-2.5 sm:px-3 rounded-xl text-xs font-black flex items-center gap-1.5 transition-all duration-200 cursor-pointer select-none whitespace-nowrap ${
+                    className={`py-1.5 px-2.5 rounded-lg text-xs font-bold flex items-center gap-1 transition-all cursor-pointer ${
                       layoutMode === 'tiles'
-                        ? 'bg-sky-500/20 text-cyan-300 border border-cyan-400/50 scale-[1.02]'
-                        : 'text-slate-400 hover:text-slate-200 hover:bg-slate-800/50 border border-transparent'
+                        ? 'bg-sky-500/20 text-cyan-300 border border-cyan-400/50 shadow-sm'
+                        : 'text-slate-400 hover:text-white border border-transparent'
                     }`}
                     title="Tiles View"
                   >
-                    <svg className="w-3.5 h-3.5 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/></svg>
+                    <svg className="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/></svg>
                     <span className="text-[11px] font-extrabold">{t('layout_tiles')}</span>
                   </button>
 
                   <button
                     type="button"
                     onClick={() => setLayoutMode('grid')}
-                    className={`py-1.5 px-2.5 sm:px-3 rounded-xl text-xs font-black flex items-center gap-1.5 transition-all duration-200 cursor-pointer select-none whitespace-nowrap ${
+                    className={`py-1.5 px-2.5 rounded-lg text-xs font-bold flex items-center gap-1 transition-all cursor-pointer ${
                       layoutMode === 'grid'
-                        ? 'bg-sky-500/20 text-cyan-300 border border-cyan-400/50 scale-[1.02]'
-                        : 'text-slate-400 hover:text-slate-200 hover:bg-slate-800/50 border border-transparent'
+                        ? 'bg-sky-500/20 text-cyan-300 border border-cyan-400/50 shadow-sm'
+                        : 'text-slate-400 hover:text-white border border-transparent'
                     }`}
                     title="Large Icons View"
                   >
-                    <svg className="w-3.5 h-3.5 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><path d="M3 9h18"/><path d="M9 21V9"/></svg>
-                    <span className="text-[11px] font-extrabold whitespace-nowrap">
-                      {language === 'km' ? 'រូបធំ' : 'Large'}<span className="hidden sm:inline"> icons</span>
-                    </span>
+                    <svg className="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><path d="M3 9h18"/><path d="M9 21V9"/></svg>
+                    <span className="text-[11px] font-extrabold">{language === 'km' ? 'រូបធំ' : 'Large'}</span>
                   </button>
 
                   <button
                     type="button"
                     onClick={() => setLayoutMode('list')}
-                    className={`py-1.5 px-2.5 sm:px-3 rounded-xl text-xs font-black flex items-center gap-1.5 transition-all duration-200 cursor-pointer select-none whitespace-nowrap ${
+                    className={`py-1.5 px-2.5 rounded-lg text-xs font-bold flex items-center gap-1 transition-all cursor-pointer ${
                       layoutMode === 'list'
-                        ? 'bg-sky-500/20 text-cyan-300 border border-cyan-400/50 scale-[1.02]'
-                        : 'text-slate-400 hover:text-slate-200 hover:bg-slate-800/50 border border-transparent'
+                        ? 'bg-sky-500/20 text-cyan-300 border border-cyan-400/50 shadow-sm'
+                        : 'text-slate-400 hover:text-white border border-transparent'
                     }`}
-                    title="List Rows View"
+                    title="List View"
                   >
-                    <svg className="w-3.5 h-3.5 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg>
+                    <svg className="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg>
                     <span className="text-[11px] font-extrabold">{t('layout_list')}</span>
                   </button>
                 </div>
@@ -2746,22 +2671,10 @@ const TopUp = () => {
                   </span>
                 </span>
                 
-                <div className="flex items-center gap-2">
-                  <button
-                    type="button"
-                    onClick={() => setShowPackageModal(true)}
-                    className="flex items-center gap-1 px-2.5 py-0.5 sm:py-1 rounded-lg bg-gradient-to-r from-amber-400 to-yellow-400 hover:from-amber-300 hover:to-yellow-300 text-slate-950 font-black text-[10px] sm:text-[11px] transition-all cursor-pointer shadow-sm active:scale-95 font-khmer"
-                    title="Press to Select (Full Display)"
-                  >
-                    <svg className="w-3 h-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M15 3h6v6M9 21H3v-6M21 3l-7 7M3 21l7-7"/></svg>
-                    <span>{language === 'km' ? 'ចុចដើម្បីជ្រើសរើស' : 'Press to Select'}</span>
-                  </button>
-
-                  <span className={`flex items-center gap-1 text-[10px] font-semibold transition-opacity ${listScroll.atBottom && listScroll.atTop ? 'opacity-0' : 'opacity-100'} text-slate-400 font-khmer`}>
-                    <svg className="w-3 h-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M12 5v14M5 12l7 7 7-7" /></svg>
-                    <span>{language === 'km' ? 'អូសមើល' : 'Scroll'}</span>
-                  </span>
-                </div>
+                <span className={`flex items-center gap-1 text-[10px] font-semibold transition-opacity ${listScroll.atBottom && listScroll.atTop ? 'opacity-0' : 'opacity-100'} text-slate-400 font-khmer`}>
+                  <svg className="w-3 h-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M12 5v14M5 12l7 7 7-7" /></svg>
+                  <span>{language === 'km' ? 'អូសមើល' : 'Scroll'}</span>
+                </span>
               </div>
               {/* Scroll progress bar */}
               <div className="h-[2px] bg-slate-800/60">
@@ -2961,18 +2874,22 @@ const TopUp = () => {
       {/* MOBILE STICKY BOTTOM "PAY NOW" ACTION DOCK (lg:hidden)     */}
       {/* High-converting, sticky payment bar on mobile & tablet    */}
       {/* ======================================================== */}
-      <aside aria-label="Mobile Payment Bar" className="lg:hidden fixed bottom-2.5 sm:bottom-4 left-1/2 -translate-x-1/2 z-40 w-[95%] max-w-md select-none font-khmer">
-        <div className="relative overflow-hidden flex items-center justify-between gap-2 p-2 sm:p-2.5 bg-gradient-to-r from-[#031d1d]/95 via-[#042827]/95 to-[#02222e]/95 backdrop-blur-2xl border border-[#00F5A0]/50 rounded-2xl sm:rounded-full shadow-[0_15px_40px_rgba(0,0,0,0.95),0_0_28px_rgba(0,245,160,0.28),inset_0_1px_1px_rgba(0,245,160,0.4)] ring-1 ring-[#00F5A0]/25">
+      <aside
+        aria-label="Mobile Payment Bar"
+        className="lg:hidden fixed left-1/2 -translate-x-1/2 z-40 w-[calc(100%-28px)] max-w-md select-none font-khmer pointer-events-none"
+        style={{ bottom: 'max(16px, calc(env(safe-area-inset-bottom, 0px) + 12px))' }}
+      >
+        <div className="relative overflow-hidden flex items-center justify-between gap-2 p-2 pl-3 sm:p-2.5 sm:pl-3.5 bg-gradient-to-r from-[#031d1d]/95 via-[#042827]/95 to-[#02222e]/95 backdrop-blur-2xl border border-[#00F5A0]/45 rounded-full shadow-[0_12px_36px_rgba(0,0,0,0.92),0_0_24px_rgba(0,245,160,0.24),inset_0_1px_1px_rgba(0,245,160,0.35)] ring-1 ring-[#00F5A0]/20 pointer-events-auto">
           
           {/* Ambient Highlight Glow Layers matching Pay Now button */}
-          <div className="absolute inset-0 bg-gradient-to-r from-[#00F5A0]/10 via-[#00E5B0]/5 to-[#00D4FF]/15 pointer-events-none rounded-2xl sm:rounded-full" />
+          <div className="absolute inset-0 bg-gradient-to-r from-[#00F5A0]/10 via-[#00E5B0]/5 to-[#00D4FF]/15 pointer-events-none rounded-full" />
           <div className="absolute right-0 top-1/2 -translate-y-1/2 w-44 h-16 bg-[#00F5A0]/20 rounded-full blur-xl pointer-events-none" />
           <div className="absolute left-1 top-1/2 -translate-y-1/2 w-28 h-12 bg-[#00D4FF]/15 rounded-full blur-xl pointer-events-none" />
 
           {/* Selected Package Thumbnail & Total Price Summary */}
-          <div className="flex-1 flex items-center gap-2 min-w-0 pl-1 relative z-10">
+          <div className="flex-1 flex items-center gap-2 min-w-0 pl-0.5 relative z-10">
             {/* Mini Package Chest / Icon with matching highlight border */}
-            <div className="w-8 h-8 xs:w-9 xs:h-9 rounded-xl bg-[#021818]/90 border border-[#00F5A0]/40 p-0.5 flex items-center justify-center shrink-0 shadow-inner">
+            <div className="w-8 h-8 xs:w-9 xs:h-9 rounded-full bg-[#021818]/90 border border-[#00F5A0]/40 p-0.5 flex items-center justify-center shrink-0 shadow-inner overflow-hidden">
               <ProductPackageImage pkg={selectedProduct || {}} size="xs" />
             </div>
 
@@ -2983,7 +2900,7 @@ const TopUp = () => {
                   {selectedProduct?.name || (language === 'km' ? 'ជ្រើសរើសកញ្ចប់' : 'Select Package')}
                 </span>
                 {selectedProduct?.tag && (
-                  <span className="hidden xs:inline-block px-1.5 py-0.2 rounded bg-[#00F5A0]/20 text-[#00F5A0] border border-[#00F5A0]/40 text-[8.5px] font-black shrink-0">
+                  <span className="hidden xs:inline-block px-1.5 py-0.2 rounded-full bg-[#00F5A0]/20 text-[#00F5A0] border border-[#00F5A0]/40 text-[8.5px] font-black shrink-0">
                     {selectedProduct.tag}
                   </span>
                 )}
@@ -3019,7 +2936,7 @@ const TopUp = () => {
               handleProceedToPayment();
             }}
             disabled={loading || isTopupDisabled}
-            className={`relative z-10 px-3.5 xs:px-4 sm:px-5 py-2 xs:py-2.5 rounded-xl sm:rounded-full font-black text-xs sm:text-sm uppercase tracking-wide flex items-center justify-center gap-1.5 transition-all active:scale-95 shrink-0 select-none group border border-white/40 ${
+            className={`relative z-10 px-3.5 xs:px-4 sm:px-5 py-2 xs:py-2.5 rounded-full font-black text-xs sm:text-sm uppercase tracking-wide flex items-center justify-center gap-1.5 transition-all active:scale-95 shrink-0 select-none group border border-white/40 ${
               loading
                 ? 'bg-sky-600/70 text-white cursor-wait opacity-90'
                 : isTopupDisabled
