@@ -1063,6 +1063,7 @@ const PRICING_GAMES = [
         activeProvider: activeProv
       };
     });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [products, providerSettings, orders, displayFinancials, financials]);
 
   const filteredAndSortedPackages = useMemo(() => {
