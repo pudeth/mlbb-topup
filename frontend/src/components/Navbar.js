@@ -19,7 +19,13 @@ const Navbar = () => {
     const handleScroll = () => {
       if (!ticking) {
         window.requestAnimationFrame(() => {
-          setIsScrolled(window.scrollY > 30);
+          const y = window.scrollY || 0;
+          setIsScrolled((prev) => {
+            // Hysteresis deadband: trigger scrolled state when past 45px, revert only when within 15px of top
+            if (!prev && y > 45) return true;
+            if (prev && y < 15) return false;
+            return prev;
+          });
           ticking = false;
         });
         ticking = true;
@@ -88,30 +94,28 @@ const Navbar = () => {
         isAuthPage 
           ? '' 
           : isScrolled
-          ? 'pt-2 sm:pt-3 px-3 sm:px-4 pb-0 pointer-events-none'
-          : 'bg-dark-bg/85 backdrop-blur-xl border-b border-slate-800/80 shadow-2xl pointer-events-auto'
+          ? 'pt-2 sm:pt-3 px-3 sm:px-4 pb-1.5 pointer-events-none bg-gradient-to-b from-[#020617]/95 via-[#020617]/80 to-transparent'
+          : 'pt-2 sm:pt-2.5 pb-2 px-3 sm:px-6 bg-dark-bg/90 backdrop-blur-xl border-b border-slate-800/80 shadow-2xl pointer-events-auto'
       }`}>
         {!isAuthPage && (
           <>
-            <div className={`transition-all duration-300 ease-[cubic-bezier(0.16,1,0.3,1)] ${
+            <div className={`transition-all duration-300 ease-[cubic-bezier(0.16,1,0.3,1)] pointer-events-auto ${
               isScrolled
-                ? 'max-w-6xl mx-auto rounded-full bg-[#03091e]/95 backdrop-blur-2xl border-2 border-[#0062ff] shadow-[0_12px_40px_rgba(0,0,0,0.92),0_0_28px_rgba(0,98,255,0.35)] ring-1 ring-white/10 px-3.5 sm:px-4 h-13 sm:h-14 relative overflow-visible pointer-events-auto'
-                : 'max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 relative z-20 pointer-events-auto'
+                ? 'max-w-6xl mx-auto rounded-full bg-[#03091e]/95 backdrop-blur-2xl border-2 border-[#0062ff] shadow-[0_12px_40px_rgba(0,0,0,0.92),0_0_28px_rgba(0,98,255,0.35)] ring-1 ring-white/10 px-3.5 sm:px-4 h-13 sm:h-14 relative overflow-visible'
+                : 'max-w-7xl mx-auto rounded-2xl bg-transparent px-1 sm:px-2 h-13 sm:h-14 relative'
             }`}>
-            <div className={`flex items-center justify-between transition-all duration-300 ${
-              isScrolled ? 'h-full' : 'h-16 lg:h-20'
-            }`}>
+            <div className="flex items-center justify-between h-full">
           
-              {/* Logo (Avatar Medallion + Title) */}
-              <div className={`flex items-center select-none ${isScrolled ? 'pl-1 sm:pl-2' : ''}`}>
+              {/* Logo (Avatar Medallion + Title) - Hidden on desktop (lg:hidden) to avoid duplicate with DesktopSidebar */}
+              <div className={`flex lg:hidden items-center select-none ${isScrolled ? 'pl-1 sm:pl-2' : ''}`}>
                 <Link to="/" className="group flex items-center">
-                  <BrandLogo size={isScrolled ? "md" : "sm"} hideTitle={isScrolled} />
+                  <BrandLogo size="sm" hideTitle={isScrolled} />
                 </Link>
               </div>
 
               {/* Desktop Central Smart Search Bar */}
               <div className={`transition-all duration-300 ${
-                isScrolled ? 'hidden' : 'hidden lg:flex items-center flex-1 max-w-xl mx-4'
+                isScrolled ? 'hidden' : 'hidden lg:flex items-center flex-1 max-w-xl mr-4'
               }`}>
                 <SmartSearchBar isMobile={false} />
               </div>
@@ -122,9 +126,9 @@ const Navbar = () => {
                 <button
                   type="button"
                   title="Notifications"
-                  className="relative h-10 px-3.5 rounded-full border border-[#0055ff]/40 bg-[#081329]/90 hover:bg-[#0e204c] hover:border-[#0088ff]/70 text-slate-200 hover:text-white flex items-center justify-center transition-all duration-200 active:scale-95 shadow-sm cursor-pointer"
+                  className="relative w-10 h-10 rounded-full border border-[#0055ff]/40 bg-[#081329]/90 hover:bg-[#0e204c] hover:border-[#0088ff]/70 text-slate-200 hover:text-white flex items-center justify-center transition-all duration-200 active:scale-95 shadow-sm cursor-pointer shrink-0"
                 >
-                  <svg className="w-4.5 h-4.5 text-white/95" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <svg className="w-5 h-5 text-white/95" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
                   </svg>
                   <span className="absolute -top-1 -right-0.5 min-w-[18px] h-[18px] px-1 rounded-full bg-[#ff3b5c] text-white font-black text-[10px] flex items-center justify-center shadow-[0_0_10px_rgba(255,59,92,0.8)] border border-white/20 animate-pulse">
@@ -505,18 +509,6 @@ const Navbar = () => {
         </div>
       </div>
 
-        {/* Mobile Smart Search Bar - completely outside the capsule dock! */}
-        <div className={`lg:hidden max-w-7xl mx-auto px-3 sm:px-6 transition-all duration-300 ease-[cubic-bezier(0.16,1,0.3,1)] overflow-hidden pointer-events-auto ${
-          isScrolled ? 'max-h-0 min-h-0 h-0 opacity-0 -translate-y-4 pointer-events-none py-0' : 'max-h-24 opacity-100 pb-3 pt-1'
-        }`}>
-          <SmartSearchBar
-            isMobile={true}
-            onFilterClick={() => {
-              const el = document.getElementById('games-section');
-              if (el) el.scrollIntoView({ behavior: 'smooth' });
-            }}
-          />
-        </div>
 
       {/* Ultra Clean & Smooth Animated Mobile Drawer */}
       <div
@@ -706,6 +698,19 @@ const Navbar = () => {
         </>
       )}
     </header>
+
+    {/* Mobile Smart Search Bar - in natural document flow right below sticky header */}
+    {!isAuthPage && (
+      <div className="lg:hidden max-w-7xl mx-auto px-3 sm:px-6 pt-1.5 pb-2.5 relative z-10 transition-opacity duration-200">
+        <SmartSearchBar
+          isMobile={true}
+          onFilterClick={() => {
+            const el = document.getElementById('games-section');
+            if (el) el.scrollIntoView({ behavior: 'smooth' });
+          }}
+        />
+      </div>
+    )}
     </>
   );
 };
