@@ -35,6 +35,8 @@ public class AdminController : BaseController
         _configuration = configuration;
     }
 
+    private static DateTime? _financialsClearedAt = null;
+
     private static object _storeBranding = new
     {
         storeName = "Tin-Topup",
@@ -1112,8 +1114,39 @@ public class AdminController : BaseController
     [HttpGet("financials/profit")]
     public async Task<IActionResult> GetFinancialsProfit()
     {
-        var paidOrders = await _context.Orders
-            .Where(o => o.PaymentStatus == "Paid")
+        // Check if cleared in MongoDB if not in memory
+        DateTime? clearedAt = _financialsClearedAt;
+        try
+        {
+            var mongoUri = _configuration["MongoDB:ConnectionString"]
+                ?? "mongodb+srv://peakmao007_db_user:DNelqTteMX30a7PX@pudeth.olrum6s.mongodb.net/?appName=pudeth&retryWrites=true&w=majority";
+            var dbName = _configuration["MongoDB:DatabaseName"] ?? "mlbbtopup";
+
+            var mongoClient = new MongoDB.Driver.MongoClient(mongoUri);
+            var mongoDb = mongoClient.GetDatabase(dbName);
+            var settingsCol = mongoDb.GetCollection<MongoDB.Bson.BsonDocument>("settings");
+            var settingDoc = await settingsCol.Find(MongoDB.Driver.Builders<MongoDB.Bson.BsonDocument>.Filter.Eq("_id", "financials_cleared_at")).FirstOrDefaultAsync();
+            if (settingDoc != null && settingDoc.Contains("cleared_at"))
+            {
+                var dt = settingDoc["cleared_at"].ToUniversalTime();
+                if (!_financialsClearedAt.HasValue || dt > _financialsClearedAt.Value)
+                {
+                    _financialsClearedAt = dt;
+                }
+                clearedAt = _financialsClearedAt;
+            }
+        }
+        catch { }
+
+        var paidOrdersQuery = _context.Orders
+            .Where(o => o.PaymentStatus == "Paid");
+
+        if (clearedAt.HasValue)
+        {
+            paidOrdersQuery = paidOrdersQuery.Where(o => o.CreatedAt > clearedAt.Value);
+        }
+
+        var paidOrders = await paidOrdersQuery
             .Include(o => o.Product)
             .ToListAsync();
 
@@ -1213,15 +1246,19 @@ public class AdminController : BaseController
             var mongoDb = mongoClient.GetDatabase(dbName);
             var paymentsCol = mongoDb.GetCollection<MongoDB.Bson.BsonDocument>("payments");
 
-            var filter = MongoDB.Driver.Builders<MongoDB.Bson.BsonDocument>.Filter.Or(
+            var statusFilter = MongoDB.Driver.Builders<MongoDB.Bson.BsonDocument>.Filter.Or(
                 MongoDB.Driver.Builders<MongoDB.Bson.BsonDocument>.Filter.Eq("status", "PAID"),
                 MongoDB.Driver.Builders<MongoDB.Bson.BsonDocument>.Filter.Eq("payment_status", "APPROVED")
             );
+            var notArchivedFilter = MongoDB.Driver.Builders<MongoDB.Bson.BsonDocument>.Filter.Ne("archived_financials", true);
+            var filter = MongoDB.Driver.Builders<MongoDB.Bson.BsonDocument>.Filter.And(statusFilter, notArchivedFilter);
 
             var mongoDocs = await paymentsCol.Find(filter).ToListAsync();
             mongoDocs.Reverse();
             foreach (var doc in mongoDocs)
             {
+                if (doc.Contains("archived_financials") && doc["archived_financials"].IsBoolean && doc["archived_financials"].AsBoolean) continue;
+
                 var bill = doc.Contains("bill_number") && !doc["bill_number"].IsBsonNull ? doc["bill_number"].AsString : string.Empty;
                 var tran = doc.Contains("transaction_id") && !doc["transaction_id"].IsBsonNull ? doc["transaction_id"].AsString : string.Empty;
                 var key = !string.IsNullOrEmpty(bill) ? bill : (!string.IsNullOrEmpty(tran) ? tran : doc["_id"].ToString() ?? string.Empty);
@@ -1352,7 +1389,55 @@ public class AdminController : BaseController
             overallMarginPct,
             dailyProfitTrend,
             packageProfitability,
-            salesLedger = ledgerList
+            salesLedger = ledgerList,
+            clearedAt = _financialsClearedAt?.ToString("o")
+        });
+    }
+
+    /// <summary>
+    /// Clear & Reset Financials for starting a brand-new selling period
+    /// </summary>
+    [HttpPost("financials/clear")]
+    public async Task<IActionResult> ClearFinancials()
+    {
+        var now = DateTime.UtcNow;
+        _financialsClearedAt = now;
+
+        try
+        {
+            var mongoUri = _configuration["MongoDB:ConnectionString"]
+                ?? "mongodb+srv://peakmao007_db_user:DNelqTteMX30a7PX@pudeth.olrum6s.mongodb.net/?appName=pudeth&retryWrites=true&w=majority";
+            var dbName = _configuration["MongoDB:DatabaseName"] ?? "mlbbtopup";
+
+            var mongoClient = new MongoDB.Driver.MongoClient(mongoUri);
+            var mongoDb = mongoClient.GetDatabase(dbName);
+            var settingsCol = mongoDb.GetCollection<MongoDB.Bson.BsonDocument>("settings");
+
+            var filter = MongoDB.Driver.Builders<MongoDB.Bson.BsonDocument>.Filter.Eq("_id", "financials_cleared_at");
+            var update = MongoDB.Driver.Builders<MongoDB.Bson.BsonDocument>.Update
+                .Set("cleared_at", now)
+                .Set("cleared_at_iso", now.ToString("o"));
+            await settingsCol.UpdateOneAsync(filter, update, new MongoDB.Driver.UpdateOptions { IsUpsert = true });
+
+            var paymentsCol = mongoDb.GetCollection<MongoDB.Bson.BsonDocument>("payments");
+            var updatePayments = MongoDB.Driver.Builders<MongoDB.Bson.BsonDocument>.Update
+                .Set("archived_financials", true)
+                .Set("archived_at", now);
+            await paymentsCol.UpdateManyAsync(
+                MongoDB.Driver.Builders<MongoDB.Bson.BsonDocument>.Filter.Empty,
+                updatePayments
+            );
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"MongoDB clear financials warning: {ex.Message}");
+        }
+
+        return Ok(new
+        {
+            success = true,
+            message = "Financials successfully reset to $0.00 for new sell period.",
+            clearedAt = now.ToString("o")
         });
     }
 

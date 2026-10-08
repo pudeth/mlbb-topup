@@ -168,6 +168,7 @@ export const adminAPI = {
   switchProvider: (provider) => api.post('/admin/provider/switch', { provider }),
   testProviderConnection: (data) => api.post('/admin/provider/test-connection', data),
   getFinancialsProfit: () => api.get('/admin/financials/profit'),
+  clearFinancials: () => api.post('/admin/financials/clear'),
   getSupplierBalance: () => api.get('/admin/supplier/balance'),
   recordSupplierDeposit: (data) => api.post('/admin/supplier/deposit', data),
   getAllResellers: () => api.get('/admin/resellers'),

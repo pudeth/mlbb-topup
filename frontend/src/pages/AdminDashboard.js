@@ -420,13 +420,24 @@ const PRICING_GAMES = [
   const [financialsSubTab, setFinancialsSubTab] = useState('ledger'); // 'ledger' | 'packages' | 'trends'
   const [financialsPage, setFinancialsPage] = useState(1);
   const [financialsPageSize, setFinancialsPageSize] = useState(15);
+  const [clearFinancialsModalOpen, setClearFinancialsModalOpen] = useState(false);
+  const [clearingFinancials, setClearingFinancials] = useState(false);
 
   // Compute live display financials combining API metrics and real orders
   const displayFinancials = useMemo(() => {
+    const clearedTimestamp = financials?.clearedAt || (typeof window !== 'undefined' ? localStorage.getItem('financials_cleared_at') : null);
+    const clearedDate = clearedTimestamp ? new Date(clearedTimestamp) : null;
+
     if (financials && ((financials.salesLedger && financials.salesLedger.length > 0) || Number(financials.totalGrossRevenue || 0) > 0)) {
-      return financials;
+      return { ...financials, clearedAt: financials.clearedAt || clearedTimestamp };
     }
-    const paidList = (orders || []).filter(o => o && (o.paymentStatus === 'Paid' || o.topupStatus === 'Completed'));
+
+    const paidList = (orders || []).filter(o => {
+      if (!o || (o.paymentStatus !== 'Paid' && o.topupStatus !== 'Completed')) return false;
+      if (clearedDate && new Date(o.createdAt || 0) <= clearedDate) return false;
+      return true;
+    });
+
     if (paidList.length > 0) {
       let rev = 0;
       let cogs = 0;
@@ -464,7 +475,8 @@ const PRICING_GAMES = [
         overallMarginPct: marginPct,
         dailyProfitTrend: financials?.dailyProfitTrend || [],
         packageProfitability: financials?.packageProfitability || [],
-        salesLedger: ledger
+        salesLedger: ledger,
+        clearedAt: clearedTimestamp
       };
     }
     return financials || {
@@ -477,7 +489,8 @@ const PRICING_GAMES = [
       overallMarginPct: 0,
       dailyProfitTrend: [],
       packageProfitability: [],
-      salesLedger: []
+      salesLedger: [],
+      clearedAt: clearedTimestamp
     };
   }, [financials, orders]);
 
@@ -2361,6 +2374,45 @@ const PRICING_GAMES = [
     document.body.removeChild(link);
     showToast('success', `Exported ${rows.length} packages for [${categoryTitle.replace(/_/g, ' ')}] to Excel/CSV!`);
     setExportModalOpen(false);
+  };
+
+  const handleClearFinancials = async () => {
+    setClearingFinancials(true);
+    try {
+      const res = await adminAPI.clearFinancials().catch(e => {
+        console.warn('Backend clearFinancials error (proceeding with local reset):', e?.message);
+        return { data: { clearedAt: new Date().toISOString() } };
+      });
+
+      const clearedIso = res?.data?.clearedAt || new Date().toISOString();
+      localStorage.setItem('financials_cleared_at', clearedIso);
+
+      // Reset local financials state
+      setFinancials({
+        totalGrossRevenue: 0,
+        totalGrossRevenueKHR: 0,
+        totalSupplierCogs: 0,
+        totalSupplierCogsKHR: 0,
+        totalNetProfit: 0,
+        totalNetProfitKHR: 0,
+        overallMarginPct: 0,
+        dailyProfitTrend: [],
+        packageProfitability: (financials?.packageProfitability || []).map(p => ({
+          ...p,
+          totalSoldCount: 0,
+          totalProfit: 0
+        })),
+        salesLedger: [],
+        clearedAt: clearedIso
+      });
+
+      setClearFinancialsModalOpen(false);
+      showToast('success', '✅ Financials cleared! All counters reset to $0.00 for your new sell period.');
+    } catch (err) {
+      showToast('error', 'Failed to clear financials: ' + (err?.message || err));
+    } finally {
+      setClearingFinancials(false);
+    }
   };
 
   const filteredOrders = orders.filter((order) => {
@@ -5192,19 +5244,39 @@ const PRICING_GAMES = [
                 <h2 className="text-2xl sm:text-3xl font-black text-white flex items-center gap-2">
                   <span>💰</span> Financials & Profit Analytics
                 </h2>
-                <p className="text-xs sm:text-sm text-slate-400 mt-1">
-                  Real-time Gross Revenue, Supplier COGS, Net Profit, and margin metrics.
-                </p>
+                <div className="flex items-center gap-2 flex-wrap mt-1">
+                  <p className="text-xs sm:text-sm text-slate-400">
+                    Real-time Gross Revenue, Supplier COGS, Net Profit, and margin metrics.
+                  </p>
+                  {displayFinancials?.clearedAt && (
+                    <span className="text-[11px] font-bold text-amber-300 bg-amber-500/10 border border-amber-500/20 px-2 py-0.5 rounded-full inline-flex items-center gap-1">
+                      <span>🔄</span> Cleared Period (tracking new sales)
+                    </span>
+                  )}
+                </div>
               </div>
 
-              <button
-                onClick={() => setExportModalOpen(true)}
-                className="btn btn-secondary text-xs py-2 px-3.5 flex items-center gap-1.5 cursor-pointer bg-emerald-950/40 hover:bg-emerald-900/60 border border-emerald-500/40 text-emerald-300 font-bold shadow-md transition-all active:scale-95 shrink-0"
-                title="Export complete pricing, wholesale costs, and profit breakdown to Excel"
-              >
-                <span>📊</span>
-                <span>Export Profit Report (Excel)</span>
-              </button>
+              <div className="flex items-center gap-2.5 flex-wrap">
+                <button
+                  type="button"
+                  onClick={() => setClearFinancialsModalOpen(true)}
+                  className="btn text-xs py-2 px-3.5 flex items-center gap-1.5 cursor-pointer bg-rose-950/40 hover:bg-rose-900/60 border border-rose-500/50 text-rose-300 font-bold shadow-md transition-all active:scale-95 shrink-0"
+                  title="Reset all financial revenue, provider costs & sales ledger to $0.00 for a fresh new sell"
+                >
+                  <span>🗑️</span>
+                  <span>Clear Financials / New Sell</span>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => setExportModalOpen(true)}
+                  className="btn btn-secondary text-xs py-2 px-3.5 flex items-center gap-1.5 cursor-pointer bg-emerald-950/40 hover:bg-emerald-900/60 border border-emerald-500/40 text-emerald-300 font-bold shadow-md transition-all active:scale-95 shrink-0"
+                  title="Export complete pricing, wholesale costs, and profit breakdown to Excel"
+                >
+                  <span>📊</span>
+                  <span>Export Profit Report (Excel)</span>
+                </button>
+              </div>
             </div>
 
             {/* Core Financials KPI Cards */}
@@ -10727,6 +10799,88 @@ const PRICING_GAMES = [
                 </button>
               </div>
             </form>
+          </div>
+        </div>
+      )}
+
+      {/* Clear Financials / Start New Sell Confirmation Modal */}
+      {clearFinancialsModalOpen && (
+        <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-md flex items-center justify-center p-4 animate-fadeIn">
+          <div className="bg-[#0f172a] border border-rose-500/40 rounded-3xl max-w-lg w-full p-6 sm:p-7 shadow-2xl space-y-6 relative overflow-hidden">
+            <div className="absolute top-0 right-0 w-48 h-48 bg-rose-500/10 rounded-full blur-3xl pointer-events-none" />
+            
+            <div className="flex items-start gap-4">
+              <div className="w-12 h-12 rounded-2xl bg-rose-500/10 border border-rose-500/30 text-rose-400 flex items-center justify-center text-2xl shrink-0 shadow-lg shadow-rose-950/50">
+                🗑️
+              </div>
+              <div className="flex-1">
+                <h3 className="text-xl font-black text-white flex items-center gap-2">
+                  Clear Financials & Start New Sell?
+                </h3>
+                <p className="text-xs sm:text-sm text-slate-400 mt-1 leading-relaxed">
+                  This action resets all Financial KPI metrics (<strong className="text-emerald-400">Income</strong>, <strong className="text-cyan-400">Total Seller</strong>, <strong className="text-rose-400">Provider Costs</strong>) back to <strong className="text-white">$0.00</strong> and archives the previous sales ledger so you can track a clean new selling period.
+                </p>
+              </div>
+            </div>
+
+            {/* Current Metrics Summary to be Cleared */}
+            <div className="p-4 rounded-2xl bg-slate-900/80 border border-slate-800 space-y-2.5 text-xs">
+              <div className="text-[11px] font-black uppercase tracking-wider text-slate-400 mb-1">
+                Current Financial Snapshot to be Reset:
+              </div>
+              <div className="flex items-center justify-between text-slate-300">
+                <span>Current Net Income:</span>
+                <span className="font-mono font-bold text-emerald-400">${displayFinancials?.totalNetProfit?.toFixed(2) || '0.00'}</span>
+              </div>
+              <div className="flex items-center justify-between text-slate-300">
+                <span>Total Gross Revenue:</span>
+                <span className="font-mono font-bold text-cyan-400">${displayFinancials?.totalGrossRevenue?.toFixed(2) || '0.00'}</span>
+              </div>
+              <div className="flex items-center justify-between text-slate-300">
+                <span>Total Provider Cost:</span>
+                <span className="font-mono font-bold text-rose-400">${displayFinancials?.totalSupplierCogs?.toFixed(2) || '0.00'}</span>
+              </div>
+              <div className="flex items-center justify-between text-slate-300">
+                <span>Sales Ledger Entries:</span>
+                <span className="font-mono font-bold text-amber-400">{displayFinancials?.salesLedger?.length || 0} transactions</span>
+              </div>
+            </div>
+
+            <div className="p-3.5 rounded-2xl bg-amber-500/10 border border-amber-500/30 text-amber-300 text-xs flex items-start gap-2.5">
+              <span className="text-base shrink-0">💡</span>
+              <p className="leading-relaxed">
+                <strong>Safety Note:</strong> Customer accounts, player IDs, and order history records remain safely intact in your Orders Ledger. Only the financial accounting numbers reset to $0.00 for your new sales cycle.
+              </p>
+            </div>
+
+            <div className="flex items-center justify-end gap-3 pt-2 border-t border-slate-800/80">
+              <button
+                type="button"
+                onClick={() => setClearFinancialsModalOpen(false)}
+                disabled={clearingFinancials}
+                className="btn btn-secondary text-xs py-2.5 px-4 font-bold cursor-pointer"
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                onClick={handleClearFinancials}
+                disabled={clearingFinancials}
+                className="btn text-xs py-2.5 px-5 font-black bg-rose-600 hover:bg-rose-500 active:scale-95 text-white shadow-lg shadow-rose-900/40 rounded-xl cursor-pointer flex items-center gap-2"
+              >
+                {clearingFinancials ? (
+                  <>
+                    <span className="animate-spin text-sm">⏳</span>
+                    <span>Resetting Financials...</span>
+                  </>
+                ) : (
+                  <>
+                    <span>🗑️</span>
+                    <span>Yes, Reset to $0.00</span>
+                  </>
+                )}
+              </button>
+            </div>
           </div>
         </div>
       )}

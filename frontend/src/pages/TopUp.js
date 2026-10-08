@@ -1809,552 +1809,371 @@ const TopUp = () => {
       )}
 
 
-      {/* ========================================================= */}
-      {/* STEP 1: GAME SHOWCASE & PLAYER INFORMATION HERO          */}
-      {/* ========================================================= */}
-      <div id="player-info-section" className="flex flex-row gap-2 sm:gap-4 md:gap-6 items-stretch pt-1 sm:pt-2">
+      {/* ======================================================== */}
+      {/* 1. GAME SHOWCASE & DETAILS CARD (Ref: media_1791438986821)*/}
+      {/* ======================================================== */}
+      <div className="relative rounded-2xl sm:rounded-3xl bg-[#0b1329] border border-slate-800/90 shadow-2xl p-4 sm:p-5 overflow-hidden transition-all">
+        {/* Subtle Ambient Background Artwork with Gradient Overlay */}
+        <div className="absolute inset-0 z-0 pointer-events-none opacity-20 sm:opacity-25 overflow-hidden">
+          <img
+            src={
+              selectedGame.id.startsWith('mlbb')
+                ? (MLBB_BANNERS[activeBannerIdx % MLBB_BANNERS.length] || '/images/mlbb_hero_banner.png')
+                : selectedGame.id.includes('freefire')
+                  ? (FREEFIRE_BANNERS[activeBannerIdx % FREEFIRE_BANNERS.length] || '/images/freefire_hero_banner.jpg')
+                  : (selectedGame.image || selectedGame.localFallbackImage || '/mlbb-logo.png')
+            }
+            alt=""
+            className="w-full h-full object-cover object-center filter blur-[1px]"
+          />
+          <div className="absolute inset-0 bg-gradient-to-r from-[#0b1329] via-[#0b1329]/90 to-[#0b1329]/75" />
+          <div className="absolute inset-0 bg-gradient-to-t from-[#0b1329] via-transparent to-black/30" />
+        </div>
 
-        {/* ========================================== */}
-        {/* LEFT COLUMN: GAME ARTWORK SHOWCASE & BANNER */}
-        {/* ========================================== */}
-        <div className="w-[30%] xs:w-[33%] sm:w-[38%] lg:w-[40%] relative rounded-2xl sm:rounded-3xl lg:rounded-[28px] overflow-hidden bg-[#040817] border border-sky-500/40 shadow-[0_0_25px_rgba(14,165,233,0.22)] flex flex-col justify-between group min-h-[300px] xs:min-h-[330px] sm:min-h-[400px] shrink-0">
-          
-          {/* Background Image / Banner Carousel */}
-          <div className="absolute inset-0 z-0">
-            <img
-              src={
-                selectedGame.id.startsWith('mlbb')
-                  ? (MLBB_BANNERS[activeBannerIdx % MLBB_BANNERS.length] || '/images/mlbb_hero_banner.png')
-                  : selectedGame.id.includes('freefire')
-                    ? (FREEFIRE_BANNERS[activeBannerIdx % FREEFIRE_BANNERS.length] || '/images/freefire_hero_banner.jpg')
-                    : (selectedGame.image || selectedGame.localFallbackImage || '/mlbb-logo.png')
-              }
-              alt={selectedGame.name}
-              onError={(e) => {
-                e.target.onerror = null;
-                e.target.src = selectedGame.id.includes('freefire') ? '/images/freefire_hero_banner.jpg' : (selectedGame.localFallbackImage || '/mlbb-logo.png');
-              }}
-              className="w-full h-full object-cover object-center transition-all duration-700 group-hover:scale-105"
-            />
-            {/* Cinematic Vignette & Ambient Glow Overlays */}
-            <div className="absolute inset-0 bg-gradient-to-t from-[#040817] via-transparent to-black/40 pointer-events-none" />
-            <div className="absolute inset-0 bg-gradient-to-r from-black/40 via-transparent to-black/30 pointer-events-none" />
+        {/* Card Content Row */}
+        <div className="relative z-10 flex flex-col sm:flex-row items-start sm:items-center gap-3.5 sm:gap-5">
+          {/* Game Icon with Cambodia Corner Badge & Glow */}
+          <div className="relative shrink-0">
+            <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-2xl overflow-hidden border-2 border-slate-700/80 bg-slate-950 shadow-lg shadow-sky-500/10">
+              <img
+                src={selectedGame.id.startsWith('mlbb') ? '/images/mlbb_square_logo.png' : (selectedGame.image || selectedGame.localFallbackImage || '/mlbb-logo.png')}
+                alt={selectedGame.name}
+                onError={(e) => {
+                  e.target.onerror = null;
+                  e.target.src = selectedGame.localFallbackImage || selectedGame.image || '/mlbb-logo.png';
+                }}
+                className={`w-full h-full ${selectedGame.id.startsWith('mlbb') ? 'object-contain' : 'object-cover'}`}
+              />
+            </div>
+            {/* Cambodia Server Corner Badge */}
+            {(selectedGame.id.includes('freefire') || selectedGame.id.startsWith('mlbb') || selectedGame.flagTitle || selectedGame.badge?.includes('ខ្មែរ')) && (
+              <span className="absolute -top-1.5 -right-1.5 px-1.5 py-0.5 rounded text-[8.5px] font-black bg-gradient-to-r from-amber-400 to-amber-500 text-slate-950 border border-amber-300 shadow-md">
+                {selectedGame.id.includes('freefire') ? 'KH' : '5V5'}
+              </span>
+            )}
           </div>
 
-          {/* Top Bar: Server Badge Frame & Back Button */}
-          <div className="relative z-10 p-2 xs:p-3 sm:p-5 flex items-center justify-end gap-1.5 sm:gap-2">
+          {/* Game Title, Description & Trust Badges */}
+          <div className="flex-1 min-w-0 space-y-2">
+            <div className="flex items-center justify-between gap-2 flex-wrap">
+              <div className="flex items-center gap-2">
+                <h1 className="text-lg sm:text-xl md:text-2xl font-black text-white tracking-wide">
+                  {selectedGame.name}
+                </h1>
+                <span className="px-2 py-0.5 rounded-full bg-cyan-500/15 border border-cyan-400/30 text-cyan-300 text-[10px] font-bold">
+                  ★ Popular
+                </span>
+              </div>
 
-            {/* Right: 3D Server Badge Frame & Back Button */}
-            <div className="flex items-center gap-1.5 sm:gap-2.5">
-              {(selectedGame.id.startsWith('mlbb') || selectedGame.id.includes('freefire') || selectedGame.flagTitle || (selectedGame.flagType && selectedGame.flagType !== 'none') || selectedGame.badge?.includes('ខ្មែរ')) && (
-                <div className="pointer-events-none drop-shadow-[0_4px_12px_rgba(0,0,0,0.85)] scale-[0.62] xs:scale-[0.72] sm:scale-[0.88] md:scale-100 origin-right">
-                  <CambodiaFlagFrame
-                    title={selectedGame.id.includes('freefire') ? 'សេវើខ្មែរ' : (selectedGame.flagTitle || (selectedGame.id?.includes('ph') ? 'PH SERVER' : selectedGame.id?.includes('id') ? 'ID SERVER' : selectedGame.badge || "សេវើខ្មែរ 5v5"))}
-                    subtitle={selectedGame.id.includes('freefire') ? 'KH' : (selectedGame.flagSubtitle || (selectedGame.id?.startsWith('mlbb') ? "5V5" : ""))}
-                    sub={selectedGame.id.includes('freefire') ? 'SERVER' : (selectedGame.flagServerText || (selectedGame.id?.includes('ph') ? 'OFFICIAL' : selectedGame.id?.includes('id') ? 'FAST' : 'SERVER'))}
-                    flagType={selectedGame.flagType || (selectedGame.id?.includes('ph') || selectedGame.name?.includes('(PH)') ? 'ph' : selectedGame.id?.includes('id') || selectedGame.name?.includes('(ID)') ? 'id' : selectedGame.badge?.includes('ខ្មែរ') ? 'kh' : 'kh')}
-                    flagImage={selectedGame.flagImage || null}
-                    isFullBadgePng={selectedGame.isFullBadgePng || false}
-                    badgeStyle={selectedGame.flagFrameStyle || 'gold_cyber'}
-                  />
-                </div>
-              )}
-
-              {/* Back Button to Home */}
+              {/* Navigation Back Pill */}
               <button
                 type="button"
                 onClick={() => navigate('/')}
-                className="w-7 h-7 sm:w-9 sm:h-9 rounded-full bg-slate-950/80 hover:bg-slate-900 backdrop-blur-xl text-white hover:text-cyan-300 flex items-center justify-center text-sm sm:text-lg font-black border border-white/20 hover:border-cyan-400/80 cursor-pointer transition-all duration-300 hover:scale-110 active:scale-95 shadow-md shrink-0 ml-0.5"
-                title="Back to Home"
+                className="inline-flex items-center gap-1 px-2.5 py-1 rounded-xl bg-slate-900/90 hover:bg-slate-800 border border-slate-700/80 hover:border-slate-600 text-slate-300 hover:text-white text-xs font-bold transition-all cursor-pointer shadow-sm"
+                title={language === 'km' ? 'ត្រឡប់ទៅទំព័រដើម' : 'Back to Home'}
               >
-                ‹
+                <span>‹</span>
+                <span>{language === 'km' ? 'ត្រឡប់' : 'Back'}</span>
               </button>
             </div>
-          </div>
 
-          {/* Bottom Artwork Content: Slogan, 5v5 Emblem & Carousel Dots */}
-          <div className="relative z-10 p-2 xs:p-3 sm:p-6 mt-auto flex flex-col justify-end space-y-2 sm:space-y-4">
-            {!selectedGame.id.startsWith('mlbb') && !selectedGame.id.includes('freefire') && (
-              <div className="flex flex-col select-none min-w-0">
-                <span className="text-[11px] xs:text-sm sm:text-2xl lg:text-3xl font-black uppercase leading-tight text-white drop-shadow-[0_2px_10px_rgba(0,0,0,0.9)] line-clamp-3 break-words">
-                  {selectedGame.name}
-                </span>
-                {selectedGame.currency && (
-                  <span className="mt-1 self-start max-w-full truncate px-1.5 sm:px-2.5 py-0.5 rounded-full bg-sky-500/20 border border-sky-400/40 text-sky-200 text-[8px] xs:text-[9px] sm:text-xs font-bold uppercase tracking-wider">
-                    {selectedGame.currency}
-                  </span>
-                )}
-              </div>
-            )}
+            {/* Khmer Description Matching Reference Image 2 */}
+            <p className="text-xs sm:text-[13px] leading-relaxed text-slate-300/90 font-khmer">
+              {selectedGame.id.startsWith('mlbb')
+                ? 'ទិញពេជ្រ Mobile Legends ដោយខ្លួនឯង! បញ្ចូលពេជ្រ Mobile Legends: Bang Bang តាមរយៈ អាយឌី ID របស់អ្នក, ជ្រើសរើសកញ្ចប់ពេជ្រ ដែលអ្នកពេញចិត្តទិញ, បង់ប្រាក់តាមមធ្យោបាយដែលមាន, ពេជ្រនឹងបញ្ជូនទៅក្នុងគណនី MLBB របស់អ្នកភ្លាមៗ។'
+                : selectedGame.id.includes('freefire')
+                ? 'ទិញពេជ្រ Free Fire ដោយខ្លួនឯង! បញ្ចូលពេជ្រ Garena Free Fire តាមរយៈ Player ID របស់អ្នក, ជ្រើសរើសកញ្ចប់ពេជ្រ ឬ Weekly Pass ដែលអ្នកពេញចិត្ត, បង់ប្រាក់តាមមធ្យោបាយដែលមាន, ពេជ្រនឹងបញ្ជូនទៅក្នុងគណនី Free Fire របស់អ្នកភ្លាមៗ។'
+                : (selectedGame.description || 'បញ្ចូលទឹកប្រាក់ហ្គេមរហ័ស សុវត្ថិភាពខ្ពស់ 100% ស្វ័យប្រវត្តិតាមរយៈ Player ID ផ្លូវការ។')}
+            </p>
 
-            {/* Carousel Pagination Controls: < ● ○ ○ ○ > */}
-            {(selectedGame.id.startsWith('mlbb') || selectedGame.id.includes('freefire')) && (
-            <div className="flex items-center justify-center gap-1.5 sm:gap-3 pt-1">
-              {(() => {
-                const activeBanners = selectedGame.id.startsWith('mlbb') ? MLBB_BANNERS : FREEFIRE_BANNERS;
-                return (
-                  <>
+            {/* 3 Trust Badges matching reference image 2 */}
+            <div className="flex items-center gap-2 flex-wrap pt-0.5 font-sans">
+              <span className="inline-flex items-center gap-1.5 px-2.5 sm:px-3 py-1 rounded-xl bg-slate-900/90 border border-slate-700/80 text-slate-200 text-[10.5px] sm:text-xs font-bold shadow-sm">
+                <span className="text-amber-400">⚡</span>
+                <span>Instant Delivery</span>
+              </span>
+              <span className="inline-flex items-center gap-1.5 px-2.5 sm:px-3 py-1 rounded-xl bg-slate-900/90 border border-slate-700/80 text-slate-200 text-[10.5px] sm:text-xs font-bold shadow-sm">
+                <span className="text-sky-400">🔒</span>
+                <span>Secure</span>
+              </span>
+              <span className="inline-flex items-center gap-1.5 px-2.5 sm:px-3 py-1 rounded-xl bg-slate-900/90 border border-slate-700/80 text-slate-200 text-[10.5px] sm:text-xs font-bold shadow-sm">
+                <span className="text-emerald-400">✓</span>
+                <span>Official</span>
+              </span>
+
+              {/* Optional multi-banner switch dots if more than 1 banner */}
+              {((selectedGame.id.startsWith('mlbb') && MLBB_BANNERS.length > 1) || (selectedGame.id.includes('freefire') && FREEFIRE_BANNERS.length > 1)) && (
+                <div className="ml-auto hidden sm:flex items-center gap-1.5 px-2 py-1 rounded-full bg-slate-900/80 border border-slate-800">
+                  {(selectedGame.id.startsWith('mlbb') ? MLBB_BANNERS : FREEFIRE_BANNERS).map((_, idx) => (
                     <button
+                      key={idx}
                       type="button"
-                      onClick={() => setActiveBannerIdx((prev) => (prev > 0 ? prev - 1 : activeBanners.length - 1))}
-                      className="text-slate-400 hover:text-cyan-300 text-xs sm:text-sm font-black px-1 py-0.5 transition-colors cursor-pointer"
-                      title="Previous Banner"
-                    >
-                      ‹
-                    </button>
-                    <div className="flex items-center gap-1 sm:gap-1.5">
-                      {activeBanners.map((_, idx) => (
-                        <button
-                          key={idx}
-                          type="button"
-                          onClick={() => setActiveBannerIdx(idx)}
-                          className={`rounded-full transition-all duration-300 cursor-pointer ${
-                            (activeBannerIdx % activeBanners.length) === idx
-                              ? 'w-3.5 sm:w-5 h-1.5 sm:h-2 bg-gradient-to-r from-cyan-400 to-blue-500 shadow-[0_0_8px_rgba(34,211,238,0.8)]'
-                              : 'w-1.5 sm:w-2 h-1.5 sm:h-2 bg-slate-600/80 hover:bg-slate-400'
-                          }`}
-                        />
-                      ))}
-                    </div>
-                    <button
-                      type="button"
-                      onClick={() => setActiveBannerIdx((prev) => (prev < activeBanners.length - 1 ? prev + 1 : 0))}
-                      className="text-slate-400 hover:text-cyan-300 text-xs sm:text-sm font-black px-1 py-0.5 transition-colors cursor-pointer"
-                      title="Next Banner"
-                    >
-                      ›
-                    </button>
-                  </>
-                );
-              })()}
+                      onClick={() => setActiveBannerIdx(idx)}
+                      className={`h-1.5 rounded-full transition-all cursor-pointer ${
+                        activeBannerIdx === idx ? 'w-4 bg-amber-400' : 'w-1.5 bg-slate-600 hover:bg-slate-400'
+                      }`}
+                      title={`Banner ${idx + 1}`}
+                    />
+                  ))}
+                </div>
+              )}
             </div>
-            )}
           </div>
         </div>
+      </div>
 
-        {/* ======================================================== */}
-        {/* RIGHT COLUMN: GAME INFO & PLAYER INFO HUB */}
-        {/* ======================================================== */}
-        <div className="flex-1 min-w-0 rounded-2xl sm:rounded-3xl lg:rounded-[28px] border border-sky-500/40 bg-[#060c21]/95 backdrop-blur-2xl p-2.5 xs:p-3 sm:p-5 lg:p-6 shadow-[0_0_25px_rgba(14,165,233,0.22)] flex flex-col justify-between space-y-2 sm:space-y-3.5">
-          
-          <div>
-            {/* Row 1: Game Header with Glowing Icon, Title, Subtitle & Popular Badge */}
-            <div className="flex items-center justify-between gap-1.5 sm:gap-3">
-              <div className="flex items-center gap-2 sm:gap-3 min-w-0">
-                {/* Glowing Game Icon Frame */}
-                <div className="w-8 h-8 xs:w-9 xs:h-9 sm:w-13 sm:h-13 rounded-xl sm:rounded-2xl bg-slate-950 border border-sky-500/80 shadow-[0_0_12px_rgba(14,165,233,0.5)] p-0.5 sm:p-1.5 flex items-center justify-center shrink-0">
-                  <img
-                    key={selectedGame.id}
-                    src={selectedGame.id.startsWith('mlbb') ? '/images/mlbb_square_logo.png' : (selectedGame.image || selectedGame.localFallbackImage || '/mlbb-logo.png')}
-                    alt={selectedGame.name}
-                    onError={(e) => {
-                      e.target.onerror = null;
-                      e.target.src = selectedGame.localFallbackImage || selectedGame.image || '/mlbb-logo.png';
-                    }}
-                    className={`w-full h-full rounded-lg sm:rounded-xl ${selectedGame.id.startsWith('mlbb') ? 'object-contain' : 'object-cover'}`}
-                  />
-                </div>
-                
-                {/* Title & Subtitle */}
-                <div className="min-w-0">
-                  <h1 className="text-xs xs:text-sm sm:text-xl lg:text-2xl font-black text-white tracking-wide uppercase leading-tight font-sans">
-                    {selectedGame.name}
-                  </h1>
-                  <span className="text-[9px] xs:text-[10px] sm:text-[13px] text-slate-400 font-medium block truncate mt-0.5">
-                    {selectedGame.publisher || 'Official'} • {selectedGame.id.startsWith('mlbb') ? '5v5 MOBA' : (selectedGame.currency || 'Official Service')}
-                  </span>
-                </div>
-              </div>
-
-              {/* Popular Badge */}
-              <div className="shrink-0">
-                <span className="px-1.5 xs:px-2 sm:px-3 py-0.5 rounded-full bg-cyan-500/15 border border-cyan-400/40 text-cyan-300 text-[8px] xs:text-[9px] sm:text-xs font-bold shadow-sm flex items-center gap-1">
-                  <span className="text-cyan-300">★</span>
-                  <span>Popular</span>
-                </span>
-              </div>
-            </div>
-
-            {/* Row 2: Description Text (Visible on sm and up) */}
-            <p className="hidden sm:block text-xs sm:text-[13px] text-slate-300 leading-relaxed mt-2.5 mb-2.5 font-sans">
-              {selectedGame.id.startsWith('mlbb')
-                ? 'Join the ultimate 5v5 battle arena! Team up with your friends, choose your hero, and fight for victory in Mobile Legends: Bang Bang.'
-                : (selectedGame.description || 'Fast, secure, and instant automated direct UID game top-up delivery with official API.')}
-            </p>
+      {/* ======================================================== */}
+      {/* 2. PLAYER INFORMATION CARD (Exact match to Reference Image 2) */}
+      {/* ======================================================== */}
+      <div id="player-info-section" className="rounded-2xl sm:rounded-3xl bg-[#0b1329] border border-slate-800/90 shadow-2xl overflow-hidden font-khmer transition-all">
+        {/* Pink/Rose Header Ribbon matching Reference Image 2 */}
+        <div className="bg-gradient-to-r from-[#ec4899] via-[#f43f5e] to-[#ec4899] text-white px-4 sm:px-5 py-2.5 sm:py-3 flex items-center justify-between shadow-md">
+          <div className="flex items-center gap-2">
+            <span className="text-xs sm:text-sm font-black tracking-wide font-khmer">
+              {language === 'km' ? 'បញ្ចូលព័ត៌មានអ្នកលេង' : 'Player Information'}
+            </span>
+            <span className="text-[10px] sm:text-[11px] font-bold opacity-80 uppercase tracking-wider font-sans">
+              (STEP 1)
+            </span>
           </div>
 
-          {/* ======================================================== */}
-          {/* STEP 1: PLAYER INFORMATION FORM BOX                       */}
-          {/* ======================================================== */}
-          <div className="space-y-2">
-            <div className="flex items-center justify-between gap-2">
-              <div className="flex items-center gap-1.5 sm:gap-2">
-                <span className="px-2 py-0.5 rounded-md bg-gradient-to-r from-amber-400 to-amber-500 text-slate-950 font-black text-[9px] sm:text-[11px] uppercase tracking-wider shadow-sm">
-                  {language === 'km' ? 'ជំហានទី ១' : 'STEP 1'}
-                </span>
-                <span className="text-[11px] sm:text-sm font-black text-white flex items-center gap-1.5">
-                  <svg className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-sky-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2" /><circle cx="12" cy="7" r="4" /></svg>
-                  <span className="truncate">{language === 'km' ? 'ព័ត៌មានអ្នកលេង' : 'Player Information'}</span>
-                </span>
+          <button
+            type="button"
+            onClick={() => setShowIdGuide(true)}
+            className="inline-flex items-center gap-1 text-[11px] bg-black/25 hover:bg-black/40 px-2.5 py-1 rounded-full text-white font-bold transition-colors cursor-pointer"
+          >
+            <span>💡</span>
+            <span>{language === 'km' ? 'របៀបស្វែងរក ID' : 'Where is ID?'}</span>
+          </button>
+        </div>
+
+        {/* Card Body */}
+        <div className="p-4 sm:p-5 space-y-4">
+          {/* Input Fields: USER ID & SERVER ID (Full-width, 2 cols on tablet/desktop, 1 col on mobile) */}
+          <div className={`grid gap-3 sm:gap-4 ${isMlbb || isHoyoverse || isFreefire ? 'grid-cols-1 sm:grid-cols-2' : 'grid-cols-1'}`}>
+            {/* USER ID Field */}
+            <div>
+              <label htmlFor="player_id_input" className="block text-[11px] sm:text-xs font-black text-slate-300 uppercase tracking-wider mb-1.5 font-sans">
+                {isTelegram ? 'TELEGRAM @' : isSteam ? 'STEAM NAME' : isGiftCard ? 'EMAIL' : 'USER ID'} <span className="text-rose-400">*</span>
+              </label>
+              <div className="relative flex items-center">
+                <input
+                  id="player_id_input"
+                  type="text"
+                  inputMode={isTelegram || isSteam || isGiftCard ? 'text' : 'numeric'}
+                  value={formData.playerID}
+                  onChange={handlePlayerIdChange}
+                  placeholder={isTelegram ? '@username' : isSteam ? 'steam_username' : isGiftCard ? 'email@domain.com' : 'User ID'}
+                  className="w-full h-11 sm:h-12 bg-[#060b18] border border-slate-700/80 rounded-xl pl-3.5 pr-24 text-sm sm:text-base font-mono text-white placeholder-slate-500 focus:outline-none focus:border-pink-500 focus:ring-2 focus:ring-pink-500/20 transition-all"
+                />
+                <div className="absolute right-1.5 top-1/2 -translate-y-1/2 flex items-center gap-1">
+                  {formData.playerID && (
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setFormData(prev => ({ ...prev, playerID: '' }));
+                        setAutoDetectedMessage('');
+                        setVerifiedAccount(null);
+                      }}
+                      className="w-6 h-6 rounded-full bg-slate-800 hover:bg-slate-700 text-slate-400 hover:text-white flex items-center justify-center text-xs transition-colors cursor-pointer"
+                      title="Clear"
+                    >
+                      ✕
+                    </button>
+                  )}
+                  <button
+                    type="button"
+                    onClick={handlePastePlayerId}
+                    className="h-8 px-2.5 rounded-lg bg-pink-500/15 hover:bg-pink-500/25 border border-pink-500/30 text-pink-300 hover:text-white text-xs font-bold flex items-center gap-1 transition-all cursor-pointer active:scale-95"
+                    title="Paste Player ID"
+                  >
+                    {pastedPlayerId ? (
+                      <>
+                        <span className="text-emerald-400">✓</span>
+                        <span className="text-emerald-400 font-extrabold text-[11px]">{language === 'km' ? 'បានបិទ' : 'Pasted'}</span>
+                      </>
+                    ) : (
+                      <>
+                        <span>📋</span>
+                        <span className="font-extrabold text-[11px]">{language === 'km' ? 'បិទភ្ជាប់' : 'Paste'}</span>
+                      </>
+                    )}
+                  </button>
+                </div>
               </div>
-              <button
-                type="button"
-                onClick={() => setShowIdGuide(true)}
-                className="shrink-0 inline-flex items-center gap-1 text-[9.5px] sm:text-[11px] text-cyan-300 hover:text-white font-semibold px-2 py-0.5 rounded-full bg-cyan-500/10 border border-cyan-400/25 hover:border-cyan-300/60 transition-colors cursor-pointer"
-              >
-                <svg className="w-3 h-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10" /><path d="M9.1 9a3 3 0 015.8 1c0 2-3 3-3 3M12 17h.01" /></svg>
-                <span>{language === 'km' ? 'រក ID?' : 'Where is ID?'}</span>
-              </button>
             </div>
 
-            {/* Main Inner Card */}
-            <div className="relative p-2.5 sm:p-4 rounded-2xl bg-gradient-to-b from-[#071030] to-[#040a1e] border border-sky-500/25 shadow-[inset_0_1px_0_rgba(255,255,255,0.04)] space-y-2.5 sm:space-y-3">
+            {/* SERVER ID / Zone ID (MLBB) or SERVER REGION (Free Fire) */}
+            {isMlbb && (
+              <div>
+                <label className="block text-[11px] sm:text-xs font-black text-slate-300 uppercase tracking-wider mb-1.5 font-sans">
+                  SERVER ID <span className="text-rose-400">*</span>
+                </label>
+                <input
+                  type="text"
+                  inputMode="numeric"
+                  value={formData.serverID}
+                  onChange={(e) => setFormData(prev => ({ ...prev, serverID: e.target.value }))}
+                  placeholder="Server ID (e.g. 11446)"
+                  className="w-full h-11 sm:h-12 bg-[#060b18] border border-slate-700/80 rounded-xl px-3.5 text-sm sm:text-base font-mono text-white placeholder-slate-500 focus:outline-none focus:border-pink-500 focus:ring-2 focus:ring-pink-500/20 transition-all"
+                />
+              </div>
+            )}
 
-              {/* Profile Status Row: Shows real name & verification status */}
-              <div className="flex items-center gap-2.5 sm:gap-3 p-2 sm:p-2.5 rounded-xl bg-slate-900/70 border border-slate-800/90 shadow-sm">
+            {isFreefire && (() => {
+              const currentRegionCode = verifiedAccount?.region || verifiedAccount?.server || formData.serverID || 'Global';
+              const regInfo = resolveRegionInfo(currentRegionCode);
+              return (
+                <div>
+                  <label className="block text-[11px] sm:text-xs font-black text-slate-300 uppercase tracking-wider mb-1.5 font-sans">
+                    SERVER REGION
+                  </label>
+                  <div className={`w-full h-11 sm:h-12 bg-[#060b18] border rounded-xl px-3.5 flex items-center justify-between gap-2 transition-all ${
+                    verifiedAccount?.valid ? 'border-emerald-500/50' : 'border-slate-700/80'
+                  }`}>
+                    <div className="flex items-center gap-2">
+                      <span className="text-base leading-none">{regInfo.flag}</span>
+                      <span className="text-xs sm:text-sm font-bold text-white">
+                        {regInfo.server}
+                      </span>
+                    </div>
+                    <span className={`text-[10px] font-mono px-2 py-0.5 rounded font-black uppercase tracking-wider ${
+                      verifiedAccount?.valid ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/40' : 'bg-slate-800 text-slate-400'
+                    }`}>
+                      {regInfo.code}
+                    </span>
+                  </div>
+                </div>
+              );
+            })()}
+
+            {isHoyoverse && (
+              <div>
+                <label className="block text-[11px] sm:text-xs font-black text-slate-300 uppercase tracking-wider mb-1.5 font-sans">
+                  SERVER
+                </label>
+                <select
+                  value={formData.serverID}
+                  onChange={(e) => setFormData(prev => ({ ...prev, serverID: e.target.value }))}
+                  className="w-full h-11 sm:h-12 bg-[#060b18] border border-slate-700/80 rounded-xl px-3.5 text-sm text-white focus:outline-none focus:border-pink-500 focus:ring-2 focus:ring-pink-500/20 transition-all"
+                >
+                  <option value="Asia">Asia</option>
+                  <option value="America">America</option>
+                  <option value="Europe">Europe</option>
+                  <option value="TW/HK/MO">TW/HK/MO</option>
+                </select>
+              </div>
+            )}
+          </div>
+
+          {/* Auto-detected message notice */}
+          {autoDetectedMessage && (
+            <div className="text-[11px] font-semibold text-emerald-400 flex items-center gap-1.5">
+              <span>⚡</span>
+              <span>{autoDetectedMessage}</span>
+            </div>
+          )}
+
+          {/* Prominent Full-Width CHECK ID Button matching Reference Image 2 */}
+          <button
+            type="button"
+            onClick={handleVerifyAccount}
+            disabled={accountChecking || !formData.playerID.trim() || (isMlbb && !formData.serverID.trim())}
+            className={`w-full h-11 sm:h-12 rounded-xl font-black text-sm uppercase tracking-wider flex items-center justify-center gap-2 transition-all cursor-pointer shadow-lg active:scale-[0.985] disabled:cursor-not-allowed ${
+              verifiedAccount?.valid
+                ? 'bg-gradient-to-r from-emerald-600 to-teal-600 text-white shadow-emerald-500/25'
+                : formData.playerID.trim()
+                ? 'bg-gradient-to-r from-[#ec4899] via-[#f43f5e] to-[#ec4899] hover:opacity-95 text-white shadow-pink-500/25'
+                : 'bg-slate-800/80 border border-slate-700 text-slate-400 opacity-60'
+            }`}
+          >
+            {accountChecking ? (
+              <>
+                <span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                <span>{language === 'km' ? 'កំពុងពិនិត្យឈ្មោះ...' : 'Checking Player Name...'}</span>
+              </>
+            ) : verifiedAccount?.valid ? (
+              <>
+                <span className="text-base">✓</span>
+                <span>{language === 'km' ? 'ឈ្មោះត្រូវបានបញ្ជាក់ (CHECKED)' : 'ACCOUNT VERIFIED'}</span>
+              </>
+            ) : (
+              <>
+                <span>CHECK ID</span>
+                <span className="text-[11px] opacity-80 font-normal">
+                  ({language === 'km' ? 'ពិនិត្យឈ្មោះ' : 'Check Name'})
+                </span>
+              </>
+            )}
+          </button>
+
+          {/* Helper Tip Note matching Reference Image 2 */}
+          <div className="flex items-center gap-2 text-xs sm:text-[13px] text-slate-300 font-khmer pt-0.5">
+            <span className="text-amber-400 text-base shrink-0">💡</span>
+            <span>ចូលទៅកាន់ Profile នៅក្នុង Lobby រួចចម្លង Player ID ដែលបង្ហាញក្រោមឈ្មោះរបស់អ្នក</span>
+          </div>
+
+          {/* Verified Account Showcase when Account is verified */}
+          {verifiedAccount?.valid && (
+            <div className="p-3.5 sm:p-4 rounded-2xl bg-[#060d21] border border-cyan-500/40 shadow-xl space-y-3 animate-fadeIn">
+              <div className="flex items-center gap-3">
                 <div className="relative shrink-0">
                   <GamerAvatar 
                     avatarId={verifiedAccount?.avatar || 'crown'} 
                     name={verifiedAccount?.name || 'Player'} 
-                    size="sm" 
-                    showGlow={!!verifiedAccount?.valid} 
+                    size="md" 
+                    showGlow={true} 
                   />
-                  <span className={`absolute -bottom-0.5 -right-0.5 w-3 h-3 rounded-full border-2 border-[#050b20] ${verifiedAccount?.valid ? 'bg-emerald-400 shadow-[0_0_8px_#34d399]' : 'bg-slate-500'}`} />
+                  <span className="absolute -bottom-0.5 -right-0.5 w-3.5 h-3.5 rounded-full border-2 border-[#060d21] bg-emerald-400 shadow-[0_0_8px_#34d399]" />
                 </div>
                 <div className="min-w-0 flex-1">
-                  {verifiedAccount?.valid ? (
-                    <div>
-                      {isEditingRealName ? (
-                        <form onSubmit={handleSaveCustomRealName} className="flex items-center gap-1.5 py-0.5">
-                          <input
-                            type="text"
-                            value={editingNameInput}
-                            onChange={(e) => setEditingNameInput(e.target.value)}
-                            placeholder={language === 'km' ? 'បញ្ចូលឈ្មោះក្នុងហ្គេម' : 'Enter in-game name'}
-                            className="h-7 px-2 text-xs bg-[#030817] border border-sky-400 rounded text-white font-bold focus:outline-none focus:ring-1 focus:ring-sky-400"
-                            autoFocus
-                          />
-                          <button
-                            type="submit"
-                            className="h-7 px-2.5 text-[10.5px] font-bold bg-emerald-500 hover:bg-emerald-400 text-slate-950 rounded transition-colors"
-                          >
-                            {language === 'km' ? 'រក្សាទុក' : 'Save'}
-                          </button>
-                          <button
-                            type="button"
-                            onClick={() => setIsEditingRealName(false)}
-                            className="h-7 px-1.5 text-[10px] text-slate-400 hover:text-white"
-                          >
-                            ✕
-                          </button>
-                        </form>
-                      ) : (
-                        <div>
-                          <div className="flex items-center gap-1.5 flex-wrap">
-                            <span
-                              className="text-xs sm:text-[15px] font-black text-white leading-tight tracking-wide drop-shadow-[0_1px_3px_rgba(0,0,0,0.8)]"
-                              style={{ wordBreak: 'break-word', fontFamily: "'Noto Sans', 'Noto Sans Khmer', 'Segoe UI', 'Apple Color Emoji', 'Noto Color Emoji', 'Noto Sans CJK SC', sans-serif" }}
-                            >
-                              {verifiedAccount.name && !verifiedAccount.name.startsWith('Player_') && !verifiedAccount.name.includes('Player #') && verifiedAccount.name !== 'Verified Player'
-                                ? verifiedAccount.name
-                                : (KNOWN_REAL_NAMES[verifiedAccount.id] || (language === 'km' ? `អ្នកលេង Free Fire (${verifiedAccount.id})` : `Free Fire Player (${verifiedAccount.id})`))}
-                            </span>
-                            <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[8.5px] sm:text-[9px] font-black uppercase tracking-wider bg-emerald-500/20 text-emerald-300 border border-emerald-500/40 shadow-[0_0_8px_rgba(16,185,129,0.25)]">
-                              <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
-                              {language === 'km' ? 'ឈ្មោះក្នុងហ្គេម' : 'REAL NAME'}
-                            </span>
-                            <button
-                              type="button"
-                              onClick={() => {
-                                setIsEditingRealName(true);
-                                setEditingNameInput(
-                                  (verifiedAccount.name && !verifiedAccount.name.startsWith('Player_') && !verifiedAccount.name.includes('Player #'))
-                                    ? verifiedAccount.name
-                                    : (KNOWN_REAL_NAMES[verifiedAccount.id] || '')
-                                );
-                              }}
-                              className="text-slate-400 hover:text-sky-300 p-0.5 transition-colors cursor-pointer"
-                              title={language === 'km' ? 'កែសម្រួលឈ្មោះ' : 'Edit display name'}
-                            >
-                              <svg className="w-3 h-3" viewBox="0 0 20 20" fill="currentColor">
-                                <path d="M13.586 3.586a2 2 0 112.828 2.828l-.793.793-2.828-2.828.793-.793zM11.379 5.793L3 14.172V17h2.828l8.38-8.379-2.83-2.828z" />
-                              </svg>
-                            </button>
-                          </div>
-                          <div className="flex items-center gap-1.5 mt-0.5 text-[9.5px] sm:text-[11px] font-medium flex-wrap">
-                            <span className="text-emerald-400 font-semibold flex items-center gap-0.5">
-                              ✓ {verifiedAccount.id}
-                            </span>
-                            <span className="px-1.5 py-0.2 rounded bg-slate-800 text-slate-300 border border-slate-700/80 font-mono text-[9px]">
-                              {resolveRegionInfo(verifiedAccount.region || verifiedAccount.server).code}
-                            </span>
-                            <span className="text-slate-400">
-                              • {resolveRegionInfo(verifiedAccount.region || verifiedAccount.server).name}
-                            </span>
-                          </div>
-                        </div>
-                      )}
-                    </div>
-                  ) : (
-                    <div>
-                      <div className="text-[11px] sm:text-sm font-extrabold text-slate-200 leading-tight">
-                        {accountChecking
-                          ? (language === 'km' ? 'កំពុងស្វែងរកឈ្មោះក្នុងហ្គេម...' : 'Checking Player Name...')
-                          : verifiedAccount && !verifiedAccount.valid
-                            ? (language === 'km' ? 'រកមិនឃើញគណនី' : 'Account Not Found')
-                            : (language === 'km' ? 'គណនីអ្នកលេង' : 'Player Account')}
-                      </div>
-                      <div className={`text-[9px] sm:text-[11px] truncate mt-0.5 font-medium ${verifiedAccount && !verifiedAccount.valid ? 'text-rose-400' : 'text-slate-400'}`}>
-                        {accountChecking
-                          ? (language === 'km' ? 'កំពុងទាក់ទង Game Server...' : 'Connecting to game server...')
-                          : verifiedAccount && !verifiedAccount.valid
-                            ? (verifiedAccount.error || 'Player account not found.')
-                            : (language === 'km' ? 'បញ្ចូល UID រួចចុចពិនិត្យឈ្មោះ' : 'Enter UID to verify in-game name')}
-                      </div>
-                    </div>
-                  )}
-                </div>
-              </div>
-
-              {/* Inputs */}
-              <div className={`grid gap-2 ${isMlbb || isHoyoverse || isFreefire ? 'grid-cols-1 sm:grid-cols-[1fr_0.75fr]' : 'grid-cols-1'}`}>
-                {/* Player ID with inline paste & clear */}
-                <div>
-                  <label htmlFor="player_id_input" className="block text-[9.5px] sm:text-[11px] font-semibold text-slate-400 mb-1 uppercase tracking-wider">
-                    {isTelegram ? 'Telegram @' : isSteam ? 'Steam Name' : isGiftCard ? 'Email' : 'Player ID (UID)'}
-                  </label>
-                  <div className="relative flex items-center">
-                    <input
-                      id="player_id_input"
-                      type="text"
-                      inputMode={isTelegram || isSteam || isGiftCard ? 'text' : 'numeric'}
-                      value={formData.playerID}
-                      onChange={handlePlayerIdChange}
-                      placeholder={isTelegram ? '@username' : isSteam ? 'steam_username' : isGiftCard ? 'email@domain.com' : '123456789'}
-                      className="w-full h-9 sm:h-10 bg-[#030817] border border-slate-700/70 rounded-xl pl-3 pr-24 text-xs sm:text-sm font-mono text-white placeholder-slate-600 focus:outline-none focus:border-sky-400 focus:ring-2 focus:ring-sky-400/25 transition-all"
-                    />
-                    <div className="absolute right-1.5 top-1/2 -translate-y-1/2 flex items-center gap-1">
-                      {formData.playerID && (
-                        <button
-                          type="button"
-                          onClick={() => {
-                            setFormData(prev => ({ ...prev, playerID: '' }));
-                            setAutoDetectedMessage('');
-                            setVerifiedAccount(null);
-                          }}
-                          className="w-5 h-5 rounded-full bg-slate-800 hover:bg-slate-700 text-slate-400 hover:text-white flex items-center justify-center text-xs transition-colors cursor-pointer"
-                          title="Clear"
-                        >
-                          ×
-                        </button>
-                      )}
-                      <button
-                        type="button"
-                        onClick={handlePastePlayerId}
-                        className="h-7 px-2.5 rounded-lg bg-sky-500/15 hover:bg-sky-500/30 border border-sky-400/30 hover:border-sky-400/60 text-sky-300 hover:text-white text-[11px] font-bold flex items-center gap-1.5 transition-all cursor-pointer active:scale-95 shadow-sm"
-                        title={language === 'km' ? 'បិទភ្ជាប់ (Paste ID)' : 'Paste Player ID from clipboard'}
-                      >
-                        {pastedPlayerId ? (
-                          <>
-                            <svg className="w-3.5 h-3.5 text-emerald-400 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
-                              <path d="M20 6L9 17l-5-5" />
-                            </svg>
-                            <span className="text-emerald-400 font-extrabold text-[10.5px]">{language === 'km' ? 'បានបិទ' : 'Pasted'}</span>
-                          </>
-                        ) : (
-                          <>
-                            <svg className="w-3.5 h-3.5 text-sky-400 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
-                              <path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2" />
-                              <rect x="8" y="2" width="8" height="4" rx="1" ry="1" />
-                            </svg>
-                            <span className="font-extrabold text-[10.5px] tracking-tight">{language === 'km' ? 'បិទភ្ជាប់' : 'Paste'}</span>
-                          </>
-                        )}
-                      </button>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Zone / Server */}
-                {isMlbb && (
-                  <div>
-                    <label className="block text-[9.5px] sm:text-[11px] font-semibold text-slate-400 mb-1 uppercase tracking-wider">Zone ID</label>
-                    <input
-                      type="text"
-                      inputMode="numeric"
-                      value={formData.serverID}
-                      onChange={(e) => setFormData(prev => ({ ...prev, serverID: e.target.value }))}
-                      placeholder="11446"
-                      className="w-full h-9 sm:h-10 bg-[#030817] border border-slate-700/70 rounded-xl px-3 text-xs sm:text-sm font-mono text-white placeholder-slate-600 focus:outline-none focus:border-sky-400 focus:ring-2 focus:ring-sky-400/25 transition-all"
-                    />
-                  </div>
-                )}
-                {isFreefire && (() => {
-                  const currentRegionCode = verifiedAccount?.region || verifiedAccount?.server || formData.serverID || 'Global';
-                  const regInfo = resolveRegionInfo(currentRegionCode);
-                  return (
-                    <div>
-                      <label className="block text-[9.5px] sm:text-[11px] font-semibold text-slate-400 mb-1 uppercase tracking-wider">
-                        {language === 'km' ? 'ម៉ាស៊ីនបម្រើ (Server Region)' : 'Server Region'}
-                      </label>
-                      <div className={`w-full h-9 sm:h-10 bg-[#030817] border rounded-xl px-2.5 sm:px-3 flex items-center gap-2 transition-all ${
-                        verifiedAccount?.valid
-                          ? 'border-emerald-500/50 shadow-[0_0_12px_rgba(16,185,129,0.15)]'
-                          : 'border-slate-700/70'
-                      }`}>
-                        <span className="text-sm leading-none shrink-0">{regInfo.flag}</span>
-                        <span className="text-xs font-bold text-slate-200 truncate">
-                          {regInfo.server}
-                        </span>
-                        <span className={`ml-auto text-[9px] font-mono px-1.5 py-0.5 rounded font-bold uppercase tracking-wider shrink-0 ${
-                          verifiedAccount?.valid ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/40' : 'bg-slate-800 text-slate-400'
-                        }`}>
-                          {regInfo.code}
-                        </span>
-                      </div>
-                    </div>
-                  );
-                })()}
-                {isHoyoverse && (
-                  <div>
-                    <label className="block text-[9.5px] sm:text-[11px] font-semibold text-slate-400 mb-1 uppercase tracking-wider">Server</label>
-                    <select
-                      value={formData.serverID}
-                      onChange={(e) => setFormData(prev => ({ ...prev, serverID: e.target.value }))}
-                      className="w-full h-9 sm:h-10 bg-[#030817] border border-slate-700/70 rounded-xl px-3 text-xs sm:text-sm text-white focus:outline-none focus:border-sky-400 focus:ring-2 focus:ring-sky-400/25 transition-all"
-                    >
-                      <option value="Asia">Asia</option>
-                      <option value="America">America</option>
-                      <option value="Europe">Europe</option>
-                      <option value="TW/HK/MO">TW/HK/MO</option>
-                    </select>
-                  </div>
-                )}
-              </div>
-
-              {/* Auto-detected message notice */}
-              {autoDetectedMessage && (
-                <div className="text-[10px] sm:text-[11px] font-semibold text-emerald-400 flex items-center gap-1">
-                  <svg className="w-3 h-3 shrink-0" viewBox="0 0 24 24" fill="currentColor"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z" /></svg>
-                  <span className="truncate">{autoDetectedMessage}</span>
-                </div>
-              )}
-
-              {/* Verification Button */}
-              <div className="pt-1">
-                <button
-                  type="button"
-                  onClick={handleVerifyAccount}
-                  disabled={accountChecking || !formData.playerID.trim()}
-                  className={`w-full h-10 sm:h-11 rounded-xl border font-black text-xs sm:text-sm flex items-center justify-center gap-2 transition-all cursor-pointer active:scale-[0.98] disabled:cursor-not-allowed ${
-                    verifiedAccount?.valid
-                      ? 'border-emerald-400/60 bg-emerald-950/60 text-emerald-300 shadow-[0_0_15px_rgba(52,211,153,0.2)]'
-                      : formData.playerID.trim()
-                      ? 'border-sky-400/60 bg-gradient-to-r from-sky-500/20 via-cyan-500/20 to-blue-600/20 hover:from-sky-500/30 hover:to-blue-600/30 text-sky-200 hover:text-white shadow-sm'
-                      : 'border-slate-800 bg-slate-900/60 text-slate-400 hover:border-slate-700'
-                  }`}
-                >
-                  {accountChecking ? (
-                    <svg className="w-4 h-4 animate-spin text-sky-400" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="3" className="opacity-25" /><path d="M4 12a8 8 0 018-8" stroke="currentColor" strokeWidth="3" strokeLinecap="round" /></svg>
-                  ) : verifiedAccount?.valid ? (
-                    <span className="w-4 h-4 rounded-full bg-emerald-400 text-slate-950 flex items-center justify-center text-[10px] font-black">✓</span>
-                  ) : (
-                    <svg className="w-4 h-4 text-sky-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><circle cx="11" cy="11" r="7" /><path d="M21 21l-4.3-4.3" /></svg>
-                  )}
-                  <span>{accountChecking ? (language === 'km' ? 'កំពុងផ្ទៀងផ្ទាត់...' : 'Checking...') : verifiedAccount?.valid ? (language === 'km' ? 'បានផ្ទៀងផ្ទាត់ជោគជ័យ' : 'Player Verified') : (language === 'km' ? 'ពិនិត្យឈ្មោះអ្នកលេង' : 'Check Player Name')}</span>
-                </button>
-              </div>
-
-              {/* Free Fire Authentic Account SUMMARY Card */}
-              {verifiedAccount?.valid && isFreefire && (
-                <div className="mt-3 p-3.5 sm:p-4 rounded-2xl bg-[#030718] border border-slate-700/80 shadow-xl space-y-3 font-sans">
-                  {/* SUMMARY Header */}
-                  <div className="flex items-center justify-between border-b border-slate-800/80 pb-2">
-                    <span className="text-[12px] sm:text-xs font-black tracking-widest text-red-500 uppercase">
-                      SUMMARY
-                    </span>
-                    <span className="text-[9.5px] px-2 py-0.5 rounded-full bg-emerald-500/15 border border-emerald-500/35 text-emerald-300 font-bold flex items-center gap-1">
+                  <div className="flex items-center gap-2 flex-wrap">
+                    <h4 className="font-black text-white text-sm sm:text-base tracking-wide truncate">
+                      {verifiedAccount.name && !verifiedAccount.name.startsWith('Player_') && !verifiedAccount.name.includes('Player #') && verifiedAccount.name !== 'Verified Player'
+                        ? verifiedAccount.name
+                        : (KNOWN_REAL_NAMES[verifiedAccount.id] || (language === 'km' ? `អ្នកលេង ${selectedGame.name} (${verifiedAccount.id})` : `${selectedGame.name} Player (${verifiedAccount.id})`))}
+                    </h4>
+                    <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[8.5px] sm:text-[9px] font-black uppercase tracking-wider bg-emerald-500/20 text-emerald-300 border border-emerald-500/40">
                       <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
-                      LIVE PROFILE
+                      REAL NAME
                     </span>
                   </div>
+                  <div className="flex items-center gap-2 text-xs text-slate-400 pt-0.5">
+                    <span className="text-cyan-300 font-mono font-bold">ID: {verifiedAccount.id}</span>
+                    <span>•</span>
+                    <span className="text-slate-300">{resolveRegionInfo(verifiedAccount.region || verifiedAccount.server).name}</span>
+                  </div>
+                </div>
+              </div>
 
-                  {/* Profile Header */}
-                  <div className="flex items-center gap-3">
-                    <div className="relative shrink-0 w-12 h-12 rounded-xl overflow-hidden border-2 border-amber-400/60 shadow-[0_0_12px_rgba(251,191,36,0.2)] bg-slate-900">
-                      {verifiedAccount.avatarUrl ? (
-                        <img
-                          src={verifiedAccount.avatarUrl}
-                          alt={verifiedAccount.name}
-                          className="w-full h-full object-cover"
-                          onError={(e) => { e.currentTarget.style.display = 'none'; }}
-                        />
-                      ) : (
-                        <GamerAvatar avatarId="crown" size="md" name={verifiedAccount.name} />
-                      )}
-                    </div>
-                    <div className="min-w-0 flex-1">
-                      <div
-                        className="text-sm sm:text-base font-black text-white leading-tight truncate tracking-wide"
-                        style={{ fontFamily: "'Noto Sans', 'Noto Sans Khmer', 'Segoe UI', 'Apple Color Emoji', 'Noto Color Emoji', 'Noto Sans CJK SC', sans-serif" }}
-                      >
-                        {verifiedAccount.name}
-                      </div>
-                      <div className="text-[11px] sm:text-xs font-semibold text-slate-400 mt-0.5 flex items-center gap-1.5">
-                        <span className="text-amber-300 font-bold">{resolveRegionInfo(verifiedAccount.region || verifiedAccount.server).code}</span>
-                        <span>·</span>
-                        <span>Level {verifiedAccount.level || 70}</span>
-                      </div>
+              {/* Free Fire Authentic Stat Rows Table */}
+              {isFreefire && (
+                <div className="divide-y divide-slate-800/80 text-xs font-medium pt-1 border-t border-slate-800/80">
+                  <div className="py-2 flex items-center justify-between">
+                    <span className="text-slate-400">Battle Royale</span>
+                    <div className="flex items-center gap-2 font-bold text-white">
+                      <span className="px-1.5 py-0.5 rounded text-[10px] bg-amber-500/15 text-amber-300 border border-amber-500/35">🛡️</span>
+                      <span>{verifiedAccount.rank || 'Bronze I'}</span>
                     </div>
                   </div>
-
-                  {/* Stat Rows Table */}
-                  <div className="divide-y divide-slate-800/80 text-xs font-medium pt-1">
-                    <div className="py-2.5 flex items-center justify-between">
-                      <span className="text-slate-400">Battle Royale</span>
-                      <div className="flex items-center gap-2 font-bold text-white">
-                        <span className="px-1.5 py-0.5 rounded text-[10px] bg-amber-500/15 text-amber-300 border border-amber-500/35">
-                          🛡️
-                        </span>
-                        <span>{verifiedAccount.rank || 'Bronze I'}</span>
-                      </div>
+                  <div className="py-2 flex items-center justify-between">
+                    <span className="text-slate-400 uppercase tracking-wide text-[11px]">CLASH SQUAD</span>
+                    <div className="flex items-center gap-2 font-bold text-white">
+                      <span className="px-1.5 py-0.5 rounded text-[10px] bg-rose-500/15 text-rose-300 border border-rose-500/35">⚔️</span>
+                      <span>{verifiedAccount.rankPoints ? `${verifiedAccount.rankPoints.toLocaleString()} pts` : (verifiedAccount.rank || 'Bronze I')}</span>
                     </div>
-
-                    <div className="py-2.5 flex items-center justify-between">
-                      <span className="text-slate-400 uppercase tracking-wide text-[11px]">CLASH SQUAD</span>
-                      <div className="flex items-center gap-2 font-bold text-white">
-                        <span className="px-1.5 py-0.5 rounded text-[10px] bg-rose-500/15 text-rose-300 border border-rose-500/35">
-                          ⚔️
-                        </span>
-                        <span>
-                          {verifiedAccount.rankPoints ? `${verifiedAccount.rankPoints.toLocaleString()} pts` : (verifiedAccount.rank || 'Bronze I')}
-                        </span>
-                      </div>
-                    </div>
-
-                    <div className="py-2.5 flex items-center justify-between">
-                      <span className="text-slate-400">Likes</span>
-                      <span className="font-extrabold text-white font-mono text-sm">
-                        {(verifiedAccount.likes ?? 1837304).toLocaleString()}
-                      </span>
-                    </div>
-
-                    <div className="pt-2.5 flex items-center justify-between">
-                      <span className="text-slate-400">ID</span>
-                      <span className="font-black text-white font-mono text-sm tracking-wider">
-                        {verifiedAccount.id}
-                      </span>
-                    </div>
+                  </div>
+                  <div className="py-2 flex items-center justify-between">
+                    <span className="text-slate-400">Likes</span>
+                    <span className="font-extrabold text-white font-mono text-sm">{(verifiedAccount.likes ?? 1837304).toLocaleString()}</span>
                   </div>
                 </div>
               )}
-
             </div>
-          </div>
-
+          )}
         </div>
-
       </div>
+
 
       {/* ======================================================== */}
       {/* STEP 2: SELECT RECHARGE PACKAGE (DIAMONDS & PASSES)      */}
