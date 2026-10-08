@@ -498,7 +498,7 @@ const AiAssistant = () => {
     hasMoved: false,
   });
 
-  // 10-second auto-hide timer: icon hides after 10 seconds unless interacted
+  // 30-second auto-hide timer: fades to 50% opacity after 30s of inactivity
   const [isHidden, setIsHidden] = useState(false);
   const hideTimerRef = useRef(null);
 
@@ -509,7 +509,7 @@ const AiAssistant = () => {
     }
     hideTimerRef.current = setTimeout(() => {
       setIsHidden(true);
-    }, 10000); // 10 seconds
+    }, 30000); // 30 seconds
   }, []);
 
   useEffect(() => {
@@ -717,9 +717,11 @@ const AiAssistant = () => {
       )}
 
       {/* Flexible Draggable Floating AI Trigger - Always Forward Layer */}
-      {/* Flexible Draggable Floating AI Trigger - Cyber HUD Pod Style matching Reference Image */}
+      {/* Draggable Floating AI Trigger - Cyber Orb Gaming Companion */}
       {(() => {
-        const isDockedLeft = pos ? pos.x < ((typeof window !== 'undefined' ? window.innerWidth : 1000) / 2) : true;
+        const isFloating = Boolean(pos);
+        const isDockedLeft = pos ? pos.x < ((typeof window !== 'undefined' ? window.innerWidth : 1000) / 2) : false;
+
         return (
           <div
             ref={btnRef}
@@ -763,31 +765,53 @@ const AiAssistant = () => {
                     zIndex: 999999,
                   }
             }
-            className={`ai-assistant-widget fixed z-[99999] select-none cursor-grab active:cursor-grabbing outline-none transition-all duration-300 ease-out ${
+            className={`ai-assistant-widget fixed z-[99999] select-none cursor-grab active:cursor-grabbing outline-none transition-all duration-500 ease-out group ${
               isHidden && !isOpen
-                ? (isDockedLeft ? '-translate-x-[62%] opacity-40 hover:translate-x-0 hover:opacity-100 hover:scale-105' : 'translate-x-[62%] opacity-40 hover:translate-x-0 hover:opacity-100 hover:scale-105')
+                ? (isDockedLeft ? '-translate-x-3 opacity-50 hover:translate-x-0 hover:opacity-100' : 'translate-x-3 opacity-50 hover:translate-x-0 hover:opacity-100')
                 : 'translate-x-0 opacity-100'
-            } ${isDragging ? 'scale-105 opacity-90' : 'hover:scale-105 active:scale-95'}`}
+            } ${isDragging ? 'scale-110 opacity-95' : 'hover:scale-105 active:scale-95'}`}
             aria-label="Open AI Assistant"
-            title="Drag to move anywhere • Double-click to reset / ចុចឬអូសផ្លាស់ប្តូរទីតាំង"
+            title="Drag to move • Double-click to reset / ចុចឬអូសផ្លាស់ប្តូរទីតាំង"
           >
-            {/* Cyber HUD Edge Pod Container - Pixel-matched to Reference Image */}
-            <div className={`relative w-[56px] sm:w-[64px] h-[80px] sm:h-[88px] flex items-center justify-center bg-[#040a1b]/92 backdrop-blur-xl border-y-2 border-[#00e5ff] shadow-[0_0_22px_rgba(0,229,255,0.45),inset_0_0_15px_rgba(0,229,255,0.12)] group transition-all duration-300 ${
-              isDockedLeft
-                ? 'rounded-r-[30px] border-r-2 pl-1 pr-2.5'
-                : 'rounded-l-[30px] border-l-2 pl-2.5 pr-1'
-            }`}>
-              {/* Iconic Glowing Orbital Node sitting on the curve arc */}
-              <span className={`absolute top-2.5 w-3 h-3 rounded-full bg-[#00e5ff] shadow-[0_0_10px_#00f0ff] ring-2 ring-[#040a1b] animate-pulse z-20 pointer-events-none ${
-                isDockedLeft ? '-right-1.5' : '-left-1.5'
-              }`} />
+            {/* Hover Tooltip Pill (Desktop only) */}
+            <div
+              className={`absolute top-1/2 -translate-y-1/2 ${
+                isDockedLeft ? 'left-full ml-2.5' : 'right-full mr-2.5'
+              } opacity-0 group-hover:opacity-100 pointer-events-none transition-all duration-300 translate-x-1 group-hover:translate-x-0 hidden sm:flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-[#0a1124]/95 border border-cyan-400/50 shadow-[0_8px_25px_rgba(0,0,0,0.8),0_0_15px_rgba(0,229,255,0.25)] text-xs font-black text-cyan-300 whitespace-nowrap z-30`}
+            >
+              <span className="text-amber-400">⚡</span>
+              <span>{t('ai_title')}</span>
+              <span className="text-[10px] text-emerald-400 font-normal">● 24/7</span>
+            </div>
 
-              {/* Static Blue Bot Avatar Medallion */}
+            {/* Cyber Gaming Medallion Container */}
+            <div
+              className={`relative flex items-center justify-center transition-all duration-300 ${
+                isFloating
+                  ? 'w-[58px] sm:w-[64px] h-[58px] sm:h-[64px] rounded-full p-1'
+                  : isDockedLeft
+                    ? 'w-[56px] sm:w-[62px] h-[60px] sm:h-[66px] rounded-r-3xl pl-1 pr-2.5 border-r-2 border-y-2'
+                    : 'w-[56px] sm:w-[62px] h-[60px] sm:h-[66px] rounded-l-3xl pr-1 pl-2.5 border-l-2 border-y-2'
+              } ${isFloating ? 'border-2' : ''} border-cyan-400/80 bg-gradient-to-br from-[#0c1630]/95 via-[#070d20]/95 to-[#040814]/95 backdrop-blur-2xl shadow-[0_0_24px_rgba(0,229,255,0.45),inset_0_0_14px_rgba(0,229,255,0.18)] group-hover:border-amber-400/90 group-hover:shadow-[0_0_30px_rgba(0,229,255,0.65),0_0_15px_rgba(245,158,11,0.35)]`}
+            >
+              {/* Radial Energy Backlight Aura behind the icon */}
+              <div className="absolute inset-1.5 rounded-full bg-gradient-to-tr from-cyan-500/25 via-blue-600/25 to-amber-500/20 blur-[6px] group-hover:blur-[10px] transition-all pointer-events-none" />
+
+              {/* Glowing Cyber Accent Bezel Ring */}
+              <div className="absolute inset-1 rounded-full border border-cyan-400/30 group-hover:border-amber-400/40 pointer-events-none" />
+
+              {/* Active Online Pulse Dot Indicator */}
+              <span className={`absolute top-1.5 ${isDockedLeft ? 'right-2' : 'left-2'} flex h-2.5 w-2.5 pointer-events-none z-20`}>
+                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-cyan-400 opacity-75"></span>
+                <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-gradient-to-r from-cyan-400 to-emerald-400 ring-2 ring-[#070d20] shadow-[0_0_8px_#00e5ff]"></span>
+              </span>
+
+              {/* High-Resolution Blue Bot Avatar Emblem */}
               <div className="relative w-11 h-11 sm:w-12 sm:h-12 shrink-0 flex items-center justify-center pointer-events-none">
                 <img
                   src="/ai-bot-icon.png"
                   alt="AI Assistant"
-                  className="w-full h-full object-contain filter drop-shadow-[0_2px_10px_rgba(0,180,255,0.7)] group-hover:scale-110 transition-transform duration-300"
+                  className="w-full h-full object-contain filter drop-shadow-[0_2px_12px_rgba(0,200,255,0.85)] group-hover:scale-110 group-hover:rotate-3 transition-transform duration-300"
                 />
               </div>
             </div>
