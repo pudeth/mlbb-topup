@@ -666,4 +666,14 @@ body.full-display-open nav {
   }
 }
 
+.search-modal-container {
+  padding-top: max(64px, calc(env(safe-area-inset-top, 0px) + 16px)) !important;
+}
+
+@media (min-width: 640px) {
+  .search-modal-container {
+    padding-top: max(32px, calc(env(safe-area-inset-top, 0px) + 24px)) !important;
+  }
+}
+
 

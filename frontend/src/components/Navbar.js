@@ -784,11 +784,11 @@ const Navbar = () => {
     {searchModalOpen && (
       <div 
         style={{
-          paddingTop: 'calc(max(20px, env(safe-area-inset-top, 0px)) + 16px)',
           paddingLeft: 'max(14px, env(safe-area-inset-left, 0px))',
-          paddingRight: 'max(14px, env(safe-area-inset-right, 0px))'
+          paddingRight: 'max(14px, env(safe-area-inset-right, 0px))',
+          paddingBottom: 'max(16px, env(safe-area-inset-bottom, 0px))'
         }}
-        className="fixed inset-0 z-[99999] bg-black/85 backdrop-blur-md flex flex-col items-center px-3.5 sm:px-4 font-khmer animate-fadeIn"
+        className="search-modal-container fixed inset-0 z-[99999] bg-black/85 backdrop-blur-md flex flex-col items-center px-3.5 sm:px-4 font-khmer animate-fadeIn"
       >
         {/* Dismiss Backdrop */}
         <div
