@@ -92,7 +92,6 @@ const BEST_SELLER_RETAIL_PACKAGES = [
   { id: 5021, name: '2 Monthly', price: 15.30, wholesaleCost: 15.03, badge: 'ទទួលបាន 5000 💎', color: 'gold', desc: '2x Monthly' },
   { id: 5022, name: '3 Monthly', price: 23.10, wholesaleCost: 22.55, badge: 'Discount 10%', color: 'gold', desc: '3x Monthly' },
   { id: 5023, name: '4 Monthly', price: 30.80, wholesaleCost: 30.06, badge: 'ទទួលបាន 10000 💎', color: 'gold', desc: '4x Monthly' },
-  { id: 5030, name: '3 in 1 membership', price: 9.65, wholesaleCost: 9.50, badge: 'ទទួលបាន 3000 💎', color: 'cyan', desc: '3-in-1 Bundle' },
   { id: 5031, name: 'Weekly + monthly', price: 9.30, wholesaleCost: 9.33, badge: 'ទទួលបាន 2910 💎', color: 'orange', desc: 'Combo Pack' },
   { id: 5032, name: '2Weekly+monthly', price: 18.60, wholesaleCost: 18.15, badge: null, color: 'orange', desc: 'Super Bundle' }
 ];

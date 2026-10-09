@@ -71,7 +71,6 @@ const GAME_PACKAGES_MAP = {
     { productId: 5021, diamondAmount: 5000, name: '2 Monthly', price: 15.30, resellerPrice: 15.30, packageId: 5021, tag: 'ទទួលបាន 5000 💎', isPass: true, category: 'Best seller', customImage: '/images/weekly-pass.png' },
     { productId: 5022, diamondAmount: 7800, name: '3 Monthly', price: 23.10, resellerPrice: 23.10, packageId: 5022, tag: 'Discount 10%', isPass: true, category: 'Best seller', customImage: '/images/weekly-pass.png' },
     { productId: 5023, diamondAmount: 10000, name: '4 Monthly', price: 30.80, resellerPrice: 30.80, packageId: 5023, tag: 'ទទួលបាន 10000 💎', isPass: true, category: 'Best seller', customImage: '/images/weekly-pass.png' },
-    { productId: 5030, diamondAmount: 3000, name: '3 in 1 membership', price: 9.65, resellerPrice: 9.65, packageId: 5030, tag: 'ទទួលបាន 3000 💎', isPass: true, category: 'Best seller', customImage: '/images/weekly-pass.png' },
     { productId: 5031, diamondAmount: 2910, name: 'Weekly + monthly', price: 9.30, resellerPrice: 9.30, packageId: 5031, tag: 'ទទួលបាន 2910 💎', isPass: true, category: 'Best seller', customImage: '/images/weekly-pass.png' },
     { productId: 5032, diamondAmount: 5820, name: '2Weekly+monthly', price: 18.60, resellerPrice: 18.60, packageId: 5032, tag: 'PRO ⚡', isPass: true, category: 'Best seller', customImage: '/images/weekly-pass.png' },
 

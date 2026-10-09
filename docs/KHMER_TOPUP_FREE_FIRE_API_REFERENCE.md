@@ -116,7 +116,6 @@ These prices match your store retail prices, with corresponding wholesale fulfil
 | 9 | **2 Monthly** | **$15.30** | $15.03 | **+$0.27** | `ទទួលបាន 5000 💎` |
 | 10 | **3 Monthly** | **$23.10** | $22.55 | **+$0.55** | `Discount 10%` |
 | 11 | **4 Monthly** | **$30.80** | $30.06 | **+$0.74** | `ទទួលបាន 10000 💎` |
-| 12 | **3 in 1 membership** | **$9.65** | $9.50 | **+$0.15** | `ទទួលបាន 3000 💎` |
 | 13 | **Weekly + monthly** | **$9.30** | $9.33 | Base Rate | `ទទួលបាន 2910 💎` |
 | 14 | **2Weekly+monthly** | **$18.60** | $18.15 | **+$0.45** | VIP Bundle |
 
