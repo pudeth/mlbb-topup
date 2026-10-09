@@ -294,6 +294,19 @@ const PRICING_GAMES = [
   const [resellers, setResellers] = useState([]);
   const [failedTransactions, setFailedTransactions] = useState([]);
   const [orders, setOrders] = useState(() => getLocalOrders());
+
+  // Auto-sync orders whenever local storage or order updates occur
+  useEffect(() => {
+    const handleOrdersUpdated = () => {
+      setOrders(getLocalOrders());
+    };
+    window.addEventListener('orders-updated', handleOrdersUpdated);
+    window.addEventListener('storage', handleOrdersUpdated);
+    return () => {
+      window.removeEventListener('orders-updated', handleOrdersUpdated);
+      window.removeEventListener('storage', handleOrdersUpdated);
+    };
+  }, []);
   const [pendingOrders, setPendingOrders] = useState([]);
   const [pendingBalanceOrders, setPendingBalanceOrders] = useState([]); // paid but provider had no balance
   const [products, setProducts] = useState([]);
@@ -423,73 +436,148 @@ const PRICING_GAMES = [
   const [clearFinancialsModalOpen, setClearFinancialsModalOpen] = useState(false);
   const [clearingFinancials, setClearingFinancials] = useState(false);
 
-  // Compute live display financials combining API metrics and real orders
+  // Compute live display financials combining API metrics and real orders cleanly
   const displayFinancials = useMemo(() => {
     const clearedTimestamp = financials?.clearedAt || (typeof window !== 'undefined' ? localStorage.getItem('financials_cleared_at') : null);
     const clearedDate = clearedTimestamp ? new Date(clearedTimestamp) : null;
 
-    if (financials && ((financials.salesLedger && financials.salesLedger.length > 0) || Number(financials.totalGrossRevenue || 0) > 0)) {
-      return { ...financials, clearedAt: financials.clearedAt || clearedTimestamp };
-    }
+    const apiLedger = financials?.salesLedger || [];
 
-    const paidList = (orders || []).filter(o => {
-      if (!o || (o.paymentStatus !== 'Paid' && o.topupStatus !== 'Completed')) return false;
-      if (clearedDate && new Date(o.createdAt || 0) <= clearedDate) return false;
+    // Helper to resolve provider wholesale price accurately for any package
+    const resolveProviderPrice = (pkgName, sellPrice, diamondAmount) => {
+      const pStr = String(pkgName || '').toLowerCase();
+      const amt = Number(diamondAmount || 0);
+      const sell = Number(sellPrice || 0);
+
+      // Check catalog list matches
+      const catalogMatch = ALL_GAMES_CATALOG_LIST.find(p => 
+        (amt > 0 && p.diamondAmount === amt) || 
+        (sell > 0 && Math.abs(p.price - sell) < 0.01) ||
+        (pStr && p.name.toLowerCase().includes(pStr))
+      );
+      if (catalogMatch && catalogMatch.costPriceFazerCards > 0) {
+        return catalogMatch.costPriceFazerCards;
+      }
+
+      if (amt === 3688 || sell === 49.99 || pStr.includes('3688') || pStr.includes('49.99')) return 45.86;
+      if (amt === 55 || sell === 0.95 || pStr.includes('55')) return 0.74;
+      if (amt === 86 || sell === 1.35 || pStr.includes('86')) return 1.17;
+      if (amt === 110 || sell === 1.70 || pStr.includes('110')) return 1.45;
+      if (amt === 165 || sell === 2.40 || pStr.includes('165')) return 2.22;
+      if (amt === 172 || sell === 2.50 || pStr.includes('172')) return 2.31;
+      if (amt === 210 || sell === 1.55 || pStr.includes('weekly')) return 1.45;
+      if (amt === 257 || sell === 3.69 || pStr.includes('257')) return 3.34;
+      if (amt === 275 || sell === 3.85 || pStr.includes('275')) return 3.55;
+      if (amt === 343 || sell === 4.99 || pStr.includes('343')) return 4.25;
+      if (amt === 429 || sell === 6.30 || pStr.includes('429')) return 5.68;
+      if (amt === 514 || sell === 7.35 || pStr.includes('514')) return 6.28;
+      if (amt === 706 || sell === 9.99 || pStr.includes('706')) return 9.08;
+      if (amt === 1050 || sell === 15.50 || pStr.includes('1050')) return 13.20;
+      if (amt === 2195 || sell === 29.99 || pStr.includes('2195')) return 27.49;
+      if (amt === 5532 || sell === 73.99 || pStr.includes('5532')) return 69.24;
+      if (amt === 9288 || sell === 125.00 || pStr.includes('9288')) return 115.00;
+
+      return sell > 0 ? Number((sell * 0.82).toFixed(2)) : 0;
+    };
+
+    const seenKeys = new Set();
+    const cleanLedger = [];
+
+    // 1. Ingest API ledger items
+    apiLedger.forEach(item => {
+      const billKey = String(item.billNumber || item.orderId || item.transaction_id || '').toLowerCase();
+      if (billKey) seenKeys.add(billKey);
+
+      if (clearedDate && item.date && new Date(item.date) <= clearedDate) return;
+
+      const sell = Number(item.sellerPrice || 0);
+      const prov = (item.providerPrice && Number(item.providerPrice) > 0) 
+        ? Number(item.providerPrice) 
+        : resolveProviderPrice(item.packageName, sell, item.diamondAmount);
+      const net = Number((sell - prov).toFixed(2));
+      const margin = sell > 0 ? Number(((net / sell) * 100).toFixed(1)) : 0;
+
+      cleanLedger.push({
+        ...item,
+        sellerPrice: sell,
+        providerPrice: prov,
+        netProfit: net,
+        marginPct: margin,
+        status: item.status || 'Completed'
+      });
+    });
+
+    // 2. Merge local paid / completed orders NOT present in API ledger
+    const localPaidOrders = (orders || []).filter(o => {
+      if (!o) return false;
+      const payStatus = String(o.paymentStatus || '').toLowerCase();
+      const topStatus = String(o.topupStatus || '').toLowerCase();
+      const isPaid = payStatus === 'paid' || payStatus === 'approved' || payStatus === 'success' || topStatus === 'completed' || topStatus === 'delivered';
+      if (!isPaid) return false;
+      if (clearedDate && o.createdAt && new Date(o.createdAt) <= clearedDate) return false;
       return true;
     });
 
-    if (paidList.length > 0) {
-      let rev = 0;
-      let cogs = 0;
-      const ledger = paidList.map(o => {
-        const sell = Number(o.amount || 0);
-        const prov = sell <= 0.35 ? 0.24 : sell <= 0.60 ? 0.36 : sell <= 1.00 ? 0.74 : Number((sell * 0.82).toFixed(2));
+    localPaidOrders.forEach(o => {
+      const ordIdStr = o.orderId ? String(o.orderId) : '';
+      const orderIdKey = ordIdStr ? `ord-${ordIdStr}` : '';
+      
+      const alreadyInLedger = (orderIdKey && seenKeys.has(orderIdKey)) ||
+        (ordIdStr && cleanLedger.some(l => String(l.orderId) === ordIdStr || String(l.billNumber || '').includes(ordIdStr))) ||
+        cleanLedger.some(l => Math.abs(Number(l.sellerPrice) - Number(o.amount)) < 0.01 && String(l.date || '').slice(0, 16) === String(o.createdAt || '').slice(0, 16));
+
+      if (!alreadyInLedger) {
+        if (orderIdKey) seenKeys.add(orderIdKey);
+
+        const sell = Number(o.amount || o.price || 0);
+        const prov = resolveProviderPrice(o.productName, sell, o.diamondAmount);
         const profit = Number((sell - prov).toFixed(2));
         const margin = sell > 0 ? Number(((profit / sell) * 100).toFixed(1)) : 0;
-        rev += sell;
-        cogs += prov;
-        return {
-          billNumber: `ORD-${o.orderId}`,
-          orderId: o.orderId,
+
+        cleanLedger.push({
+          billNumber: o.orderId ? `ORD-${o.orderId}` : `TX-${String(o.createdAt || Date.now()).slice(-8)}`,
+          orderId: o.orderId || 0,
           gameName: o.gameName || 'Mobile Legends',
-          packageName: o.productName || `${o.diamondAmount} Diamonds`,
+          packageName: o.productName || (o.diamondAmount ? `${o.diamondAmount} Diamonds` : 'MLBB Diamonds'),
           playerId: o.playerID || o.playerId || 'N/A',
           serverId: o.serverID || o.serverId || 'Global',
           sellerPrice: sell,
           providerPrice: prov,
           netProfit: profit,
           marginPct: margin,
-          date: o.createdAt || '',
+          date: o.createdAt || new Date().toISOString(),
           status: o.topupStatus || 'Completed'
-        };
-      });
-      const net = Number((rev - cogs).toFixed(2));
-      const marginPct = rev > 0 ? Number(((net / rev) * 100).toFixed(1)) : 0;
-      return {
-        totalGrossRevenue: rev,
-        totalGrossRevenueKHR: Math.round(rev * 4100),
-        totalSupplierCogs: cogs,
-        totalSupplierCogsKHR: Math.round(cogs * 4100),
-        totalNetProfit: net,
-        totalNetProfitKHR: Math.round(net * 4100),
-        overallMarginPct: marginPct,
-        dailyProfitTrend: financials?.dailyProfitTrend || [],
-        packageProfitability: financials?.packageProfitability || [],
-        salesLedger: ledger,
-        clearedAt: clearedTimestamp
-      };
-    }
-    return financials || {
-      totalGrossRevenue: 0,
-      totalGrossRevenueKHR: 0,
-      totalSupplierCogs: 0,
-      totalSupplierCogsKHR: 0,
-      totalNetProfit: 0,
-      totalNetProfitKHR: 0,
-      overallMarginPct: 0,
-      dailyProfitTrend: [],
-      packageProfitability: [],
-      salesLedger: [],
+        });
+      }
+    });
+
+    // Sort descending by date (newest sales at the top)
+    cleanLedger.sort((a, b) => new Date(b.date || 0) - new Date(a.date || 0));
+
+    // Calculate totals across ALL merged transactions
+    let rev = 0;
+    let cogs = 0;
+    cleanLedger.forEach(item => {
+      rev += Number(item.sellerPrice || 0);
+      cogs += Number(item.providerPrice || 0);
+    });
+
+    rev = Number(rev.toFixed(2));
+    cogs = Number(cogs.toFixed(2));
+    const net = Number((rev - cogs).toFixed(2));
+    const marginPct = rev > 0 ? Number(((net / rev) * 100).toFixed(1)) : 0;
+
+    return {
+      totalGrossRevenue: rev,
+      totalGrossRevenueKHR: Math.round(rev * 4100),
+      totalSupplierCogs: cogs,
+      totalSupplierCogsKHR: Math.round(cogs * 4100),
+      totalNetProfit: net,
+      totalNetProfitKHR: Math.round(net * 4100),
+      overallMarginPct: marginPct,
+      dailyProfitTrend: financials?.dailyProfitTrend || [],
+      packageProfitability: financials?.packageProfitability || [],
+      salesLedger: cleanLedger,
       clearedAt: clearedTimestamp
     };
   }, [financials, orders]);
