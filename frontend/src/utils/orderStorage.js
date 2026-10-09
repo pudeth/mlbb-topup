@@ -50,8 +50,12 @@ export const getLocalOrders = (playerId = null) => {
     // Clean stale historical test seeds if present, replacing with single real seed
     const cleanQuery = playerId ? String(playerId).trim() : '';
     const hasStaleSeeds = list.some(o => o.orderId >= 200 || String(o.playerId) === '1225368571');
-    if (list.length === 0 || hasStaleSeeds) {
-      list = (historicalSeeds || []).map(normalizeOrder).filter(Boolean);
+    if (list.length === 0 || hasStaleSeeds || list.length < 4) {
+      const seeds = (historicalSeeds || []).map(normalizeOrder).filter(Boolean);
+      const seedMap = new Map();
+      seeds.forEach(s => seedMap.set(String(s.billNumber || s.orderId), s));
+      list.forEach(o => seedMap.set(String(o.billNumber || o.orderId), o));
+      list = Array.from(seedMap.values());
       try {
         localStorage.setItem(STORAGE_KEY, JSON.stringify(list));
       } catch {}
