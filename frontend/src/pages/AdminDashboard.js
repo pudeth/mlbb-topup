@@ -27,6 +27,8 @@ import {
 import { getLocalOrders, mergeOrders, updateLocalOrderStatus } from '../utils/orderStorage';
 import { exportPackageProfitabilityExcel, exportOrdersLedgerExcel } from '../utils/excelExporter';
 import { exportPackageProfitabilityPDF, exportOrdersLedgerPDF } from '../utils/pdfExporter';
+import { getTelegramConfig, saveTelegramConfig, checkAndSendBalanceAlert } from '../utils/telegramNotifier';
+
 
 
 
@@ -1505,6 +1507,10 @@ const PRICING_GAMES = [
   const [exportModalOpen, setExportModalOpen] = useState(false);
   const [exportGameTarget, setExportGameTarget] = useState('current');
   const [exportStatusTarget, setExportStatusTarget] = useState('ALL');
+
+  // Telegram Smart Khmer Alert State
+  const [telegramForm, setTelegramForm] = useState(getTelegramConfig);
+  const [sendingTestTelegram, setSendingTestTelegram] = useState(false);
 
   // Bakong Gateway State
   const [bakongInfo, setBakongInfo] = useState(null);
@@ -7430,6 +7436,142 @@ const PRICING_GAMES = [
                     >
                       <span className="text-base group-hover:scale-125 transition-transform">➕</span>
                       <span className="font-bold text-xs">Add Another Supplier Gateway (Smile One, UniPin, Custom REST...)</span>
+                    </button>
+                  </div>
+                </div>
+              </div>
+
+              {/* Telegram Smart Khmer Balance Alert Settings & Test Console Card */}
+              <div className="card p-5 sm:p-6 bg-gradient-to-br from-slate-900/90 via-sky-950/40 to-slate-900/90 border border-sky-500/30 rounded-3xl space-y-4 shadow-2xl backdrop-blur-xl">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-sky-500/20">
+                  <div className="flex items-center gap-2.5">
+                    <div className="w-10 h-10 rounded-2xl bg-sky-500/20 border border-sky-500/40 flex items-center justify-center text-xl text-sky-300 shadow-md">
+                      ✈️
+                    </div>
+                    <div>
+                      <h4 className="font-black text-white text-sm sm:text-base flex items-center gap-2 flex-wrap">
+                        <span>Telegram Smart Balance Notifications (ភាសាខ្មែរ)</span>
+                        <span className="px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">
+                          ● Automated Alerts ($20 / $15 / $10 / $5 / $0)
+                        </span>
+                      </h4>
+                      <p className="text-[11px] text-slate-300 mt-0.5">
+                        ប្រព័ន្ធផ្ញើសារសុំបន្ថែមថវិកាស្វ័យប្រវត្តិជាភាសាខ្មែរទៅ Telegram Admin នៅពេលតុល្យភាព Supplier ចុះដល់ $20, $15, $10, $5, និង $0។
+                      </p>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Khmer Threshold Badges */}
+                <div className="grid grid-cols-2 sm:grid-cols-5 gap-2">
+                  <div className="p-2.5 rounded-xl bg-amber-500/10 border border-amber-500/30 text-center">
+                    <span className="text-[11px] font-black text-amber-300 block">⚠️ $20.00 USD</span>
+                    <span className="text-[9.5px] text-slate-400 font-bold block mt-0.5">អាទិភាពមធ្យម</span>
+                  </div>
+                  <div className="p-2.5 rounded-xl bg-amber-500/20 border border-amber-500/40 text-center">
+                    <span className="text-[11px] font-black text-amber-300 block">⚠️ $15.00 USD</span>
+                    <span className="text-[9.5px] text-slate-400 font-bold block mt-0.5">នៅសល់តិច</span>
+                  </div>
+                  <div className="p-2.5 rounded-xl bg-rose-500/20 border border-rose-500/40 text-center">
+                    <span className="text-[11px] font-black text-rose-300 block">🚨 $10.00 USD</span>
+                    <span className="text-[9.5px] text-slate-400 font-bold block mt-0.5">អាសន្នជិតអស់</span>
+                  </div>
+                  <div className="p-2.5 rounded-xl bg-rose-600/25 border border-rose-500/60 text-center">
+                    <span className="text-[11px] font-black text-rose-200 block">🚨 $5.00 USD</span>
+                    <span className="text-[9.5px] text-slate-400 font-bold block mt-0.5">បន្ទាន់ខ្លាំង</span>
+                  </div>
+                  <div className="p-2.5 rounded-xl bg-red-950/70 border border-red-500/80 text-center">
+                    <span className="text-[11px] font-black text-red-400 block">⛔ $0.00 USD</span>
+                    <span className="text-[9.5px] text-red-300 font-bold block mt-0.5">អស់លុយទាំងស្រុង</span>
+                  </div>
+                </div>
+
+                {/* Configuration Inputs */}
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 pt-1">
+                  <div>
+                    <label className="block text-[11px] font-bold text-slate-300 mb-1">
+                      Telegram Bot Token
+                    </label>
+                    <input
+                      type="text"
+                      value={telegramForm.botToken || ''}
+                      onChange={(e) => setTelegramForm({ ...telegramForm, botToken: e.target.value })}
+                      placeholder="8516986555:AAH3enG..."
+                      className="input w-full text-xs font-mono py-2 rounded-xl bg-black/60 border-slate-700 text-sky-200 focus:border-sky-400"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-[11px] font-bold text-slate-300 mb-1">
+                      Telegram Chat ID / Channel
+                    </label>
+                    <input
+                      type="text"
+                      value={telegramForm.chatId || ''}
+                      onChange={(e) => setTelegramForm({ ...telegramForm, chatId: e.target.value })}
+                      placeholder="-1004398577975"
+                      className="input w-full text-xs font-mono py-2 rounded-xl bg-black/60 border-slate-700 text-sky-200 focus:border-sky-400"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-[11px] font-bold text-slate-300 mb-1">
+                      Topic Thread ID (Optional)
+                    </label>
+                    <input
+                      type="text"
+                      value={telegramForm.topicId || ''}
+                      onChange={(e) => setTelegramForm({ ...telegramForm, topicId: e.target.value })}
+                      placeholder="35"
+                      className="input w-full text-xs font-mono py-2 rounded-xl bg-black/60 border-slate-700 text-sky-200 focus:border-sky-400"
+                    />
+                  </div>
+                </div>
+
+                {/* Control Actions */}
+                <div className="flex flex-col sm:flex-row items-center justify-between gap-3 pt-3 border-t border-slate-800">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      saveTelegramConfig(telegramForm);
+                      showToast('success', '✅ Saved Telegram Khmer Alert credentials!');
+                    }}
+                    className="btn btn-secondary text-xs py-2 px-4 font-bold border-sky-500/40 text-sky-300 hover:bg-sky-950/60 w-full sm:w-auto"
+                  >
+                    💾 Save Telegram Config
+                  </button>
+
+                  <div className="flex items-center gap-2 w-full sm:w-auto justify-end">
+                    <button
+                      type="button"
+                      onClick={async () => {
+                        setSendingTestTelegram(true);
+                        try {
+                          const activeP = providerSettings.activeProvider || 'KhmerTopUp';
+                          const curBal = Number(providerSettings.khmerTopUpBalanceUSD !== undefined ? providerSettings.khmerTopUpBalanceUSD : (providerSettings.balanceUSD || 101.41));
+                          const res = await checkAndSendBalanceAlert({
+                            providerId: activeP,
+                            providerName: activeP === 'KhmerTopUp' ? 'Khmer TopUp' : activeP,
+                            balanceUSD: curBal,
+                            refillUrl: activeP === 'KhmerTopUp' ? 'https://khmer-topup.com/wallet' : 'https://reseller.fazercards.com/panel/balance',
+                            forceAlert: true
+                          });
+                          if (res?.success) {
+                            showToast('success', '✈️ Telegram Khmer Alert test message sent successfully!');
+                          } else {
+                            showToast('error', 'Failed to send Telegram message: ' + (res?.error || res?.reason || 'Check credentials'));
+                          }
+                        } catch (e) {
+                          showToast('error', 'Telegram alert error: ' + e.message);
+                        } finally {
+                          setSendingTestTelegram(false);
+                        }
+                      }}
+                      disabled={sendingTestTelegram}
+                      className="btn btn-primary text-xs py-2 px-4 font-black bg-gradient-to-r from-sky-500 via-blue-600 to-indigo-600 text-white flex items-center justify-center gap-1.5 shadow-glow-cyan w-full sm:w-auto cursor-pointer"
+                    >
+                      <span>{sendingTestTelegram ? '⏳' : '✈️'}</span>
+                      <span>{sendingTestTelegram ? 'Sending Telegram Message...' : 'Send Test Khmer Alert ($20 / $15 / $10 / $5 / $0)'}</span>
                     </button>
                   </div>
                 </div>
