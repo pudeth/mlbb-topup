@@ -579,8 +579,6 @@ const PRICING_GAMES = [
       const billKey = String(item.billNumber || item.orderId || item.transaction_id || '').toLowerCase();
       if (billKey) seenKeys.add(billKey);
 
-      if (clearedDate && item.date && new Date(item.date) <= clearedDate) return;
-
       const sell = Number(item.sellerPrice || 0);
       const calcCost = resolveProviderPrice(item.packageName, sell, item.diamondAmount, item.billNumber);
       const prov = (calcCost > 0) 
@@ -599,45 +597,51 @@ const PRICING_GAMES = [
       });
     });
 
-    // 2. Merge local paid / completed orders NOT present in API ledger
-    const localPaidOrders = (orders || []).filter(o => {
+    // 2. Merge ALL orders from Orders Ledger into Sales & Profit Ledger
+    const allLedgerOrders = (orders || []).filter(o => {
       if (!o) return false;
       const pIdStr = String(o.playerId || o.playerID || '').trim();
       const billStr = String(o.billNumber || o.orderId || '').trim().toUpperCase();
       if (pIdStr === '1225368571' || billStr.startsWith('TRX') || billStr.startsWith('MLBB000') || billStr.startsWith('ORD-TOPIC') || billStr.startsWith('ORD-TEST')) {
         return false;
       }
-
-      const payStatus = String(o.paymentStatus || '').toLowerCase();
-      const topStatus = String(o.topupStatus || '').toLowerCase();
-      const isPaid = payStatus === 'paid' || payStatus === 'approved' || payStatus === 'success' || topStatus === 'completed' || topStatus === 'delivered';
-      if (!isPaid) return false;
-      if (clearedDate && o.createdAt && new Date(o.createdAt) <= clearedDate) return false;
       return true;
     });
 
-    localPaidOrders.forEach(o => {
+    allLedgerOrders.forEach(o => {
       const ordIdStr = o.orderId ? String(o.orderId) : '';
       const orderIdKey = ordIdStr ? `ord-${ordIdStr}` : '';
+      const billNum = o.billNumber || (o.orderId ? `KT-${o.orderId}` : `KT-${String(o.createdAt || Date.now()).slice(-8)}`);
+      const billKey = String(billNum).toLowerCase();
       
       const alreadyInLedger = (orderIdKey && seenKeys.has(orderIdKey)) ||
-        (ordIdStr && cleanLedger.some(l => String(l.orderId) === ordIdStr || String(l.billNumber || '').includes(ordIdStr))) ||
-        cleanLedger.some(l => Math.abs(Number(l.sellerPrice) - Number(o.amount)) < 0.01 && String(l.date || '').slice(0, 16) === String(o.createdAt || '').slice(0, 16));
+        seenKeys.has(billKey) ||
+        (ordIdStr && cleanLedger.some(l => String(l.orderId) === ordIdStr || String(l.billNumber || '').toLowerCase() === billKey)) ||
+        cleanLedger.some(l => Math.abs(Number(l.sellerPrice) - Number(o.amount || o.price)) < 0.01 && String(l.date || '').slice(0, 16) === String(o.createdAt || '').slice(0, 16));
 
       if (!alreadyInLedger) {
         if (orderIdKey) seenKeys.add(orderIdKey);
+        if (billKey) seenKeys.add(billKey);
 
-        const billNum = o.billNumber || (o.orderId ? `ORD-${o.orderId}` : `TX-${String(o.createdAt || Date.now()).slice(-8)}`);
+        const payStatus = String(o.paymentStatus || '').toLowerCase();
+        const topStatus = String(o.topupStatus || '').toLowerCase();
+        const isRefunded = payStatus === 'refunded' || topStatus === 'refunded';
+        const isCompleted = payStatus === 'paid' || payStatus === 'approved' || payStatus === 'success' || topStatus === 'completed' || topStatus === 'delivered';
+
         const sell = Number(o.amount || o.price || 0);
-        const prov = (o.providerPrice && Number(o.providerPrice) > 0) ? Number(o.providerPrice) : resolveProviderPrice(o.productName, sell, o.diamondAmount, billNum);
-        const profit = Number((sell - prov).toFixed(2));
-        const margin = sell > 0 ? Number(((profit / sell) * 100).toFixed(1)) : 0;
+        const prov = (o.providerPrice && Number(o.providerPrice) > 0)
+          ? Number(o.providerPrice)
+          : resolveProviderPrice(o.productName || o.packageName, sell, o.diamondAmount, billNum);
+        
+        const profit = isRefunded ? 0 : Number((sell - prov).toFixed(2));
+        const margin = (isCompleted && !isRefunded && sell > 0) ? Number(((profit / sell) * 100).toFixed(1)) : 0;
+        const displayStatus = isRefunded ? 'Refunded' : (isCompleted ? 'Completed' : (o.topupStatus || o.paymentStatus || 'Pending'));
 
         cleanLedger.push({
-          billNumber: o.orderId ? `ORD-${o.orderId}` : `TX-${String(o.createdAt || Date.now()).slice(-8)}`,
+          billNumber: billNum,
           orderId: o.orderId || 0,
           gameName: o.gameName || 'Mobile Legends',
-          packageName: o.productName || (o.diamondAmount ? `${o.diamondAmount} Diamonds` : 'MLBB Diamonds'),
+          packageName: o.productName || o.packageName || (o.diamondAmount ? `${o.diamondAmount} Diamonds` : 'Diamonds'),
           playerId: o.playerID || o.playerId || 'N/A',
           serverId: o.serverID || o.serverId || 'Global',
           sellerPrice: sell,
@@ -645,20 +649,33 @@ const PRICING_GAMES = [
           netProfit: profit,
           marginPct: margin,
           date: o.createdAt || new Date().toISOString(),
-          status: o.topupStatus || 'Completed'
+          status: displayStatus
         });
       }
     });
 
-    // Sort descending by date (newest sales at the top)
-    cleanLedger.sort((a, b) => new Date(b.date || 0) - new Date(a.date || 0));
+    // Filter by clearedDate ONLY if newer orders exist after clearedDate
+    let finalLedger = cleanLedger;
+    if (clearedDate) {
+      const newerLedger = cleanLedger.filter(item => item.date && new Date(item.date) > clearedDate);
+      if (newerLedger.length > 0) {
+        finalLedger = newerLedger;
+      }
+    }
 
-    // Calculate totals across ALL merged transactions
+    // Sort descending by date (newest sales at the top)
+    finalLedger.sort((a, b) => new Date(b.date || 0) - new Date(a.date || 0));
+
+    // Calculate totals across ALL completed transactions
     let rev = 0;
     let cogs = 0;
-    cleanLedger.forEach(item => {
-      rev += Number(item.sellerPrice || 0);
-      cogs += Number(item.providerPrice || 0);
+    finalLedger.forEach(item => {
+      const st = String(item.status || '').toLowerCase();
+      const isCompleted = st === 'completed' || st === 'delivered' || st === 'paid';
+      if (isCompleted) {
+        rev += Number(item.sellerPrice || 0);
+        cogs += Number(item.providerPrice || 0);
+      }
     });
 
     rev = Number(rev.toFixed(2));
@@ -676,7 +693,7 @@ const PRICING_GAMES = [
       overallMarginPct: marginPct,
       dailyProfitTrend: financials?.dailyProfitTrend || [],
       packageProfitability: financials?.packageProfitability || [],
-      salesLedger: cleanLedger,
+      salesLedger: finalLedger,
       clearedAt: clearedTimestamp
     };
   }, [financials, orders, providerSettings]);
@@ -1312,15 +1329,21 @@ const PRICING_GAMES = [
       });
     } catch (e) {}
 
-    const paidOrders = allOrdersList.filter(o => {
+    let paidOrders = allOrdersList.filter(o => {
       if (!o) return false;
       const pStat = String(o.paymentStatus || o.status || '').toLowerCase();
       const tStat = String(o.topupStatus || o.status || '').toLowerCase();
-      const isPaid = pStat === 'paid' || pStat === 'completed' || pStat === 'success' || tStat === 'completed' || tStat === 'paid' || tStat === 'success';
+      const isPaid = pStat === 'paid' || pStat === 'completed' || pStat === 'success' || tStat === 'completed' || tStat === 'paid' || tStat === 'success' || tStat === 'delivered';
       if (!isPaid) return false;
-      if (clearedDate && new Date(o.createdAt || 0) <= clearedDate) return false;
       return true;
     });
+
+    if (clearedDate) {
+      const newer = paidOrders.filter(o => new Date(o.createdAt || 0) > clearedDate);
+      if (newer.length > 0) {
+        paidOrders = newer;
+      }
+    }
 
     const activeProv = providerSettings?.activeProvider || 'FazerCards';
 
