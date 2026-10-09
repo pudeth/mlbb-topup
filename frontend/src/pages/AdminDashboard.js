@@ -459,7 +459,7 @@ const PRICING_GAMES = [
         return catalogMatch.costPriceFazerCards;
       }
 
-      if (amt === 3688 || sell === 49.99 || pStr.includes('3688') || pStr.includes('49.99')) return 45.86;
+      if (amt === 3688 || sell === 49.99 || pStr.includes('3688') || pStr.includes('49.99')) return 48.65;
       if (amt === 55 || sell === 0.95 || pStr.includes('55')) return 0.74;
       if (amt === 86 || sell === 1.35 || pStr.includes('86')) return 1.17;
       if (amt === 110 || sell === 1.70 || pStr.includes('110')) return 1.45;

@@ -47,11 +47,11 @@ export const getLocalOrders = (playerId = null) => {
       }
     }
 
-    // Auto-seed historical orders if storage is fresh or empty
+    // Clean stale historical test seeds if present, replacing with single real seed
     const cleanQuery = playerId ? String(playerId).trim() : '';
-    if (list.length === 0 || (cleanQuery === '1225368571' && !list.some(o => o.orderId === 289))) {
-      const seeds = (historicalSeeds || []).map(normalizeOrder).filter(Boolean);
-      list = mergeOrders(list, seeds);
+    const hasStaleSeeds = list.some(o => o.orderId >= 200 || String(o.playerId) === '1225368571');
+    if (list.length === 0 || hasStaleSeeds) {
+      list = (historicalSeeds || []).map(normalizeOrder).filter(Boolean);
       try {
         localStorage.setItem(STORAGE_KEY, JSON.stringify(list));
       } catch {}
