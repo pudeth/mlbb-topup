@@ -1,7 +1,7 @@
 import ExcelJS from 'exceljs';
 
 /**
- * Exports Executive Package Profitability & Pricing Ledger (.xlsx)
+ * Exports Compact & Professional Package Profitability & Pricing Ledger (.xlsx)
  */
 export async function exportPackageProfitabilityExcel({
   list = [],
@@ -21,76 +21,20 @@ export async function exportPackageProfitabilityExcel({
   });
 
   const totalCount = list.length;
-  const sumRevenue = list.reduce((acc, p) => acc + (Number(p.totalRevenue || 0) || (Number(p.retailPrice || 0) * Number(p.unitsSold || 0))), 0);
-  const sumCost = list.reduce((acc, p) => acc + Number(p.totalProviderCost || p.providerCost || 0), 0);
-  const sumProfit = list.reduce((acc, p) => acc + (Number(p.totalProfit || 0) || (Number(p.unitNetProfit || 0) * Number(p.unitsSold || 0))), 0);
-  const avgMargin = totalCount > 0 ? (list.reduce((acc, p) => acc + Number(p.retailMarginPct || 0), 0) / totalCount) / 100 : 0;
 
-  // 1. Title Banner (Rows 1 & 2)
-  sheet.mergeCells('A1:Q1');
-  const titleCell = sheet.getCell('A1');
-  titleCell.value = 'MLBB TOPUP STORE — EXECUTIVE PACKAGE PROFITABILITY & PRICING STATEMENT';
-  titleCell.font = { name: 'Segoe UI', size: 14, bold: true, color: { argb: 'FFFFFFFF' } };
-  titleCell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FF0F172A' } };
-  titleCell.alignment = { vertical: 'middle', horizontal: 'left', indent: 1 };
-  sheet.getRow(1).height = 36;
+  // 1. Compact Title Block (Rows 1 & 2 - Unmerged, Clean)
+  sheet.getCell('A1').value = 'MLBB TopUp Store — Package Profitability & Pricing Statement';
+  sheet.getCell('A1').font = { name: 'Segoe UI', size: 13, bold: true, color: { argb: 'FF0F172A' } };
+  sheet.getRow(1).height = 24;
 
-  sheet.mergeCells('A2:Q2');
-  const metaCell = sheet.getCell('A2');
-  metaCell.value = `Report Timestamp: ${new Date().toLocaleString()}  |  Active Supplier: ${activeProvider}  |  Catalog Scope: ${gameFilter.toUpperCase()} (${totalCount} Packages)`;
-  metaCell.font = { name: 'Segoe UI', size: 9, italic: true, color: { argb: 'FF94A3B8' } };
-  metaCell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FF1E293B' } };
-  metaCell.alignment = { vertical: 'middle', horizontal: 'left', indent: 1 };
-  sheet.getRow(2).height = 22;
+  sheet.getCell('A2').value = `Generated: ${new Date().toLocaleString()}  |  Active Supplier: ${activeProvider}  |  Catalog Scope: ${gameFilter.toUpperCase()} (${totalCount} Packages)`;
+  sheet.getCell('A2').font = { name: 'Segoe UI', size: 9, italic: true, color: { argb: 'FF64748B' } };
+  sheet.getRow(2).height = 18;
 
-  sheet.addRow([]); // Blank Row 3
+  sheet.addRow([]); // Blank Row 3 (Height 10)
+  sheet.getRow(3).height = 10;
 
-  // 2. KPI Summary Cards (Rows 4-5)
-  const kpis = [
-    { label: 'CATALOG PACKAGES', val: totalCount, fmt: '#,##0', color: 'FF0F172A', startCol: 1, endCol: 3 },
-    { label: 'TOTAL CATALOG REVENUE', val: sumRevenue, fmt: '"$"#,##0.00', color: 'FF0284C7', startCol: 4, endCol: 6 },
-    { label: 'SUPPLIER WHOLESALE COGS', val: sumCost, fmt: '"$"#,##0.00', color: 'FF475569', startCol: 7, endCol: 9 },
-    { label: 'ESTIMATED NET PROFIT', val: sumProfit, fmt: '"+"#,##0.00;"-"#,##0.00;0.00', color: 'FF059669', startCol: 10, endCol: 12 },
-    { label: 'AVERAGE RETAIL MARGIN', val: avgMargin, fmt: '0.0%', color: 'FFD97706', startCol: 13, endCol: 15 }
-  ];
-
-  kpis.forEach((kpi) => {
-    const colStartChar = String.fromCharCode(64 + kpi.startCol);
-    const colEndChar = String.fromCharCode(64 + kpi.endCol);
-
-    sheet.mergeCells(`${colStartChar}4:${colEndChar}4`);
-    const lblCell = sheet.getCell(`${colStartChar}4`);
-    lblCell.value = kpi.label;
-    lblCell.font = { name: 'Segoe UI', size: 8, bold: true, color: { argb: 'FF64748B' } };
-    lblCell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFF1F5F9' } };
-    lblCell.alignment = { horizontal: 'center', vertical: 'middle' };
-
-    sheet.mergeCells(`${colStartChar}5:${colEndChar}5`);
-    const valCell = sheet.getCell(`${colStartChar}5`);
-    valCell.value = kpi.val;
-    valCell.font = { name: 'Segoe UI', size: 13, bold: true, color: { argb: kpi.color } };
-    valCell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFF1F5F9' } };
-    valCell.alignment = { horizontal: 'center', vertical: 'middle' };
-    if (kpi.fmt) valCell.numFmt = kpi.fmt;
-
-    for (let r = 4; r <= 5; r++) {
-      for (let c = kpi.startCol; c <= kpi.endCol; c++) {
-        const cell = sheet.getCell(r, c);
-        cell.border = {
-          top: r === 4 ? { style: 'thin', color: { argb: 'FFCBD5E1' } } : undefined,
-          bottom: r === 5 ? { style: 'thin', color: { argb: 'FFCBD5E1' } } : undefined,
-          left: c === kpi.startCol ? { style: 'thin', color: { argb: 'FFCBD5E1' } } : undefined,
-          right: c === kpi.endCol ? { style: 'thin', color: { argb: 'FFCBD5E1' } } : undefined
-        };
-      }
-    }
-  });
-
-  sheet.getRow(4).height = 18;
-  sheet.getRow(5).height = 26;
-  sheet.addRow([]); // Blank Row 6
-
-  // 3. Table Header Row (Row 7)
+  // 2. Data Table Header Row (Row 4)
   const headers = [
     '#',
     'Game Category',
@@ -112,22 +56,23 @@ export async function exportPackageProfitabilityExcel({
   ];
 
   const headerRow = sheet.addRow(headers);
-  headerRow.height = 28;
+  headerRow.height = 26;
   headerRow.eachCell((cell) => {
-    cell.font = { name: 'Segoe UI', size: 10, bold: true, color: { argb: 'FFFFFFFF' } };
+    cell.font = { name: 'Segoe UI', size: 9.5, bold: true, color: { argb: 'FFFFFFFF' } };
     cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FF1E293B' } };
     cell.alignment = { vertical: 'middle', horizontal: 'center', wrapText: true };
     cell.border = {
-      top: { style: 'medium', color: { argb: 'FF0F172A' } },
+      top: { style: 'thin', color: { argb: 'FF0F172A' } },
       bottom: { style: 'medium', color: { argb: 'FF0F172A' } },
       left: { style: 'thin', color: { argb: 'FF334155' } },
       right: { style: 'thin', color: { argb: 'FF334155' } }
     };
   });
 
-  sheet.views = [{ state: 'frozen', xSplit: 0, ySplit: 7 }];
+  // Freeze top headers at Row 4
+  sheet.views = [{ state: 'frozen', xSplit: 0, ySplit: 4 }];
 
-  // 4. Data Rows (Row 8+)
+  // 3. Compact Data Rows (Row 5+)
   list.forEach((p, idx) => {
     const isEven = idx % 2 === 0;
     const bgHex = isEven ? 'FFFFFFFF' : 'FFF8FAFC';
@@ -153,7 +98,7 @@ export async function exportPackageProfitabilityExcel({
     ];
 
     const row = sheet.addRow(rowData);
-    row.height = 22;
+    row.height = 20;
 
     row.eachCell((cell, colIndex) => {
       cell.font = { name: 'Segoe UI', size: 9, color: { argb: 'FF334155' } };
@@ -164,6 +109,7 @@ export async function exportPackageProfitabilityExcel({
         right: { style: 'thin', color: { argb: 'FFE2E8F0' } }
       };
 
+      // Alignment
       if ([1, 4, 13, 16, 17].includes(colIndex)) {
         cell.alignment = { horizontal: 'center', vertical: 'middle' };
       } else if ([5, 6, 8, 9, 10, 11, 12, 14, 15].includes(colIndex)) {
@@ -172,6 +118,7 @@ export async function exportPackageProfitabilityExcel({
         cell.alignment = { horizontal: 'left', vertical: 'middle' };
       }
 
+      // Number Formats
       if ([5, 6, 8, 9, 11, 14, 15].includes(colIndex)) {
         cell.numFmt = '"$"#,##0.00';
       }
@@ -182,29 +129,32 @@ export async function exportPackageProfitabilityExcel({
         cell.numFmt = '#,##0';
       }
 
+      // Highlighting Positive Profit
       if ([9, 11, 14].includes(colIndex) && cell.value > 0) {
-        cell.font = { name: 'Segoe UI', size: 9, bold: true, color: { argb: 'FF059669' } };
+        cell.font = { name: 'Segoe UI', size: 9, bold: true, color: { argb: 'FF047857' } };
       }
 
+      // Status pill badge color
       if (colIndex === 16) {
         cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFDCFCE7' } };
-        cell.font = { name: 'Segoe UI', size: 9, bold: true, color: { argb: 'FF15803D' } };
+        cell.font = { name: 'Segoe UI', size: 8.5, bold: true, color: { argb: 'FF15803D' } };
       }
 
+      // Promo/Tag pill badge color
       if (colIndex === 17 && cell.value && cell.value !== 'Standard') {
         cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFFEF3C7' } };
-        cell.font = { name: 'Segoe UI', size: 9, bold: true, color: { argb: 'FFB45309' } };
+        cell.font = { name: 'Segoe UI', size: 8.5, bold: true, color: { argb: 'FFB45309' } };
       }
     });
   });
 
-  // 5. Summary Total Row
-  const startRow = 8;
-  const endRow = list.length + 7;
+  // 4. Compact Summary Totals Row
+  const startRow = 5;
+  const endRow = list.length + 4;
 
   const totalRow = sheet.addRow([
     'TOTALS',
-    `Catalog Master (${totalCount} packages)`,
+    `Catalog (${totalCount} pkgs)`,
     '',
     `=SUM(D${startRow}:D${endRow})`,
     `=AVERAGE(E${startRow}:E${endRow})`,
@@ -222,9 +172,9 @@ export async function exportPackageProfitabilityExcel({
     'Master'
   ]);
 
-  totalRow.height = 26;
+  totalRow.height = 24;
   totalRow.eachCell((cell, colIndex) => {
-    cell.font = { name: 'Segoe UI', size: 10, bold: true, color: { argb: 'FF0F172A' } };
+    cell.font = { name: 'Segoe UI', size: 9.5, bold: true, color: { argb: 'FF0F172A' } };
     cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFE2E8F0' } };
     cell.border = {
       top: { style: 'medium', color: { argb: 'FF0F172A' } },
@@ -245,17 +195,32 @@ export async function exportPackageProfitabilityExcel({
     }
   });
 
-  sheet.columns.forEach((column) => {
-    let maxLen = 0;
-    column.eachCell({ includeEmpty: true }, (cell) => {
-      const s = cell.value ? cell.value.toString() : '';
-      if (s.length > maxLen && !s.startsWith('=')) {
-        maxLen = s.length;
-      }
-    });
-    column.width = Math.max(maxLen + 4, 12);
+  // 5. Clean Fixed Proportional Column Widths (Prevents Huge Stretching)
+  const columnWidths = [
+    5,   // 1: #
+    18,  // 2: Game Category
+    28,  // 3: Package Name
+    14,  // 4: Diamonds / Units
+    14,  // 5: Seller Retail ($)
+    16,  // 6: Provider Wholesale Cost ($)
+    15,  // 7: Supplier Gateway
+    14,  // 8: VIP Reseller Price ($)
+    13,  // 9: Unit Net Profit ($)
+    12,  // 10: Retail Margin (%)
+    14,  // 11: Reseller Unit Profit ($)
+    12,  // 12: Reseller Margin (%)
+    10,  // 13: Units Sold
+    14,  // 14: Total Net Profit ($)
+    15,  // 15: Total Gross Revenue ($)
+    10,  // 16: Status
+    15   // 17: Pass / Promo Tag
+  ];
+
+  sheet.columns.forEach((col, idx) => {
+    col.width = columnWidths[idx] || 14;
   });
 
+  // Download Trigger
   const buffer = await workbook.xlsx.writeBuffer();
   const blob = new Blob([buffer], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
   const url = window.URL.createObjectURL(blob);
@@ -267,7 +232,7 @@ export async function exportPackageProfitabilityExcel({
 }
 
 /**
- * Exports Executive Orders & Sales Ledger (.xlsx)
+ * Exports Compact & Professional Orders & Sales Ledger (.xlsx)
  */
 export async function exportOrdersLedgerExcel({
   orders = [],
@@ -284,26 +249,20 @@ export async function exportOrdersLedgerExcel({
   });
 
   const totalCount = orders.length;
-  const totalRev = orders.reduce((acc, o) => acc + Number(o.amount || o.price || 0), 0);
 
-  sheet.mergeCells('A1:L1');
-  const titleCell = sheet.getCell('A1');
-  titleCell.value = 'MLBB TOPUP STORE — OFFICIAL ORDERS & SALES LEDGER STATEMENT';
-  titleCell.font = { name: 'Segoe UI', size: 14, bold: true, color: { argb: 'FFFFFFFF' } };
-  titleCell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FF0F172A' } };
-  titleCell.alignment = { vertical: 'middle', horizontal: 'left', indent: 1 };
-  sheet.getRow(1).height = 36;
+  // 1. Compact Title Block
+  sheet.getCell('A1').value = 'MLBB TopUp Store — Official Orders & Sales Ledger Statement';
+  sheet.getCell('A1').font = { name: 'Segoe UI', size: 13, bold: true, color: { argb: 'FF0F172A' } };
+  sheet.getRow(1).height = 24;
 
-  sheet.mergeCells('A2:L2');
-  const metaCell = sheet.getCell('A2');
-  metaCell.value = `Report Timestamp: ${new Date().toLocaleString()}  |  Total Orders: ${totalCount}  |  Total Sales Revenue: $${totalRev.toFixed(2)} USD`;
-  metaCell.font = { name: 'Segoe UI', size: 9, italic: true, color: { argb: 'FF94A3B8' } };
-  metaCell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FF1E293B' } };
-  metaCell.alignment = { vertical: 'middle', horizontal: 'left', indent: 1 };
-  sheet.getRow(2).height = 22;
+  sheet.getCell('A2').value = `Generated: ${new Date().toLocaleString()}  |  Total Orders: ${totalCount}  |  Currency: USD ($)`;
+  sheet.getCell('A2').font = { name: 'Segoe UI', size: 9, italic: true, color: { argb: 'FF64748B' } };
+  sheet.getRow(2).height = 18;
 
   sheet.addRow([]);
+  sheet.getRow(3).height = 10;
 
+  // 2. Table Headers (Row 4)
   const headers = [
     '#',
     'Order ID',
@@ -322,17 +281,18 @@ export async function exportOrdersLedgerExcel({
   const headerRow = sheet.addRow(headers);
   headerRow.height = 26;
   headerRow.eachCell((cell) => {
-    cell.font = { name: 'Segoe UI', size: 10, bold: true, color: { argb: 'FFFFFFFF' } };
+    cell.font = { name: 'Segoe UI', size: 9.5, bold: true, color: { argb: 'FFFFFFFF' } };
     cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FF1E293B' } };
     cell.alignment = { vertical: 'middle', horizontal: 'center' };
     cell.border = {
-      top: { style: 'medium', color: { argb: 'FF0F172A' } },
+      top: { style: 'thin', color: { argb: 'FF0F172A' } },
       bottom: { style: 'medium', color: { argb: 'FF0F172A' } }
     };
   });
 
   sheet.views = [{ state: 'frozen', xSplit: 0, ySplit: 4 }];
 
+  // 3. Compact Data Rows
   orders.forEach((o, idx) => {
     const isEven = idx % 2 === 0;
     const bgHex = isEven ? 'FFFFFFFF' : 'FFF8FAFC';
@@ -372,16 +332,17 @@ export async function exportOrdersLedgerExcel({
 
       if (colIndex === 9 || colIndex === 10) {
         cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFDCFCE7' } };
-        cell.font = { name: 'Segoe UI', size: 9, bold: true, color: { argb: 'FF15803D' } };
+        cell.font = { name: 'Segoe UI', size: 8.5, bold: true, color: { argb: 'FF15803D' } };
       }
     });
   });
 
+  // 4. Totals Row
   const startRow = 5;
   const endRow = orders.length + 4;
   const totalRow = sheet.addRow([
     'TOTALS',
-    `${totalCount} Orders Recorded`,
+    `${totalCount} Orders`,
     '',
     '',
     'All Games',
@@ -396,7 +357,7 @@ export async function exportOrdersLedgerExcel({
 
   totalRow.height = 24;
   totalRow.eachCell((cell, colIndex) => {
-    cell.font = { name: 'Segoe UI', size: 10, bold: true, color: { argb: 'FF0F172A' } };
+    cell.font = { name: 'Segoe UI', size: 9.5, bold: true, color: { argb: 'FF0F172A' } };
     cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFE2E8F0' } };
     cell.border = {
       top: { style: 'medium', color: { argb: 'FF0F172A' } },
@@ -412,15 +373,9 @@ export async function exportOrdersLedgerExcel({
     }
   });
 
-  sheet.columns.forEach((col) => {
-    let maxLen = 0;
-    col.eachCell({ includeEmpty: true }, (c) => {
-      const valStr = c.value ? c.value.toString() : '';
-      if (valStr.length > maxLen && !valStr.startsWith('=')) {
-        maxLen = valStr.length;
-      }
-    });
-    col.width = Math.max(maxLen + 4, 12);
+  const orderWidths = [5, 18, 16, 12, 18, 26, 12, 14, 12, 14, 14, 20];
+  sheet.columns.forEach((col, idx) => {
+    col.width = orderWidths[idx] || 14;
   });
 
   const buffer = await workbook.xlsx.writeBuffer();
