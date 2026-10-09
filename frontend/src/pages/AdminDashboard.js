@@ -1693,10 +1693,39 @@ const PRICING_GAMES = [
         }
         setPendingBalanceOrders(balRes.data?.orders || []);
       } else if (activeTab === 'orders') {
-        const ordersRes = await adminAPI.getAllOrders().catch(() => ({ data: [] }));
+        const [ordersRes, finRes] = await Promise.all([
+          adminAPI.getAllOrders().catch(() => ({ data: [] })),
+          adminAPI.getFinancialsProfit().catch(() => ({ data: null }))
+        ]);
         const remoteOrders = Array.isArray(ordersRes?.data) ? ordersRes.data : [];
         const localOrders = getLocalOrders();
-        const combined = mergeOrders(remoteOrders, localOrders);
+
+        const ledgerItems = finRes?.data?.ledger || [];
+        const ledgerOrders = ledgerItems.map((item, idx) => {
+          const numId = parseInt(String(item.billNumber || '').replace(/\D/g, ''), 10) || (9000 + idx);
+          return {
+            orderId: numId,
+            id: numId,
+            billNumber: item.billNumber,
+            playerId: item.playerId,
+            playerID: item.playerId,
+            serverId: item.serverId || 'Global',
+            serverID: item.serverId || 'Global',
+            accountName: `Player ${item.playerId}`,
+            customerName: `Player ${item.playerId}`,
+            gameName: item.gameName || 'Mobile Legends',
+            productName: item.packageName || 'Diamonds Top-Up',
+            diamondAmount: item.diamondAmount || 0,
+            amount: Number(item.sellerPrice || 0),
+            price: Number(item.sellerPrice || 0),
+            providerPrice: Number(item.providerPrice || 0),
+            paymentStatus: 'Paid',
+            topupStatus: (item.status === 'Delivered' || item.status === 'Completed' || !item.status) ? 'Completed' : item.status,
+            createdAt: item.date || new Date().toISOString()
+          };
+        });
+
+        const combined = mergeOrders([...remoteOrders, ...ledgerOrders], localOrders);
         setOrders(combined);
       } else if (activeTab === 'provider') {
         const [provRes, suppRes] = await Promise.all([

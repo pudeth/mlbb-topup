@@ -609,13 +609,152 @@ public class AdminController : BaseController
     }
 
     /// <summary>
-    /// Get all orders
+    /// Get all orders (aggregated from SQLite & MongoDB Atlas persistent storage)
     /// </summary>
     [HttpGet("orders")]
     public async Task<IActionResult> GetAllOrders()
     {
-        var orders = await _orderService.GetAllOrdersAsync();
-        return Ok(orders);
+        var sqliteOrders = (await _orderService.GetAllOrdersAsync()).ToList();
+        var allOrdersList = new List<object>();
+        var seenKeys = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+
+        foreach (var o in sqliteOrders)
+        {
+            var key = $"ORD-{o.OrderId}";
+            seenKeys.Add(key);
+            seenKeys.Add(o.OrderId.ToString());
+            allOrdersList.Add(o);
+        }
+
+        try
+        {
+            var mongoUri = _configuration["MongoDB:ConnectionString"]
+                ?? "mongodb+srv://peakmao007_db_user:DNelqTteMX30a7PX@pudeth.olrum6s.mongodb.net/?appName=pudeth&retryWrites=true&w=majority";
+            var dbName = _configuration["MongoDB:DatabaseName"] ?? "mlbbtopup";
+
+            var mongoClient = new MongoDB.Driver.MongoClient(mongoUri);
+            var mongoDb = mongoClient.GetDatabase(dbName);
+            var notArchivedFilter = MongoDB.Driver.Builders<MongoDB.Bson.BsonDocument>.Filter.Ne("archived_financials", true);
+
+            // 1. Query MongoDB orders collection
+            var ordersCol = mongoDb.GetCollection<MongoDB.Bson.BsonDocument>("orders");
+            var mongoOrders = await ordersCol.Find(notArchivedFilter).ToListAsync();
+            mongoOrders.Reverse();
+
+            int mIdx = 5000;
+            foreach (var doc in mongoOrders)
+            {
+                var bill = doc.Contains("bill_number") && !doc["bill_number"].IsBsonNull ? doc["bill_number"].AsString :
+                           (doc.Contains("order_id") && !doc["order_id"].IsBsonNull ? $"ORD-{doc["order_id"]}" : string.Empty);
+                var tran = doc.Contains("transaction_id") && !doc["transaction_id"].IsBsonNull ? doc["transaction_id"].AsString : string.Empty;
+                var key = !string.IsNullOrEmpty(bill) ? bill : (!string.IsNullOrEmpty(tran) ? tran : doc["_id"].ToString() ?? string.Empty);
+
+                if (string.IsNullOrEmpty(key) || seenKeys.Contains(key)) continue;
+                seenKeys.Add(key);
+
+                decimal rawAmt = 0m;
+                if (doc.Contains("amount"))
+                {
+                    if (doc["amount"].IsDouble) rawAmt = (decimal)doc["amount"].AsDouble;
+                    else if (doc["amount"].IsInt32) rawAmt = doc["amount"].AsInt32;
+                    else if (doc["amount"].IsInt64) rawAmt = doc["amount"].AsInt64;
+                    else if (doc["amount"].IsDecimal128) rawAmt = (decimal)doc["amount"].AsDecimal128;
+                }
+
+                var curr = doc.Contains("currency") && !doc["currency"].IsBsonNull ? doc["currency"].AsString : "USD";
+                var sell = (curr.Equals("KHR", StringComparison.OrdinalIgnoreCase)) ? Math.Round(rawAmt / 4100m, 2) : rawAmt;
+                if (sell <= 0) continue;
+
+                var game = doc.Contains("game_name") && !doc["game_name"].IsBsonNull ? doc["game_name"].AsString : "Mobile Legends";
+                var pkg = doc.Contains("package_name") && !doc["package_name"].IsBsonNull ? doc["package_name"].AsString :
+                          (doc.Contains("product_name") && !doc["product_name"].IsBsonNull ? doc["product_name"].AsString : "Diamonds");
+                var pid = doc.Contains("player_id") && !doc["player_id"].IsBsonNull ? doc["player_id"].AsString : "N/A";
+                var sid = doc.Contains("server_id") && !doc["server_id"].IsBsonNull ? doc["server_id"].AsString : "Global";
+                var dateStr = doc.Contains("created_at") && !doc["created_at"].IsBsonNull ? doc["created_at"].ToString()! : DateTime.UtcNow.ToString("yyyy-MM-dd HH:mm:ss");
+
+                var tst = doc.Contains("topup_status") && !doc["topup_status"].IsBsonNull ? doc["topup_status"].AsString : "Completed";
+
+                int parsedId = mIdx++;
+                if (doc.Contains("order_id") && doc["order_id"].IsInt32) parsedId = doc["order_id"].AsInt32;
+
+                allOrdersList.Add(new
+                {
+                    orderId = parsedId,
+                    userId = 0,
+                    playerID = pid,
+                    playerId = pid,
+                    serverID = sid,
+                    serverId = sid,
+                    accountName = $"Player {pid}",
+                    customerPhone = "",
+                    gameName = game,
+                    productId = 0,
+                    productName = pkg,
+                    diamondAmount = 0,
+                    amount = sell,
+                    paymentStatus = "Paid",
+                    topupStatus = (tst.Equals("DELIVERED", StringComparison.OrdinalIgnoreCase) || tst.Equals("COMPLETED", StringComparison.OrdinalIgnoreCase) || string.IsNullOrEmpty(tst)) ? "Completed" : tst,
+                    createdAt = dateStr
+                });
+            }
+
+            // 2. Query MongoDB payments collection
+            var paymentsCol = mongoDb.GetCollection<MongoDB.Bson.BsonDocument>("payments");
+            var mongoPayments = await paymentsCol.Find(notArchivedFilter).ToListAsync();
+            mongoPayments.Reverse();
+
+            foreach (var doc in mongoPayments)
+            {
+                var bill = doc.Contains("bill_number") && !doc["bill_number"].IsBsonNull ? doc["bill_number"].AsString : string.Empty;
+                var tran = doc.Contains("transaction_id") && !doc["transaction_id"].IsBsonNull ? doc["transaction_id"].AsString : string.Empty;
+                var key = !string.IsNullOrEmpty(bill) ? bill : (!string.IsNullOrEmpty(tran) ? tran : doc["_id"].ToString() ?? string.Empty);
+
+                if (string.IsNullOrEmpty(key) || seenKeys.Contains(key)) continue;
+                seenKeys.Add(key);
+
+                decimal rawAmt = 0m;
+                if (doc.Contains("amount"))
+                {
+                    if (doc["amount"].IsDouble) rawAmt = (decimal)doc["amount"].AsDouble;
+                    else if (doc["amount"].IsInt32) rawAmt = doc["amount"].AsInt32;
+                    else if (doc["amount"].IsInt64) rawAmt = doc["amount"].AsInt64;
+                    else if (doc["amount"].IsDecimal128) rawAmt = (decimal)doc["amount"].AsDecimal128;
+                }
+
+                var curr = doc.Contains("currency") && !doc["currency"].IsBsonNull ? doc["currency"].AsString : "USD";
+                var sell = (curr.Equals("KHR", StringComparison.OrdinalIgnoreCase)) ? Math.Round(rawAmt / 4100m, 2) : rawAmt;
+                if (sell <= 0) continue;
+
+                var game = doc.Contains("game_name") && !doc["game_name"].IsBsonNull ? doc["game_name"].AsString : "Mobile Legends";
+                var pkg = doc.Contains("package_name") && !doc["package_name"].IsBsonNull ? doc["package_name"].AsString : "Diamonds";
+                var pid = doc.Contains("player_id") && !doc["player_id"].IsBsonNull ? doc["player_id"].AsString : "N/A";
+                var sid = doc.Contains("server_id") && !doc["server_id"].IsBsonNull ? doc["server_id"].AsString : "Global";
+                var dateStr = doc.Contains("created_at") && !doc["created_at"].IsBsonNull ? doc["created_at"].ToString()! : DateTime.UtcNow.ToString("yyyy-MM-dd HH:mm:ss");
+
+                allOrdersList.Add(new
+                {
+                    orderId = mIdx++,
+                    userId = 0,
+                    playerID = pid,
+                    playerId = pid,
+                    serverID = sid,
+                    serverId = sid,
+                    accountName = $"Player {pid}",
+                    customerPhone = "",
+                    gameName = game,
+                    productId = 0,
+                    productName = pkg,
+                    diamondAmount = 0,
+                    amount = sell,
+                    paymentStatus = "Paid",
+                    topupStatus = "Completed",
+                    createdAt = dateStr
+                });
+            }
+        }
+        catch { }
+
+        return Ok(allOrdersList);
     }
 
     /// <summary>
