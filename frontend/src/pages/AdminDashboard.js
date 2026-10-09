@@ -1251,8 +1251,22 @@ const PRICING_GAMES = [
     const clearedTimestamp = financials?.clearedAt || (typeof window !== 'undefined' ? localStorage.getItem('financials_cleared_at') : null);
     const clearedDate = clearedTimestamp ? new Date(clearedTimestamp) : null;
 
-    const paidOrders = (orders || []).filter(o => {
-      if (!o || (o.paymentStatus !== 'Paid' && o.topupStatus !== 'Completed')) return false;
+    const allOrdersList = [...(orders || [])];
+    try {
+      const localStored = getLocalOrders();
+      localStored.forEach(lo => {
+        if (!allOrdersList.some(o => (o.orderId && Number(o.orderId) === Number(lo.orderId)) || (o.id && Number(o.id) === Number(lo.id)))) {
+          allOrdersList.push(lo);
+        }
+      });
+    } catch (e) {}
+
+    const paidOrders = allOrdersList.filter(o => {
+      if (!o) return false;
+      const pStat = String(o.paymentStatus || o.status || '').toLowerCase();
+      const tStat = String(o.topupStatus || o.status || '').toLowerCase();
+      const isPaid = pStat === 'paid' || pStat === 'completed' || pStat === 'success' || tStat === 'completed' || tStat === 'paid' || tStat === 'success';
+      if (!isPaid) return false;
       if (clearedDate && new Date(o.createdAt || 0) <= clearedDate) return false;
       return true;
     });
@@ -1296,15 +1310,15 @@ const PRICING_GAMES = [
 
       const totalProfit = unitsSold > 0
         ? Number((unitsSold * unitNetProfit).toFixed(2))
-        : (backendMatch?.totalProfit ? Number(backendMatch.totalProfit) : 0);
+        : (backendMatch?.totalProfit && Number(backendMatch.totalProfit) > 0 ? Number(backendMatch.totalProfit) : unitNetProfit);
 
       const totalRevenue = unitsSold > 0
         ? Number((unitsSold * retailPrice).toFixed(2))
-        : 0;
+        : retailPrice;
 
       const totalProviderCost = unitsSold > 0
         ? Number((unitsSold * providerCost).toFixed(2))
-        : 0;
+        : providerCost;
 
       const packageName = prod.name || `${prod.diamondAmount} ${gId === 'steam_usd' ? 'USD' : gId === 'telegram_stars' ? 'Stars' : 'Diamonds'}`;
 
@@ -6606,12 +6620,16 @@ const PRICING_GAMES = [
 
                                   {/* Total Profit */}
                                   <td className="p-3 text-right font-black text-emerald-400">
-                                    ${p.totalProfit.toFixed(2)}
+                                    <div>+${p.totalProfit.toFixed(2)}</div>
+                                    {p.unitsSold === 0 && <div className="text-[9px] text-emerald-400/60 font-sans font-normal">(Unit Est.)</div>}
+                                    {p.unitsSold > 0 && <div className="text-[9px] text-emerald-400/80 font-sans font-normal">({p.unitsSold} sold)</div>}
                                   </td>
 
                                   {/* Total Income / Revenue */}
                                   <td className="p-3 text-right font-bold text-cyan-300">
-                                    ${p.totalRevenue.toFixed(2)}
+                                    <div>${p.totalRevenue.toFixed(2)}</div>
+                                    {p.unitsSold === 0 && <div className="text-[9px] text-cyan-400/60 font-sans font-normal">(Unit Rate)</div>}
+                                    {p.unitsSold > 0 && <div className="text-[9px] text-cyan-400/80 font-sans font-normal">({p.unitsSold} sold)</div>}
                                   </td>
                                 </tr>
                               );
