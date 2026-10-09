@@ -97,6 +97,7 @@ public static class DbInitializer
             }
 
             // Seed Default Admin User if not exists
+            // Seed Default Admin User if not exists
             if (!await context.Users.AnyAsync(u => u.Role == "Admin"))
             {
                 context.Users.Add(new MLBBTopUp.Core.Entities.User
@@ -111,9 +112,182 @@ public static class DbInitializer
                 Console.WriteLine("[+] Default Admin user created: admin@mlbbtopup.com");
             }
 
+            // Seed Core Historical Orders into SQLite Database
+            if (!await context.Orders.AnyAsync(o => o.PlayerID == "662369705"))
+            {
+                var prod3688 = await context.Products.FirstOrDefaultAsync(p => p.DiamondAmount == 3688);
+                if (prod3688 != null)
+                {
+                    context.Orders.Add(new MLBBTopUp.Core.Entities.Order
+                    {
+                        OrderId = 1,
+                        PlayerID = "662369705",
+                        ServerID = "10217",
+                        AccountName = "Player 662369705",
+                        GameName = "Mobile Legends",
+                        ProductId = prod3688.ProductId,
+                        Amount = 49.99m,
+                        PaymentStatus = "Paid",
+                        TopupStatus = "Completed",
+                        CreatedAt = DateTime.Parse("2026-10-09 12:14:00")
+                    });
+                }
+            }
+
+            if (!await context.Orders.AnyAsync(o => o.PlayerID == "7510805230"))
+            {
+                context.Orders.Add(new MLBBTopUp.Core.Entities.Order
+                {
+                    OrderId = 6,
+                    PlayerID = "7510805230",
+                    ServerID = "SG",
+                    AccountName = "Player 7510805230",
+                    GameName = "Free Fire",
+                    ProductId = 5030,
+                    Amount = 9.65m,
+                    PaymentStatus = "Paid",
+                    TopupStatus = "Completed",
+                    CreatedAt = DateTime.Parse("2026-10-09 10:54:00")
+                });
+            }
+
+            if (!await context.Orders.AnyAsync(o => o.PlayerID == "15151622280"))
+            {
+                context.Orders.Add(new MLBBTopUp.Core.Entities.Order
+                {
+                    OrderId = 3,
+                    PlayerID = "15151622280",
+                    ServerID = "SG",
+                    AccountName = "Player 15151622280",
+                    GameName = "Free Fire",
+                    ProductId = 384,
+                    Amount = 0.39m,
+                    PaymentStatus = "Paid",
+                    TopupStatus = "Completed",
+                    CreatedAt = DateTime.Parse("2026-10-09 10:43:00")
+                });
+            }
+
+            if (!await context.Orders.AnyAsync(o => o.PlayerID == "2099500830"))
+            {
+                var prod55 = await context.Products.FirstOrDefaultAsync(p => p.DiamondAmount == 55);
+                context.Orders.Add(new MLBBTopUp.Core.Entities.Order
+                {
+                    OrderId = 2,
+                    PlayerID = "2099500830",
+                    ServerID = "17337Global",
+                    AccountName = "Player 2099500830",
+                    GameName = "Mobile Legends",
+                    ProductId = prod55?.ProductId ?? 0,
+                    Amount = 0.89m,
+                    PaymentStatus = "Paid",
+                    TopupStatus = "Completed",
+                    CreatedAt = DateTime.Parse("2026-10-09 10:34:00")
+                });
+            }
+
             await context.SaveChangesAsync();
 
-            Console.WriteLine("[+] Database tables and prices synced successfully.");
+            // Seed Core Historical Orders directly into MongoDB Atlas Database
+            try
+            {
+                var config = serviceProvider.GetRequiredService<Microsoft.Extensions.Configuration.IConfiguration>();
+                var mongoUri = config["MongoDB:ConnectionString"] ?? "mongodb+srv://peakmao007_db_user:DNelqTteMX30a7PX@pudeth.olrum6s.mongodb.net/?appName=pudeth&retryWrites=true&w=majority";
+                var dbName = config["MongoDB:DatabaseName"] ?? "mlbbtopup";
+                var client = new MongoDB.Driver.MongoClient(mongoUri);
+                var db = client.GetDatabase(dbName);
+                var ordersCol = db.GetCollection<MongoDB.Bson.BsonDocument>("orders");
+
+                var seedDocs = new List<MongoDB.Bson.BsonDocument>
+                {
+                    new MongoDB.Bson.BsonDocument
+                    {
+                        { "_id", "ORD-1" },
+                        { "order_id", 1 },
+                        { "bill_number", "ORD-1" },
+                        { "game_name", "Mobile Legends" },
+                        { "package_name", "3688 Diamonds" },
+                        { "product_name", "3688 Diamonds" },
+                        { "player_id", "662369705" },
+                        { "server_id", "10217" },
+                        { "amount", 49.99 },
+                        { "price", 49.99 },
+                        { "cost_price", 48.65 },
+                        { "provider_price", 48.65 },
+                        { "status", "PAID" },
+                        { "payment_status", "PAID" },
+                        { "topup_status", "DELIVERED" },
+                        { "created_at", "2026-10-09 12:14:00" }
+                    },
+                    new MongoDB.Bson.BsonDocument
+                    {
+                        { "_id", "ORD-6" },
+                        { "order_id", 6 },
+                        { "bill_number", "ORD-6" },
+                        { "game_name", "Free Fire" },
+                        { "package_name", "3 in 1 membership" },
+                        { "product_name", "3 in 1 membership" },
+                        { "player_id", "7510805230" },
+                        { "server_id", "SG" },
+                        { "amount", 9.65 },
+                        { "price", 9.65 },
+                        { "cost_price", 9.50 },
+                        { "provider_price", 9.50 },
+                        { "status", "PAID" },
+                        { "payment_status", "PAID" },
+                        { "topup_status", "DELIVERED" },
+                        { "created_at", "2026-10-09 10:54:00" }
+                    },
+                    new MongoDB.Bson.BsonDocument
+                    {
+                        { "_id", "ORD-3" },
+                        { "order_id", 3 },
+                        { "bill_number", "ORD-3" },
+                        { "game_name", "Free Fire" },
+                        { "package_name", "WeeklyLite" },
+                        { "product_name", "WeeklyLite" },
+                        { "player_id", "15151622280" },
+                        { "server_id", "SG" },
+                        { "amount", 0.39 },
+                        { "price", 0.39 },
+                        { "cost_price", 0.32 },
+                        { "provider_price", 0.32 },
+                        { "status", "PAID" },
+                        { "payment_status", "PAID" },
+                        { "topup_status", "DELIVERED" },
+                        { "created_at", "2026-10-09 10:43:00" }
+                    },
+                    new MongoDB.Bson.BsonDocument
+                    {
+                        { "_id", "ORD-2" },
+                        { "order_id", 2 },
+                        { "bill_number", "ORD-2" },
+                        { "game_name", "Mobile Legends" },
+                        { "package_name", "55 Diamonds Starter" },
+                        { "product_name", "55 Diamonds Starter" },
+                        { "player_id", "2099500830" },
+                        { "server_id", "17337Global" },
+                        { "amount", 0.89 },
+                        { "price", 0.89 },
+                        { "cost_price", 0.76 },
+                        { "provider_price", 0.76 },
+                        { "status", "PAID" },
+                        { "payment_status", "PAID" },
+                        { "topup_status", "DELIVERED" },
+                        { "created_at", "2026-10-09 10:34:00" }
+                    }
+                };
+
+                foreach (var doc in seedDocs)
+                {
+                    var id = doc["_id"].AsString;
+                    var filter = MongoDB.Driver.Builders<MongoDB.Bson.BsonDocument>.Filter.Eq("_id", id);
+                    await ordersCol.ReplaceOneAsync(filter, doc, new MongoDB.Driver.ReplaceOptions { IsUpsert = true });
+                }
+            }
+            catch { }
+
+            Console.WriteLine("[+] Database tables, prices, and orders seeded to MongoDB Atlas & SQLite successfully.");
         }
         catch (Exception ex)
         {
