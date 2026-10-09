@@ -25,6 +25,8 @@ import {
   updateProviderBalance
 } from '../services/supplierGateway';
 import { getLocalOrders, mergeOrders, updateLocalOrderStatus } from '../utils/orderStorage';
+import { exportPackageProfitabilityExcel, exportOrdersLedgerExcel } from '../utils/excelExporter';
+
 
 const AdminDashboard = () => {
 
@@ -1447,59 +1449,30 @@ const PRICING_GAMES = [
     };
   }, [filteredAndSortedPackages]);
 
-  const handleExportPackageAnalyticsCSV = () => {
+  const handleExportPackageAnalyticsCSV = async () => {
     const list = filteredAndSortedPackages;
     if (list.length === 0) {
       showToast('error', 'No package data to export.');
       return;
     }
-    const headers = [
-      'Game',
-      'Package Name',
-      'Diamonds / Units',
-      'Seller Retail (USD)',
-      'Provider Cost (USD)',
-      'Active Provider',
-      'Reseller Wholesale (USD)',
-      'Unit Net Profit (USD)',
-      'Retail Margin (%)',
-      'Reseller Unit Profit (USD)',
-      'Reseller Margin (%)',
-      'Units Sold',
-      'Total Profit (USD)',
-      'Total Revenue (USD)',
-      'Status',
-      'Pass / Promo Tag'
-    ];
-    const rows = list.map(p => [
-      `"${p.gameName}"`,
-      `"${p.name.replace(/"/g, '""')}"`,
-      `"${p.diamondAmount || ''}"`,
-      p.retailPrice.toFixed(2),
-      p.providerCost.toFixed(2),
-      `"${p.activeProvider}"`,
-      p.resellerPrice.toFixed(2),
-      p.unitNetProfit.toFixed(2),
-      `"${p.retailMarginPct}%"`,
-      p.resellerUnitProfit.toFixed(2),
-      `"${p.resellerMarginPct}%"`,
-      p.unitsSold,
-      p.totalProfit.toFixed(2),
-      p.totalRevenue.toFixed(2),
-      `"${p.status}"`,
-      `"${(p.tag || (p.isPass ? 'Pass' : '')).replace(/"/g, '""')}"`
-    ]);
 
-    const csvContent = 'data:text/csv;charset=utf-8,\uFEFF' + [headers.join(','), ...rows.map(r => r.join(','))].join('\n');
-    const encodedUri = encodeURI(csvContent);
-    const link = document.createElement('a');
-    link.setAttribute('href', encodedUri);
-    const filterSuffix = packageAnalyticsGameFilter === 'ALL' ? 'All_Games' : packageAnalyticsGameFilter.toUpperCase();
-    link.setAttribute('download', `Package_Profitability_Analytics_${filterSuffix}_${new Date().toISOString().slice(0, 10)}.csv`);
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-    showToast('success', `Exported ${rows.length} package analytics rows to CSV!`);
+    try {
+      const activeProv = providerSettings?.activeProvider || 'KhmerTopUp';
+      const filterSuffix = packageAnalyticsGameFilter === 'ALL' ? 'All_Games' : packageAnalyticsGameFilter.toUpperCase();
+      const filename = `MLBB_Topup_Executive_Package_Profitability_${filterSuffix}_${new Date().toISOString().slice(0, 10)}.xlsx`;
+
+      await exportPackageProfitabilityExcel({
+        list,
+        activeProvider: activeProv,
+        gameFilter: packageAnalyticsGameFilter,
+        filename
+      });
+
+      showToast('success', 'Exported executive Excel statement (.xlsx)!');
+    } catch (err) {
+      console.error('Export error:', err);
+      showToast('error', 'Export failed: ' + err.message);
+    }
   };
   const [exportModalOpen, setExportModalOpen] = useState(false);
   const [exportGameTarget, setExportGameTarget] = useState('current');
@@ -2778,46 +2751,24 @@ const PRICING_GAMES = [
     }
   };
 
-  // ==================== CSV EXPORT ====================
+  // ==================== CSV & EXCEL EXPORTS ====================
 
-  const handleExportCSV = () => {
-    if (!orders.length) return;
-    const headers = [
-      'OrderID',
-      'PlayerID',
-      'ServerID',
-      'DiamondAmount',
-      'AmountUSD',
-      'PaymentStatus',
-      'TopupStatus',
-      'CreatedAt',
-    ];
-    const rows = orders.map((o) => [
-      o.orderId,
-      o.playerID,
-      o.serverID,
-      o.diamondAmount,
-      o.amount,
-      o.paymentStatus,
-      o.topupStatus,
-      o.createdAt,
-    ]);
-
-    const csvContent =
-      'data:text/csv;charset=utf-8,\uFEFF' +
-      [headers.join(','), ...rows.map((e) => e.join(','))].join('\n');
-
-    const encodedUri = encodeURI(csvContent);
-    const link = document.createElement('a');
-    link.setAttribute('href', encodedUri);
-    link.setAttribute('download', `MLBB_TopUp_Orders_${new Date().toISOString().slice(0, 10)}.csv`);
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-    showToast('success', 'Exported orders ledger to Excel/CSV successfully!');
+  const handleExportCSV = async () => {
+    if (!orders.length) {
+      showToast('error', 'No order ledger data to export.');
+      return;
+    }
+    try {
+      const filename = `MLBB_TopUp_Orders_Ledger_Statement_${new Date().toISOString().slice(0, 10)}.xlsx`;
+      await exportOrdersLedgerExcel({ orders, filename });
+      showToast('success', 'Exported executive orders sales ledger (.xlsx)!');
+    } catch (err) {
+      console.error('Export error:', err);
+      showToast('error', 'Export failed: ' + err.message);
+    }
   };
 
-  const handleExportPricingExcel = (targetGame = exportGameTarget, targetStatus = exportStatusTarget) => {
+  const handleExportPricingExcel = async (targetGame = exportGameTarget, targetStatus = exportStatusTarget) => {
     let list = getMergedProductsList();
 
     // Filter by Game or Category
@@ -2863,77 +2814,54 @@ const PRICING_GAMES = [
       list = list.filter(p => p.isPass || p.diamondAmount === 210 || p.diamondAmount === 500);
     }
 
-    const headers = [
-      'Product ID',
-      'Game Title',
-      'Game Category / Type',
-      'Package Name',
-      'Diamonds / Units',
-      'Provider Wholesale Cost (USD)',
-      'VIP Reseller Price (USD)',
-      'Customer Retail Price (USD)',
-      'Net Profit (USD)',
-      'Profit Margin (%)',
-      'Reseller Discount (USD)',
-      'Status',
-      'Promo Tag / Event'
-    ];
+    if (list.length === 0) {
+      showToast('error', 'No package matrix data found for the selected scope.');
+      return;
+    }
 
-    const getGameMeta = (gameId) => {
-      switch (gameId) {
-        case 'mlbb': return { title: 'Mobile Legends: Bang Bang', cat: 'MOBA' };
-        case 'pubgm': return { title: 'PUBG Mobile', cat: 'Battle Royale' };
-        case 'freefire': return { title: 'Free Fire', cat: 'Battle Royale' };
-        case 'hok': return { title: 'Honor of Kings', cat: 'MOBA' };
-        case 'genshin': return { title: 'Genshin Impact', cat: 'RPG & Anime' };
-        case 'star_rail': return { title: 'Honkai: Star Rail', cat: 'RPG & Anime' };
-        case 'zenless': return { title: 'Zenless Zone Zero', cat: 'Action RPG' };
-        case 'steam_usd': return { title: 'Steam Wallet', cat: 'Digital Balance' };
-        case 'telegram_stars': return { title: 'Telegram Stars', cat: 'Social Units' };
-        case 'gift_cards': return { title: 'Gift Cards & Vouchers', cat: 'Gift Cards' };
-        default: return { title: 'Mobile Legends (MLBB)', cat: 'MOBA' };
-      }
-    };
+    try {
+      const activeProv = providerSettings?.activeProvider || 'KhmerTopUp';
+      const filename = `MLBB_TopUp_Master_Pricing_Matrix_${categoryTitle}_${new Date().toISOString().slice(0, 10)}.xlsx`;
 
-    const rows = list.map((prod) => {
-      const cost = getProductCostForActiveProvider(prod);
-      const retail = Number(prod.price) || 0;
-      const reseller = prod.resellerPrice > 0 ? Number(prod.resellerPrice) : retail * 0.92;
-      const profit = Math.max(0, retail - cost);
-      const margin = retail > 0 ? ((profit / retail) * 100).toFixed(1) : '0.0';
-      const resellerDiscount = Math.max(0, retail - reseller).toFixed(2);
-      const meta = getGameMeta(prod.game || 'mlbb');
+      const formattedList = list.map(prod => {
+        const cost = getProductCostForActiveProvider(prod);
+        const retail = Number(prod.price) || 0;
+        const reseller = prod.resellerPrice > 0 ? Number(prod.resellerPrice) : retail * 0.92;
+        const unitNetProfit = Math.max(0, retail - cost);
+        const retailMarginPct = retail > 0 ? Number(((unitNetProfit / retail) * 100).toFixed(1)) : 0;
+        const resellerUnitProfit = Math.max(0, reseller - cost);
+        const resellerMarginPct = reseller > 0 ? Number(((resellerUnitProfit / reseller) * 100).toFixed(1)) : 0;
 
-      return [
-        `"${prod.productId || ''}"`,
-        `"${meta.title}"`,
-        `"${meta.cat}"`,
-        `"${(prod.name || `${prod.diamondAmount} Diamonds / Units`).replace(/"/g, '""')}"`,
-        `"${prod.diamondAmount || ''}"`,
-        cost.toFixed(2),
-        reseller.toFixed(2),
-        retail.toFixed(2),
-        profit.toFixed(2),
-        `"${margin}%"`,
-        resellerDiscount,
-        `"${prod.status || 'Active'}"`,
-        `"${(prod.tag || '').replace(/"/g, '""')}"`
-      ];
-    });
+        return {
+          ...prod,
+          gameName: prod.game ? prod.game.toUpperCase() : 'MLBB',
+          retailPrice: retail,
+          providerCost: cost,
+          activeProvider: activeProv,
+          resellerPrice: reseller,
+          unitNetProfit,
+          retailMarginPct,
+          resellerUnitProfit,
+          resellerMarginPct,
+          unitsSold: prod.unitsSold || 0,
+          totalProfit: unitNetProfit * (prod.unitsSold || 0),
+          totalRevenue: retail * (prod.unitsSold || 0)
+        };
+      });
 
-    const csvContent =
-      'data:text/csv;charset=utf-8,\uFEFF' +
-      [headers.join(','), ...rows.map((e) => e.join(','))].join('\n');
+      await exportPackageProfitabilityExcel({
+        list: formattedList,
+        activeProvider: activeProv,
+        gameFilter: categoryTitle,
+        filename
+      });
 
-    const encodedUri = encodeURI(csvContent);
-    const link = document.createElement('a');
-    link.setAttribute('href', encodedUri);
-    link.setAttribute('download', `TopUp_Pricing_${categoryTitle}_${new Date().toISOString().slice(0, 10)}.csv`);
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-    showToast('success', `Exported ${rows.length} packages for [${categoryTitle.replace(/_/g, ' ')}] to Excel/CSV!`);
-    setExportModalOpen(false);
+      showToast('success', `Exported executive master pricing matrix (${categoryTitle.replace(/_/g, ' ')})!`);
+      setExportModalOpen(false);
+    } catch (err) {
+      console.error('Export error:', err);
+      showToast('error', 'Export failed: ' + err.message);
+    }
   };
 
   const handleClearFinancials = async () => {
