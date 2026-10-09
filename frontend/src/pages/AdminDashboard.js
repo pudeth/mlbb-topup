@@ -474,7 +474,6 @@ const PRICING_GAMES = [
       const isKT = (providerSettings?.activeProvider === 'KhmerTopUp') || bill.startsWith('kt-');
 
       // --- Free Fire Specific Packages & Wholesale Costs (Checked First) ---
-      if (pStr.includes('3 in 1') || pStr.includes('3in1') || pStr.includes('3-in-1') || amt === 5030) return 9.50;
       if (pStr.includes('weekly lite x3') || pStr.includes('weeklylite x3') || pStr.includes('3 weekly lite') || pStr.includes('3 weeklylite') || amt === 5029) return 0.94;
       if (pStr.includes('weekly lite x2') || pStr.includes('weeklylite x2') || pStr.includes('2 weekly lite') || pStr.includes('2 weeklylite') || amt === 5028) return 0.63;
       if (pStr.includes('weekly lite') || pStr.includes('weeklylite') || amt === 384) return 0.32;
@@ -1654,8 +1653,15 @@ const PRICING_GAMES = [
         setPendingOrders(pendRes.data || []);
         setPendingBalanceOrders(balRes.data?.orders || []);
       } else if (activeTab === 'financials') {
-        const finRes = await adminAPI.getFinancialsProfit().catch(() => ({ data: null }));
+        const [finRes, ordersRes] = await Promise.all([
+          adminAPI.getFinancialsProfit().catch(() => ({ data: null })),
+          adminAPI.getAllOrders().catch(() => ({ data: [] }))
+        ]);
         if (finRes.data) setFinancials(finRes.data);
+        const remoteOrders = Array.isArray(ordersRes?.data) ? ordersRes.data : [];
+        const localOrders = getLocalOrders();
+        const combined = mergeOrders(remoteOrders, localOrders);
+        setOrders(combined);
       } else if (activeTab === 'pricing') {
         const prodRes = await adminAPI.getAllProducts().catch(() => ({ data: [] }));
         setProducts(prodRes.data || []);

@@ -1309,7 +1309,6 @@ public class AdminController : BaseController
             if (pLower.Contains("weekly x2") || pLower.Contains("2 weekly") || amt == 5024) return 3.12m;
             if (pLower.Contains("4 weekly") || amt == 5026) return 6.24m;
             if (pLower.Contains("520 + weekly") || amt == 3077) return 6.16m;
-            if (pLower.Contains("3 in 1") || amt == 5030) return 9.50m;
             if (pLower.Contains("weekly + monthly") || amt == 5031) return 9.33m;
             if (pLower.Contains("2weekly+monthly") || amt == 5032) return 18.15m;
 
