@@ -47,11 +47,11 @@ public static class DbInitializer
                 { 2195, (29.80m, 28.00m, 28.90m, "2195 Diamonds", "2195 Diamonds Mythic Pack") },
                 { 2452, (32.50m, 28.50m, 30.50m, "2452 Diamonds", "2452 Diamonds Mythic Plus") },
                 { 2901, (39.99m, 35.00m, 37.50m, "2901 Diamonds", "2901 Diamonds Legendary Pack") },
-                { 3688, (49.99m, 48.65m, 49.30m, "3688 Diamonds", "3688 Diamonds Epic Vault") },
-                { 4390, (62.99m, 55.00m, 58.99m, "4390 Diamonds", "4390 Diamonds Supreme Chest") },
-                { 5532, (73.99m, 70.00m, 71.99m, "5532 Diamonds", "5532 Diamonds Immortal Pack") },
-                { 6944, (92.99m, 81.00m, 86.99m, "6944 Diamonds", "6944 Diamonds Titan Pack") },
-                { 9288, (125.00m, 118.00m, 121.00m, "9288 Diamonds", "9288 Diamonds ULTIMATE") }
+                { 3688, (50.00m, 48.65m, 49.65m, "3688 Diamonds", "3688 Diamonds Epic Vault") },
+                { 4390, (65.00m, 55.00m, 60.00m, "4390 Diamonds", "4390 Diamonds Supreme Chest") },
+                { 5532, (76.00m, 70.00m, 73.50m, "5532 Diamonds", "5532 Diamonds Immortal Pack") },
+                { 6944, (95.00m, 81.00m, 89.00m, "6944 Diamonds", "6944 Diamonds Titan Pack") },
+                { 9288, (125.00m, 118.00m, 122.50m, "9288 Diamonds", "9288 Diamonds ULTIMATE") }
             };
 
             var dbProducts = await context.Products.ToListAsync();
