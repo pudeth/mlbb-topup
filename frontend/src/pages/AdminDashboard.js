@@ -457,20 +457,8 @@ const PRICING_GAMES = [
       const bill = String(billNumber || '').toLowerCase();
       const isKT = (providerSettings?.activeProvider === 'KhmerTopUp') || bill.startsWith('kt-');
 
-      // Check catalog list matches
-      const catalogMatch = ALL_GAMES_CATALOG_LIST.find(p => 
-        (amt > 0 && p.diamondAmount === amt) || 
-        (sell > 0 && Math.abs(p.price - sell) < 0.01) ||
-        (pStr && p.name.toLowerCase().includes(pStr))
-      );
-      if (catalogMatch) {
-        const cost = isKT 
-          ? (catalogMatch.costPriceKhmerTopUp || catalogMatch.costPriceFazerCards) 
-          : (catalogMatch.costPriceFazerCards || catalogMatch.costPriceKhmerTopUp);
-        if (cost > 0) return cost;
-      }
-
-      // --- Free Fire Specific Packages & Wholesale Costs ---
+      // --- Free Fire Specific Packages & Wholesale Costs (Checked First) ---
+      if (pStr.includes('3 in 1') || pStr.includes('3in1') || pStr.includes('3-in-1') || amt === 5030) return 9.50;
       if (pStr.includes('weekly lite x3') || pStr.includes('weeklylite x3') || pStr.includes('3 weekly lite') || pStr.includes('3 weeklylite') || amt === 5029) return 0.94;
       if (pStr.includes('weekly lite x2') || pStr.includes('weeklylite x2') || pStr.includes('2 weekly lite') || pStr.includes('2 weeklylite') || amt === 5028) return 0.63;
       if (pStr.includes('weekly lite') || pStr.includes('weeklylite') || amt === 384) return 0.32;
@@ -479,14 +467,13 @@ const PRICING_GAMES = [
       if (pStr.includes('weekly x2') || pStr.includes('2 weekly') || amt === 5024) return 3.12;
       if (pStr.includes('4 weekly') || amt === 5026) return 6.24;
       if (pStr.includes('520 + weekly') || amt === 3077) return 6.16;
-      if (pStr.includes('3 in 1') || amt === 5030) return 9.50;
       if (pStr.includes('weekly + monthly') || amt === 5031) return 9.33;
       if (pStr.includes('2weekly+monthly') || amt === 5032) return 18.15;
 
       if (pStr.includes('monthly x3') || pStr.includes('3 monthly') || amt === 5022) return 22.55;
       if (pStr.includes('monthly x2') || pStr.includes('2 monthly') || amt === 5021) return 15.03;
       if (pStr.includes('4 monthly') || amt === 5023) return 30.06;
-      if (pStr.includes('monthly membership') || (pStr.includes('monthly') && !gStr.includes('mlbb') && !pStr.includes('mlbb')) || amt === 4852) return 7.76;
+      if (pStr.includes('monthly membership') || (pStr.includes('monthly') && !pStr.includes('mlbb')) || amt === 4852) return 7.76;
 
       if (pStr.includes('level 30') || pStr.includes('level-30') || amt === 389) return 0.90;
       if (pStr.includes('level 25') || pStr.includes('level-25') || amt === 388) return 0.61;
@@ -499,6 +486,17 @@ const PRICING_GAMES = [
       if (pStr.includes('evo 7') || amt === 5302) return 0.90;
       if (pStr.includes('evo 3') || amt === 5301) return 0.65;
 
+      // Check catalog list matches
+      const catalogMatch = ALL_GAMES_CATALOG_LIST.find(p => 
+        (pStr && p.name.toLowerCase().includes(pStr)) ||
+        (amt > 0 && p.diamondAmount === amt && pStr && p.name.toLowerCase().includes(pStr.split(' ')[0]))
+      );
+      if (catalogMatch) {
+        const cost = isKT 
+          ? (catalogMatch.costPriceKhmerTopUp || catalogMatch.costPriceFazerCards) 
+          : (catalogMatch.costPriceFazerCards || catalogMatch.costPriceKhmerTopUp);
+        if (cost > 0) return cost;
+      }
       if (isKT) {
         if (amt === 3688 || sell === 49.99 || pStr.includes('3688') || pStr.includes('49.99')) return 48.65;
         if (amt === 55 || sell === 0.95 || pStr.includes('55')) return 0.76;
