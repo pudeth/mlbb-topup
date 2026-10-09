@@ -58,59 +58,29 @@ const GAME_PACKAGES_MAP = {
     { productId: 206, diamondAmount: 8100, name: '6000 + 2100 UC', price: 95.00, resellerPrice: 87.40, tag: 'ULTIMATE ⚡' },
   ],
   freefire: [
-    // Best Seller Memberships & Passes
-    { productId: 384, diamondAmount: 90, name: 'WeeklyLite', price: 0.39, resellerPrice: 0.39, packageId: 384, tag: 'ទទួលបាន 90 💎', isPass: true, category: 'Best seller', customImage: '/images/weekly-pass.png' },
-    { productId: 5028, diamondAmount: 180, name: '2 Weeklylite', price: 0.78, resellerPrice: 0.78, packageId: 5028, tag: 'ទទួលបាន 180 💎', isPass: true, category: 'Best seller', customImage: '/images/weekly-pass.png' },
-    { productId: 5029, diamondAmount: 270, name: '3 Weeklylite', price: 1.15, resellerPrice: 1.15, packageId: 5029, tag: 'Discount 5%', isPass: true, category: 'Best seller', customImage: '/images/weekly-pass.png' },
-    { productId: 383, diamondAmount: 445, name: 'Weekly', price: 1.65, resellerPrice: 1.65, packageId: 383, tag: 'ទទួលបាន 445 💎', isPass: true, category: 'Best seller', customImage: '/images/weekly-pass.png' },
-    { productId: 5024, diamondAmount: 890, name: '2 Weekly', price: 3.30, resellerPrice: 3.30, packageId: 5024, tag: 'ទទួលបាន 890 💎', isPass: true, category: 'Best seller', customImage: '/images/weekly-pass.png' },
-    { productId: 5025, diamondAmount: 1335, name: '3 Weekly', price: 5.00, resellerPrice: 5.00, packageId: 5025, tag: 'Discount 5%', isPass: true, category: 'Best seller', customImage: '/images/weekly-pass.png' },
-    { productId: 5026, diamondAmount: 1780, name: '4 Weekly', price: 6.50, resellerPrice: 6.50, packageId: 5026, tag: 'Discount 10%', isPass: true, category: 'Best seller', customImage: '/images/weekly-pass.png' },
-    { productId: 3077, diamondAmount: 965, name: '520 + Weekly', price: 6.20, resellerPrice: 6.20, packageId: 3077, tag: 'Discount 5%', isPass: true, category: 'Best seller', customImage: '/images/weekly-pass.png' },
-    { productId: 4852, diamondAmount: 2600, name: 'Monthly', price: 7.65, resellerPrice: 7.65, packageId: 4852, tag: 'VIP 👑', isPass: true, category: 'Best seller', customImage: '/images/weekly-pass.png' },
-    { productId: 5021, diamondAmount: 5000, name: '2 Monthly', price: 15.30, resellerPrice: 15.30, packageId: 5021, tag: 'ទទួលបាន 5000 💎', isPass: true, category: 'Best seller', customImage: '/images/weekly-pass.png' },
-    { productId: 5022, diamondAmount: 7800, name: '3 Monthly', price: 23.10, resellerPrice: 23.10, packageId: 5022, tag: 'Discount 10%', isPass: true, category: 'Best seller', customImage: '/images/weekly-pass.png' },
-    { productId: 5023, diamondAmount: 10000, name: '4 Monthly', price: 30.80, resellerPrice: 30.80, packageId: 5023, tag: 'ទទួលបាន 10000 💎', isPass: true, category: 'Best seller', customImage: '/images/weekly-pass.png' },
-    { productId: 5031, diamondAmount: 2910, name: 'Weekly + monthly', price: 9.30, resellerPrice: 9.30, packageId: 5031, tag: 'ទទួលបាន 2910 💎', isPass: true, category: 'Best seller', customImage: '/images/weekly-pass.png' },
-    { productId: 5032, diamondAmount: 5820, name: '2Weekly+monthly', price: 18.60, resellerPrice: 18.60, packageId: 5032, tag: 'PRO ⚡', isPass: true, category: 'Best seller', customImage: '/images/weekly-pass.png' },
-
-    // Official Level Up Packages (Level Pass)
-    { productId: 390, diamondAmount: 200, name: 'Level Up Package - Level 6', price: 0.29, resellerPrice: 0.29, packageId: 390, tag: 'Level 6 🎖️', isPass: true, isLevelPass: true, category: 'Level Pass', customImage: '/images/weekly-pass.png' },
-    { productId: 385, diamondAmount: 300, name: 'Level Up Package - Level 10', price: 0.61, resellerPrice: 0.61, packageId: 385, tag: 'Level 10 🎖️', isPass: true, isLevelPass: true, category: 'Level Pass', customImage: '/images/weekly-pass.png' },
-    { productId: 386, diamondAmount: 400, name: 'Level Up Package - Level 15', price: 0.61, resellerPrice: 0.61, packageId: 386, tag: 'Level 15 🎖️', isPass: true, isLevelPass: true, category: 'Level Pass', customImage: '/images/weekly-pass.png' },
-    { productId: 387, diamondAmount: 500, name: 'Level Up Package - Level 20', price: 0.61, resellerPrice: 0.61, packageId: 387, tag: 'Level 20 🎖️', isPass: true, isLevelPass: true, category: 'Level Pass', customImage: '/images/weekly-pass.png' },
-    { productId: 388, diamondAmount: 600, name: 'Level Up Package - Level 25', price: 0.61, resellerPrice: 0.61, packageId: 388, tag: 'Level 25 🎖️', isPass: true, isLevelPass: true, category: 'Level Pass', customImage: '/images/weekly-pass.png' },
-    { productId: 389, diamondAmount: 800, name: 'Level Up Package - Level 30', price: 0.90, resellerPrice: 0.90, packageId: 389, tag: 'Level 30 🎖️', isPass: true, isLevelPass: true, category: 'Level Pass', customImage: '/images/weekly-pass.png' },
-
-    // Other Packages (Standard Diamonds Top-Up & Evo Access)
-    { productId: 374, diamondAmount: 25, name: '25 Diamonds', price: 0.29, resellerPrice: 0.29, packageId: 374, category: 'Other Packages', customImage: '/images/diamond-chest-3d.png' },
-    { productId: 5293, diamondAmount: 50, name: '50 Diamonds', price: 0.55, resellerPrice: 0.55, packageId: 5293, tag: 'Discount 10%', category: 'Other Packages', customImage: '/images/diamond-chest-3d.png' },
-    { productId: 391, diamondAmount: 100, name: '100 Diamonds', price: 0.95, resellerPrice: 0.95, packageId: 391, tag: 'Discount 10%', category: 'Other Packages', customImage: '/images/diamond-chest-3d.png' },
-    { productId: 5295, diamondAmount: 200, name: '200 Diamonds', price: 1.90, resellerPrice: 1.90, packageId: 5295, tag: 'Discount 15%', category: 'Other Packages', customImage: '/images/diamond-chest-3d.png' },
-    { productId: 376, diamondAmount: 310, name: '310 Diamonds', price: 2.80, resellerPrice: 2.80, packageId: 376, category: 'Other Packages', customImage: '/images/diamond-chest-3d.png' },
-    { productId: 377, diamondAmount: 520, name: '520 Diamonds', price: 4.75, resellerPrice: 4.75, packageId: 377, category: 'Other Packages', customImage: '/images/diamond-chest-3d.png' },
-    { productId: 5299, diamondAmount: 830, name: '830 Diamonds', price: 7.55, resellerPrice: 7.55, packageId: 5299, tag: 'Discount 8%', category: 'Other Packages', customImage: '/images/diamond-chest-3d.png' },
-    { productId: 378, diamondAmount: 1060, name: '1060 Diamonds', price: 8.90, resellerPrice: 8.90, packageId: 378, category: 'Other Packages', customImage: '/images/diamond-chest-3d.png' },
-    { productId: 5146, diamondAmount: 1580, name: '1580 Diamonds', price: 13.65, resellerPrice: 13.65, packageId: 5146, tag: 'Discount 10%', category: 'Other Packages', customImage: '/images/diamond-chest-3d.png' },
-    { productId: 379, diamondAmount: 2180, name: '2180 Diamonds', price: 18.50, resellerPrice: 18.50, packageId: 379, category: 'Other Packages', customImage: '/images/diamond-chest-3d.png' },
-    { productId: 5147, diamondAmount: 3240, name: '3240 Diamonds', price: 27.50, resellerPrice: 27.50, packageId: 5147, tag: 'Discount 10%', category: 'Other Packages', customImage: '/images/diamond-chest-3d.png' },
-    { productId: 380, diamondAmount: 5600, name: '5600 Diamonds', price: 45.50, resellerPrice: 45.50, packageId: 380, category: 'Other Packages', customImage: '/images/diamond-chest-3d.png' },
-    { productId: 5148, diamondAmount: 7780, name: '7780 Diamonds', price: 74.88, resellerPrice: 74.88, packageId: 5148, category: 'Other Packages', customImage: '/images/diamond-chest-3d.png' },
-    { productId: 381, diamondAmount: 11500, name: '11500 Diamonds', price: 92.99, resellerPrice: 92.99, packageId: 381, category: 'Other Packages', customImage: '/images/diamond-chest-3d.png' },
-
-    // Evo Access Passes
-    { productId: 5301, diamondAmount: 0, name: 'Evo 3Days', price: 0.70, resellerPrice: 0.70, packageId: 5301, isPass: true, category: 'Other Packages', customImage: '/images/weekly-pass.png' },
-    { productId: 5302, diamondAmount: 0, name: 'Evo 7 Days', price: 0.99, resellerPrice: 0.99, packageId: 5302, isPass: true, category: 'Other Packages', customImage: '/images/weekly-pass.png' },
-    { productId: 5303, diamondAmount: 0, name: 'Evo 30 Days', price: 2.79, resellerPrice: 2.79, packageId: 5303, isPass: true, category: 'Other Packages', customImage: '/images/weekly-pass.png' },
-
-    // Direct Standard Free Fire SKUs
-    { productId: 301, diamondAmount: 100, name: '100 + 10 Diamonds', price: 0.95, resellerPrice: 0.87, packageId: 301, tag: 'Starter' },
-    { productId: 302, diamondAmount: 310, name: '310 + 31 Diamonds', price: 2.85, resellerPrice: 2.62, packageId: 302, tag: 'Popular' },
-    { productId: 307, diamondAmount: 450, name: 'Weekly Membership Pass', price: 1.99, resellerPrice: 1.83, packageId: 307, tag: 'PASS 🌟', isPass: true },
-    { productId: 303, diamondAmount: 520, name: '520 + 52 Diamonds', price: 4.75, resellerPrice: 4.37, packageId: 303, tag: 'HOT 🔥' },
-    { productId: 304, diamondAmount: 1060, name: '1060 + 106 Diamonds', price: 9.50, resellerPrice: 8.74, packageId: 304, tag: 'Best Value' },
-    { productId: 305, diamondAmount: 2180, name: '2180 + 218 Diamonds', price: 18.99, resellerPrice: 17.47, packageId: 305, tag: 'Pro Pack' },
-    { productId: 308, diamondAmount: 2600, name: 'Monthly Membership Pass', price: 7.99, resellerPrice: 7.35, packageId: 308, tag: 'VIP 👑', isPass: true },
+    { productId: 374, packageId: 374, diamondAmount: 25, name: '25 Diamonds', price: 0.24, resellerPrice: 0.24, category: 'Other Packages', customImage: '/images/diamond-chest-3d.png' },
+    { productId: 391, packageId: 391, diamondAmount: 100, name: '100 Diamonds', price: 0.90, resellerPrice: 0.90, tag: 'POPULAR TODAY', category: 'Other Packages', customImage: '/images/diamond-chest-3d.png' },
+    { productId: 376, packageId: 376, diamondAmount: 310, name: '310 Diamonds', price: 2.74, resellerPrice: 2.74, category: 'Other Packages', customImage: '/images/diamond-chest-3d.png' },
+    { productId: 377, packageId: 377, diamondAmount: 520, name: '520 Diamonds', price: 4.59, resellerPrice: 4.59, category: 'Other Packages', customImage: '/images/diamond-chest-3d.png' },
+    { productId: 378, packageId: 378, diamondAmount: 1060, name: '1060 Diamonds', price: 9.02, resellerPrice: 9.02, category: 'Other Packages', customImage: '/images/diamond-chest-3d.png' },
+    { productId: 379, packageId: 379, diamondAmount: 2180, name: '2180 Diamonds', price: 18.22, resellerPrice: 18.22, category: 'Other Packages', customImage: '/images/diamond-chest-3d.png' },
+    { productId: 380, packageId: 380, diamondAmount: 5600, name: '5600 Diamonds', price: 45.08, resellerPrice: 45.08, category: 'Other Packages', customImage: '/images/diamond-chest-3d.png' },
+    { productId: 381, packageId: 381, diamondAmount: 11500, name: '11500 Diamonds', price: 92.86, resellerPrice: 92.86, category: 'Other Packages', customImage: '/images/diamond-chest-3d.png' },
+    { productId: 390, packageId: 390, diamondAmount: 200, name: 'Level Up Package - Level 6', price: 0.29, resellerPrice: 0.29, tag: 'Level 6 🎖️', isPass: true, isLevelPass: true, category: 'Level Pass', customImage: '/images/weekly-pass.png' },
+    { productId: 384, packageId: 384, diamondAmount: 90, name: 'WeeklyLite', price: 0.32, resellerPrice: 0.32, isPass: true, category: 'Best seller', customImage: '/images/weekly-pass.png' },
+    { productId: 385, packageId: 385, diamondAmount: 300, name: 'Level Up Package - Level 10', price: 0.61, resellerPrice: 0.61, tag: 'Level 10 🎖️', isPass: true, isLevelPass: true, category: 'Level Pass', customImage: '/images/weekly-pass.png' },
+    { productId: 386, packageId: 386, diamondAmount: 400, name: 'Level Up Package - Level 15', price: 0.61, resellerPrice: 0.61, tag: 'Level 15 🎖️', isPass: true, isLevelPass: true, category: 'Level Pass', customImage: '/images/weekly-pass.png' },
+    { productId: 387, packageId: 387, diamondAmount: 500, name: 'Level Up Package - Level 20', price: 0.61, resellerPrice: 0.61, tag: 'Level 20 🎖️', isPass: true, isLevelPass: true, category: 'Level Pass', customImage: '/images/weekly-pass.png' },
+    { productId: 388, packageId: 388, diamondAmount: 600, name: 'Level Up Package - Level 25', price: 0.61, resellerPrice: 0.61, tag: 'Level 25 🎖️', isPass: true, isLevelPass: true, category: 'Level Pass', customImage: '/images/weekly-pass.png' },
+    { productId: 5028, packageId: 5028, diamondAmount: 180, name: 'Weekly Lit x2', price: 0.63, resellerPrice: 0.63, isPass: true, category: 'Best seller', customImage: '/images/weekly-pass.png' },
+    { productId: 389, packageId: 389, diamondAmount: 800, name: 'Level Up Package - Level 30', price: 0.90, resellerPrice: 0.90, tag: 'Level 30 🎖️', isPass: true, isLevelPass: true, category: 'Level Pass', customImage: '/images/weekly-pass.png' },
+    { productId: 5029, packageId: 5029, diamondAmount: 270, name: 'Weekly Lit x3', price: 0.94, resellerPrice: 0.94, isPass: true, category: 'Best seller', customImage: '/images/weekly-pass.png' },
+    { productId: 383, packageId: 383, diamondAmount: 445, name: 'Weekly', price: 1.57, resellerPrice: 1.57, tag: 'BEST SELLER', isPass: true, category: 'Best seller', customImage: '/images/weekly-pass.png' },
+    { productId: 5024, packageId: 5024, diamondAmount: 890, name: 'Weekly x2', price: 3.12, resellerPrice: 3.12, isPass: true, category: 'Best seller', customImage: '/images/weekly-pass.png' },
+    { productId: 5025, packageId: 5025, diamondAmount: 1335, name: 'Weekly x3', price: 4.67, resellerPrice: 4.67, isPass: true, category: 'Best seller', customImage: '/images/weekly-pass.png' },
+    { productId: 4852, packageId: 4852, diamondAmount: 2600, name: 'Monthly', price: 7.76, resellerPrice: 7.76, isPass: true, category: 'Best seller', customImage: '/images/weekly-pass.png' },
+    { productId: 5021, packageId: 5021, diamondAmount: 5000, name: 'Monthly x2', price: 15.03, resellerPrice: 15.03, isPass: true, category: 'Best seller', customImage: '/images/weekly-pass.png' },
+    { productId: 5022, packageId: 5022, diamondAmount: 7800, name: 'Monthly x3', price: 22.55, resellerPrice: 22.55, isPass: true, category: 'Best seller', customImage: '/images/weekly-pass.png' },
   ],
   hok: [
     { productId: 407, diamondAmount: 100, name: 'Weekly Card Plus', price: 0.99, resellerPrice: 0.91, tag: 'PASS 🌟', isPass: true },
@@ -555,7 +525,7 @@ const TopUp = () => {
     else if (gameId.startsWith('steam')) baseList = [...GAME_PACKAGES_MAP.steam];
     else baseList = [...GAME_PACKAGES_MAP.giftcards];
 
-    // Auto-purge any stale corrupted legacy cache where productId was 12 for 55 diamonds or stale prices
+    // Auto-purge any stale corrupted legacy cache for Free Fire
     try {
       const savedRaw = localStorage.getItem('admin_custom_products');
       if (savedRaw && (
@@ -563,8 +533,11 @@ const TopUp = () => {
         savedRaw.includes('"productId":14,"diamondAmount":210') ||
         savedRaw.includes('"productId":12,"name":"55 Diamonds"') ||
         savedRaw.includes('"productId":5030') ||
+        savedRaw.includes('"productId":5026') ||
+        savedRaw.includes('"productId":3077') ||
         savedRaw.includes('"price":0.45') ||
-        savedRaw.includes('"price":1.99')
+        savedRaw.includes('"price":1.99') ||
+        savedRaw.includes('"price":0.39')
       )) {
         localStorage.removeItem('admin_custom_products');
       }
