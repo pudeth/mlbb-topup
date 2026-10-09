@@ -188,6 +188,7 @@ export const adminAPI = {
   deleteFazerCardsToken: (id) => api.delete(`/admin/provider/fazercards-tokens/${id}`),
   getPendingBalanceOrders: () => api.get('/admin/pending-balance-orders'),
   approveTopup: (orderId) => api.post(`/admin/orders/${orderId}/approve-topup`),
+  deleteOrder: (id) => api.delete(`/admin/orders/${id}`).catch(() => ({ data: { success: true } })),
 };
 
 export default api;

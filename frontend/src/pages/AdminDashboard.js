@@ -24,7 +24,7 @@ import {
   deleteCustomProvider,
   updateProviderBalance
 } from '../services/supplierGateway';
-import { getLocalOrders, mergeOrders, updateLocalOrderStatus, clearLocalOrders, restoreLocalOrders } from '../utils/orderStorage';
+import { getLocalOrders, mergeOrders, updateLocalOrderStatus, clearLocalOrders, restoreLocalOrders, deleteLocalOrder, deleteMultipleLocalOrders } from '../utils/orderStorage';
 import { exportPackageProfitabilityExcel, exportOrdersLedgerExcel } from '../utils/excelExporter';
 import { exportPackageProfitabilityPDF, exportOrdersLedgerPDF } from '../utils/pdfExporter';
 import { getTelegramConfig, saveTelegramConfig, checkAndSendBalanceAlert } from '../utils/telegramNotifier';
@@ -355,6 +355,9 @@ const PRICING_GAMES = [
   const [dateFilter, setDateFilter] = useState('ALL');
   const [orderSortBy, setOrderSortBy] = useState('date');
   const [orderSortOrder, setOrderSortOrder] = useState('desc');
+  const [selectedOrderIds, setSelectedOrderIds] = useState([]);
+  const [deleteOrderModalData, setDeleteOrderModalData] = useState(null);
+  const [deletingOrder, setDeletingOrder] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
   const [pageSize, setPageSize] = useState(10);
 
@@ -3172,6 +3175,51 @@ const PRICING_GAMES = [
     showToast('success', '🔄 Default transaction seeds restored successfully!');
   };
 
+  const handleToggleSelectOrder = (orderKey) => {
+    setSelectedOrderIds(prev =>
+      prev.includes(orderKey) ? prev.filter(k => k !== orderKey) : [...prev, orderKey]
+    );
+  };
+
+  const handleToggleSelectAllPageOrders = () => {
+    const pageKeys = paginatedOrders.map(o => String(o.orderId || o.id || o.billNumber));
+    const allSelected = pageKeys.every(k => selectedOrderIds.includes(k));
+    if (allSelected) {
+      setSelectedOrderIds(prev => prev.filter(k => !pageKeys.includes(k)));
+    } else {
+      setSelectedOrderIds(prev => Array.from(new Set([...prev, ...pageKeys])));
+    }
+  };
+
+  const handleConfirmDeleteOrders = async () => {
+    if (!deleteOrderModalData) return;
+    setDeletingOrder(true);
+    try {
+      const ids = deleteOrderModalData.ids || [];
+      ids.forEach(id => {
+        deleteLocalOrder(id);
+        adminAPI.deleteOrder(id);
+      });
+
+      setOrders(prev => prev.filter(o => {
+        const oId = String(o.orderId || o.id || '').toLowerCase();
+        const bNo = String(o.billNumber || '').toLowerCase();
+        return !ids.some(id => {
+          const key = String(id).toLowerCase();
+          return oId === key || bNo === key || `ord-${oId}` === key || `kt-${oId}` === key;
+        });
+      }));
+
+      setSelectedOrderIds(prev => prev.filter(id => !ids.includes(id)));
+      setDeleteOrderModalData(null);
+      showToast('success', `🗑️ ${ids.length > 1 ? `${ids.length} orders` : 'Order'} deleted successfully!`);
+    } catch (err) {
+      showToast('error', 'Failed to delete order: ' + (err?.message || err));
+    } finally {
+      setDeletingOrder(false);
+    }
+  };
+
   const filteredOrders = orders.filter((order) => {
     if (!order) return false;
     const pId = String(order.playerID || order.playerId || '');
@@ -5823,12 +5871,48 @@ const PRICING_GAMES = [
               </div>
             </div>
 
+            {/* Batch Selection Action Bar */}
+            {selectedOrderIds.length > 0 && (
+              <div className="p-3 px-4 bg-rose-950/70 border border-rose-500/50 rounded-2xl flex items-center justify-between shadow-lg animate-fadeIn">
+                <div className="text-xs font-bold text-rose-200 flex items-center gap-2">
+                  <span className="w-5 h-5 rounded-lg bg-rose-500/20 text-rose-300 flex items-center justify-center font-bold text-[10px]">✓</span>
+                  <span><strong>{selectedOrderIds.length}</strong> orders selected</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <button
+                    type="button"
+                    onClick={() => setSelectedOrderIds([])}
+                    className="px-3 py-1 text-xs text-slate-300 hover:text-white font-bold cursor-pointer transition-colors"
+                  >
+                    Clear Selection
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setDeleteOrderModalData({ isBatch: true, ids: [...selectedOrderIds] })}
+                    className="px-3.5 py-1.5 bg-rose-600 hover:bg-rose-500 text-white font-black text-xs rounded-xl shadow-md shadow-rose-950/50 cursor-pointer flex items-center gap-1.5 transition-all active:scale-95"
+                  >
+                    <span>🗑️</span>
+                    <span>Delete Selected ({selectedOrderIds.length})</span>
+                  </button>
+                </div>
+              </div>
+            )}
+
             {/* Orders Table */}
             <div className="card rounded-2xl shadow-xl overflow-hidden border border-slate-800 bg-[#0B0F19]">
               <div className="overflow-x-auto">
                 <table className="w-full text-left text-xs min-w-[850px]">
                   <thead className="bg-[#111728] text-slate-400 uppercase text-[10px] tracking-wider border-b border-slate-800 font-bold">
                     <tr>
+                      <th className="p-3 w-10 text-center">
+                        <input
+                          type="checkbox"
+                          checked={paginatedOrders.length > 0 && paginatedOrders.every(o => selectedOrderIds.includes(String(o.orderId || o.id || o.billNumber)))}
+                          onChange={handleToggleSelectAllPageOrders}
+                          className="w-4 h-4 rounded border-slate-700 bg-slate-900 text-rose-500 focus:ring-rose-500 cursor-pointer accent-rose-500"
+                          title="Select / Deselect all orders on this page"
+                        />
+                      </th>
                       <th
                         onClick={() => {
                           if (orderSortBy === 'id') setOrderSortOrder(o => o === 'desc' ? 'asc' : 'desc');
@@ -5910,6 +5994,16 @@ const PRICING_GAMES = [
 
                         return (
                           <tr key={order.orderId} className="hover:bg-slate-800/40 transition-colors">
+                            {/* CHECKBOX */}
+                            <td className="p-3 text-center">
+                              <input
+                                type="checkbox"
+                                checked={selectedOrderIds.includes(String(order.orderId || order.id || order.billNumber))}
+                                onChange={() => handleToggleSelectOrder(String(order.orderId || order.id || order.billNumber))}
+                                className="w-4 h-4 rounded border-slate-700 bg-slate-900 text-rose-500 focus:ring-rose-500 cursor-pointer accent-rose-500"
+                              />
+                            </td>
+
                             {/* ORDER */}
                             <td className="p-3">
                               <div className="flex flex-col">
@@ -12338,6 +12432,77 @@ const PRICING_GAMES = [
                   <>
                     <span>🗑️</span>
                     <span>Yes, Clear All Orders</span>
+                  </>
+                )}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Delete Order Confirmation Modal */}
+      {deleteOrderModalData && (
+        <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-md flex items-center justify-center p-4 animate-fadeIn">
+          <div className="bg-[#0f172a] border border-rose-500/40 rounded-3xl max-w-lg w-full p-6 sm:p-7 shadow-2xl space-y-6 relative overflow-hidden">
+            <div className="absolute top-0 right-0 w-48 h-48 bg-rose-500/10 rounded-full blur-3xl pointer-events-none" />
+            
+            <div className="flex items-start gap-4">
+              <div className="w-12 h-12 rounded-2xl bg-rose-500/10 border border-rose-500/30 text-rose-400 flex items-center justify-center text-2xl shrink-0 shadow-lg shadow-rose-950/50">
+                🗑️
+              </div>
+              <div className="flex-1">
+                <h3 className="text-xl font-black text-white flex items-center gap-2">
+                  {deleteOrderModalData.isBatch
+                    ? `Delete ${deleteOrderModalData.ids?.length} Selected Orders?`
+                    : `Delete Order #${deleteOrderModalData.order?.orderId || deleteOrderModalData.order?.billNumber || deleteOrderModalData.ids?.[0]}?`}
+                </h3>
+                <p className="text-xs sm:text-sm text-slate-400 mt-1 leading-relaxed">
+                  Are you sure you want to delete {deleteOrderModalData.isBatch ? `these ${deleteOrderModalData.ids?.length} selected orders` : 'this transaction record'} from your Orders & Sales Ledger? This action cannot be undone.
+                </p>
+              </div>
+            </div>
+
+            {!deleteOrderModalData.isBatch && deleteOrderModalData.order && (
+              <div className="p-4 rounded-2xl bg-slate-900/80 border border-slate-800 space-y-2 text-xs font-mono">
+                <div className="flex items-center justify-between text-slate-300">
+                  <span>Bill / Order ID:</span>
+                  <span className="font-bold text-white">{deleteOrderModalData.order.billNumber || `#${deleteOrderModalData.order.orderId}`}</span>
+                </div>
+                <div className="flex items-center justify-between text-slate-300">
+                  <span>Player / Game:</span>
+                  <span className="font-bold text-cyan-300">{deleteOrderModalData.order.playerID || deleteOrderModalData.order.playerId} ({deleteOrderModalData.order.gameName})</span>
+                </div>
+                <div className="flex items-center justify-between text-slate-300">
+                  <span>Package & Price:</span>
+                  <span className="font-bold text-emerald-400">{deleteOrderModalData.order.productName} (${Number(deleteOrderModalData.order.amount || deleteOrderModalData.order.price || 0).toFixed(2)})</span>
+                </div>
+              </div>
+            )}
+
+            <div className="flex items-center justify-end gap-3 pt-2 border-t border-slate-800/80">
+              <button
+                type="button"
+                onClick={() => setDeleteOrderModalData(null)}
+                disabled={deletingOrder}
+                className="btn btn-secondary text-xs py-2.5 px-4 font-bold cursor-pointer"
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                onClick={handleConfirmDeleteOrders}
+                disabled={deletingOrder}
+                className="btn text-xs py-2.5 px-5 font-black bg-rose-600 hover:bg-rose-500 active:scale-95 text-white shadow-lg shadow-rose-900/40 rounded-xl cursor-pointer flex items-center gap-2"
+              >
+                {deletingOrder ? (
+                  <>
+                    <span className="animate-spin text-sm">⏳</span>
+                    <span>Deleting...</span>
+                  </>
+                ) : (
+                  <>
+                    <span>🗑️</span>
+                    <span>Yes, Delete {deleteOrderModalData.isBatch ? `${deleteOrderModalData.ids?.length} Orders` : 'Order'}</span>
                   </>
                 )}
               </button>

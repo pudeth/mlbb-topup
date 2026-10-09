@@ -117,6 +117,50 @@ export const restoreLocalOrders = () => {
 };
 
 /**
+ * Delete a single order from local storage by orderId or billNumber.
+ */
+export const deleteLocalOrder = (orderIdOrBill) => {
+  if (!orderIdOrBill) return [];
+  try {
+    const key = String(orderIdOrBill).toLowerCase();
+    const current = getLocalOrders();
+    const updated = current.filter(o => {
+      const oId = String(o.orderId || o.id || '').toLowerCase();
+      const bNo = String(o.billNumber || '').toLowerCase();
+      return oId !== key && bNo !== key && `ord-${oId}` !== key && `kt-${oId}` !== key;
+    });
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(updated));
+    window.dispatchEvent(new CustomEvent('orders-updated', { detail: { deleted: orderIdOrBill } }));
+    return updated;
+  } catch (err) {
+    console.warn('Error deleting local order:', err);
+    return getLocalOrders();
+  }
+};
+
+/**
+ * Delete multiple orders from local storage by array of orderIds/billNumbers.
+ */
+export const deleteMultipleLocalOrders = (orderIdOrBillList = []) => {
+  if (!Array.isArray(orderIdOrBillList) || orderIdOrBillList.length === 0) return [];
+  try {
+    const keys = new Set(orderIdOrBillList.map(k => String(k).toLowerCase()));
+    const current = getLocalOrders();
+    const updated = current.filter(o => {
+      const oId = String(o.orderId || o.id || '').toLowerCase();
+      const bNo = String(o.billNumber || '').toLowerCase();
+      return !keys.has(oId) && !keys.has(bNo) && !keys.has(`ord-${oId}`) && !keys.has(`kt-${oId}`);
+    });
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(updated));
+    window.dispatchEvent(new CustomEvent('orders-updated', { detail: { deletedMultiple: orderIdOrBillList } }));
+    return updated;
+  } catch (err) {
+    console.warn('Error deleting multiple local orders:', err);
+    return getLocalOrders();
+  }
+};
+
+/**
  * Save or update a single order into local storage.
  */
 export const saveLocalOrder = (order) => {
