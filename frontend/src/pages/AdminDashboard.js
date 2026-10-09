@@ -567,9 +567,10 @@ const PRICING_GAMES = [
       if (clearedDate && item.date && new Date(item.date) <= clearedDate) return;
 
       const sell = Number(item.sellerPrice || 0);
-      const prov = (item.providerPrice && Number(item.providerPrice) > 0) 
-        ? Number(item.providerPrice) 
-        : resolveProviderPrice(item.packageName, sell, item.diamondAmount, item.billNumber);
+      const calcCost = resolveProviderPrice(item.packageName, sell, item.diamondAmount, item.billNumber);
+      const prov = (calcCost > 0) 
+        ? calcCost 
+        : (item.providerPrice && Number(item.providerPrice) > 0 ? Number(item.providerPrice) : Number((sell * 0.82).toFixed(2)));
       const net = Number((sell - prov).toFixed(2));
       const margin = sell > 0 ? Number(((net / sell) * 100).toFixed(1)) : 0;
 
