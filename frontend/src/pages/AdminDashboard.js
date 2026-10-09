@@ -518,8 +518,14 @@ const PRICING_GAMES = [
     const seenKeys = new Set();
     const cleanLedger = [];
 
-    // 1. Ingest API ledger items
+    // 1. Ingest API ledger items (excluding mock test records)
     apiLedger.forEach(item => {
+      const pIdStr = String(item.playerId || item.playerID || '').trim();
+      const billStr = String(item.billNumber || '').trim().toUpperCase();
+      if (pIdStr === '1225368571' || billStr.startsWith('TRX') || billStr.startsWith('MLBB000') || billStr.startsWith('ORD-TOPIC') || billStr.startsWith('ORD-TEST')) {
+        return;
+      }
+
       const billKey = String(item.billNumber || item.orderId || item.transaction_id || '').toLowerCase();
       if (billKey) seenKeys.add(billKey);
 
@@ -545,6 +551,12 @@ const PRICING_GAMES = [
     // 2. Merge local paid / completed orders NOT present in API ledger
     const localPaidOrders = (orders || []).filter(o => {
       if (!o) return false;
+      const pIdStr = String(o.playerId || o.playerID || '').trim();
+      const billStr = String(o.billNumber || o.orderId || '').trim().toUpperCase();
+      if (pIdStr === '1225368571' || billStr.startsWith('TRX') || billStr.startsWith('MLBB000') || billStr.startsWith('ORD-TOPIC') || billStr.startsWith('ORD-TEST')) {
+        return false;
+      }
+
       const payStatus = String(o.paymentStatus || '').toLowerCase();
       const topStatus = String(o.topupStatus || '').toLowerCase();
       const isPaid = payStatus === 'paid' || payStatus === 'approved' || payStatus === 'success' || topStatus === 'completed' || topStatus === 'delivered';
