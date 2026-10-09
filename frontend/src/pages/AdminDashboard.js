@@ -34,16 +34,16 @@ const AdminDashboard = () => {
 // Comprehensive Catalog of Official Packages for All Games & Special Events with Dual Provider Wholesale Costs
 const ALL_GAMES_CATALOG_LIST = [
   // Mobile Legends (MLBB)
-  { productId: 2, game: 'mlbb', diamondAmount: 55, name: '55 Diamonds', price: 0.95, resellerPrice: 0.95, costPriceFazerCards: 0.74, costPriceKhmerTopUp: 0.78, tag: 'Starter', status: 'Active', customImage: '/images/diamond-chest-3d.png' },
+  { productId: 2, game: 'mlbb', diamondAmount: 55, name: '55 Diamonds', price: 0.95, resellerPrice: 0.95, costPriceFazerCards: 0.74, costPriceKhmerTopUp: 0.76, tag: 'Starter', status: 'Active', customImage: '/images/diamond-chest-3d.png' },
   { productId: 3, game: 'mlbb', diamondAmount: 86, name: '86 Diamonds', price: 1.35, resellerPrice: 1.35, costPriceFazerCards: 1.17, costPriceKhmerTopUp: 1.20, tag: 'Bonus', status: 'Active', customImage: '/images/diamond-chest-3d.png' },
-  { productId: 5, game: 'mlbb', diamondAmount: 210, name: 'Weekly Pass', price: 1.55, resellerPrice: 1.55, costPriceFazerCards: 1.45, costPriceKhmerTopUp: 1.50, tag: 'ទទួលបាន 220 💎 + 70 arura ⭐', isPass: true, status: 'Active', customImage: '/images/weekly-pass.png' },
+  { productId: 5, game: 'mlbb', diamondAmount: 210, name: 'Weekly Pass', price: 1.55, resellerPrice: 1.55, costPriceFazerCards: 1.45, costPriceKhmerTopUp: 1.55, tag: 'ទទួលបាន 220 💎 + 70 arura ⭐', isPass: true, status: 'Active', customImage: '/images/weekly-pass.png' },
   { productId: 19, game: 'mlbb', diamondAmount: 440, name: '2 Weekly Pass', price: 3.10, resellerPrice: 3.10, costPriceFazerCards: 2.90, costPriceKhmerTopUp: 3.00, tag: 'ទទួលបាន 440 💎 + 140 arura ⭐', isPass: true, status: 'Active', customImage: '/images/weekly-pass.png' },
   { productId: 20, game: 'mlbb', diamondAmount: 660, name: '3 Weekly Pass', price: 4.65, resellerPrice: 4.65, costPriceFazerCards: 4.35, costPriceKhmerTopUp: 4.50, tag: '29 tickets 🎫', isPass: true, status: 'Active', customImage: '/images/weekly-pass.png' },
   { productId: 21, game: 'mlbb', diamondAmount: 880, name: '4 Weekly Pass', price: 6.20, resellerPrice: 6.20, costPriceFazerCards: 5.80, costPriceKhmerTopUp: 6.00, tag: '4x WDP', isPass: true, status: 'Active', customImage: '/images/weekly-pass.png' },
   { productId: 22, game: 'mlbb', diamondAmount: 1100, name: '5 Weekly Pass', price: 7.75, resellerPrice: 7.75, costPriceFazerCards: 7.25, costPriceKhmerTopUp: 7.50, tag: '5x WDP', isPass: true, status: 'Active', customImage: '/images/weekly-pass.png' },
   { productId: 23, game: 'mlbb', diamondAmount: 1320, name: '6 Weekly Pass', price: 9.30, resellerPrice: 9.30, costPriceFazerCards: 8.70, costPriceKhmerTopUp: 9.00, tag: '6x WDP', isPass: true, status: 'Active', customImage: '/images/weekly-pass.png' },
   { productId: 24, game: 'mlbb', diamondAmount: 605, name: '165 + 2Weekly', price: 5.50, resellerPrice: 5.50, costPriceFazerCards: 5.12, costPriceKhmerTopUp: 5.30, tag: '165 💎 + 2x WDP', isPass: true, status: 'Active', customImage: '/images/weekly-pass.png' },
-  { productId: 207, game: 'mlbb', diamondAmount: 55, name: 'Weekly Elite Bundle', price: 0.85, resellerPrice: 0.85, costPriceFazerCards: 0.75, costPriceKhmerTopUp: 0.78, tag: 'ទទួលបាន 55 💎 + 20 arura ⭐', isPass: true, status: 'Active', customImage: '/images/weekly-pass.png' },
+  { productId: 207, game: 'mlbb', diamondAmount: 55, name: 'Weekly Elite Bundle', price: 0.85, resellerPrice: 0.85, costPriceFazerCards: 0.75, costPriceKhmerTopUp: 0.76, tag: 'ទទួលបាន 55 💎 + 20 arura ⭐', isPass: true, status: 'Active', customImage: '/images/weekly-pass.png' },
   { productId: 208, game: 'mlbb', diamondAmount: 275, name: 'Monthly Epic Bundle', price: 4.25, resellerPrice: 4.25, costPriceFazerCards: 3.73, costPriceKhmerTopUp: 3.90, tag: 'ទទួលបាន 275 💎 + 180 arura ⭐', isPass: true, status: 'Active', customImage: '/images/weekly-pass.png' },
   { productId: 17, game: 'mlbb', diamondAmount: 110, name: '110 Diamonds', price: 1.70, resellerPrice: 1.70, costPriceFazerCards: 1.45, costPriceKhmerTopUp: 1.50, tag: 'Bonus', status: 'Active', customImage: '/images/diamond-chest-3d.png' },
   { productId: 18, game: 'mlbb', diamondAmount: 165, name: '165 Diamonds', price: 2.40, resellerPrice: 2.40, costPriceFazerCards: 2.22, costPriceKhmerTopUp: 2.25, tag: 'HOT 🔥', status: 'Active', customImage: '/images/diamond-chest-3d.png' },
@@ -65,7 +65,7 @@ const ALL_GAMES_CATALOG_LIST = [
   { productId: 13, game: 'mlbb', diamondAmount: 2195, name: '2195 Diamonds', price: 29.99, resellerPrice: 29.99, costPriceFazerCards: 27.49, costPriceKhmerTopUp: 28.00, tag: 'Mythic Pack', status: 'Active', customImage: '/images/diamond-chest-3d.png' },
   { productId: 33, game: 'mlbb', diamondAmount: 2452, name: '2452 Diamonds', price: 32.50, resellerPrice: 32.50, costPriceFazerCards: 27.70, costPriceKhmerTopUp: 28.50, tag: 'Mythic Plus', status: 'Active', customImage: '/images/diamond-chest-3d.png' },
   { productId: 34, game: 'mlbb', diamondAmount: 2901, name: '2901 Diamonds', price: 39.99, resellerPrice: 39.99, costPriceFazerCards: 34.00, costPriceKhmerTopUp: 35.00, tag: 'Legendary Pack', status: 'Active', customImage: '/images/diamond-chest-3d.png' },
-  { productId: 14, game: 'mlbb', diamondAmount: 3688, name: '3688 Diamonds', price: 49.99, resellerPrice: 49.99, costPriceFazerCards: 45.86, costPriceKhmerTopUp: 46.50, tag: 'Epic Vault', status: 'Active', customImage: '/images/diamond-chest-3d.png' },
+  { productId: 14, game: 'mlbb', diamondAmount: 3688, name: '3688 Diamonds', price: 49.99, resellerPrice: 49.99, costPriceFazerCards: 45.86, costPriceKhmerTopUp: 48.65, tag: 'Epic Vault', status: 'Active', customImage: '/images/diamond-chest-3d.png' },
   { productId: 35, game: 'mlbb', diamondAmount: 4390, name: '4390 Diamonds', price: 62.99, resellerPrice: 62.99, costPriceFazerCards: 53.60, costPriceKhmerTopUp: 55.00, tag: 'Supreme Chest', status: 'Active', customImage: '/images/diamond-chest-3d.png' },
   { productId: 15, game: 'mlbb', diamondAmount: 5532, name: '5532 Diamonds', price: 73.99, resellerPrice: 73.99, costPriceFazerCards: 69.24, costPriceKhmerTopUp: 70.00, tag: 'Immortal Pack', status: 'Active', customImage: '/images/diamond-chest-3d.png' },
   { productId: 36, game: 'mlbb', diamondAmount: 6944, name: '6944 Diamonds', price: 92.99, resellerPrice: 92.99, costPriceFazerCards: 79.20, costPriceKhmerTopUp: 81.00, tag: 'Titan Pack', status: 'Active', customImage: '/images/diamond-chest-3d.png' },
@@ -444,10 +444,12 @@ const PRICING_GAMES = [
     const apiLedger = financials?.salesLedger || [];
 
     // Helper to resolve provider wholesale price accurately for any package
-    const resolveProviderPrice = (pkgName, sellPrice, diamondAmount) => {
+    const resolveProviderPrice = (pkgName, sellPrice, diamondAmount, billNumber = '') => {
       const pStr = String(pkgName || '').toLowerCase();
       const amt = Number(diamondAmount || 0);
       const sell = Number(sellPrice || 0);
+      const bill = String(billNumber || '').toLowerCase();
+      const isKT = (providerSettings?.activeProvider === 'KhmerTopUp') || bill.startsWith('kt-');
 
       // Check catalog list matches
       const catalogMatch = ALL_GAMES_CATALOG_LIST.find(p => 
@@ -455,11 +457,44 @@ const PRICING_GAMES = [
         (sell > 0 && Math.abs(p.price - sell) < 0.01) ||
         (pStr && p.name.toLowerCase().includes(pStr))
       );
-      if (catalogMatch && catalogMatch.costPriceFazerCards > 0) {
-        return catalogMatch.costPriceFazerCards;
+      if (catalogMatch) {
+        const cost = isKT 
+          ? (catalogMatch.costPriceKhmerTopUp || catalogMatch.costPriceFazerCards) 
+          : (catalogMatch.costPriceFazerCards || catalogMatch.costPriceKhmerTopUp);
+        if (cost > 0) return cost;
       }
 
-      if (amt === 3688 || sell === 49.99 || pStr.includes('3688') || pStr.includes('49.99')) return 48.65;
+      if (isKT) {
+        if (amt === 3688 || sell === 49.99 || pStr.includes('3688') || pStr.includes('49.99')) return 48.65;
+        if (amt === 55 || sell === 0.95 || pStr.includes('55')) return 0.76;
+        if (amt === 86 || sell === 1.35 || pStr.includes('86')) return 1.20;
+        if (amt === 110 || sell === 1.70 || pStr.includes('110')) return 1.50;
+        if (amt === 165 || sell === 2.40 || pStr.includes('165')) return 2.25;
+        if (amt === 172 || sell === 2.50 || pStr.includes('172')) return 2.35;
+        if (amt === 210 || sell === 1.55 || pStr.includes('weekly')) return 1.55;
+        if (amt === 257 || sell === 3.69 || pStr.includes('257')) return 3.40;
+        if (amt === 275 || sell === 3.85 || pStr.includes('275')) return 3.60;
+        if (amt === 312 || sell === 4.55 || pStr.includes('312')) return 4.00;
+        if (amt === 343 || sell === 4.99 || pStr.includes('343')) return 4.40;
+        if (amt === 429 || sell === 6.30 || pStr.includes('429')) return 5.80;
+        if (amt === 514 || sell === 7.35 || pStr.includes('514')) return 6.45;
+        if (amt === 565 || sell === 7.80 || pStr.includes('565')) return 7.45;
+        if (amt === 600 || sell === 8.50 || pStr.includes('600')) return 7.45;
+        if (amt === 706 || sell === 9.99 || pStr.includes('706')) return 9.25;
+        if (amt === 878 || sell === 12.80 || pStr.includes('878')) return 11.20;
+        if (amt === 963 || sell === 13.60 || pStr.includes('963')) return 11.90;
+        if (amt === 1050 || sell === 15.50 || pStr.includes('1050')) return 13.60;
+        if (amt === 1412 || sell === 22.00 || pStr.includes('1412')) return 19.20;
+        if (amt === 2195 || sell === 29.99 || pStr.includes('2195')) return 28.00;
+        if (amt === 2452 || sell === 32.50 || pStr.includes('2452')) return 28.50;
+        if (amt === 2901 || sell === 39.99 || pStr.includes('2901')) return 35.00;
+        if (amt === 4390 || sell === 62.99 || pStr.includes('4390')) return 55.00;
+        if (amt === 5532 || sell === 73.99 || pStr.includes('5532')) return 70.00;
+        if (amt === 6944 || sell === 92.99 || pStr.includes('6944')) return 81.00;
+        if (amt === 9288 || sell === 125.00 || pStr.includes('9288')) return 118.00;
+      }
+
+      if (amt === 3688 || sell === 49.99 || pStr.includes('3688') || pStr.includes('49.99')) return 45.86;
       if (amt === 55 || sell === 0.95 || pStr.includes('55')) return 0.74;
       if (amt === 86 || sell === 1.35 || pStr.includes('86')) return 1.17;
       if (amt === 110 || sell === 1.70 || pStr.includes('110')) return 1.45;
@@ -493,7 +528,7 @@ const PRICING_GAMES = [
       const sell = Number(item.sellerPrice || 0);
       const prov = (item.providerPrice && Number(item.providerPrice) > 0) 
         ? Number(item.providerPrice) 
-        : resolveProviderPrice(item.packageName, sell, item.diamondAmount);
+        : resolveProviderPrice(item.packageName, sell, item.diamondAmount, item.billNumber);
       const net = Number((sell - prov).toFixed(2));
       const margin = sell > 0 ? Number(((net / sell) * 100).toFixed(1)) : 0;
 
@@ -529,8 +564,9 @@ const PRICING_GAMES = [
       if (!alreadyInLedger) {
         if (orderIdKey) seenKeys.add(orderIdKey);
 
+        const billNum = o.billNumber || (o.orderId ? `ORD-${o.orderId}` : `TX-${String(o.createdAt || Date.now()).slice(-8)}`);
         const sell = Number(o.amount || o.price || 0);
-        const prov = resolveProviderPrice(o.productName, sell, o.diamondAmount);
+        const prov = (o.providerPrice && Number(o.providerPrice) > 0) ? Number(o.providerPrice) : resolveProviderPrice(o.productName, sell, o.diamondAmount, billNum);
         const profit = Number((sell - prov).toFixed(2));
         const margin = sell > 0 ? Number(((profit / sell) * 100).toFixed(1)) : 0;
 
@@ -580,7 +616,7 @@ const PRICING_GAMES = [
       salesLedger: cleanLedger,
       clearedAt: clearedTimestamp
     };
-  }, [financials, orders]);
+  }, [financials, orders, providerSettings]);
 
   // Sync event banners from cloud MongoDB on Admin load & auto-seed if cloud is empty
   useEffect(() => {
