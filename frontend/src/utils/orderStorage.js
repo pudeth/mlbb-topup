@@ -47,14 +47,14 @@ export const getLocalOrders = (playerId = null) => {
       }
     }
 
-    // Clean stale historical test seeds if present, replacing with single real seed
+    // Clean stale historical test seeds if present, replacing with real KhmerTopUp transactions
     const cleanQuery = playerId ? String(playerId).trim() : '';
-    const hasStaleSeeds = list.some(o => o.orderId >= 200 || String(o.playerId) === '1225368571');
-    if (list.length === 0 || hasStaleSeeds || list.length < 4) {
+    const hasStaleSeeds = list.some(o => String(o.productName).includes('3 in 1') || String(o.billNumber).startsWith('ORD-'));
+    if (list.length < 10 || hasStaleSeeds || !list.some(o => String(o.billNumber).startsWith('KT-'))) {
       const seeds = (historicalSeeds || []).map(normalizeOrder).filter(Boolean);
       const seedMap = new Map();
       seeds.forEach(s => seedMap.set(String(s.billNumber || s.orderId), s));
-      list.forEach(o => seedMap.set(String(o.billNumber || o.orderId), o));
+      list.filter(o => !String(o.productName).includes('3 in 1') && !String(o.billNumber).startsWith('ORD-')).forEach(o => seedMap.set(String(o.billNumber || o.orderId), o));
       list = Array.from(seedMap.values());
       try {
         localStorage.setItem(STORAGE_KEY, JSON.stringify(list));
