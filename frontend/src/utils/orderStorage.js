@@ -70,6 +70,13 @@ export const getLocalOrders = (playerId = null) => {
       } catch {}
     }
 
+    list.sort((a, b) => {
+      const tA = new Date(a.createdAt || 0).getTime();
+      const tB = new Date(b.createdAt || 0).getTime();
+      if (tB !== tA) return tB - tA;
+      return (b.orderId || 0) - (a.orderId || 0);
+    });
+
     if (cleanQuery) {
       return list.filter(o => String(o.playerId).trim() === cleanQuery || String(o.playerID).trim() === cleanQuery);
     }
@@ -218,15 +225,15 @@ export const mergeOrders = (remoteOrders = [], localOrders = []) => {
     }
   });
 
-  // 3. Sort descending by orderId, then by createdAt date
+  // 3. Sort strictly descending by createdAt date & time (newest first), then by orderId
   const result = Array.from(map.values());
   result.sort((a, b) => {
-    if (b.orderId && a.orderId && b.orderId !== a.orderId) {
-      return b.orderId - a.orderId;
-    }
     const tA = new Date(a.createdAt || 0).getTime();
     const tB = new Date(b.createdAt || 0).getTime();
-    return tB - tA;
+    if (tB !== tA) {
+      return tB - tA;
+    }
+    return (b.orderId || 0) - (a.orderId || 0);
   });
 
   return result;

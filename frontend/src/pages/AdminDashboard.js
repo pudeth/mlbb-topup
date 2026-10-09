@@ -3208,6 +3208,11 @@ const PRICING_GAMES = [
     }
 
     return matchSearch && matchPayment && matchTopup && matchDate;
+  }).sort((a, b) => {
+    const tA = new Date(a.createdAt || 0).getTime();
+    const tB = new Date(b.createdAt || 0).getTime();
+    if (tB !== tA) return tB - tA;
+    return (b.orderId || 0) - (a.orderId || 0);
   });
 
   const totalPages = Math.ceil(filteredOrders.length / pageSize) || 1;
