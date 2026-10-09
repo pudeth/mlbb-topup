@@ -38,6 +38,7 @@ export const normalizeOrder = (o) => {
  */
 export const getLocalOrders = (playerId = null) => {
   try {
+    const isCleared = localStorage.getItem('orders_cleared') === 'true';
     let list = [];
     const raw = localStorage.getItem(STORAGE_KEY);
     if (raw) {
@@ -45,6 +46,14 @@ export const getLocalOrders = (playerId = null) => {
       if (Array.isArray(parsed)) {
         list = parsed.map(normalizeOrder).filter(Boolean);
       }
+    }
+
+    if (isCleared) {
+      const cleanQuery = playerId ? String(playerId).trim() : '';
+      if (cleanQuery) {
+        return list.filter(o => String(o.playerId).trim() === cleanQuery || String(o.playerID).trim() === cleanQuery);
+      }
+      return list;
     }
 
     // Clean stale historical test seeds if present, replacing with real KhmerTopUp transactions
@@ -72,11 +81,41 @@ export const getLocalOrders = (playerId = null) => {
 };
 
 /**
+ * Clear all locally stored orders explicitly.
+ */
+export const clearLocalOrders = () => {
+  try {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify([]));
+    localStorage.setItem('orders_cleared', 'true');
+    window.dispatchEvent(new CustomEvent('orders-updated', { detail: { cleared: true } }));
+  } catch (err) {
+    console.warn('Error clearing local orders:', err);
+  }
+};
+
+/**
+ * Restore seed orders into local storage.
+ */
+export const restoreLocalOrders = () => {
+  try {
+    localStorage.removeItem('orders_cleared');
+    const seeds = (historicalSeeds || []).map(normalizeOrder).filter(Boolean);
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(seeds));
+    window.dispatchEvent(new CustomEvent('orders-updated', { detail: { restored: true } }));
+    return seeds;
+  } catch (err) {
+    console.warn('Error restoring local orders:', err);
+    return [];
+  }
+};
+
+/**
  * Save or update a single order into local storage.
  */
 export const saveLocalOrder = (order) => {
   if (!order) return;
   try {
+    localStorage.removeItem('orders_cleared');
     const normalized = normalizeOrder(order);
     if (!normalized.orderId && !normalized.createdAt) return;
 

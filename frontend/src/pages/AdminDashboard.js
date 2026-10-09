@@ -24,7 +24,7 @@ import {
   deleteCustomProvider,
   updateProviderBalance
 } from '../services/supplierGateway';
-import { getLocalOrders, mergeOrders, updateLocalOrderStatus } from '../utils/orderStorage';
+import { getLocalOrders, mergeOrders, updateLocalOrderStatus, clearLocalOrders, restoreLocalOrders } from '../utils/orderStorage';
 import { exportPackageProfitabilityExcel, exportOrdersLedgerExcel } from '../utils/excelExporter';
 import { exportPackageProfitabilityPDF, exportOrdersLedgerPDF } from '../utils/pdfExporter';
 import { getTelegramConfig, saveTelegramConfig, checkAndSendBalanceAlert } from '../utils/telegramNotifier';
@@ -457,6 +457,8 @@ const PRICING_GAMES = [
   const [financialsPageSize, setFinancialsPageSize] = useState(15);
   const [clearFinancialsModalOpen, setClearFinancialsModalOpen] = useState(false);
   const [clearingFinancials, setClearingFinancials] = useState(false);
+  const [clearOrdersModalOpen, setClearOrdersModalOpen] = useState(false);
+  const [clearingOrders, setClearingOrders] = useState(false);
 
   // Compute live display financials combining API metrics and real orders cleanly
   const displayFinancials = useMemo(() => {
@@ -3125,6 +3127,26 @@ const PRICING_GAMES = [
     }
   };
 
+  const handleClearAllOrders = async () => {
+    setClearingOrders(true);
+    try {
+      clearLocalOrders();
+      setOrders([]);
+      setClearOrdersModalOpen(false);
+      showToast('success', '🗑️ All orders and transaction history have been cleared!');
+    } catch (err) {
+      showToast('error', 'Failed to clear orders: ' + (err?.message || err));
+    } finally {
+      setClearingOrders(false);
+    }
+  };
+
+  const handleRestoreOrders = () => {
+    const restored = restoreLocalOrders();
+    setOrders(restored);
+    showToast('success', '🔄 Default transaction seeds restored successfully!');
+  };
+
   const filteredOrders = orders.filter((order) => {
     if (!order) return false;
     const pId = String(order.playerID || order.playerId || '');
@@ -5606,6 +5628,24 @@ const PRICING_GAMES = [
                   <span>📄</span>
                   <span>Export PDF (A4)</span>
                 </button>
+                <button
+                  onClick={() => setClearOrdersModalOpen(true)}
+                  className="btn btn-secondary text-xs py-2 px-3 flex items-center gap-1.5 bg-rose-950/40 hover:bg-rose-900/60 border border-rose-500/40 text-rose-300 font-bold cursor-pointer transition-all hover:scale-105"
+                  title="Clear all transaction history & orders"
+                >
+                  <span>🗑️</span>
+                  <span>Clear All</span>
+                </button>
+                {orders.length === 0 && (
+                  <button
+                    onClick={handleRestoreOrders}
+                    className="btn btn-secondary text-xs py-2 px-3 flex items-center gap-1.5 bg-amber-950/40 hover:bg-amber-900/60 border border-amber-500/40 text-amber-300 font-bold cursor-pointer"
+                    title="Restore default sample orders"
+                  >
+                    <span>🔄</span>
+                    <span>Restore Seeds</span>
+                  </button>
+                )}
               </div>
             </div>
 
@@ -12136,6 +12176,79 @@ const PRICING_GAMES = [
                   <>
                     <span>🗑️</span>
                     <span>Yes, Reset to $0.00</span>
+                  </>
+                )}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Clear All Orders Confirmation Modal */}
+      {clearOrdersModalOpen && (
+        <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-md flex items-center justify-center p-4 animate-fadeIn">
+          <div className="bg-[#0f172a] border border-rose-500/40 rounded-3xl max-w-lg w-full p-6 sm:p-7 shadow-2xl space-y-6 relative overflow-hidden">
+            <div className="absolute top-0 right-0 w-48 h-48 bg-rose-500/10 rounded-full blur-3xl pointer-events-none" />
+            
+            <div className="flex items-start gap-4">
+              <div className="w-12 h-12 rounded-2xl bg-rose-500/10 border border-rose-500/30 text-rose-400 flex items-center justify-center text-2xl shrink-0 shadow-lg shadow-rose-950/50">
+                🗑️
+              </div>
+              <div className="flex-1">
+                <h3 className="text-xl font-black text-white flex items-center gap-2">
+                  Clear All Orders & Transactions?
+                </h3>
+                <p className="text-xs sm:text-sm text-slate-400 mt-1 leading-relaxed">
+                  This action clears all <strong className="text-rose-400">{orders.length} transaction records</strong> from your Orders Ledger.
+                </p>
+              </div>
+            </div>
+
+            <div className="p-4 rounded-2xl bg-slate-900/80 border border-slate-800 space-y-2 text-xs">
+              <div className="text-[11px] font-black uppercase tracking-wider text-slate-400 mb-1">
+                Order History Summary to Clear:
+              </div>
+              <div className="flex items-center justify-between text-slate-300">
+                <span>Total Orders in Ledger:</span>
+                <span className="font-mono font-bold text-amber-400">{orders.length} orders</span>
+              </div>
+              <div className="flex items-center justify-between text-slate-300">
+                <span>Delivered Orders:</span>
+                <span className="font-mono font-bold text-emerald-400">{orders.filter(o => o.topupStatus === 'Completed').length} orders</span>
+              </div>
+            </div>
+
+            <div className="p-3.5 rounded-2xl bg-amber-500/10 border border-amber-500/30 text-amber-300 text-xs flex items-start gap-2.5">
+              <span className="text-base shrink-0">💡</span>
+              <p className="leading-relaxed">
+                <strong>Tip:</strong> If you clear by mistake, you can click <strong>"Restore Seeds"</strong> to bring back default transactions anytime.
+              </p>
+            </div>
+
+            <div className="flex items-center justify-end gap-3 pt-2 border-t border-slate-800/80">
+              <button
+                type="button"
+                onClick={() => setClearOrdersModalOpen(false)}
+                disabled={clearingOrders}
+                className="btn btn-secondary text-xs py-2.5 px-4 font-bold cursor-pointer"
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                onClick={handleClearAllOrders}
+                disabled={clearingOrders}
+                className="btn text-xs py-2.5 px-5 font-black bg-rose-600 hover:bg-rose-500 active:scale-95 text-white shadow-lg shadow-rose-900/40 rounded-xl cursor-pointer flex items-center gap-2"
+              >
+                {clearingOrders ? (
+                  <>
+                    <span className="animate-spin text-sm">⏳</span>
+                    <span>Clearing Orders...</span>
+                  </>
+                ) : (
+                  <>
+                    <span>🗑️</span>
+                    <span>Yes, Clear All Orders</span>
                   </>
                 )}
               </button>
