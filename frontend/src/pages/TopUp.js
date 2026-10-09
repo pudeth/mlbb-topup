@@ -555,13 +555,16 @@ const TopUp = () => {
     else if (gameId.startsWith('steam')) baseList = [...GAME_PACKAGES_MAP.steam];
     else baseList = [...GAME_PACKAGES_MAP.giftcards];
 
-    // Auto-purge any stale corrupted legacy cache where productId was 12 for 55 diamonds
+    // Auto-purge any stale corrupted legacy cache where productId was 12 for 55 diamonds or stale prices
     try {
       const savedRaw = localStorage.getItem('admin_custom_products');
       if (savedRaw && (
         savedRaw.includes('"productId":12,"diamondAmount":55') ||
         savedRaw.includes('"productId":14,"diamondAmount":210') ||
-        savedRaw.includes('"productId":12,"name":"55 Diamonds"')
+        savedRaw.includes('"productId":12,"name":"55 Diamonds"') ||
+        savedRaw.includes('"productId":5030') ||
+        savedRaw.includes('"price":0.45') ||
+        savedRaw.includes('"price":1.99')
       )) {
         localStorage.removeItem('admin_custom_products');
       }
