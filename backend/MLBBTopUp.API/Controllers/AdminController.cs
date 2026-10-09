@@ -1161,13 +1161,43 @@ public class AdminController : BaseController
             var pLower = (pkgName ?? string.Empty).ToLower();
             var amt = diamondAmt ?? 0;
 
+            // --- Free Fire Specific Packages & Wholesale Costs ---
+            if (pLower.Contains("weekly lite x3") || pLower.Contains("weeklylite x3") || pLower.Contains("3 weekly lite") || pLower.Contains("3 weeklylite") || amt == 5029) return 0.94m;
+            if (pLower.Contains("weekly lite x2") || pLower.Contains("weeklylite x2") || pLower.Contains("2 weekly lite") || pLower.Contains("2 weeklylite") || amt == 5028) return 0.63m;
+            if (pLower.Contains("weekly lite") || pLower.Contains("weeklylite") || amt == 384) return 0.32m;
+
+            if (pLower.Contains("weekly x3") || pLower.Contains("3 weekly") || amt == 5025) return 4.67m;
+            if (pLower.Contains("weekly x2") || pLower.Contains("2 weekly") || amt == 5024) return 3.12m;
+            if (pLower.Contains("4 weekly") || amt == 5026) return 6.24m;
+            if (pLower.Contains("520 + weekly") || amt == 3077) return 6.16m;
+            if (pLower.Contains("3 in 1") || amt == 5030) return 9.50m;
+            if (pLower.Contains("weekly + monthly") || amt == 5031) return 9.33m;
+            if (pLower.Contains("2weekly+monthly") || amt == 5032) return 18.15m;
+
+            if (pLower.Contains("monthly x3") || pLower.Contains("3 monthly") || amt == 5022) return 22.55m;
+            if (pLower.Contains("monthly x2") || pLower.Contains("2 monthly") || amt == 5021) return 15.03m;
+            if (pLower.Contains("4 monthly") || amt == 5023) return 30.06m;
+            if (pLower.Contains("monthly membership") || (pLower.Contains("monthly") && !pLower.Contains("mlbb")) || amt == 4852) return 7.76m;
+
+            if (pLower.Contains("level 30") || pLower.Contains("level-30") || amt == 389) return 0.90m;
+            if (pLower.Contains("level 25") || pLower.Contains("level-25") || amt == 388) return 0.61m;
+            if (pLower.Contains("level 20") || pLower.Contains("level-20") || amt == 387) return 0.61m;
+            if (pLower.Contains("level 15") || pLower.Contains("level-15") || amt == 386) return 0.61m;
+            if (pLower.Contains("level 10") || pLower.Contains("level-10") || amt == 385) return 0.61m;
+            if (pLower.Contains("level 6") || pLower.Contains("level-6") || amt == 390) return 0.29m;
+
+            if (pLower.Contains("evo 30") || amt == 5303) return 2.55m;
+            if (pLower.Contains("evo 7") || amt == 5302) return 0.90m;
+            if (pLower.Contains("evo 3") || amt == 5301) return 0.65m;
+
+            // --- MLBB Specific Packages & General Diamonds ---
             if (amt == 3688 || sellPrice == 49.99m || pLower.Contains("3688") || pLower.Contains("49.99")) return 45.86m;
             if (amt == 55 || sellPrice == 0.95m || pLower.Contains("55 diamond")) return 0.74m;
             if (amt == 86 || sellPrice == 1.35m || pLower.Contains("86 diamond")) return 1.17m;
             if (amt == 110 || sellPrice == 1.70m || pLower.Contains("110 diamond")) return 1.45m;
             if (amt == 165 || sellPrice == 2.40m || pLower.Contains("165 diamond")) return 2.22m;
             if (amt == 172 || sellPrice == 2.50m || pLower.Contains("172 diamond")) return 2.31m;
-            if (amt == 210 || sellPrice == 1.55m || pLower.Contains("weekly")) return 1.45m;
+            if (amt == 210 || sellPrice == 1.55m || (pLower.Contains("weekly") && pLower.Contains("mlbb"))) return 1.45m;
             if (amt == 257 || sellPrice == 3.69m || pLower.Contains("257 diamond")) return 3.34m;
             if (amt == 275 || sellPrice == 3.85m || pLower.Contains("275 diamond")) return 3.55m;
             if (amt == 312 || sellPrice == 4.55m || pLower.Contains("312 diamond")) return 3.88m;
@@ -1188,8 +1218,6 @@ public class AdminController : BaseController
             if (amt == 5532 || sellPrice == 73.99m || pLower.Contains("5532 diamond")) return 69.24m;
             if (amt == 6944 || sellPrice == 92.99m || pLower.Contains("6944 diamond")) return 79.20m;
             if (amt == 9288 || sellPrice == 125.00m || pLower.Contains("9288 diamond")) return 115.00m;
-            if (pLower.Contains("level 6") || pLower.Contains("level up")) return 0.29m;
-            if (pLower.Contains("weekly lite") || pLower.Contains("weeklylite")) return 0.32m;
 
             var matchProd = products.FirstOrDefault(p =>
                 (diamondAmt.HasValue && p.DiamondAmount == diamondAmt.Value) ||

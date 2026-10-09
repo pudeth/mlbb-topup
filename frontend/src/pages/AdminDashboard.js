@@ -470,6 +470,35 @@ const PRICING_GAMES = [
         if (cost > 0) return cost;
       }
 
+      // --- Free Fire Specific Packages & Wholesale Costs ---
+      if (pStr.includes('weekly lite x3') || pStr.includes('weeklylite x3') || pStr.includes('3 weekly lite') || pStr.includes('3 weeklylite') || amt === 5029) return 0.94;
+      if (pStr.includes('weekly lite x2') || pStr.includes('weeklylite x2') || pStr.includes('2 weekly lite') || pStr.includes('2 weeklylite') || amt === 5028) return 0.63;
+      if (pStr.includes('weekly lite') || pStr.includes('weeklylite') || amt === 384) return 0.32;
+
+      if (pStr.includes('weekly x3') || pStr.includes('3 weekly') || amt === 5025) return 4.67;
+      if (pStr.includes('weekly x2') || pStr.includes('2 weekly') || amt === 5024) return 3.12;
+      if (pStr.includes('4 weekly') || amt === 5026) return 6.24;
+      if (pStr.includes('520 + weekly') || amt === 3077) return 6.16;
+      if (pStr.includes('3 in 1') || amt === 5030) return 9.50;
+      if (pStr.includes('weekly + monthly') || amt === 5031) return 9.33;
+      if (pStr.includes('2weekly+monthly') || amt === 5032) return 18.15;
+
+      if (pStr.includes('monthly x3') || pStr.includes('3 monthly') || amt === 5022) return 22.55;
+      if (pStr.includes('monthly x2') || pStr.includes('2 monthly') || amt === 5021) return 15.03;
+      if (pStr.includes('4 monthly') || amt === 5023) return 30.06;
+      if (pStr.includes('monthly membership') || (pStr.includes('monthly') && !gStr.includes('mlbb') && !pStr.includes('mlbb')) || amt === 4852) return 7.76;
+
+      if (pStr.includes('level 30') || pStr.includes('level-30') || amt === 389) return 0.90;
+      if (pStr.includes('level 25') || pStr.includes('level-25') || amt === 388) return 0.61;
+      if (pStr.includes('level 20') || pStr.includes('level-20') || amt === 387) return 0.61;
+      if (pStr.includes('level 15') || pStr.includes('level-15') || amt === 386) return 0.61;
+      if (pStr.includes('level 10') || pStr.includes('level-10') || amt === 385) return 0.61;
+      if (pStr.includes('level 6') || pStr.includes('level-6') || amt === 390) return 0.29;
+
+      if (pStr.includes('evo 30') || amt === 5303) return 2.55;
+      if (pStr.includes('evo 7') || amt === 5302) return 0.90;
+      if (pStr.includes('evo 3') || amt === 5301) return 0.65;
+
       if (isKT) {
         if (amt === 3688 || sell === 49.99 || pStr.includes('3688') || pStr.includes('49.99')) return 48.65;
         if (amt === 55 || sell === 0.95 || pStr.includes('55')) return 0.76;
@@ -477,7 +506,7 @@ const PRICING_GAMES = [
         if (amt === 110 || sell === 1.70 || pStr.includes('110')) return 1.50;
         if (amt === 165 || sell === 2.40 || pStr.includes('165')) return 2.25;
         if (amt === 172 || sell === 2.50 || pStr.includes('172')) return 2.35;
-        if (amt === 210 || sell === 1.55 || pStr.includes('weekly')) return 1.55;
+        if (amt === 210 || sell === 1.55 || (pStr.includes('weekly') && pStr.includes('mlbb'))) return 1.55;
         if (amt === 257 || sell === 3.69 || pStr.includes('257')) return 3.40;
         if (amt === 275 || sell === 3.85 || pStr.includes('275')) return 3.60;
         if (amt === 312 || sell === 4.55 || pStr.includes('312')) return 4.00;
@@ -506,7 +535,7 @@ const PRICING_GAMES = [
       if (amt === 110 || sell === 1.70 || pStr.includes('110')) return 1.45;
       if (amt === 165 || sell === 2.40 || pStr.includes('165')) return 2.22;
       if (amt === 172 || sell === 2.50 || pStr.includes('172')) return 2.31;
-      if (amt === 210 || sell === 1.55 || pStr.includes('weekly')) return 1.45;
+      if (amt === 210 || sell === 1.55 || (pStr.includes('weekly') && pStr.includes('mlbb'))) return 1.45;
       if (amt === 257 || sell === 3.69 || pStr.includes('257')) return 3.34;
       if (amt === 275 || sell === 3.85 || pStr.includes('275')) return 3.55;
       if (amt === 343 || sell === 4.99 || pStr.includes('343')) return 4.25;

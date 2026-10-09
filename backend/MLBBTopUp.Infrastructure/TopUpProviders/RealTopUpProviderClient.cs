@@ -398,7 +398,7 @@ public class RealTopUpProviderClient : ITopUpProviderClient
                           cleanServer.Equals("ME", StringComparison.OrdinalIgnoreCase) ||
                           !isNumericServer; // In Mobile Legends, server is strictly numeric! If it's letters like "SG", it's Free Fire!
 
-        var validFreeFirePackages = new HashSet<int> { 390, 384, 383, 385, 386, 387, 388, 389, 4852, 5021, 5022, 5024, 5025, 5028, 5029, 374, 391, 376, 377, 378, 379, 380, 381, 5292, 5293, 5294, 5295, 5298, 5299, 5296, 5297, 5301, 5302, 5303 };
+        var validFreeFirePackages = new HashSet<int> { 390, 384, 383, 385, 386, 387, 388, 389, 4852, 5021, 5022, 5023, 5024, 5025, 5026, 5028, 5029, 5030, 5031, 5032, 3077, 374, 391, 376, 377, 378, 379, 380, 381, 5292, 5293, 5294, 5295, 5298, 5299, 5296, 5297, 5301, 5302, 5303, 5146, 5147, 5148 };
 
         int packageId;
         if (int.TryParse(sku, out var parsedSku) && parsedSku > 100)
@@ -429,6 +429,18 @@ public class RealTopUpProviderClient : ITopUpProviderClient
                 else if (passContext.Contains("level 10") || passContext.Contains("lvl 10") || passContext.Contains("level-10") || (productId.HasValue && productId.Value == 385) || diamondAmount == 300) packageId = 385; // Level 10 ($0.61)
                 else packageId = 390;                                 // Level 6  ($0.29)
             }
+            else if (passContext.Contains("3 in 1") || passContext.Contains("3-in-1"))
+            {
+                packageId = 5030; // 3 in 1 membership ($9.50)
+            }
+            else if (passContext.Contains("2weekly+monthly") || passContext.Contains("2 weekly+monthly"))
+            {
+                packageId = 5032; // 2Weekly+monthly ($18.15)
+            }
+            else if (passContext.Contains("weekly + monthly") || passContext.Contains("weekly+monthly"))
+            {
+                packageId = 5031; // Weekly + monthly ($9.33)
+            }
             else if (passContext.Contains("evo"))
             {
                 if (passContext.Contains("30")) packageId = 5303;
@@ -443,13 +455,15 @@ public class RealTopUpProviderClient : ITopUpProviderClient
             }
             else if (passContext.Contains("monthly") || diamondAmount == 2600)
             {
-                if (passContext.Contains("3") || passContext.Contains("x3")) packageId = 5022; // Monthly x3 ($22.55)
+                if (passContext.Contains("4") || passContext.Contains("x4")) packageId = 5023; // Monthly x4 ($30.06)
+                else if (passContext.Contains("3") || passContext.Contains("x3")) packageId = 5022; // Monthly x3 ($22.55)
                 else if (passContext.Contains("2") || passContext.Contains("x2")) packageId = 5021; // Monthly x2 ($15.03)
                 else packageId = 4852; // Monthly Membership ($7.76)
             }
             else if (passContext.Contains("weekly") || diamondAmount == 450)
             {
-                if (passContext.Contains("3") || passContext.Contains("x3")) packageId = 5025; // Weekly x3 ($4.67)
+                if (passContext.Contains("4") || passContext.Contains("x4")) packageId = 5026; // Weekly x4 ($6.24)
+                else if (passContext.Contains("3") || passContext.Contains("x3")) packageId = 5025; // Weekly x3 ($4.67)
                 else if (passContext.Contains("2") || passContext.Contains("x2")) packageId = 5024; // Weekly x2 ($3.12)
                 else packageId = 383; // Weekly Membership ($1.57)
             }
