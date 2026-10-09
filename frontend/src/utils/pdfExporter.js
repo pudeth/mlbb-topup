@@ -1,10 +1,66 @@
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
+import { getStoreBranding } from '../services/storeBranding';
 
 /**
- * Exports Executive Package Profitability Statement as a styled A4 PDF Document (Landscape)
+ * Converts image URL or path to base64 string for jsPDF
  */
-export function exportPackageProfitabilityPDF({
+const loadImageAsBase64 = (url) => {
+  return new Promise((resolve) => {
+    if (!url) return resolve(null);
+    if (url.startsWith('data:image')) return resolve(url);
+
+    // Resolve relative public URLs
+    let fullUrl = url;
+    if (!url.startsWith('http') && !url.startsWith('//')) {
+      fullUrl = window.location.origin + (url.startsWith('/') ? url : '/' + url);
+    }
+
+    const img = new Image();
+    img.crossOrigin = 'Anonymous';
+    img.onload = () => {
+      try {
+        const canvas = document.createElement('canvas');
+        canvas.width = img.naturalWidth || img.width || 120;
+        canvas.height = img.naturalHeight || img.height || 120;
+        const ctx = canvas.getContext('2d');
+        ctx.drawImage(img, 0, 0);
+        const dataURL = canvas.toDataURL('image/png');
+        resolve(dataURL);
+      } catch (err) {
+        console.warn('Failed to convert logo image to base64 for PDF:', err);
+        resolve(null);
+      }
+    };
+    img.onerror = () => {
+      // Fallback attempt to default /tin-logo.png if custom URL fails
+      if (url !== '/tin-logo.png') {
+        const fallbackImg = new Image();
+        fallbackImg.crossOrigin = 'Anonymous';
+        fallbackImg.onload = () => {
+          try {
+            const canvas = document.createElement('canvas');
+            canvas.width = fallbackImg.naturalWidth || 120;
+            canvas.height = fallbackImg.naturalHeight || 120;
+            const ctx = canvas.getContext('2d');
+            ctx.drawImage(fallbackImg, 0, 0);
+            resolve(canvas.toDataURL('image/png'));
+          } catch (_) { resolve(null); }
+        };
+        fallbackImg.onerror = () => resolve(null);
+        fallbackImg.src = window.location.origin + '/tin-logo.png';
+      } else {
+        resolve(null);
+      }
+    };
+    img.src = fullUrl;
+  });
+};
+
+/**
+ * Exports Executive Package Profitability Statement as a styled A4 PDF Document with Store Logo
+ */
+export async function exportPackageProfitabilityPDF({
   list = [],
   activeProvider = 'KhmerTopUp',
   gameFilter = 'ALL',
@@ -12,10 +68,14 @@ export function exportPackageProfitabilityPDF({
 }) {
   if (!list || list.length === 0) return;
 
+  const branding = getStoreBranding();
+  const logoBase64 = await loadImageAsBase64(branding.logoImage || '/tin-logo.png');
+  const storeNameText = (branding.storeName || 'TIN-TOPUP').toUpperCase();
+
   const doc = new jsPDF({
     orientation: 'landscape',
     unit: 'mm',
-    format: 'a4' // Standard A4: 297mm x 210mm
+    format: 'a4' // Standard A4 Landscape: 297mm x 210mm
   });
 
   const totalCount = list.length;
@@ -28,15 +88,28 @@ export function exportPackageProfitabilityPDF({
   doc.setFillColor(15, 23, 42); // #0F172A Dark Navy
   doc.rect(0, 0, 297, 24, 'F');
 
+  let textStartX = 10;
+
+  // Render Logo if available
+  if (logoBase64) {
+    try {
+      doc.addImage(logoBase64, 'PNG', 10, 3.5, 17, 17);
+      textStartX = 30; // Shift title text right of logo
+    } catch (e) {
+      console.warn('Could not add logo to PDF:', e);
+      textStartX = 10;
+    }
+  }
+
   doc.setFont('helvetica', 'bold');
-  doc.setFontSize(13);
+  doc.setFontSize(12.5);
   doc.setTextColor(255, 255, 255);
-  doc.text('MLBB TOPUP STORE — EXECUTIVE PACKAGE PROFITABILITY STATEMENT', 10, 10);
+  doc.text(`${storeNameText} — EXECUTIVE PACKAGE PROFITABILITY STATEMENT`, textStartX, 10.5);
 
   doc.setFont('helvetica', 'normal');
   doc.setFontSize(8.5);
   doc.setTextColor(148, 163, 184); // #94A3B8
-  doc.text(`Generated: ${new Date().toLocaleString()}  |  Active Supplier: ${activeProvider}  |  Catalog Scope: ${gameFilter.toUpperCase()} (${totalCount} Packages)`, 10, 17);
+  doc.text(`Generated: ${new Date().toLocaleString()}  |  Active Supplier: ${activeProvider}  |  Scope: ${gameFilter.toUpperCase()} (${totalCount} Packages)`, textStartX, 17.5);
 
   // 2. KPI Summary Cards (Top Block on Page 1)
   const cardY = 28;
@@ -54,20 +127,17 @@ export function exportPackageProfitabilityPDF({
   ];
 
   kpis.forEach((kpi) => {
-    // Card background
     doc.setFillColor(241, 245, 249); // #F1F5F9
     doc.roundedRect(startX, cardY, cardW, cardH, 1.5, 1.5, 'F');
     doc.setDrawColor(203, 213, 225);
     doc.setLineWidth(0.2);
     doc.roundedRect(startX, cardY, cardW, cardH, 1.5, 1.5, 'S');
 
-    // Label
     doc.setFont('helvetica', 'bold');
     doc.setFontSize(6.5);
     doc.setTextColor(100, 116, 139);
     doc.text(kpi.label, startX + cardW / 2, cardY + 4.5, { align: 'center' });
 
-    // Value
     doc.setFont('helvetica', 'bold');
     doc.setFontSize(10);
     doc.setTextColor(kpi.color[0], kpi.color[1], kpi.color[2]);
@@ -113,7 +183,6 @@ export function exportPackageProfitabilityPDF({
     p.status || 'Active'
   ]);
 
-  // Add Totals Summary Row
   tableRows.push([
     'TOTAL',
     'Catalog Master',
@@ -176,7 +245,6 @@ export function exportPackageProfitabilityPDF({
       14: { halign: 'center', cellWidth: 17 }
     },
     didParseCell: (data) => {
-      // Style Totals Row at the bottom
       if (data.row.index === tableRows.length - 1) {
         data.cell.styles.fontStyle = 'bold';
         data.cell.styles.fillColor = [226, 232, 240];
@@ -184,17 +252,24 @@ export function exportPackageProfitabilityPDF({
       }
     },
     didDrawPage: (data) => {
-      // Re-draw Header Bar on Pages 2+
       if (data.pageNumber > 1) {
         doc.setFillColor(15, 23, 42);
         doc.rect(0, 0, 297, 18, 'F');
+
+        let p2StartX = 10;
+        if (logoBase64) {
+          try {
+            doc.addImage(logoBase64, 'PNG', 10, 2.5, 13, 13);
+            p2StartX = 26;
+          } catch (_) { p2StartX = 10; }
+        }
+
         doc.setFont('helvetica', 'bold');
         doc.setFontSize(10);
         doc.setTextColor(255, 255, 255);
-        doc.text('MLBB TOPUP STORE — PACKAGE PROFITABILITY STATEMENT', 10, 11);
+        doc.text(`${storeNameText} — PACKAGE PROFITABILITY STATEMENT`, p2StartX, 11);
       }
 
-      // Footer Page Numbering
       const pageCount = doc.internal.getNumberOfPages();
       doc.setFont('helvetica', 'normal');
       doc.setFontSize(8);
@@ -204,7 +279,7 @@ export function exportPackageProfitabilityPDF({
       doc.setLineWidth(0.2);
       doc.line(10, 202, 287, 202);
 
-      doc.text('MLBB TopUp Store Official Executive A4 Financial Statement', 10, 206);
+      doc.text(`${branding.storeName || 'MLBB TopUp Store'} Official Executive A4 Financial Statement`, 10, 206);
       doc.text(`Page ${data.pageNumber} of ${pageCount}`, 287, 206, { align: 'right' });
     }
   });
@@ -213,13 +288,17 @@ export function exportPackageProfitabilityPDF({
 }
 
 /**
- * Exports Official Orders Sales Ledger as a styled A4 PDF Document (Landscape)
+ * Exports Official Orders Sales Ledger as a styled A4 PDF Document with Store Logo
  */
-export function exportOrdersLedgerPDF({
+export async function exportOrdersLedgerPDF({
   orders = [],
   filename = `MLBB_TopUp_Orders_Ledger_A4_${new Date().toISOString().slice(0, 10)}.pdf`
 }) {
   if (!orders || orders.length === 0) return;
+
+  const branding = getStoreBranding();
+  const logoBase64 = await loadImageAsBase64(branding.logoImage || '/tin-logo.png');
+  const storeNameText = (branding.storeName || 'TIN-TOPUP').toUpperCase();
 
   const doc = new jsPDF({
     orientation: 'landscape',
@@ -234,15 +313,23 @@ export function exportOrdersLedgerPDF({
   doc.setFillColor(15, 23, 42);
   doc.rect(0, 0, 297, 24, 'F');
 
+  let textStartX = 10;
+  if (logoBase64) {
+    try {
+      doc.addImage(logoBase64, 'PNG', 10, 3.5, 17, 17);
+      textStartX = 30;
+    } catch (_) { textStartX = 10; }
+  }
+
   doc.setFont('helvetica', 'bold');
-  doc.setFontSize(13);
+  doc.setFontSize(12.5);
   doc.setTextColor(255, 255, 255);
-  doc.text('MLBB TOPUP STORE — OFFICIAL ORDERS & SALES LEDGER STATEMENT', 10, 10);
+  doc.text(`${storeNameText} — OFFICIAL ORDERS & SALES LEDGER STATEMENT`, textStartX, 10.5);
 
   doc.setFont('helvetica', 'normal');
   doc.setFontSize(8.5);
   doc.setTextColor(148, 163, 184);
-  doc.text(`Generated: ${new Date().toLocaleString()}  |  Total Orders: ${totalCount}  |  Total Sales Revenue: $${totalRev.toFixed(2)} USD`, 10, 17);
+  doc.text(`Generated: ${new Date().toLocaleString()}  |  Total Orders: ${totalCount}  |  Total Sales Revenue: $${totalRev.toFixed(2)} USD`, textStartX, 17.5);
 
   // 2. Table Rows
   const headers = [
@@ -340,10 +427,19 @@ export function exportOrdersLedgerPDF({
       if (data.pageNumber > 1) {
         doc.setFillColor(15, 23, 42);
         doc.rect(0, 0, 297, 18, 'F');
+
+        let p2StartX = 10;
+        if (logoBase64) {
+          try {
+            doc.addImage(logoBase64, 'PNG', 10, 2.5, 13, 13);
+            p2StartX = 26;
+          } catch (_) { p2StartX = 10; }
+        }
+
         doc.setFont('helvetica', 'bold');
         doc.setFontSize(10);
         doc.setTextColor(255, 255, 255);
-        doc.text('MLBB TOPUP STORE — OFFICIAL ORDERS LEDGER', 10, 11);
+        doc.text(`${storeNameText} — OFFICIAL ORDERS LEDGER`, p2StartX, 11);
       }
 
       const pageCount = doc.internal.getNumberOfPages();
@@ -355,7 +451,7 @@ export function exportOrdersLedgerPDF({
       doc.setLineWidth(0.2);
       doc.line(10, 202, 287, 202);
 
-      doc.text('MLBB TopUp Store Official Executive A4 Sales Statement', 10, 206);
+      doc.text(`${branding.storeName || 'MLBB TopUp Store'} Official Executive A4 Sales Statement`, 10, 206);
       doc.text(`Page ${data.pageNumber} of ${pageCount}`, 287, 206, { align: 'right' });
     }
   });
