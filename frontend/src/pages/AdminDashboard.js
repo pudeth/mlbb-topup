@@ -26,6 +26,8 @@ import {
 } from '../services/supplierGateway';
 import { getLocalOrders, mergeOrders, updateLocalOrderStatus } from '../utils/orderStorage';
 import { exportPackageProfitabilityExcel, exportOrdersLedgerExcel } from '../utils/excelExporter';
+import { exportPackageProfitabilityPDF, exportOrdersLedgerPDF } from '../utils/pdfExporter';
+
 
 
 const AdminDashboard = () => {
@@ -1474,6 +1476,32 @@ const PRICING_GAMES = [
       showToast('error', 'Export failed: ' + err.message);
     }
   };
+
+  const handleExportPackageAnalyticsPDF = async () => {
+    const list = filteredAndSortedPackages;
+    if (list.length === 0) {
+      showToast('error', 'No package data to export.');
+      return;
+    }
+
+    try {
+      const activeProv = providerSettings?.activeProvider || 'KhmerTopUp';
+      const filterSuffix = packageAnalyticsGameFilter === 'ALL' ? 'All_Games' : packageAnalyticsGameFilter.toUpperCase();
+      const filename = `MLBB_Topup_Package_Profitability_A4_${filterSuffix}_${new Date().toISOString().slice(0, 10)}.pdf`;
+
+      exportPackageProfitabilityPDF({
+        list,
+        activeProvider: activeProv,
+        gameFilter: packageAnalyticsGameFilter,
+        filename
+      });
+
+      showToast('success', 'Exported professional A4 PDF statement!');
+    } catch (err) {
+      console.error('PDF Export error:', err);
+      showToast('error', 'PDF Export failed: ' + err.message);
+    }
+  };
   const [exportModalOpen, setExportModalOpen] = useState(false);
   const [exportGameTarget, setExportGameTarget] = useState('current');
   const [exportStatusTarget, setExportStatusTarget] = useState('ALL');
@@ -2861,6 +2889,115 @@ const PRICING_GAMES = [
     } catch (err) {
       console.error('Export error:', err);
       showToast('error', 'Export failed: ' + err.message);
+    }
+  };
+
+  const handleExportOrdersPDF = async () => {
+    if (!orders.length) {
+      showToast('error', 'No order ledger data to export.');
+      return;
+    }
+    try {
+      const filename = `MLBB_TopUp_Orders_Ledger_A4_${new Date().toISOString().slice(0, 10)}.pdf`;
+      exportOrdersLedgerPDF({ orders, filename });
+      showToast('success', 'Exported professional A4 PDF order statement!');
+    } catch (err) {
+      console.error('PDF Export error:', err);
+      showToast('error', 'PDF Export failed: ' + err.message);
+    }
+  };
+
+  const handleExportPricingPDF = (targetGame = exportGameTarget, targetStatus = exportStatusTarget) => {
+    let list = getMergedProductsList();
+
+    let categoryTitle = 'All_Games';
+    if (targetGame === 'current') {
+      if (selectedPricingGame !== 'all') {
+        if (selectedPricingGame === 'special_passes') {
+          list = list.filter(p => p.isPass || p.diamondAmount === 210 || p.diamondAmount === 500 || (p.name && (p.name.includes('Pass') || p.name.includes('Membership') || p.name.includes('Welkin'))));
+          categoryTitle = 'Special_Passes';
+        } else {
+          list = list.filter(p => (p.game || 'mlbb') === selectedPricingGame);
+          categoryTitle = selectedPricingGame.toUpperCase();
+        }
+      }
+    } else if (targetGame === 'all') {
+      categoryTitle = 'All_Games_Master';
+    } else if (targetGame === 'moba') {
+      list = list.filter(p => (p.game === 'mlbb' || p.game === 'hok' || !p.game));
+      categoryTitle = 'Category_MOBA';
+    } else if (targetGame === 'battle_royale') {
+      list = list.filter(p => (p.game === 'pubgm' || p.game === 'freefire'));
+      categoryTitle = 'Category_Battle_Royale';
+    } else if (targetGame === 'rpg') {
+      list = list.filter(p => (p.game === 'genshin' || p.game === 'star_rail' || p.game === 'zenless'));
+      categoryTitle = 'Category_RPG_Anime';
+    } else if (targetGame === 'digital_cards') {
+      list = list.filter(p => (p.game === 'steam_usd' || p.game === 'gift_cards' || p.game === 'telegram_stars'));
+      categoryTitle = 'Category_Digital_Cards_Balance';
+    } else if (targetGame === 'special_passes') {
+      list = list.filter(p => p.isPass || p.diamondAmount === 210 || p.diamondAmount === 500 || (p.name && (p.name.includes('Pass') || p.name.includes('Membership') || p.name.includes('Welkin'))));
+      categoryTitle = 'Special_Passes_Events';
+    } else {
+      list = list.filter(p => (p.game || 'mlbb') === targetGame);
+      categoryTitle = targetGame.toUpperCase();
+    }
+
+    if (targetStatus === 'ACTIVE') {
+      list = list.filter(p => p.status === 'Active');
+    } else if (targetStatus === 'INACTIVE') {
+      list = list.filter(p => p.status === 'Inactive');
+    } else if (targetStatus === 'PASSES') {
+      list = list.filter(p => p.isPass || p.diamondAmount === 210 || p.diamondAmount === 500);
+    }
+
+    if (list.length === 0) {
+      showToast('error', 'No package matrix data found for the selected scope.');
+      return;
+    }
+
+    try {
+      const activeProv = providerSettings?.activeProvider || 'KhmerTopUp';
+      const filename = `MLBB_TopUp_Master_Pricing_Matrix_A4_${categoryTitle}_${new Date().toISOString().slice(0, 10)}.pdf`;
+
+      const formattedList = list.map(prod => {
+        const cost = getProductCostForActiveProvider(prod);
+        const retail = Number(prod.price) || 0;
+        const reseller = prod.resellerPrice > 0 ? Number(prod.resellerPrice) : retail * 0.92;
+        const unitNetProfit = Math.max(0, retail - cost);
+        const retailMarginPct = retail > 0 ? Number(((unitNetProfit / retail) * 100).toFixed(1)) : 0;
+        const resellerUnitProfit = Math.max(0, reseller - cost);
+        const resellerMarginPct = reseller > 0 ? Number(((resellerUnitProfit / reseller) * 100).toFixed(1)) : 0;
+
+        return {
+          ...prod,
+          gameName: prod.game ? prod.game.toUpperCase() : 'MLBB',
+          retailPrice: retail,
+          providerCost: cost,
+          activeProvider: activeProv,
+          resellerPrice: reseller,
+          unitNetProfit,
+          retailMarginPct,
+          resellerUnitProfit,
+          resellerMarginPct,
+          unitsSold: prod.unitsSold || 0,
+          totalProfit: unitNetProfit * (prod.unitsSold || 0),
+          totalRevenue: retail * (prod.unitsSold || 0)
+        };
+      });
+
+      exportPackageProfitabilityPDF({
+        list: formattedList,
+        activeProvider: activeProv,
+        gameFilter: categoryTitle,
+        filename
+      });
+
+      showToast('success', `Exported A4 PDF master pricing matrix (${categoryTitle.replace(/_/g, ' ')})!`);
+      setExportModalOpen(false);
+    } catch (err) {
+      console.error('PDF Export error:', err);
+      showToast('error', 'PDF Export failed: ' + err.message);
     }
   };
 
@@ -5371,9 +5508,18 @@ const PRICING_GAMES = [
                 <button
                   onClick={handleExportCSV}
                   className="btn btn-secondary text-xs py-2 px-3 flex items-center gap-1.5 bg-emerald-950/40 hover:bg-emerald-900/60 border border-emerald-500/40 text-emerald-300 font-bold cursor-pointer"
+                  title="Export orders ledger to Excel (.xlsx)"
                 >
-                  <span>📥</span>
-                  <span>Export CSV</span>
+                  <span>📊</span>
+                  <span>Export Excel</span>
+                </button>
+                <button
+                  onClick={handleExportOrdersPDF}
+                  className="btn btn-secondary text-xs py-2 px-3 flex items-center gap-1.5 bg-sky-950/40 hover:bg-sky-900/60 border border-sky-500/40 text-sky-300 font-bold cursor-pointer"
+                  title="Export orders ledger to printable A4 PDF statement"
+                >
+                  <span>📄</span>
+                  <span>Export PDF (A4)</span>
                 </button>
               </div>
             </div>
@@ -6323,15 +6469,24 @@ const PRICING_GAMES = [
                             <span className="font-black text-white">{activeProvName}</span>
                           </div>
 
-                          {/* Dedicated Export CSV button */}
+                          {/* Dedicated Export Excel & PDF buttons */}
                           <button
                             type="button"
                             onClick={handleExportPackageAnalyticsCSV}
                             className="btn btn-secondary text-xs py-1.5 px-3 rounded-xl border-emerald-500/40 text-emerald-300 hover:bg-emerald-950/60 font-bold flex items-center gap-1.5 cursor-pointer shadow-sm"
-                            title="Export package profitability leaderboard with live provider & reseller rates"
+                            title="Export package profitability leaderboard to Excel (.xlsx)"
                           >
-                            <span>📥</span>
-                            <span>Export CSV ({pkgs.length})</span>
+                            <span>📊</span>
+                            <span>Export Excel ({pkgs.length})</span>
+                          </button>
+                          <button
+                            type="button"
+                            onClick={handleExportPackageAnalyticsPDF}
+                            className="btn btn-secondary text-xs py-1.5 px-3 rounded-xl border-sky-500/40 text-sky-300 hover:bg-sky-950/60 font-bold flex items-center gap-1.5 cursor-pointer shadow-sm"
+                            title="Export package profitability leaderboard to printable A4 PDF statement"
+                          >
+                            <span>📄</span>
+                            <span>Export PDF (A4)</span>
                           </button>
                         </div>
                       </div>
@@ -11109,22 +11264,32 @@ const PRICING_GAMES = [
                 Cancel
               </button>
 
-              <div className="flex items-center gap-2 w-full sm:w-auto">
+              <div className="flex items-center gap-2 w-full sm:w-auto flex-wrap">
                 <button
                   type="button"
                   onClick={() => handleExportPricingExcel('all', 'ALL')}
-                  className="btn btn-secondary text-xs py-2 px-3 w-full sm:w-auto font-bold border-slate-700 text-slate-300 hover:text-white"
-                  title="Export everything"
+                  className="btn btn-secondary text-xs py-2 px-3 font-bold border-slate-700 text-slate-300 hover:text-white"
+                  title="Export master catalog to Excel"
                 >
-                  🌐 Master Export
+                  🌐 Excel Master
                 </button>
                 <button
                   type="button"
                   onClick={() => handleExportPricingExcel(exportGameTarget, exportStatusTarget)}
-                  className="btn btn-primary text-xs py-2.5 px-5 font-black flex items-center justify-center gap-1.5 shadow-glow-cyan w-full sm:w-auto"
+                  className="btn btn-primary text-xs py-2 px-4 font-black flex items-center justify-center gap-1.5 shadow-glow-cyan"
+                  title="Export selected scope to Excel (.xlsx)"
                 >
-                  <span>📥</span>
-                  <span>Download Excel (.csv)</span>
+                  <span>📊</span>
+                  <span>Export Excel</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => handleExportPricingPDF(exportGameTarget, exportStatusTarget)}
+                  className="btn btn-secondary text-xs py-2 px-4 font-bold flex items-center justify-center gap-1.5 bg-sky-950/50 hover:bg-sky-900/60 border border-sky-500/40 text-sky-300"
+                  title="Export selected scope to printable A4 PDF statement"
+                >
+                  <span>📄</span>
+                  <span>Export PDF (A4)</span>
                 </button>
               </div>
             </div>
