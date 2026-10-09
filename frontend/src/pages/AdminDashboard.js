@@ -353,6 +353,8 @@ const PRICING_GAMES = [
   const [paymentFilter, setPaymentFilter] = useState('ALL');
   const [topupFilter, setTopupFilter] = useState('ALL');
   const [dateFilter, setDateFilter] = useState('ALL');
+  const [orderSortBy, setOrderSortBy] = useState('date');
+  const [orderSortOrder, setOrderSortOrder] = useState('desc');
   const [currentPage, setCurrentPage] = useState(1);
   const [pageSize, setPageSize] = useState(10);
 
@@ -3209,10 +3211,23 @@ const PRICING_GAMES = [
 
     return matchSearch && matchPayment && matchTopup && matchDate;
   }).sort((a, b) => {
+    if (orderSortBy === 'id') {
+      const idA = Number(a.orderId || a.id || 0);
+      const idB = Number(b.orderId || b.id || 0);
+      return orderSortOrder === 'asc' ? idA - idB : idB - idA;
+    }
+    if (orderSortBy === 'amount') {
+      const amA = Number(a.amount || a.price || 0);
+      const amB = Number(b.amount || b.price || 0);
+      return orderSortOrder === 'asc' ? amA - amB : amB - amA;
+    }
+    // Default: date & time
     const tA = new Date(a.createdAt || 0).getTime();
     const tB = new Date(b.createdAt || 0).getTime();
-    if (tB !== tA) return tB - tA;
-    return (b.orderId || 0) - (a.orderId || 0);
+    if (tB !== tA) {
+      return orderSortOrder === 'asc' ? tA - tB : tB - tA;
+    }
+    return orderSortOrder === 'asc' ? (a.orderId || 0) - (b.orderId || 0) : (b.orderId || 0) - (a.orderId || 0);
   });
 
   const totalPages = Math.ceil(filteredOrders.length / pageSize) || 1;
@@ -5727,7 +5742,7 @@ const PRICING_GAMES = [
             </div>
 
             {/* Filter Bar */}
-            <div className="card p-3.5 grid grid-cols-1 sm:grid-cols-2 md:grid-cols-5 gap-2.5 text-xs rounded-2xl bg-dark-card/90 border border-slate-800">
+            <div className="card p-3.5 grid grid-cols-1 sm:grid-cols-2 md:grid-cols-6 gap-2.5 text-xs rounded-2xl bg-dark-card/90 border border-slate-800">
               <div className="md:col-span-2">
                 <input
                   type="text"
@@ -5787,6 +5802,25 @@ const PRICING_GAMES = [
                   <option value="30DAYS">Date: Last 30 Days</option>
                 </select>
               </div>
+              <div>
+                <select
+                  value={`${orderSortBy}_${orderSortOrder}`}
+                  onChange={(e) => {
+                    const [by, dir] = e.target.value.split('_');
+                    setOrderSortBy(by);
+                    setOrderSortOrder(dir);
+                    setCurrentPage(1);
+                  }}
+                  className="input text-xs py-2 w-full bg-slate-900 border-amber-500/40 text-amber-300 font-bold cursor-pointer"
+                >
+                  <option value="date_desc">📅 Sort: Newest First</option>
+                  <option value="date_asc">📅 Sort: Oldest First</option>
+                  <option value="id_desc">🔢 Sort: ID High to Low (#15 → #1)</option>
+                  <option value="id_asc">🔢 Sort: ID Low to High (#1 → #15)</option>
+                  <option value="amount_desc">💰 Sort: Price ($ High to Low)</option>
+                  <option value="amount_asc">💰 Sort: Price ($ Low to High)</option>
+                </select>
+              </div>
             </div>
 
             {/* Orders Table */}
@@ -5795,13 +5829,40 @@ const PRICING_GAMES = [
                 <table className="w-full text-left text-xs min-w-[850px]">
                   <thead className="bg-[#111728] text-slate-400 uppercase text-[10px] tracking-wider border-b border-slate-800 font-bold">
                     <tr>
-                      <th className="p-3">Order</th>
+                      <th
+                        onClick={() => {
+                          if (orderSortBy === 'id') setOrderSortOrder(o => o === 'desc' ? 'asc' : 'desc');
+                          else { setOrderSortBy('id'); setOrderSortOrder('desc'); }
+                        }}
+                        className="p-3 cursor-pointer hover:text-white transition-colors select-none"
+                        title="Click to sort by Order ID"
+                      >
+                        Order {orderSortBy === 'id' ? (orderSortOrder === 'desc' ? '▼' : '▲') : '↕'}
+                      </th>
                       <th className="p-3">Player / Zone</th>
                       <th className="p-3">Item / Package</th>
-                      <th className="p-3">Amount</th>
+                      <th
+                        onClick={() => {
+                          if (orderSortBy === 'amount') setOrderSortOrder(o => o === 'desc' ? 'asc' : 'desc');
+                          else { setOrderSortBy('amount'); setOrderSortOrder('desc'); }
+                        }}
+                        className="p-3 cursor-pointer hover:text-white transition-colors select-none"
+                        title="Click to sort by Amount ($)"
+                      >
+                        Amount {orderSortBy === 'amount' ? (orderSortOrder === 'desc' ? '▼' : '▲') : '↕'}
+                      </th>
                       <th className="p-3">Payment</th>
                       <th className="p-3">Current Delivery Status</th>
-                      <th className="p-3">Date</th>
+                      <th
+                        onClick={() => {
+                          if (orderSortBy === 'date') setOrderSortOrder(o => o === 'desc' ? 'asc' : 'desc');
+                          else { setOrderSortBy('date'); setOrderSortOrder('desc'); }
+                        }}
+                        className="p-3 cursor-pointer hover:text-white transition-colors select-none"
+                        title="Click to sort by Date & Time"
+                      >
+                        Date {orderSortBy === 'date' ? (orderSortOrder === 'desc' ? '▼' : '▲') : '↕'}
+                      </th>
                       <th className="p-3 text-right">Actions</th>
                     </tr>
                   </thead>
