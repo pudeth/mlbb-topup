@@ -999,9 +999,144 @@ const PRICING_GAMES = [
     }
   };
 
+  // Reseller & Retail Pricing Presets Dictionary
+  const MARKET_RESELLER_PRICES = {
+    55: { price: 0.95, resellerPrice: 0.85 },
+    86: { price: 1.40, resellerPrice: 1.30 },
+    210: { price: 1.55, resellerPrice: 1.55 },
+    440: { price: 3.10, resellerPrice: 3.10 },
+    660: { price: 4.65, resellerPrice: 4.65 },
+    880: { price: 6.20, resellerPrice: 6.20 },
+    1100: { price: 7.75, resellerPrice: 7.75 },
+    1320: { price: 9.30, resellerPrice: 9.30 },
+    605: { price: 5.50, resellerPrice: 5.50 },
+    110: { price: 1.85, resellerPrice: 1.70 },
+    165: { price: 2.50, resellerPrice: 2.35 },
+    172: { price: 2.60, resellerPrice: 2.45 },
+    257: { price: 3.69, resellerPrice: 3.50 },
+    275: { price: 3.90, resellerPrice: 3.75 },
+    312: { price: 4.55, resellerPrice: 4.25 },
+    343: { price: 5.00, resellerPrice: 4.70 },
+    429: { price: 6.20, resellerPrice: 6.00 },
+    500: { price: 8.50, resellerPrice: 8.25 },
+    514: { price: 7.20, resellerPrice: 6.85 },
+    565: { price: 7.80, resellerPrice: 7.60 },
+    600: { price: 8.40, resellerPrice: 7.95 },
+    706: { price: 9.70, resellerPrice: 9.45 },
+    878: { price: 12.80, resellerPrice: 12.00 },
+    963: { price: 13.60, resellerPrice: 12.80 },
+    1050: { price: 15.50, resellerPrice: 14.50 },
+    1412: { price: 19.80, resellerPrice: 19.50 },
+    2195: { price: 29.80, resellerPrice: 28.90 },
+    2452: { price: 32.50, resellerPrice: 30.50 },
+    2901: { price: 39.99, resellerPrice: 37.50 },
+    3688: { price: 49.99, resellerPrice: 49.30 },
+    4390: { price: 62.99, resellerPrice: 58.99 },
+    5532: { price: 73.99, resellerPrice: 71.99 },
+    6944: { price: 92.99, resellerPrice: 86.99 },
+    9288: { price: 125.00, resellerPrice: 121.00 },
+  };
+
+  const CLASSIC_RESELLER_PRICES = {
+    55: { price: 0.95, resellerPrice: 0.87 },
+    86: { price: 1.40, resellerPrice: 1.25 },
+    210: { price: 1.55, resellerPrice: 1.55 },
+    110: { price: 1.85, resellerPrice: 1.65 },
+    165: { price: 2.50, resellerPrice: 2.25 },
+    172: { price: 2.60, resellerPrice: 2.40 },
+    257: { price: 3.69, resellerPrice: 3.40 },
+    275: { price: 3.90, resellerPrice: 3.60 },
+    312: { price: 4.55, resellerPrice: 4.10 },
+    343: { price: 5.00, resellerPrice: 4.50 },
+    429: { price: 6.20, resellerPrice: 5.60 },
+    500: { price: 8.50, resellerPrice: 8.00 },
+    514: { price: 7.20, resellerPrice: 6.50 },
+    565: { price: 7.80, resellerPrice: 7.20 },
+    600: { price: 8.40, resellerPrice: 7.50 },
+    706: { price: 9.70, resellerPrice: 8.70 },
+    878: { price: 12.80, resellerPrice: 11.50 },
+    963: { price: 13.60, resellerPrice: 12.20 },
+    1050: { price: 15.50, resellerPrice: 14.00 },
+    1412: { price: 19.80, resellerPrice: 18.00 },
+    2195: { price: 29.80, resellerPrice: 27.00 },
+    2452: { price: 32.50, resellerPrice: 29.50 },
+    2901: { price: 39.99, resellerPrice: 36.00 },
+    3688: { price: 49.99, resellerPrice: 46.00 },
+    4390: { price: 62.99, resellerPrice: 57.00 },
+    5532: { price: 73.99, resellerPrice: 68.00 },
+    6944: { price: 92.99, resellerPrice: 84.00 },
+    9288: { price: 125.00, resellerPrice: 115.00 },
+  };
+
   // Pricing Matrix Filter & Search
   const [pricingFilter, setPricingFilter] = useState('ALL');
   const [selectedPricingGame, setSelectedPricingGame] = useState('all');
+  const [activePricingPreset, setActivePricingPreset] = useState(() => {
+    try {
+      return localStorage.getItem('active_pricing_preset') || 'market';
+    } catch (e) {
+      return 'market';
+    }
+  });
+
+  // Switch and Apply Reseller Pricing Preset across Catalog
+  const handleApplyPricingPreset = async (presetKey) => {
+    try {
+      setActivePricingPreset(presetKey);
+      localStorage.setItem('active_pricing_preset', presetKey);
+
+      const targetPresetMap = presetKey === 'market' ? MARKET_RESELLER_PRICES : CLASSIC_RESELLER_PRICES;
+
+      // Update in-memory merged products list
+      const currentList = getMergedProductsList();
+      const updatedProductsList = currentList.map(item => {
+        if (item.game === 'mlbb' || !item.game) {
+          const match = targetPresetMap[item.diamondAmount];
+          if (match) {
+            return {
+              ...item,
+              price: match.price,
+              resellerPrice: match.resellerPrice,
+            };
+          }
+        }
+        return item;
+      });
+
+      // Save custom products to localStorage
+      localStorage.setItem('admin_custom_products', JSON.stringify(updatedProductsList));
+
+      // Batch update DB products if available
+      for (const item of updatedProductsList) {
+        if (item.productId && (item.game === 'mlbb' || !item.game)) {
+          const match = targetPresetMap[item.diamondAmount];
+          if (match) {
+            await adminAPI.updateProduct(item.productId, {
+              price: match.price,
+              resellerPrice: match.resellerPrice,
+            }).catch(() => {});
+          }
+        }
+      }
+
+      setProducts(prev => prev.map(p => {
+        if (p.game === 'mlbb' || !p.game) {
+          const match = targetPresetMap[p.diamondAmount];
+          if (match) {
+            return { ...p, price: match.price, resellerPrice: match.resellerPrice };
+          }
+        }
+        return p;
+      }));
+
+      window.dispatchEvent(new Event('productsConfigUpdated'));
+      window.dispatchEvent(new Event('adminProductsUpdated'));
+
+      showToast('success', `Switched MLBB pricing to ${presetKey === 'market' ? '🎯 Market Reseller Rates (Ref Screenshots)' : '🏛️ Classic Standard Rates'} preset!`);
+    } catch (err) {
+      showToast('error', 'Failed to update pricing preset');
+    }
+  };
   // Get dynamic wholesale cost based on selected active provider
   const getProductCostForActiveProvider = (prod) => {
     const isFazer = providerSettings.activeProvider === 'FazerCards';
@@ -4964,6 +5099,80 @@ const PRICING_GAMES = [
                   <span>➕</span>
                   <span>New Package / Event</span>
                 </button>
+              </div>
+            </div>
+
+            {/* RESELLER PRICING MODE & PRESET SWITCHER */}
+            <div className="card p-3.5 sm:p-4 bg-gradient-to-r from-slate-900 via-indigo-950/80 to-slate-900 border border-indigo-500/30 rounded-2xl shadow-xl space-y-3">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 pb-2.5 border-b border-indigo-500/20">
+                <div className="flex items-center gap-2">
+                  <span className="text-xl">🏷️</span>
+                  <div>
+                    <h4 className="font-black text-white text-xs sm:text-sm flex items-center gap-2">
+                      <span>Reseller Pricing Preset Engine</span>
+                      <span className="px-2 py-0.5 rounded-full text-[10px] font-extrabold uppercase bg-amber-500/20 text-amber-300 border border-amber-500/40">
+                        {activePricingPreset === 'market' ? '🎯 Market Rates (Ref Screenshots)' : activePricingPreset === 'classic' ? '🏛️ Classic Standard Rates' : '⚡ Custom Reseller Rates'}
+                      </span>
+                    </h4>
+                    <p className="text-[11px] text-slate-300">
+                      Switch pricing presets across MLBB packages with 1-click while preserving original diamond amounts.
+                    </p>
+                  </div>
+                </div>
+
+                <div className="flex items-center gap-2 flex-wrap">
+                  <button
+                    type="button"
+                    onClick={() => handleApplyPricingPreset('market')}
+                    className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer flex items-center gap-1.5 ${
+                      activePricingPreset === 'market'
+                        ? 'bg-gradient-to-r from-amber-500 to-yellow-400 text-slate-950 font-black shadow-glow-gold scale-[1.02] ring-2 ring-amber-300'
+                        : 'bg-slate-800 text-slate-200 border border-slate-700 hover:text-white hover:bg-slate-700'
+                    }`}
+                  >
+                    <span>🎯</span>
+                    <span>Market Reseller Rates (Screenshot Fit)</span>
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => handleApplyPricingPreset('classic')}
+                    className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer flex items-center gap-1.5 ${
+                      activePricingPreset === 'classic'
+                        ? 'bg-gradient-to-r from-cyan-500 to-blue-500 text-white font-black shadow-glow-cyan scale-[1.02] ring-2 ring-cyan-300'
+                        : 'bg-slate-800 text-slate-200 border border-slate-700 hover:text-white hover:bg-slate-700'
+                    }`}
+                  >
+                    <span>🏛️</span>
+                    <span>Classic Standard Rates</span>
+                  </button>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5 text-xs text-slate-300">
+                <div className="p-2.5 rounded-xl bg-black/40 border border-slate-800 flex items-center gap-2">
+                  <span className="text-emerald-400 font-bold text-sm">✅ 86 💎</span>
+                  <div>
+                    <span className="block text-[11px] text-slate-400">Market Preset:</span>
+                    <strong className="text-white">Retail $1.40 / Reseller $1.30</strong>
+                  </div>
+                </div>
+
+                <div className="p-2.5 rounded-xl bg-black/40 border border-slate-800 flex items-center gap-2">
+                  <span className="text-emerald-400 font-bold text-sm">✅ 172 💎</span>
+                  <div>
+                    <span className="block text-[11px] text-slate-400">Market Preset:</span>
+                    <strong className="text-white">Retail $2.60 / Reseller $2.45</strong>
+                  </div>
+                </div>
+
+                <div className="p-2.5 rounded-xl bg-black/40 border border-slate-800 flex items-center gap-2">
+                  <span className="text-emerald-400 font-bold text-sm">✅ 3688 💎</span>
+                  <div>
+                    <span className="block text-[11px] text-slate-400">Market Preset:</span>
+                    <strong className="text-white">Retail $49.99 / Reseller $49.30</strong>
+                  </div>
+                </div>
               </div>
             </div>
 
