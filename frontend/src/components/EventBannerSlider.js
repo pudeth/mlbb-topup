@@ -154,7 +154,7 @@ const EventBannerSlider = ({ className = '' }) => {
       }}
     >
       {/* Banner Canvas Area with Real Horizontal Swipe & Zoom Out Transition */}
-      <div className="relative aspect-[16/10] sm:aspect-[21/9] md:aspect-[24/9] min-h-[190px] sm:min-h-[230px] md:min-h-[270px] w-full overflow-hidden">
+      <div className="relative aspect-[21/9] sm:aspect-[24/9] md:aspect-[28/9] min-h-[135px] sm:min-h-[175px] md:min-h-[210px] max-h-[180px] sm:max-h-[250px] md:max-h-[300px] w-full overflow-hidden">
         <div
           className="flex w-full h-full"
           style={{
@@ -191,8 +191,8 @@ const EventBannerSlider = ({ className = '' }) => {
                   />
 
                   {/* Clean Cinematic Edge Vignettes */}
-                  <div className="absolute top-0 inset-x-0 h-16 sm:h-20 bg-gradient-to-b from-slate-950/80 via-slate-950/20 to-transparent pointer-events-none" />
-                  <div className="absolute bottom-0 inset-x-0 h-28 sm:h-36 bg-gradient-to-t from-slate-950/95 via-slate-950/35 to-transparent pointer-events-none" />
+                  <div className="absolute top-0 inset-x-0 h-10 sm:h-14 bg-gradient-to-b from-slate-950/70 via-slate-950/20 to-transparent pointer-events-none" />
+                  <div className="absolute bottom-0 inset-x-0 h-16 sm:h-24 bg-gradient-to-t from-slate-950/90 via-slate-950/30 to-transparent pointer-events-none" />
                 </div>
               </div>
             );
@@ -200,26 +200,26 @@ const EventBannerSlider = ({ className = '' }) => {
         </div>
 
         {/* Content Overlay */}
-        <div className="absolute inset-0 z-20 flex flex-col justify-between p-3.5 sm:p-5 md:p-6 pointer-events-none">
+        <div className="absolute inset-0 z-20 flex flex-col justify-between p-2.5 sm:p-4 md:p-5 pointer-events-none">
           
           {/* Top Header / Badges */}
           <div 
             key={`badge-${currentIndex}`}
             className="flex items-center justify-between gap-2 pointer-events-auto transition-all duration-300"
           >
-            <div className="flex items-center gap-2">
-              <span className={`px-2.5 py-1 rounded-lg text-[9px] sm:text-xs font-black tracking-wider uppercase shadow-md flex items-center gap-1.5 ${currentBanner.badgeColor || 'bg-gradient-to-r from-amber-400 to-yellow-400 text-slate-950'}`}>
+            <div className="flex items-center gap-1.5 sm:gap-2">
+              <span className={`px-2 py-0.5 sm:px-2.5 sm:py-1 rounded-md sm:rounded-lg text-[8.5px] sm:text-xs font-black tracking-wider uppercase shadow-md flex items-center gap-1 sm:gap-1.5 ${currentBanner.badgeColor || 'bg-gradient-to-r from-amber-400 to-yellow-400 text-slate-950'}`}>
                 <span>⚡</span>
                 <span>{currentBanner.tag || 'SPECIAL EVENT'}</span>
               </span>
-              <span className="hidden sm:inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-slate-950/75 border border-white/10 text-[10px] sm:text-xs text-slate-300 font-bold backdrop-blur-md shadow-sm">
+              <span className="hidden sm:inline-flex items-center gap-1.5 px-2 py-0.5 sm:px-2.5 sm:py-1 rounded-md sm:rounded-lg bg-slate-950/75 border border-white/10 text-[9px] sm:text-xs text-slate-300 font-bold backdrop-blur-md shadow-sm">
                 <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
                 <span>Live Event</span>
               </span>
             </div>
 
             {/* Slide Index Counter */}
-            <div className="px-2.5 py-1 rounded-lg bg-slate-950/75 border border-white/10 text-[10px] sm:text-xs font-mono text-slate-300 font-bold backdrop-blur-md shadow-sm">
+            <div className="px-2 py-0.5 sm:px-2.5 sm:py-1 rounded-md sm:rounded-lg bg-slate-950/75 border border-white/10 text-[9px] sm:text-xs font-mono text-slate-300 font-bold backdrop-blur-md shadow-sm">
               <span className="text-amber-400 font-black">{currentIndex + 1}</span>
               <span className="text-slate-500 mx-1">/</span>
               <span>{banners.length}</span>
@@ -233,12 +233,12 @@ const EventBannerSlider = ({ className = '' }) => {
               isHovered ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-3 pointer-events-none'
             }`}
           >
-            <div className="bg-slate-950/80 backdrop-blur-md p-3 sm:p-4 rounded-2xl border border-white/10 shadow-2xl inline-block max-w-lg">
-              <h3 className="text-base sm:text-2xl md:text-3xl font-black text-white tracking-tight leading-tight line-clamp-2 drop-shadow-[0_2px_12px_rgba(0,0,0,0.9)]">
+            <div className="bg-slate-950/80 backdrop-blur-md p-2.5 sm:p-3.5 rounded-2xl border border-white/10 shadow-2xl inline-block max-w-lg">
+              <h3 className="text-sm sm:text-xl md:text-2xl font-black text-white tracking-tight leading-tight line-clamp-2 drop-shadow-[0_2px_12px_rgba(0,0,0,0.9)]">
                 {currentBanner.title}
               </h3>
               {currentBanner.subtitle && (
-                <p className="text-[10px] sm:text-xs md:text-sm text-sky-200/90 font-medium leading-relaxed line-clamp-2 mt-1 drop-shadow-md">
+                <p className="text-[9px] sm:text-xs md:text-sm text-sky-200/90 font-medium leading-relaxed line-clamp-2 mt-0.5 drop-shadow-md">
                   {currentBanner.subtitle}
                 </p>
               )}
@@ -255,17 +255,17 @@ const EventBannerSlider = ({ className = '' }) => {
                 e.stopPropagation();
                 navigate(currentBanner.link || `/topup?game=${currentBanner.gameId || 'mlbb'}`);
               }}
-              className="btn-gold h-8 sm:h-9.5 px-3.5 sm:px-5 rounded-full text-slate-950 text-[11px] sm:text-xs md:text-sm font-black tracking-wide inline-flex items-center gap-2 shadow-[0_4px_18px_rgba(245,158,11,0.5)] active:scale-95 group/btn cursor-pointer transition-all hover:scale-105"
+              className="btn-gold h-7 sm:h-8.5 px-3 sm:px-4 rounded-full text-slate-950 text-[10px] sm:text-xs font-black tracking-wide inline-flex items-center gap-1.5 sm:gap-2 shadow-[0_4px_14px_rgba(245,158,11,0.45)] active:scale-95 group/btn cursor-pointer transition-all hover:scale-105"
             >
-              <span className="text-xs sm:text-sm">🎮</span>
+              <span className="text-[11px] sm:text-xs">🎮</span>
               <span>{currentBanner.buttonText || 'ចាប់លេងឥឡូវនេះ'}</span>
-              <svg className="w-3.5 h-3.5 sm:w-4 sm:h-4 shrink-0 transition-transform duration-200 group-hover/btn:translate-x-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <svg className="w-3 h-3 sm:w-3.5 sm:h-3.5 shrink-0 transition-transform duration-200 group-hover/btn:translate-x-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M14 5l7 7m0 0l-7 7m7-7H3" />
               </svg>
             </button>
 
             {/* Bottom Pagination Dots */}
-            <div className="flex items-center gap-1.5 sm:gap-2 bg-slate-950/75 backdrop-blur-md px-2.5 py-1.5 rounded-full border border-white/10 shadow-lg">
+            <div className="flex items-center gap-1 sm:gap-1.5 bg-slate-950/75 backdrop-blur-md px-2 py-1 sm:px-2.5 sm:py-1 rounded-full border border-white/10 shadow-lg">
               {banners.map((_, idx) => (
                 <button
                   key={idx}
@@ -276,8 +276,8 @@ const EventBannerSlider = ({ className = '' }) => {
                   }}
                   className={`rounded-full transition-all duration-300 cursor-pointer ${
                     idx === currentIndex
-                      ? 'w-5 sm:w-7 h-1.5 sm:h-2 bg-gradient-to-r from-amber-400 to-yellow-300 shadow-[0_0_8px_rgba(251,191,36,0.8)]'
-                      : 'w-1.5 sm:w-2 h-1.5 sm:h-2 bg-white/30 hover:bg-white/60'
+                      ? 'w-4 sm:w-6 h-1 sm:h-1.5 bg-gradient-to-r from-amber-400 to-yellow-300 shadow-[0_0_8px_rgba(251,191,36,0.8)]'
+                      : 'w-1 sm:w-1.5 h-1 sm:h-1.5 bg-white/30 hover:bg-white/60'
                   }`}
                   aria-label={`Go to slide ${idx + 1}`}
                 />
