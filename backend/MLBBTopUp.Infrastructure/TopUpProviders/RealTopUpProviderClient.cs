@@ -478,20 +478,57 @@ public class RealTopUpProviderClient : ITopUpProviderClient
 
         var validFreeFirePackages = new HashSet<int> { 390, 384, 383, 385, 386, 387, 388, 389, 4852, 5021, 5022, 5023, 5024, 5025, 5026, 5028, 5029, 5030, 5031, 5032, 3077, 374, 391, 376, 377, 378, 379, 380, 381, 5292, 5293, 5294, 5295, 5298, 5299, 5296, 5297, 5301, 5302, 5303, 5146, 5147, 5148 };
 
+        // Normalize customer payment to USD
+        decimal paidUsd = 0m;
+        if (orderAmount.HasValue && orderAmount.Value > 0)
+        {
+            // If >= 500, customer paid in Cambodian Riel (KHR), e.g. 33,825 KHR => $8.25 USD
+            paidUsd = orderAmount.Value >= 500m ? Math.Round(orderAmount.Value / 4100m, 2) : orderAmount.Value;
+        }
+
         int packageId;
-        if (int.TryParse(sku, out var parsedSku) && parsedSku > 100)
+
+        // OWNER STRICT RULE:
+        // If customer paid $8.25 (or ~33,825 KHR) of sold package, system MUST NEVER buy a package with provider that is more expensive ($15.03).
+        // Strictly force Package 4852 ($7.76 wholesale).
+        if (isFreeFire && (diamondAmount == 2600 || 
+                           (Math.Abs(paidUsd - 8.25m) <= 0.60m && (productName?.Contains("monthly", StringComparison.OrdinalIgnoreCase) == true || diamondAmount <= 2600)) ||
+                           (productName != null && productName.Contains("monthly", StringComparison.OrdinalIgnoreCase) && !productName.Contains("x2", StringComparison.OrdinalIgnoreCase) && !productName.Contains("2x", StringComparison.OrdinalIgnoreCase) && !productName.Contains("x3", StringComparison.OrdinalIgnoreCase) && !productName.Contains("3x", StringComparison.OrdinalIgnoreCase) && !productName.Contains("x4", StringComparison.OrdinalIgnoreCase) && !productName.Contains("4x", StringComparison.OrdinalIgnoreCase))))
+        {
+            _logger.LogInformation("[Strict Price Rule] Matched Free Fire Monthly ($8.25 paid / 2600 diamonds). Strictly assigned Package #4852 ($7.76 wholesale).");
+            packageId = 4852;
+        }
+        else if (isFreeFire && (diamondAmount == 445 || diamondAmount == 450 || 
+                                (Math.Abs(paidUsd - 1.68m) <= 0.35m && (productName?.Contains("weekly", StringComparison.OrdinalIgnoreCase) == true || diamondAmount <= 450) && productName?.Contains("lit", StringComparison.OrdinalIgnoreCase) != true) ||
+                                (productName != null && productName.Contains("weekly", StringComparison.OrdinalIgnoreCase) && !productName.Contains("lit", StringComparison.OrdinalIgnoreCase) && !productName.Contains("x2", StringComparison.OrdinalIgnoreCase) && !productName.Contains("2x", StringComparison.OrdinalIgnoreCase) && !productName.Contains("x3", StringComparison.OrdinalIgnoreCase) && !productName.Contains("3x", StringComparison.OrdinalIgnoreCase) && !productName.Contains("x4", StringComparison.OrdinalIgnoreCase) && !productName.Contains("4x", StringComparison.OrdinalIgnoreCase))))
+        {
+            _logger.LogInformation("[Strict Price Rule] Matched Free Fire Weekly ($1.68 paid / 445 diamonds). Strictly assigned Package #383 ($1.57 wholesale).");
+            packageId = 383;
+        }
+        else if (isFreeFire && (diamondAmount == 90 || 
+                                (Math.Abs(paidUsd - 0.35m) <= 0.15m && (productName?.Contains("lit", StringComparison.OrdinalIgnoreCase) == true || diamondAmount <= 90)) ||
+                                (productName != null && (productName.Contains("weeklylite", StringComparison.OrdinalIgnoreCase) || productName.Contains("weekly lite", StringComparison.OrdinalIgnoreCase)) && !productName.Contains("x2", StringComparison.OrdinalIgnoreCase) && !productName.Contains("2x", StringComparison.OrdinalIgnoreCase) && !productName.Contains("x3", StringComparison.OrdinalIgnoreCase) && !productName.Contains("3x", StringComparison.OrdinalIgnoreCase))))
+        {
+            _logger.LogInformation("[Strict Price Rule] Matched Free Fire Weekly Lite ($0.35 paid / 90 diamonds). Strictly assigned Package #384 ($0.32 wholesale).");
+            packageId = 384;
+        }
+        else if (int.TryParse(sku, out var parsedSku) && parsedSku > 100)
         {
             packageId = parsedSku;
         }
         else if (isFreeFire && productId.HasValue && validFreeFirePackages.Contains(productId.Value))
         {
-            if ((productId.Value == 5021 || productId.Value == 5022 || productId.Value == 5023) && (diamondAmount == 2600 || (orderAmount.HasValue && orderAmount.Value < 12.00m)))
+            if ((productId.Value == 5021 || productId.Value == 5022 || productId.Value == 5023) && (diamondAmount == 2600 || paidUsd < 14.50m || Math.Abs(paidUsd - 8.25m) <= 0.60m))
             {
                 packageId = 4852;
             }
-            else if ((productId.Value == 5024 || productId.Value == 5025 || productId.Value == 5026) && (diamondAmount == 445 || diamondAmount == 450 || (orderAmount.HasValue && orderAmount.Value < 2.50m)))
+            else if ((productId.Value == 5024 || productId.Value == 5025 || productId.Value == 5026) && (diamondAmount == 445 || diamondAmount == 450 || paidUsd < 2.90m || Math.Abs(paidUsd - 1.68m) <= 0.35m))
             {
                 packageId = 383;
+            }
+            else if ((productId.Value == 5028 || productId.Value == 5029) && (diamondAmount == 90 || paidUsd < 0.55m || Math.Abs(paidUsd - 0.35m) <= 0.15m))
+            {
+                packageId = 384;
             }
             else
             {
@@ -505,16 +542,16 @@ public class RealTopUpProviderClient : ITopUpProviderClient
             {
                 // Membership Passes
                 2600 => 4852, // 1x Monthly ($7.76 wholesale)
-                5000 or 5200 => 5021, // 2x Monthly ($15.03 wholesale)
-                7800 => 5022, // 3x Monthly ($22.55 wholesale)
-                10400 or 10000 => 5023, // 4x Monthly ($30.06 wholesale)
+                5000 or 5200 => (paidUsd > 0 && paidUsd < 14.50m) ? 4852 : 5021, // 2x Monthly ($15.03 wholesale)
+                7800 => (paidUsd > 0 && paidUsd < 21.00m) ? 4852 : 5022, // 3x Monthly ($22.55 wholesale)
+                10400 or 10000 => (paidUsd > 0 && paidUsd < 28.00m) ? 4852 : 5023, // 4x Monthly ($30.06 wholesale)
                 445 or 450 => 383,  // 1x Weekly ($1.57 wholesale)
-                890 or 900 => 5024,  // 2x Weekly ($3.12 wholesale)
-                1335 or 1350 => 5025, // 3x Weekly ($4.67 wholesale)
-                1780 or 1800 => 5026, // 4x Weekly ($6.24 wholesale)
+                890 or 900 => (paidUsd > 0 && paidUsd < 2.90m) ? 383 : 5024,  // 2x Weekly ($3.12 wholesale)
+                1335 or 1350 => (paidUsd > 0 && paidUsd < 4.20m) ? 383 : 5025, // 3x Weekly ($4.67 wholesale)
+                1780 or 1800 => (paidUsd > 0 && paidUsd < 5.80m) ? 383 : 5026, // 4x Weekly ($6.24 wholesale)
                 90 => 384,   // 1x Weekly Lite ($0.32 wholesale)
-                180 => 5028, // 2x Weekly Lite ($0.63 wholesale)
-                270 => 5029, // 3x Weekly Lite ($0.94 wholesale)
+                180 => (paidUsd > 0 && paidUsd < 0.55m) ? 384 : 5028, // 2x Weekly Lite ($0.63 wholesale)
+                270 => (paidUsd > 0 && paidUsd < 0.85m) ? 384 : 5029, // 3x Weekly Lite ($0.94 wholesale)
                 // Level Up Milestone Passes
                 200 => 390,  // Level 6 ($0.29 wholesale)
                 300 => 385,  // Level 10 ($0.61 wholesale)
@@ -590,22 +627,22 @@ public class RealTopUpProviderClient : ITopUpProviderClient
                 }
                 else if (pNameLower.Contains("weeklylite") || pNameLower.Contains("weekly lite") || pNameLower.Contains("weekly lit") || pNameLower.Contains("lite") || pNameLower.Contains("lit") || diamondAmount == 90 || diamondAmount == 180 || diamondAmount == 270)
                 {
-                    if (hasX3 || (diamondAmount >= 260 && diamondAmount <= 280)) packageId = 5029; // Weekly Lite x3 ($0.94)
-                    else if (hasX2 || (diamondAmount >= 170 && diamondAmount <= 190)) packageId = 5028; // Weekly Lite x2 ($0.63)
+                    if ((hasX3 || (diamondAmount >= 260 && diamondAmount <= 280)) && (paidUsd <= 0 || paidUsd >= 0.85m)) packageId = 5029; // Weekly Lite x3 ($0.94)
+                    else if ((hasX2 || (diamondAmount >= 170 && diamondAmount <= 190)) && (paidUsd <= 0 || paidUsd >= 0.55m)) packageId = 5028; // Weekly Lite x2 ($0.63)
                     else packageId = 384; // Weekly Lite ($0.32)
                 }
                 else if (pNameLower.Contains("monthly") || diamondAmount == 2600 || diamondAmount == 5000 || diamondAmount == 7800 || diamondAmount == 10400)
                 {
-                    if (hasX4 || diamondAmount >= 10000) packageId = 5023; // Monthly x4 ($30.06)
-                    else if (hasX3 || diamondAmount >= 7500) packageId = 5022; // Monthly x3 ($22.55)
-                    else if (hasX2 || (diamondAmount >= 5000 && diamondAmount < 7500)) packageId = 5021; // Monthly x2 ($15.03)
+                    if ((hasX4 || diamondAmount >= 10000) && (paidUsd <= 0 || paidUsd >= 28.00m)) packageId = 5023; // Monthly x4 ($30.06)
+                    else if ((hasX3 || diamondAmount >= 7500) && (paidUsd <= 0 || paidUsd >= 21.00m)) packageId = 5022; // Monthly x3 ($22.55)
+                    else if ((hasX2 || (diamondAmount >= 5000 && diamondAmount < 7500)) && (paidUsd <= 0 || paidUsd >= 14.50m)) packageId = 5021; // Monthly x2 ($15.03)
                     else packageId = 4852; // Monthly Membership ($7.76)
                 }
                 else if (pNameLower.Contains("weekly") || diamondAmount == 445 || diamondAmount == 450 || diamondAmount == 890 || diamondAmount == 1335 || diamondAmount == 1780)
                 {
-                    if (hasX4 || diamondAmount >= 1700) packageId = 5026; // Weekly x4 ($6.24)
-                    else if (hasX3 || diamondAmount >= 1300) packageId = 5025; // Weekly x3 ($4.67)
-                    else if (hasX2 || (diamondAmount >= 800 && diamondAmount < 1300)) packageId = 5024; // Weekly x2 ($3.12)
+                    if ((hasX4 || diamondAmount >= 1700) && (paidUsd <= 0 || paidUsd >= 5.80m)) packageId = 5026; // Weekly x4 ($6.24)
+                    else if ((hasX3 || diamondAmount >= 1300) && (paidUsd <= 0 || paidUsd >= 4.20m)) packageId = 5025; // Weekly x3 ($4.67)
+                    else if ((hasX2 || (diamondAmount >= 800 && diamondAmount < 1300)) && (paidUsd <= 0 || paidUsd >= 2.90m)) packageId = 5024; // Weekly x2 ($3.12)
                     else packageId = 383; // Weekly Membership ($1.57)
                 }
                 else
@@ -637,11 +674,11 @@ public class RealTopUpProviderClient : ITopUpProviderClient
             {
                 // Membership Passes
                 210 => 371,   // Weekly Diamond Pass ($1.54)
-                440 => 4967,  // 2x Weekly Pass ($2.97)
-                660 => 4968,  // 3x Weekly Pass ($4.46)
-                880 => 4969,  // 4x Weekly Pass ($5.94)
-                1100 => 4970, // 5x Weekly Pass ($7.43)
-                1320 => 4970, // 6x Weekly Pass
+                440 => (paidUsd <= 0 || paidUsd >= 2.70m) ? 4967 : 371,  // 2x Weekly Pass ($2.97)
+                660 => (paidUsd <= 0 || paidUsd >= 4.00m) ? 4968 : 371,  // 3x Weekly Pass ($4.46)
+                880 => (paidUsd <= 0 || paidUsd >= 5.50m) ? 4969 : 371,  // 4x Weekly Pass ($5.94)
+                1100 => (paidUsd <= 0 || paidUsd >= 7.00m) ? 4970 : 371, // 5x Weekly Pass ($7.43)
+                1320 => (paidUsd <= 0 || paidUsd >= 7.00m) ? 4970 : 371, // 6x Weekly Pass
                 500 => 370,   // Twilight Pass ($8.10)
                 // Direct Diamonds
                 11 or 14 => 569,  // 14 Diamonds Special ($0.25)
@@ -730,34 +767,32 @@ public class RealTopUpProviderClient : ITopUpProviderClient
         }
 
         // UNIVERSAL FINANCIAL SAFETY GUARD:
-        // Ensure upstream provider package cost never exceeds customer payment!
-        if (orderAmount.HasValue && orderAmount.Value > 0)
+        // Absolute rule: Upstream provider package cost MUST NEVER exceed customer payment!
+        if (paidUsd > 0)
         {
-            var customerPaid = orderAmount.Value;
-
             // 1. Pass Multiplier Safe Automatic Downgrades:
-            if ((packageId == 5021 || packageId == 5022 || packageId == 5023) && customerPaid < 12.00m)
+            if ((packageId == 5021 || packageId == 5022 || packageId == 5023) && (paidUsd < 14.50m || Math.Abs(paidUsd - 8.25m) <= 0.60m))
             {
                 _logger.LogWarning("[Price Safeguard] Downgrading Free Fire Monthly multiplier package {OriginalId} to 4852 (1x Monthly $7.76) for Order #{OrderId}: Customer paid ${Paid:F2}, below multiplier threshold.",
-                    packageId, orderId, customerPaid);
+                    packageId, orderId, paidUsd);
                 packageId = 4852;
             }
-            else if ((packageId == 5024 || packageId == 5025 || packageId == 5026) && customerPaid < 2.50m)
+            else if ((packageId == 5024 || packageId == 5025 || packageId == 5026) && (paidUsd < 2.90m || Math.Abs(paidUsd - 1.68m) <= 0.35m))
             {
                 _logger.LogWarning("[Price Safeguard] Downgrading Free Fire Weekly multiplier package {OriginalId} to 383 (1x Weekly $1.57) for Order #{OrderId}: Customer paid ${Paid:F2}, below multiplier threshold.",
-                    packageId, orderId, customerPaid);
+                    packageId, orderId, paidUsd);
                 packageId = 383;
             }
-            else if ((packageId == 5028 || packageId == 5029) && customerPaid < 0.50m)
+            else if ((packageId == 5028 || packageId == 5029) && (paidUsd < 0.55m || Math.Abs(paidUsd - 0.35m) <= 0.15m))
             {
                 _logger.LogWarning("[Price Safeguard] Downgrading Free Fire Weekly Lite multiplier package {OriginalId} to 384 (Weekly Lite $0.32) for Order #{OrderId}: Customer paid ${Paid:F2}, below multiplier threshold.",
-                    packageId, orderId, customerPaid);
+                    packageId, orderId, paidUsd);
                 packageId = 384;
             }
-            else if ((packageId == 4967 || packageId == 4968 || packageId == 4969 || packageId == 4970) && customerPaid < 2.50m)
+            else if ((packageId == 4967 || packageId == 4968 || packageId == 4969 || packageId == 4970) && (paidUsd < 2.70m || Math.Abs(paidUsd - 1.55m) <= 0.35m))
             {
                 _logger.LogWarning("[Price Safeguard] Downgrading MLBB Weekly multiplier package {OriginalId} to 371 (1x WDP $1.54) for Order #{OrderId}: Customer paid ${Paid:F2}, below multiplier threshold.",
-                    packageId, orderId, customerPaid);
+                    packageId, orderId, paidUsd);
                 packageId = 371;
             }
 
@@ -765,15 +800,15 @@ public class RealTopUpProviderClient : ITopUpProviderClient
             if (KhmerTopUpPackageCosts.TryGetValue(packageId, out var wholesaleCost))
             {
                 // If wholesale cost strictly exceeds what the customer paid, BLOCK the order to prevent money loss!
-                if (wholesaleCost > (customerPaid * 1.02m) && wholesaleCost > (customerPaid + 0.05m))
+                if (wholesaleCost > paidUsd)
                 {
-                    _logger.LogError("[CRITICAL PRICE GUARD BLOCKED ORDER #{OrderId}] Package {PackageId} wholesale cost ${Cost:F2} exceeds customer payment ${Paid:F2}. Halting upstream order to prevent money loss.",
-                        orderId, packageId, wholesaleCost, customerPaid);
+                    _logger.LogError("[CRITICAL PRICE GUARD BLOCKED ORDER #{OrderId}] Package {PackageId} wholesale cost ${Cost:F2} is MORE EXPENSIVE than customer payment ${Paid:F2}. Halting upstream order to prevent money loss.",
+                        orderId, packageId, wholesaleCost, paidUsd);
 
                     return new TopUpResult
                     {
                         Success = false,
-                        ErrorMessage = $"Financial Safety Guard Blocked: Upstream provider package #{packageId} cost (${wholesaleCost:F2}) is higher than customer order amount (${customerPaid:F2}). Automated purchase was safely stopped to prevent store loss."
+                        ErrorMessage = $"Strict Financial Price Guard: Upstream provider package #{packageId} price (${wholesaleCost:F2}) is MORE EXPENSIVE than customer payment (${paidUsd:F2}). Automated purchase was strictly halted to prevent store loss."
                     };
                 }
             }

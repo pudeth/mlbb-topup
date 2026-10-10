@@ -278,7 +278,19 @@ public class TopUpService : ITopUpService
                         gameName = order.GameName;
                         productName = order.ProductName;
                         productId = order.ProductId;
-                        orderAmount = order.Amount;
+                        // Prioritize confirmed USD product catalog price if available, otherwise normalize order.Amount from KHR
+                        if (order.ProductPrice.HasValue && order.ProductPrice.Value > 0)
+                        {
+                            orderAmount = order.ProductPrice.Value;
+                        }
+                        else if (order.Amount >= 500m)
+                        {
+                            orderAmount = Math.Round(order.Amount / 4100m, 2);
+                        }
+                        else
+                        {
+                            orderAmount = order.Amount;
+                        }
                     }
                 }
                 catch { }

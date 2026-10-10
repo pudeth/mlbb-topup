@@ -30,6 +30,8 @@ public class OrderResponse
     public string ProductName { get; set; } = string.Empty;
     public int DiamondAmount { get; set; }
     public decimal Amount { get; set; }
+    public decimal? ProductPrice { get; set; }
+    public decimal? CostPrice { get; set; }
     public string PaymentStatus { get; set; } = string.Empty;
     public string TopupStatus { get; set; } = string.Empty;
     public DateTime CreatedAt { get; set; }

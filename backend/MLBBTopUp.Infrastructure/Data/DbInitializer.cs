@@ -57,9 +57,11 @@ public static class DbInitializer
                 { 2600, (8.25m, 7.76m, 8.25m, "Monthly", "Free Fire Monthly Membership (2600 Diamonds)") },
                 { 5000, (15.95m, 15.03m, 15.95m, "Monthly x2", "Free Fire Monthly x2 Pass") },
                 { 7800, (23.95m, 22.55m, 23.95m, "Monthly x3", "Free Fire Monthly x3 Pass") },
+                { 10000, (31.95m, 30.06m, 31.95m, "Monthly x4", "Free Fire Monthly x4 Pass") },
                 { 445, (1.68m, 1.57m, 1.68m, "Weekly", "Free Fire Weekly Membership (445 Diamonds)") },
                 { 890, (3.35m, 3.12m, 3.35m, "Weekly x2", "Free Fire Weekly x2 Pass") },
                 { 1335, (4.98m, 4.67m, 4.98m, "Weekly x3", "Free Fire Weekly x3 Pass") },
+                { 1780, (6.65m, 6.24m, 6.65m, "Weekly x4", "Free Fire Weekly x4 Pass") },
                 { 90, (0.35m, 0.32m, 0.35m, "WeeklyLite", "Free Fire Weekly Lite Pass (90 Diamonds)") },
                 { 180, (0.68m, 0.63m, 0.68m, "Weekly Lit x2", "Free Fire Weekly Lite x2 Pass") },
                 { 270, (1.00m, 0.94m, 1.00m, "Weekly Lit x3", "Free Fire Weekly Lite x3 Pass") },
@@ -67,7 +69,15 @@ public static class DbInitializer
                 { 300, (0.66m, 0.61m, 0.66m, "Level Up Package - Level 10", "Free Fire Level Up Level 10") },
                 { 400, (0.66m, 0.61m, 0.66m, "Level Up Package - Level 15", "Free Fire Level Up Level 15") },
                 { 600, (0.66m, 0.61m, 0.66m, "Level Up Package - Level 25", "Free Fire Level Up Level 25") },
-                { 800, (0.96m, 0.90m, 0.96m, "Level Up Package - Level 30", "Free Fire Level Up Level 30") }
+                { 800, (0.96m, 0.90m, 0.96m, "Level Up Package - Level 30", "Free Fire Level Up Level 30") },
+                { 25, (0.26m, 0.24m, 0.26m, "25 Diamonds", "Free Fire 25 Diamonds") },
+                { 100, (0.96m, 0.90m, 0.96m, "100 Diamonds", "Free Fire 100 Diamonds") },
+                { 310, (2.90m, 2.74m, 2.90m, "310 Diamonds", "Free Fire 310 Diamonds") },
+                { 520, (4.85m, 4.59m, 4.85m, "520 Diamonds", "Free Fire 520 Diamonds") },
+                { 1060, (9.55m, 9.01m, 9.55m, "1060 Diamonds", "Free Fire 1060 Diamonds") },
+                { 2180, (19.30m, 18.21m, 19.30m, "2180 Diamonds", "Free Fire 2180 Diamonds") },
+                { 5600, (47.80m, 45.07m, 47.80m, "5600 Diamonds", "Free Fire 5600 Diamonds") },
+                { 11500, (98.00m, 92.82m, 98.00m, "11500 Diamonds", "Free Fire 11500 Diamonds") }
             };
 
             var dbProducts = await context.Products.ToListAsync();

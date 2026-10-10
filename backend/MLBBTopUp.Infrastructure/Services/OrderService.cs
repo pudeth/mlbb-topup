@@ -337,6 +337,8 @@ public class OrderService : IOrderService
             ProductName = !string.IsNullOrWhiteSpace(order.Product?.Description) ? order.Product.Description : $"{order.Product?.DiamondAmount ?? 0} Diamonds",
             DiamondAmount = order.Product?.DiamondAmount ?? 0,
             Amount = order.Amount,
+            ProductPrice = order.Product?.Price,
+            CostPrice = order.Product?.CostPrice,
             PaymentStatus = order.PaymentStatus,
             TopupStatus = order.TopupStatus,
             CreatedAt = order.CreatedAt,
