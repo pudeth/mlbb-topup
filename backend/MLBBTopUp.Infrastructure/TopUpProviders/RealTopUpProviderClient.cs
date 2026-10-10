@@ -578,62 +578,25 @@ public class RealTopUpProviderClient : ITopUpProviderClient
 
         int packageId;
 
-        // OWNER STRICT RULE:
-        // System MUST NEVER buy a package with provider that is more expensive than what the customer paid.
-        // If customer paid $8.25 (or ~33,825 KHR), force Package 4852 ($7.76 wholesale) for Free Fire or Package 370 ($8.14 wholesale) for MLBB Twilight Pass.
-        if (isFreeFire && (diamondAmount == 2600 || 
-                           (Math.Abs(paidUsd - 8.25m) <= 0.60m && (productName?.Contains("monthly", StringComparison.OrdinalIgnoreCase) == true || diamondAmount <= 2600)) ||
-                           (productName != null && productName.Contains("monthly", StringComparison.OrdinalIgnoreCase) && !productName.Contains("x2", StringComparison.OrdinalIgnoreCase) && !productName.Contains("2x", StringComparison.OrdinalIgnoreCase) && !productName.Contains("x3", StringComparison.OrdinalIgnoreCase) && !productName.Contains("3x", StringComparison.OrdinalIgnoreCase) && !productName.Contains("x4", StringComparison.OrdinalIgnoreCase) && !productName.Contains("4x", StringComparison.OrdinalIgnoreCase))))
-        {
-            _logger.LogInformation("[Strict Price Rule] Matched Free Fire Monthly ($8.25 paid / 2600 diamonds). Strictly assigned Package #4852 ($7.76 wholesale).");
-            packageId = 4852;
-        }
-        else if (isFreeFire && (diamondAmount == 445 || diamondAmount == 450 || 
-                                (Math.Abs(paidUsd - 1.68m) <= 0.35m && (productName?.Contains("weekly", StringComparison.OrdinalIgnoreCase) == true || diamondAmount <= 450) && productName?.Contains("lit", StringComparison.OrdinalIgnoreCase) != true) ||
-                                (productName != null && productName.Contains("weekly", StringComparison.OrdinalIgnoreCase) && !productName.Contains("lit", StringComparison.OrdinalIgnoreCase) && !productName.Contains("x2", StringComparison.OrdinalIgnoreCase) && !productName.Contains("2x", StringComparison.OrdinalIgnoreCase) && !productName.Contains("x3", StringComparison.OrdinalIgnoreCase) && !productName.Contains("3x", StringComparison.OrdinalIgnoreCase) && !productName.Contains("x4", StringComparison.OrdinalIgnoreCase) && !productName.Contains("4x", StringComparison.OrdinalIgnoreCase))))
-        {
-            _logger.LogInformation("[Strict Price Rule] Matched Free Fire Weekly ($1.68 paid / 445 diamonds). Strictly assigned Package #383 ($1.57 wholesale).");
-            packageId = 383;
-        }
-        else if (isFreeFire && (diamondAmount == 90 || 
-                                (Math.Abs(paidUsd - 0.35m) <= 0.15m && (productName?.Contains("lit", StringComparison.OrdinalIgnoreCase) == true || diamondAmount <= 90)) ||
-                                (productName != null && (productName.Contains("weeklylite", StringComparison.OrdinalIgnoreCase) || productName.Contains("weekly lite", StringComparison.OrdinalIgnoreCase)) && !productName.Contains("x2", StringComparison.OrdinalIgnoreCase) && !productName.Contains("2x", StringComparison.OrdinalIgnoreCase) && !productName.Contains("x3", StringComparison.OrdinalIgnoreCase) && !productName.Contains("3x", StringComparison.OrdinalIgnoreCase))))
-        {
-            _logger.LogInformation("[Strict Price Rule] Matched Free Fire Weekly Lite ($0.35 paid / 90 diamonds). Strictly assigned Package #384 ($0.32 wholesale).");
-            packageId = 384;
-        }
-        else if (!isFreeFire && (diamondAmount == 500 || 
-                                 (Math.Abs(paidUsd - 8.25m) <= 0.60m && (productName?.Contains("twilight", StringComparison.OrdinalIgnoreCase) == true || sku?.Contains("twilight", StringComparison.OrdinalIgnoreCase) == true || diamondAmount == 500)) ||
-                                 productName?.Contains("twilight", StringComparison.OrdinalIgnoreCase) == true ||
-                                 sku?.Contains("twilight", StringComparison.OrdinalIgnoreCase) == true))
-        {
-            _logger.LogInformation("[Strict Price Rule] Matched MLBB Twilight Pass ($8.25 paid / 500 diamonds). Strictly assigned Package #370 ($8.14 wholesale).");
-            packageId = 370;
-        }
-        else if (!isFreeFire && (diamondAmount == 210 || diamondAmount == 220 || 
-                                 (Math.Abs(paidUsd - 1.55m) <= 0.35m && (productName?.Contains("weekly", StringComparison.OrdinalIgnoreCase) == true || productName?.Contains("wdp", StringComparison.OrdinalIgnoreCase) == true || diamondAmount <= 220)) ||
-                                 ((productName?.Contains("weekly", StringComparison.OrdinalIgnoreCase) == true || productName?.Contains("wdp", StringComparison.OrdinalIgnoreCase) == true || sku?.Contains("weekly", StringComparison.OrdinalIgnoreCase) == true || sku?.Contains("wdp", StringComparison.OrdinalIgnoreCase) == true) &&
-                                  !System.Text.RegularExpressions.Regex.IsMatch($"{productName} {sku}", @"(\bx[2-6]\b|\bx\s*[2-6]\b|\b[2-6]x\b|\b[2-6]\s*(weekly|wdp|pass))", System.Text.RegularExpressions.RegexOptions.IgnoreCase))))
-        {
-            _logger.LogInformation("[Strict Price Rule] Matched MLBB Weekly Diamond Pass ($1.55 paid / 210 diamonds). Strictly assigned Package #371 ($1.54 wholesale).");
-            packageId = 371;
-        }
-        else if (int.TryParse(sku, out var parsedSku) && parsedSku > 100)
-        {
-            packageId = parsedSku;
-        }
-        else if (isFreeFire && productId.HasValue && (validFreeFirePackages.Contains(productId.Value) || productId.Value >= 100))
+        // 1. Direct Package ID from Order / Catalog (Prioritize exact selection):
+        if (isFreeFire && productId.HasValue && (validFreeFirePackages.Contains(productId.Value) || productId.Value >= 100))
         {
             if ((productId.Value == 5021 || productId.Value == 5022 || productId.Value == 5023) && (diamondAmount == 2600 || paidUsd < 14.50m || Math.Abs(paidUsd - 8.25m) <= 0.60m))
             {
+                _logger.LogWarning("[Price Guard] Downgrading Free Fire Monthly multiplier package {OriginalId} to 4852 (1x Monthly $7.76) for Order #{OrderId}: Customer paid ${Paid:F2}",
+                    productId.Value, orderId, paidUsd);
                 packageId = 4852;
             }
             else if ((productId.Value == 5024 || productId.Value == 5025 || productId.Value == 5026) && (diamondAmount == 445 || diamondAmount == 450 || paidUsd < 2.90m || Math.Abs(paidUsd - 1.68m) <= 0.35m))
             {
+                _logger.LogWarning("[Price Guard] Downgrading Free Fire Weekly multiplier package {OriginalId} to 383 (1x Weekly $1.57) for Order #{OrderId}: Customer paid ${Paid:F2}",
+                    productId.Value, orderId, paidUsd);
                 packageId = 383;
             }
             else if ((productId.Value == 5028 || productId.Value == 5029) && (diamondAmount == 90 || paidUsd < 0.55m || Math.Abs(paidUsd - 0.35m) <= 0.15m))
             {
+                _logger.LogWarning("[Price Guard] Downgrading Free Fire Weekly Lite multiplier package {OriginalId} to 384 (1x Weekly Lite $0.32) for Order #{OrderId}: Customer paid ${Paid:F2}",
+                    productId.Value, orderId, paidUsd);
                 packageId = 384;
             }
             else
@@ -645,12 +608,51 @@ public class RealTopUpProviderClient : ITopUpProviderClient
         {
             if ((productId.Value == 4967 || productId.Value == 4968 || productId.Value == 4969 || productId.Value == 4970) && (diamondAmount == 210 || paidUsd < 2.70m || Math.Abs(paidUsd - 1.55m) <= 0.35m))
             {
+                _logger.LogWarning("[Price Guard] Downgrading MLBB Weekly multiplier package {OriginalId} to 371 (1x WDP $1.54) for Order #{OrderId}: Customer paid ${Paid:F2}",
+                    productId.Value, orderId, paidUsd);
                 packageId = 371;
             }
             else
             {
                 packageId = productId.Value;
             }
+        }
+        else if (int.TryParse(sku, out var parsedSku) && parsedSku > 100)
+        {
+            packageId = parsedSku;
+        }
+        // 2. Fallback Pass Heuristics (Only if productId was NOT explicitly provided):
+        else if (isFreeFire && (diamondAmount == 2600 || 
+                               (productName != null && productName.Contains("monthly", StringComparison.OrdinalIgnoreCase) && !productName.Contains("x2", StringComparison.OrdinalIgnoreCase) && !productName.Contains("2x", StringComparison.OrdinalIgnoreCase) && !productName.Contains("x3", StringComparison.OrdinalIgnoreCase) && !productName.Contains("3x", StringComparison.OrdinalIgnoreCase) && !productName.Contains("x4", StringComparison.OrdinalIgnoreCase) && !productName.Contains("4x", StringComparison.OrdinalIgnoreCase))))
+        {
+            _logger.LogInformation("[Strict Price Rule] Matched Free Fire Monthly ($8.25 paid / 2600 diamonds). Strictly assigned Package #4852 ($7.76 wholesale).");
+            packageId = 4852;
+        }
+        else if (isFreeFire && (diamondAmount == 445 || diamondAmount == 450 || 
+                                (productName != null && productName.Contains("weekly", StringComparison.OrdinalIgnoreCase) && !productName.Contains("lit", StringComparison.OrdinalIgnoreCase) && !productName.Contains("x2", StringComparison.OrdinalIgnoreCase) && !productName.Contains("2x", StringComparison.OrdinalIgnoreCase) && !productName.Contains("x3", StringComparison.OrdinalIgnoreCase) && !productName.Contains("3x", StringComparison.OrdinalIgnoreCase) && !productName.Contains("x4", StringComparison.OrdinalIgnoreCase) && !productName.Contains("4x", StringComparison.OrdinalIgnoreCase))))
+        {
+            _logger.LogInformation("[Strict Price Rule] Matched Free Fire Weekly ($1.68 paid / 445 diamonds). Strictly assigned Package #383 ($1.57 wholesale).");
+            packageId = 383;
+        }
+        else if (isFreeFire && (diamondAmount == 90 || 
+                                (productName != null && (productName.Contains("weeklylite", StringComparison.OrdinalIgnoreCase) || productName.Contains("weekly lite", StringComparison.OrdinalIgnoreCase) || productName.Contains("weekly lit", StringComparison.OrdinalIgnoreCase)) && !productName.Contains("x2", StringComparison.OrdinalIgnoreCase) && !productName.Contains("2x", StringComparison.OrdinalIgnoreCase) && !productName.Contains("x3", StringComparison.OrdinalIgnoreCase) && !productName.Contains("3x", StringComparison.OrdinalIgnoreCase))))
+        {
+            _logger.LogInformation("[Strict Price Rule] Matched Free Fire Weekly Lite ($0.35 paid / 90 diamonds). Strictly assigned Package #384 ($0.32 wholesale).");
+            packageId = 384;
+        }
+        else if (!isFreeFire && (diamondAmount == 500 || 
+                                 productName?.Contains("twilight", StringComparison.OrdinalIgnoreCase) == true ||
+                                 sku?.Contains("twilight", StringComparison.OrdinalIgnoreCase) == true))
+        {
+            _logger.LogInformation("[Strict Price Rule] Matched MLBB Twilight Pass ($8.25 paid / 500 diamonds). Strictly assigned Package #370 ($8.14 wholesale).");
+            packageId = 370;
+        }
+        else if (!isFreeFire && (diamondAmount == 210 || diamondAmount == 220 || 
+                                 ((productName?.Contains("weekly", StringComparison.OrdinalIgnoreCase) == true || productName?.Contains("wdp", StringComparison.OrdinalIgnoreCase) == true || sku?.Contains("weekly", StringComparison.OrdinalIgnoreCase) == true || sku?.Contains("wdp", StringComparison.OrdinalIgnoreCase) == true) &&
+                                  !System.Text.RegularExpressions.Regex.IsMatch($"{productName} {sku}", @"(\bx[2-6]\b|\bx\s*[2-6]\b|\b[2-6]x\b|\b[2-6]\s*(weekly|wdp|pass))", System.Text.RegularExpressions.RegexOptions.IgnoreCase))))
+        {
+            _logger.LogInformation("[Strict Price Rule] Matched MLBB Weekly Diamond Pass ($1.55 paid / 210 diamonds). Strictly assigned Package #371 ($1.54 wholesale).");
+            packageId = 371;
         }
         else if (isFreeFire)
         {
@@ -742,7 +744,7 @@ public class RealTopUpProviderClient : ITopUpProviderClient
                     else if (passContext.Contains("7")) packageId = 5302;
                     else packageId = 5301;
                 }
-                else if (pNameLower.Contains("weeklylite") || pNameLower.Contains("weekly lite") || pNameLower.Contains("weekly lit") || pNameLower.Contains("lite") || pNameLower.Contains("lit") || diamondAmount == 90 || diamondAmount == 180 || diamondAmount == 270)
+                else if (pNameLower.Contains("weeklylite") || pNameLower.Contains("weekly lite") || pNameLower.Contains("weekly lit") || pNameLower.Contains("lite pass") || diamondAmount == 90 || diamondAmount == 180 || diamondAmount == 270)
                 {
                     if ((hasX3 || (diamondAmount >= 260 && diamondAmount <= 280)) && (paidUsd <= 0 || paidUsd >= 0.85m)) packageId = 5029; // Weekly Lite x3 ($0.94)
                     else if ((hasX2 || (diamondAmount >= 170 && diamondAmount <= 190)) && (paidUsd <= 0 || paidUsd >= 0.55m)) packageId = 5028; // Weekly Lite x2 ($0.63)
