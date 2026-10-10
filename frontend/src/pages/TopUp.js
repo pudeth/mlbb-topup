@@ -867,16 +867,18 @@ const TopUp = () => {
           if (!/^\d{7,12}$/.test(pId)) {
             setVerifiedAccount({
               valid: false,
-              error: language === 'km' ? 'រកមិនឃើញគណនី Free Fire ទេ។ UID ត្រូវតែជាលេខ 7-12 ខ្ទង់។' : 'Free Fire account not found. UID must be 7-12 digits.',
+              notFound: true,
+              error: language === 'km' ? 'រកមិនឃើញគណនី Free Fire ទេ។ UID ត្រូវតែជាលេខ 7-12 ខ្ទង់ (Account Not Found)' : 'Free Fire account not found. UID must be 7-12 digits.',
               id: pId,
               server: sId || 'Global'
             });
+            setAccountChecking(false);
             return;
           }
 
           let profileData = KNOWN_PLAYER_PROFILES[pId] || null;
 
-          if (profileData) {
+          if (profileData && profileData.nickname) {
             realName = profileData.nickname;
             accountConfirmed = true;
           } else if (KNOWN_REAL_NAMES[pId]) {
@@ -892,14 +894,36 @@ const TopUp = () => {
             } catch (e) {}
           }
 
+          // 1. Direct Live Real Free Fire Verification via isan API (super-fast ~200ms)
           if (!accountConfirmed) {
             try {
-              const ffProxyRes = await topupAPI.getFreefireNickname(pId);
-              if (ffProxyRes?.data?.found === true) {
+              const controller = new AbortController();
+              const timeoutId = setTimeout(() => controller.abort(), 4500);
+              const ffRes = await fetch(`https://api.isan.eu.org/nickname/ff?id=${pId}`, { signal: controller.signal })
+                .then(r => r.json())
+                .catch(() => null);
+              clearTimeout(timeoutId);
+
+              if (ffRes?.success === true && ffRes?.name && ffRes.name.trim() !== '') {
+                realName = ffRes.name.trim();
                 accountConfirmed = true;
-                if (ffProxyRes.data.nickname) realName = ffProxyRes.data.nickname;
+              } else if (ffRes && (!ffRes.name || ffRes.name.trim() === '' || ffRes.success === false)) {
+                // Upstream database explicitly responded with no player name for this UID -> Not Found!
+                accountConfirmed = false;
+                realName = null;
+              }
+            } catch (e) {}
+          }
+
+          // 2. Secondary Backend Proxy Check if direct check was network-blocked
+          if (!accountConfirmed && realName === null) {
+            try {
+              const ffProxyRes = await topupAPI.getFreefireNickname(pId);
+              if (ffProxyRes?.data?.found === true && ffProxyRes.data.nickname && ffProxyRes.data.nickname.trim() !== '') {
+                realName = ffProxyRes.data.nickname.trim();
+                accountConfirmed = true;
                 profileData = {
-                  nickname: ffProxyRes.data.nickname,
+                  nickname: realName,
                   region: ffProxyRes.data.region || 'Global',
                   level: ffProxyRes.data.level,
                   likes: ffProxyRes.data.likes,
@@ -907,33 +931,18 @@ const TopUp = () => {
                   rank: ffProxyRes.data.rank,
                   rankPoints: ffProxyRes.data.rankPoints,
                 };
-              } else if (ffProxyRes?.data?.found === false && ffProxyRes?.data?.message === 'Player not found') {
-                setVerifiedAccount({
-                  valid: false,
-                  error: language === 'km' ? 'រកមិនឃើញគណនី Free Fire ទេ។ សូមពិនិត្យ UID ឡើងវិញ។' : 'Free Fire account not found. Please verify your UID.',
-                  id: pId,
-                  server: sId || 'Global'
-                });
-                setAccountChecking(false);
-                return;
-              } else {
-                const ffRes = await fetch(`https://api.isan.eu.org/nickname/ff?id=${pId}`).then(r => r.json()).catch(() => null);
-                if (ffRes?.success === true && ffRes?.id && String(ffRes.id) === String(pId)) {
-                  accountConfirmed = true;
-                }
+              } else if (ffProxyRes?.data?.found === false) {
+                accountConfirmed = false;
+                realName = null;
               }
-            } catch (e) {
-              try {
-                const ffRes = await fetch(`https://api.isan.eu.org/nickname/ff?id=${pId}`).then(r => r.json());
-                if (ffRes?.success === true && ffRes?.id && String(ffRes.id) === String(pId)) {
-                  accountConfirmed = true;
-                }
-              } catch (e2) {}
-            }
+            } catch (e) {}
           }
 
-          if (accountConfirmed) {
-            const finalName = realName || profileData?.nickname || resolveRealPlayerName(pId, realName);
+          // Only verify if an authentic in-game name was verified (never use generic fallback strings)
+          if (accountConfirmed && realName && realName.trim() &&
+              !realName.startsWith('Free Fire Player') &&
+              !realName.startsWith('FF Player #') &&
+              !realName.includes('Player #')) {
             const detectedRegion = profileData?.region || sId || 'Global';
             const regInfo = resolveRegionInfo(detectedRegion);
 
@@ -942,30 +951,34 @@ const TopUp = () => {
             lastVerifiedKeyRef.current = `${selectedGame?.id || 'ff'}_${pId}_${detectedRegion}`;
             setVerifiedAccount({
               valid: true,
-              name: finalName || (language === 'km' ? `អ្នកលេង Free Fire (${pId})` : `Free Fire Player (${pId})`),
+              name: realName,
               country: regInfo.name,
               region: detectedRegion,
               server: detectedRegion,
               id: pId,
               game: 'freefire',
-              level: profileData?.level || 70,
-              likes: profileData?.likes || 0,
+              level: profileData?.level || null,
+              likes: profileData?.likes || null,
               avatarUrl: profileData?.avatarUrl || null,
-              rank: profileData?.rank || 'Bronze I',
+              rank: profileData?.rank || null,
               rankPoints: profileData?.rankPoints || null,
             });
             setError('');
             playSuccessSound();
           } else {
+            // Real negative verification -> "Account Not Found"
             lastVerifiedKeyRef.current = '';
             setVerifiedAccount({
               valid: false,
-              error: language === 'km' ? 'រកមិនឃើញគណនី Free Fire ទេ។ សូមពិនិត្យលេខ UID ឡើងវិញ។' : 'Free Fire account not found. Please verify your UID.',
+              notFound: true,
+              error: language === 'km' 
+                ? 'រកមិនឃើញគណនី Free Fire ទេ។ សូមពិនិត្យលេខ Player ID ឡើងវិញ (Account Not Found)' 
+                : 'Account Not Found. Please double-check your Free Fire Player ID.',
               id: pId,
               server: sId || 'Global'
             });
             setPlayerCardAlert(true);
-            setTimeout(() => setPlayerCardAlert(false), 2500);
+            setTimeout(() => setPlayerCardAlert(false), 3000);
           }
         } else {
           // Other games (Genshin, PUBG, etc.)
@@ -978,23 +991,57 @@ const TopUp = () => {
             }
 
             if (checkUrl) {
-              const gCheck = await fetch(checkUrl).then(r => r.json());
-              if (gCheck?.name) {
-                realName = gCheck.name;
+              const controller = new AbortController();
+              const timeoutId = setTimeout(() => controller.abort(), 4500);
+              const gCheck = await fetch(checkUrl, { signal: controller.signal }).then(r => r.json()).catch(() => null);
+              clearTimeout(timeoutId);
+              if (gCheck?.name && gCheck.name.trim()) {
+                realName = gCheck.name.trim();
               }
             }
           } catch (e) {}
 
-          lastVerifiedKeyRef.current = `${selectedGame?.id || 'game'}_${pId}_${sId}`;
-          setVerifiedAccount({
-            valid: true,
-            name: realName || '',
-            country: 'Global',
-            id: pId,
-            server: sId
-          });
-          setError('');
-          playSuccessSound();
+          const isVoucherOrNoLookupGame = selectedGame?.id?.includes('steam') ||
+            selectedGame?.id?.includes('telegram') ||
+            selectedGame?.id?.includes('apple') ||
+            selectedGame?.id?.includes('google');
+
+          if (realName && realName.trim() && !realName.includes('Player #')) {
+            lastVerifiedKeyRef.current = `${selectedGame?.id || 'game'}_${pId}_${sId}`;
+            setVerifiedAccount({
+              valid: true,
+              name: realName,
+              country: 'Global',
+              id: pId,
+              server: sId
+            });
+            setError('');
+            playSuccessSound();
+          } else if (isVoucherOrNoLookupGame) {
+            lastVerifiedKeyRef.current = `${selectedGame?.id || 'game'}_${pId}_${sId}`;
+            setVerifiedAccount({
+              valid: true,
+              name: pId,
+              country: 'Global',
+              id: pId,
+              server: sId
+            });
+            setError('');
+          } else {
+            // Real negative verification -> "Account Not Found"
+            lastVerifiedKeyRef.current = '';
+            setVerifiedAccount({
+              valid: false,
+              notFound: true,
+              error: language === 'km' 
+                ? 'រកមិនឃើញគណនីអ្នកលេងទេ (Account Not Found)។ សូមពិនិត្យមើល Player ID ឡើងវិញ' 
+                : 'Account Not Found. Please check your Player ID.',
+              id: pId,
+              server: sId
+            });
+            setPlayerCardAlert(true);
+            setTimeout(() => setPlayerCardAlert(false), 3000);
+          }
         }
       }
     } catch (err) {
@@ -2802,7 +2849,11 @@ const TopUp = () => {
               onClick={handleVerifyAccount}
               disabled={accountChecking || !formData.playerID.trim() || (isMlbb && !formData.serverID.trim())}
               className={`w-full h-11 sm:h-12 rounded-xl font-black text-sm uppercase tracking-wider flex items-center justify-center gap-2 transition-all cursor-pointer shadow-lg active:scale-[0.985] disabled:cursor-not-allowed ${
-                formData.playerID.trim()
+                accountChecking
+                  ? 'bg-gradient-to-r from-[#ec4899] via-[#f43f5e] to-[#ec4899] text-white opacity-90'
+                  : verifiedAccount && !verifiedAccount.valid
+                  ? 'bg-gradient-to-r from-rose-600 via-rose-700 to-red-600 hover:opacity-95 text-white shadow-rose-500/25 border border-rose-400/50'
+                  : formData.playerID.trim()
                   ? 'bg-gradient-to-r from-[#ec4899] via-[#f43f5e] to-[#ec4899] hover:opacity-95 text-white shadow-pink-500/25'
                   : 'bg-slate-800/80 border border-slate-700 text-slate-400 opacity-60'
               }`}
@@ -2811,6 +2862,14 @@ const TopUp = () => {
                 <>
                   <span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
                   <span>{language === 'km' ? 'កំពុងពិនិត្យឈ្មោះ...' : 'Checking Player Name...'}</span>
+                </>
+              ) : verifiedAccount && !verifiedAccount.valid ? (
+                <>
+                  <span className="text-base">⚠️</span>
+                  <span>{language === 'km' ? 'រកមិនឃើញគណនី (Account Not Found)' : 'Account Not Found'}</span>
+                  <span className="text-[11px] opacity-80 font-normal">
+                    ({language === 'km' ? 'ចុចដើម្បីពិនិត្យម្តងទៀត' : 'Click to Re-check'})
+                  </span>
                 </>
               ) : (
                 <>

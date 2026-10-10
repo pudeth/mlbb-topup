@@ -90,6 +90,37 @@ public class FreefireNicknameService
         if (_cache.TryGetValue(uid, out var cached) && DateTimeOffset.UtcNow - cached.FetchedAt < CacheTtl)
             return new NicknameResult(true, cached.Nickname, cached.Region, cached.Level, cached.Likes, cached.AvatarUrl, cached.Rank, cached.RankPoints, null);
 
+        // Step 0: Real-time fast upstream lookup (answers in ~200ms)
+        try
+        {
+            using var fastCts = CancellationTokenSource.CreateLinkedTokenSource(ct);
+            fastCts.CancelAfter(TimeSpan.FromSeconds(5));
+            var fastResp = await _http.GetAsync($"https://api.isan.eu.org/nickname/ff?id={Uri.EscapeDataString(uid)}", fastCts.Token);
+            if (fastResp.IsSuccessStatusCode)
+            {
+                var fastJson = await fastResp.Content.ReadAsStringAsync(fastCts.Token);
+                using var fastDoc = JsonDocument.Parse(fastJson);
+                var root = fastDoc.RootElement;
+                if (root.TryGetProperty("success", out var s) && s.GetBoolean() &&
+                    root.TryGetProperty("name", out var n) && !string.IsNullOrWhiteSpace(n.GetString()))
+                {
+                    var realName = n.GetString()!.Trim();
+                    _cache[uid] = new CachedProfile(realName, "Global", 70, 0, null, "Heroic", null, DateTimeOffset.UtcNow);
+                    return new NicknameResult(true, realName, "Global", 70, 0, null, "Heroic", null, null);
+                }
+                else if (root.TryGetProperty("success", out var s2) && s2.GetBoolean() &&
+                         (!root.TryGetProperty("name", out var n2) || string.IsNullOrWhiteSpace(n2.GetString())))
+                {
+                    // Upstream explicitly verified that UID does not have a player nickname -> Not found
+                    return new NicknameResult(false, Message: "Player not found");
+                }
+            }
+        }
+        catch (Exception exFast)
+        {
+            _logger.LogDebug("Fast FF lookup notice: {Message}", exFast.Message);
+        }
+
         try
         {
             // Step 1: Bootstrap — get a short-lived token
