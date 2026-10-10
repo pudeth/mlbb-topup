@@ -407,12 +407,29 @@ public class RealTopUpProviderClient : ITopUpProviderClient
         }
         else if (isFreeFire && productId.HasValue && validFreeFirePackages.Contains(productId.Value))
         {
-            packageId = productId.Value;
+            if ((productId.Value == 5021 || productId.Value == 5022 || productId.Value == 5023) && (diamondAmount == 2600 || (orderAmount.HasValue && orderAmount.Value < 12.00m)))
+            {
+                packageId = 4852;
+            }
+            else if ((productId.Value == 5024 || productId.Value == 5025 || productId.Value == 5026) && (diamondAmount == 445 || diamondAmount == 450 || (orderAmount.HasValue && orderAmount.Value < 2.50m)))
+            {
+                packageId = 383;
+            }
+            else
+            {
+                packageId = productId.Value;
+            }
         }
         else if (isFreeFire)
         {
             // Free Fire Official Packages (khmer-topup.com slug: freefire-sgmy)
-            var passContext = $"{sku} {productName}".ToLower();
+            var pNameLower = (productName ?? string.Empty).ToLowerInvariant().Trim();
+            var skuLower = (sku ?? string.Empty).ToLowerInvariant().Trim();
+            var passContext = $"{skuLower} {pNameLower}".Trim();
+
+            bool hasX4 = System.Text.RegularExpressions.Regex.IsMatch(pNameLower, @"(\bx4\b|\bx\s*4\b|\b4x\b|\b4\s*(monthly|weekly|lit))");
+            bool hasX3 = System.Text.RegularExpressions.Regex.IsMatch(pNameLower, @"(\bx3\b|\bx\s*3\b|\b3x\b|\b3\s*(monthly|weekly|lit))");
+            bool hasX2 = System.Text.RegularExpressions.Regex.IsMatch(pNameLower, @"(\bx2\b|\bx\s*2\b|\b2x\b|\b2\s*(monthly|weekly|lit))");
 
             // Check for Level Up Packages (e.g. Level 6 pass is $0.29 for 200 diamonds)
             bool isLevelPass = passContext.Contains("level") ||
@@ -447,24 +464,24 @@ public class RealTopUpProviderClient : ITopUpProviderClient
                 else if (passContext.Contains("7")) packageId = 5302;
                 else packageId = 5301;
             }
-            else if (passContext.Contains("weeklylite") || passContext.Contains("weekly lite") || passContext.Contains("weekly lit") || passContext.Contains("lite"))
+            else if (pNameLower.Contains("weeklylite") || pNameLower.Contains("weekly lite") || pNameLower.Contains("weekly lit") || pNameLower.Contains("lite") || pNameLower.Contains("lit") || diamondAmount == 90 || diamondAmount == 180 || diamondAmount == 270)
             {
-                if (passContext.Contains("3") || passContext.Contains("x3")) packageId = 5029; // Weekly Lite x3 ($0.94)
-                else if (passContext.Contains("2") || passContext.Contains("x2")) packageId = 5028; // Weekly Lite x2 ($0.63)
+                if (hasX3 || (diamondAmount >= 260 && diamondAmount <= 280)) packageId = 5029; // Weekly Lite x3 ($0.94)
+                else if (hasX2 || (diamondAmount >= 170 && diamondAmount <= 190)) packageId = 5028; // Weekly Lite x2 ($0.63)
                 else packageId = 384; // Weekly Lite ($0.32)
             }
-            else if (passContext.Contains("monthly") || diamondAmount == 2600)
+            else if (pNameLower.Contains("monthly") || diamondAmount == 2600 || diamondAmount == 5000 || diamondAmount == 7800 || diamondAmount == 10400)
             {
-                if (passContext.Contains("4") || passContext.Contains("x4")) packageId = 5023; // Monthly x4 ($30.06)
-                else if (passContext.Contains("3") || passContext.Contains("x3")) packageId = 5022; // Monthly x3 ($22.55)
-                else if (passContext.Contains("2") || passContext.Contains("x2")) packageId = 5021; // Monthly x2 ($15.03)
+                if (hasX4 || diamondAmount >= 10000) packageId = 5023; // Monthly x4 ($30.06)
+                else if (hasX3 || diamondAmount >= 7500) packageId = 5022; // Monthly x3 ($22.55)
+                else if (hasX2 || (diamondAmount >= 5000 && diamondAmount < 7500)) packageId = 5021; // Monthly x2 ($15.03)
                 else packageId = 4852; // Monthly Membership ($7.76)
             }
-            else if (passContext.Contains("weekly") || diamondAmount == 450)
+            else if (pNameLower.Contains("weekly") || diamondAmount == 445 || diamondAmount == 450 || diamondAmount == 890 || diamondAmount == 1335 || diamondAmount == 1780)
             {
-                if (passContext.Contains("4") || passContext.Contains("x4")) packageId = 5026; // Weekly x4 ($6.24)
-                else if (passContext.Contains("3") || passContext.Contains("x3")) packageId = 5025; // Weekly x3 ($4.67)
-                else if (passContext.Contains("2") || passContext.Contains("x2")) packageId = 5024; // Weekly x2 ($3.12)
+                if (hasX4 || diamondAmount >= 1700) packageId = 5026; // Weekly x4 ($6.24)
+                else if (hasX3 || diamondAmount >= 1300) packageId = 5025; // Weekly x3 ($4.67)
+                else if (hasX2 || (diamondAmount >= 800 && diamondAmount < 1300)) packageId = 5024; // Weekly x2 ($3.12)
                 else packageId = 383; // Weekly Membership ($1.57)
             }
             else
@@ -540,6 +557,42 @@ public class RealTopUpProviderClient : ITopUpProviderClient
                 <= 6000 => 337, // 5532 Diamonds Main ($73.49)
                 _ => 350        // 9288 Diamonds Main ($122.05)
             };
+        }
+
+        // Financial Safety Guard: Ensure upstream provider package cost never exceeds customer payment!
+        if (orderAmount.HasValue && orderAmount.Value > 0)
+        {
+            var customerPaid = orderAmount.Value;
+
+            // Free Fire Monthly Protection:
+            // 5021 ($15.03), 5022 ($22.55), 5023 ($30.06) must never be sent if customer paid for 1x Monthly ($8.25)
+            if ((packageId == 5021 || packageId == 5022 || packageId == 5023) && customerPaid < 12.00m)
+            {
+                _logger.LogWarning("[Price Safeguard] Overriding KhmerTopUp Package {OriginalId} to 4852 (Monthly $7.76) for Order #{OrderId}: Customer paid ${Paid:F2}, which is below multiplier threshold.",
+                    packageId, orderId, customerPaid);
+                packageId = 4852;
+            }
+            // Free Fire Weekly Protection:
+            else if ((packageId == 5024 || packageId == 5025 || packageId == 5026) && customerPaid < 2.50m)
+            {
+                _logger.LogWarning("[Price Safeguard] Overriding KhmerTopUp Package {OriginalId} to 383 (Weekly $1.57) for Order #{OrderId}: Customer paid ${Paid:F2}, which is below multiplier threshold.",
+                    packageId, orderId, customerPaid);
+                packageId = 383;
+            }
+            // Free Fire Weekly Lite Protection:
+            else if ((packageId == 5028 || packageId == 5029) && customerPaid < 0.50m)
+            {
+                _logger.LogWarning("[Price Safeguard] Overriding KhmerTopUp Package {OriginalId} to 384 (Weekly Lite $0.32) for Order #{OrderId}: Customer paid ${Paid:F2}, which is below multiplier threshold.",
+                    packageId, orderId, customerPaid);
+                packageId = 384;
+            }
+            // MLBB Weekly Pass Multiplier Protection:
+            else if ((packageId == 4967 || packageId == 4968 || packageId == 4969 || packageId == 4970) && customerPaid < 2.50m)
+            {
+                _logger.LogWarning("[Price Safeguard] Overriding KhmerTopUp Package {OriginalId} to 371 (1x WDP $1.54) for Order #{OrderId}: Customer paid ${Paid:F2}, which is below multiplier threshold.",
+                    packageId, orderId, customerPaid);
+                packageId = 371;
+            }
         }
 
         object payload;

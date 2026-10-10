@@ -19,17 +19,39 @@ public class OrderService : IOrderService
     {
         Product? product = null;
 
-        // 1. Check if custom diamond amount is requested
-        if (request.CustomDiamondAmount.HasValue && request.CustomDiamondAmount.Value > 0)
+        // 1. If explicit ProductId provided, look up by ProductId first
+        if (request.ProductId.HasValue && request.ProductId.Value > 0)
+        {
+            product = await _context.Products.FirstOrDefaultAsync(p => p.ProductId == request.ProductId.Value && p.Status == "Active");
+        }
+
+        // 2. Check if custom diamond amount is requested or match by DiamondAmount + ProductName
+        if (product == null && request.CustomDiamondAmount.HasValue && request.CustomDiamondAmount.Value > 0)
         {
             int customDiamonds = request.CustomDiamondAmount.Value;
-            product = await _context.Products.FirstOrDefaultAsync(p => p.DiamondAmount == customDiamonds && p.Status == "Active");
+
+            // Prioritize match by both DiamondAmount and ProductName/Description (to avoid cross-game collisions)
+            if (!string.IsNullOrWhiteSpace(request.ProductName))
+            {
+                var lowerReqName = request.ProductName.Trim().ToLower();
+                product = await _context.Products.FirstOrDefaultAsync(p => 
+                    p.Status == "Active" && 
+                    p.DiamondAmount == customDiamonds && 
+                    p.Description.ToLower().Contains(lowerReqName));
+            }
 
             if (product == null)
             {
-                // Calculate classic fair price per diamond based on official MLBB rates (1050=$15.50, 2195=$29.99, 9288=$125.00)
+                product = await _context.Products.FirstOrDefaultAsync(p => p.DiamondAmount == customDiamonds && p.Status == "Active");
+            }
+
+            if (product == null)
+            {
+                // Calculate fair price per diamond based on request price or official rates
                 decimal calculatedPrice;
-                if (customDiamonds == 9288) calculatedPrice = 125.00m;
+                if (request.Price.HasValue && request.Price.Value > 0) calculatedPrice = request.Price.Value;
+                else if (request.Amount.HasValue && request.Amount.Value > 0) calculatedPrice = request.Amount.Value;
+                else if (customDiamonds == 9288) calculatedPrice = 125.00m;
                 else if (customDiamonds == 5532) calculatedPrice = 75.00m;
                 else if (customDiamonds == 3688) calculatedPrice = 49.99m;
                 else if (customDiamonds == 2195) calculatedPrice = 29.99m;
@@ -62,6 +84,7 @@ public class OrderService : IOrderService
                 {
                     DiamondAmount = customDiamonds,
                     Price = calculatedPrice,
+                    CostPrice = Math.Round(calculatedPrice * 0.94m, 2),
                     Description = !string.IsNullOrWhiteSpace(request.ProductName) ? request.ProductName : $"{customDiamonds} Diamonds",
                     Status = "Active",
                     CreatedAt = DateTime.UtcNow
