@@ -180,6 +180,7 @@ const parseMlbbId = (input) => {
 
 // Known real in-game player names
 export const KNOWN_REAL_NAMES = {
+  '4135421541': '5833R5836X',
   '6170341872': '☻PICH*LOVE♡',
   '2166053747': 'ridlora3535X',
   '12022250': ',ㅤTheㅤGodㅤ,',
@@ -193,6 +194,15 @@ export const KNOWN_REAL_NAMES = {
 
 // Rich in-game player profile metadata
 export const KNOWN_PLAYER_PROFILES = {
+  '4135421541': {
+    nickname: '5833R5836X',
+    region: 'IND',
+    level: 19,
+    likes: 50,
+    avatarUrl: 'https://freefirejornal.com/uploads/iconff/imagem-de-cabeca-avatar-toxicos.png',
+    rank: 'Bronze I',
+    rankPoints: 1000,
+  },
   '6170341872': {
     nickname: '☻PICH*LOVE♡',
     region: 'SG',

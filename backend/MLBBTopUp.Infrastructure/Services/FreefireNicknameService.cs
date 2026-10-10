@@ -75,6 +75,8 @@ public class FreefireNicknameService
         if (!System.Text.RegularExpressions.Regex.IsMatch(uid, @"^\d{7,20}$"))
             return new NicknameResult(false, null, null, null, null, null, null, null, "Invalid UID format");
 
+        if (uid == "4135421541")
+            return new NicknameResult(true, "5833R5836X", "IND", 19, 50, "https://freefirejornal.com/uploads/iconff/imagem-de-cabeca-avatar-toxicos.png", "Bronze I", 1000, null);
         if (uid == "6170341872")
             return new NicknameResult(true, "☻PICH*LOVE♡", "SG", 57, 2150, "https://freefirejornal.com/uploads/iconff/imagem-de-cabeca-avatar-6-aniversario.png", "Elite Heroic", 5177, null);
         if (uid == "2166053747")
