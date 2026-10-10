@@ -3502,6 +3502,39 @@ const TopUp = () => {
               </div>
             )}
 
+            <div className="grid grid-cols-2 gap-2 pt-2">
+              <Link
+                to="/order-history"
+                onClick={() => {
+                  closeAbaCheckoutPopup();
+                  setPaymentData(null);
+                  setOrderId(null);
+                  setPaymentPaid(false);
+                  setAwaitingBalance(false);
+                  setConfirmSent(false);
+                }}
+                className="py-3 px-3 rounded-xl bg-slate-800 hover:bg-slate-700 border border-slate-700 text-white font-bold text-xs uppercase tracking-wider flex items-center justify-center gap-1.5 transition-all shadow-md cursor-pointer"
+              >
+                <span>📜</span>
+                <span>{language === 'km' ? 'មើលប្រវត្តិ' : 'Order History'}</span>
+              </Link>
+              <button
+                type="button"
+                onClick={() => {
+                  closeAbaCheckoutPopup();
+                  setPaymentData(null);
+                  setOrderId(null);
+                  setPaymentPaid(false);
+                  setAwaitingBalance(false);
+                  setConfirmSent(false);
+                }}
+                className="py-3 px-3 rounded-xl bg-slate-800 hover:bg-slate-700 border border-slate-700 text-slate-300 font-bold text-xs uppercase tracking-wider flex items-center justify-center gap-1 transition-all shadow-md cursor-pointer"
+              >
+                <span>✕</span>
+                <span>{language === 'km' ? 'បិទ' : 'Close'}</span>
+              </button>
+            </div>
+
             <p className="text-[10px] text-slate-500 leading-relaxed">
               After confirming, our admin will be alerted immediately and your 💎 diamonds will be delivered as soon as possible. Thank you for your patience!
             </p>

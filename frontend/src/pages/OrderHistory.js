@@ -552,7 +552,7 @@ const OrderHistory = () => {
         {/* ======================================================== */}
         {/* VIEW 1: FULL PORTAL INTERFACE - PLAYER ORDER HISTORY     */}
         {/* ======================================================== */}
-        {!playerAccount ? (
+        {!effectivePlayer ? (
           <div className="py-6 sm:py-10 max-w-2xl mx-auto w-full animate-fadeIn">
             {/* Main Access Form Portal */}
             <div className="relative rounded-3xl p-5 sm:p-8 bg-gradient-to-b from-[#0c152e] via-[#091024] to-[#060b18] border border-sky-500/35 shadow-[0_20px_50px_rgba(0,0,0,0.8),0_0_30px_rgba(14,165,233,0.15)] overflow-hidden">
@@ -786,11 +786,35 @@ const OrderHistory = () => {
                 <div className="mt-5 pt-4 border-t border-slate-800/80 text-center">
                   <span className="text-[10.5px] text-slate-400">
                     {language === 'km'
-                      ? 'គណនីត្រូវបានបង្កើតដោយស្វ័យប្រវត្តិជាមួយឈ្មោះ Player (Username) និង Server ID (Password)'
+                      ? 'គណនីត្រូវបានបង្កើតដោយស្វ័យប្រវត្តិតាមឈ្មោះ Player (Username) និង Server ID (Password)'
                       : 'Your account is automatically created with your Player Name (Username) and Server ID (Password).'}
                   </span>
                 </div>
               </div>
+
+              {/* If there are any device orders found locally before player login, show them immediately below the form! */}
+              {orders.length > 0 && (
+                <div className="mt-8 space-y-4">
+                  <div className="flex items-center justify-between px-1">
+                    <div className="flex items-center gap-2">
+                      <span className="text-base">📱</span>
+                      <h3 className="text-sm font-black text-slate-200">
+                        {language === 'km' ? 'ការបញ្ជាទិញថ្មីៗនៅលើឧបករណ៍នេះ' : 'Recent Purchases on this Device'}
+                      </h3>
+                      <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-cyan-950/80 text-cyan-300 border border-cyan-500/30">
+                        {orders.length}
+                      </span>
+                    </div>
+                    <span className="text-[11px] text-slate-400">
+                      {language === 'km' ? 'រកឃើញដោយស្វ័យប្រវត្តិ' : 'Auto-detected'}
+                    </span>
+                  </div>
+
+                  <div className="space-y-3">
+                    {orders.slice(0, 10).map((order) => renderOrderCard(order))}
+                  </div>
+                </div>
+              )}
           </div>
         ) : (
           /* ======================================================== */
@@ -802,15 +826,15 @@ const OrderHistory = () => {
             <div className="p-4 sm:p-5 rounded-3xl bg-gradient-to-r from-[#0d1733] via-[#0a1126] to-[#070b18] border border-sky-500/30 shadow-[0_10px_30px_rgba(0,0,0,0.6),0_0_20px_rgba(14,165,233,0.1)] flex flex-col sm:flex-row sm:items-center justify-between gap-4 animate-fadeIn">
               <div className="flex items-center gap-3.5 min-w-0">
                 <GamerAvatar
-                  avatarId={playerAccount?.avatar || user?.avatar}
-                  name={playerAccount?.realName || user?.name || playerAccount?.playerId}
+                  avatarId={effectivePlayer?.avatar || user?.avatar}
+                  name={effectivePlayer?.realName || user?.name || effectivePlayer?.playerId}
                   size="md"
                   showGlow={true}
                 />
                 <div className="min-w-0">
                   <div className="flex items-center gap-2">
                     <h2 className="text-base sm:text-lg font-black text-white truncate">
-                      {playerAccount?.realName || user?.name || 'Player'}
+                      {effectivePlayer?.realName || user?.name || 'Player'}
                     </h2>
                     <span className="px-2 py-0.5 rounded-full text-[9px] font-bold bg-emerald-500/20 text-emerald-400 border border-emerald-500/40 flex items-center gap-1">
                       <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
@@ -818,9 +842,9 @@ const OrderHistory = () => {
                     </span>
                   </div>
                   <div className="flex items-center gap-2 mt-0.5 text-xs font-mono text-slate-300">
-                    <span className="text-cyan-300 font-bold">ID: {playerAccount?.playerId}</span>
+                    <span className="text-cyan-300 font-bold">ID: {effectivePlayer?.playerId}</span>
                     <span className="text-slate-600">•</span>
-                    <span className="text-slate-400">Zone: {playerAccount?.serverId || 'Global'}</span>
+                    <span className="text-slate-400">Zone: {effectivePlayer?.serverId || 'Global'}</span>
                   </div>
                 </div>
               </div>
@@ -829,7 +853,7 @@ const OrderHistory = () => {
               <div className="flex items-center gap-2 flex-wrap">
                 <button
                   type="button"
-                  onClick={() => loadOrdersForPlayer(playerAccount.playerId, playerAccount.serverId)}
+                  onClick={() => loadOrdersForPlayer(effectivePlayer?.playerId, effectivePlayer?.serverId)}
                   disabled={loadingOrders}
                   className="px-3.5 py-2 rounded-xl bg-slate-900/90 hover:bg-slate-800 border border-slate-700/80 hover:border-sky-400/50 text-slate-200 hover:text-white text-xs font-bold flex items-center gap-1.5 transition-all cursor-pointer active:scale-95 shadow-sm disabled:opacity-50"
                   title="Reload and sync orders"
@@ -848,7 +872,10 @@ const OrderHistory = () => {
 
                 <button
                   type="button"
-                  onClick={() => logout()}
+                  onClick={() => {
+                    logout();
+                    setEffectivePlayer(null);
+                  }}
                   className="px-3 py-2 rounded-xl bg-rose-950/40 hover:bg-rose-900/60 border border-rose-500/30 text-rose-300 hover:text-rose-100 text-xs font-bold flex items-center gap-1 transition-all cursor-pointer"
                   title="Switch to another player ID"
                 >
@@ -857,6 +884,7 @@ const OrderHistory = () => {
                 </button>
               </div>
             </div>
+
 
             {/* Filter Tabs & Count */}
             <div className="flex items-center justify-between gap-2 flex-wrap">
@@ -916,7 +944,7 @@ const OrderHistory = () => {
                 <div className="mt-3">
                   <button
                     type="button"
-                    onClick={() => loadOrdersForPlayer(playerAccount.playerId, playerAccount.serverId)}
+                    onClick={() => loadOrdersForPlayer(effectivePlayer?.playerId, effectivePlayer?.serverId)}
                     className="px-4 py-2 rounded-xl bg-slate-900 border border-slate-700 text-white font-bold hover:bg-slate-800"
                   >
                     {language === 'km' ? 'ព្យាយាមម្តងទៀត' : 'Try Again'}
@@ -932,8 +960,8 @@ const OrderHistory = () => {
                 </h3>
                 <p className="text-xs text-slate-400 max-w-sm mx-auto mt-1 mb-5">
                   {language === 'km'
-                    ? `មិនទាន់មានប្រវត្តិទិញពេជ្រសម្រាប់ Player ID ${playerAccount.playerId} នៅឡើយទេ។ ចាប់ផ្តើមការបញ្ជាទិញដំបូងរបស់អ្នកឥឡូវនេះ!`
-                    : `No top-up history found for Player ID ${playerAccount.playerId}. Start your first order now!`}
+                    ? `មិនទាន់មានប្រវត្តិទិញពេជ្រសម្រាប់ Player ID ${effectivePlayer?.playerId || ''} នៅឡើយទេ។ ចាប់ផ្តើមការបញ្ជាទិញដំបូងរបស់អ្នកឥឡូវនេះ!`
+                    : `No top-up history found for Player ID ${effectivePlayer?.playerId || ''}. Start your first order now!`}
                 </p>
                 <Link
                   to="/topup"
@@ -946,104 +974,7 @@ const OrderHistory = () => {
             ) : (
               /* Active Orders Cards */
               <div className="space-y-3">
-                {filteredOrders.map((order) => {
-                  const isCompleted = order.topupStatus === 'Completed';
-                  const isProcessing = order.topupStatus === 'Processing' || order.topupStatus === 'AwaitingBalance';
-                  const isFailed = order.topupStatus === 'Failed' || order.paymentStatus === 'Failed';
-                  const isPass = (order.productName || '').toLowerCase().includes('pass');
-
-                  const statusConfig = isCompleted
-                    ? {
-                        label: language === 'km' ? 'ជោគជ័យ' : 'Completed',
-                        cls: 'bg-emerald-950/80 text-emerald-300 border-emerald-500/50 shadow-[0_0_10px_rgba(52,211,153,0.3)]',
-                        icon: '✓'
-                      }
-                    : isFailed
-                      ? {
-                          label: language === 'km' ? 'បរាជ័យ' : 'Failed',
-                          cls: 'bg-rose-950/80 text-rose-300 border-rose-500/50 shadow-[0_0_10px_rgba(244,63,94,0.3)]',
-                          icon: '✕'
-                        }
-                      : {
-                          label: isProcessing ? (language === 'km' ? 'កំពុងផ្ញើពេជ្រ' : 'Processing') : (language === 'km' ? 'រង់ចាំទូទាត់' : 'Pending'),
-                          cls: 'bg-amber-950/80 text-amber-300 border-amber-500/50 shadow-[0_0_10px_rgba(245,158,11,0.3)]',
-                          icon: '⚡'
-                        };
-
-                  return (
-                    <div
-                      key={order.orderId}
-                      className="group relative rounded-2xl p-3.5 sm:p-4 bg-gradient-to-r from-[#0d1428] via-[#091020] to-[#060a14] border border-slate-800/90 hover:border-sky-500/50 hover:shadow-[0_10px_25px_-5px_rgba(0,0,0,0.8),0_0_15px_rgba(56,189,248,0.15)] transition-all duration-200"
-                    >
-                      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-                        
-                        {/* Left: Artwork / Game & Order Title */}
-                        <div className="flex items-center gap-3 min-w-0">
-                          {/* 3D Package Gem / Pass Art */}
-                          <div className="relative w-12 h-12 sm:w-14 sm:h-14 rounded-xl bg-slate-950/80 border border-slate-800 p-1 flex items-center justify-center shrink-0">
-                            <span className="text-2xl">
-                              {isPass ? '🎟️' : '💎'}
-                            </span>
-                          </div>
-
-                          <div className="min-w-0">
-                            {/* Order ID & Status */}
-                            <div className="flex items-center gap-2 flex-wrap">
-                              <span
-                                onClick={() => handleCopyOrderId(order.orderId)}
-                                className="font-mono text-xs sm:text-sm font-black text-white hover:text-cyan-300 flex items-center gap-1 cursor-pointer transition-colors"
-                                title="Click to Copy Order ID"
-                              >
-                                <span>#{order.orderId}</span>
-                                <span className="text-[10px] text-slate-500">
-                                  {copiedId === order.orderId ? '✓' : '📋'}
-                                </span>
-                              </span>
-
-                              {/* Status Badge */}
-                              <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[9px] sm:text-[10px] font-black border uppercase tracking-wider ${statusConfig.cls}`}>
-                                <span>{statusConfig.icon}</span>
-                                <span>{statusConfig.label}</span>
-                              </span>
-                            </div>
-
-                            {/* Package Name & Diamond count */}
-                            <div className="text-xs sm:text-sm font-bold text-slate-200 mt-1 truncate">
-                              {order.productName || `${order.diamondAmount} Diamonds`}
-                            </div>
-
-                            {/* Date & Game */}
-                            <div className="text-[10px] sm:text-[11px] text-slate-400 mt-0.5 flex items-center gap-2 font-mono">
-                              <span>{order.createdAt ? formatDateTime(order.createdAt, { seconds: true }) : 'Recent'}</span>
-                              <span className="text-slate-600">•</span>
-                              <span className="text-sky-300 font-semibold">{order.gameName || 'Mobile Legends'}</span>
-                            </div>
-                          </div>
-                        </div>
-
-                        {/* Right: Amount & View Details Button */}
-                        <div className="flex items-center justify-between sm:justify-end gap-3 shrink-0 pt-2 sm:pt-0 border-t sm:border-t-0 border-slate-800/80">
-                          <div className="text-left sm:text-right">
-                            <div className="font-mono font-black text-sm sm:text-base text-[#00F5B8] drop-shadow-[0_0_8px_rgba(0,245,184,0.3)]">
-                              ${parseFloat(order.amount || 0).toFixed(2)}
-                            </div>
-                            <div className="text-[9px] font-mono text-slate-400">
-                              ~{Math.round((parseFloat(order.amount) || 0) * 4100).toLocaleString()} ៛
-                            </div>
-                          </div>
-
-                          <Link
-                            to={`/order-status/${order.orderId}`}
-                            className="px-3 py-1.5 rounded-xl bg-slate-900 hover:bg-slate-800 border border-slate-700 hover:border-cyan-400 text-xs font-bold text-cyan-300 hover:text-white flex items-center gap-1 transition-all shadow-sm"
-                          >
-                            <span>{language === 'km' ? 'មើលវិក្កយបត្រ' : 'Details'}</span>
-                            <span className="text-[10px]">→</span>
-                          </Link>
-                        </div>
-                      </div>
-                    </div>
-                  );
-                })}
+                {filteredOrders.map((order) => renderOrderCard(order))}
               </div>
             )}
 
