@@ -3,13 +3,24 @@ import { Link, useLocation } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { useLanguage } from '../context/LanguageContext';
 import { BrandLogo } from './BrandLogo';
-import GamerAvatar from './GamerAvatar';
+import { getGamerAvatarPreset } from './GamerAvatar';
 
 const DesktopSidebar = () => {
   const location = useLocation();
   const { language } = useLanguage();
   const { user, playerAccount, logout, isAuthenticated } = useAuth();
   const isUserLoggedIn = isAuthenticated();
+
+  const avatarId = playerAccount?.avatar || user?.avatar || 'crown';
+  const avatarPreset = getGamerAvatarPreset(avatarId);
+  const avatarSrc = avatarPreset?.image || (avatarId === 'crown' ? '/images/crowned_gamer_avatar.jpg' : null);
+
+  const rawName = playerAccount?.realName || user?.name || (playerAccount?.playerId ? `ID: ${playerAccount.playerId}` : user?.email?.split('@')[0] || 'ZA | PUKAFF');
+  const formattedName = (rawName || 'ZA | PUKAFF').replace(/⁞/g, '|');
+
+  const zoneText = playerAccount?.serverId 
+    ? `Zone ${playerAccount.serverId}` 
+    : (user?.role ? user.role.toUpperCase() : 'Zone SG');
 
   const isActive = (path) => {
     if (path === '/') return location.pathname === '/' && !location.hash;
@@ -183,48 +194,133 @@ const DesktopSidebar = () => {
             </div>
           </button>
         ) : (
-          <div className="rounded-xl p-2.5 bg-slate-900/90 border border-slate-800 shadow-md">
+          <div className="relative rounded-2xl p-3 bg-gradient-to-br from-[#0c1026] via-[#080d1f] to-[#050814] border border-[#202958] hover:border-[#2b3776] shadow-[0_10px_30px_rgba(0,0,0,0.8),0_0_24px_rgba(20,40,95,0.35)] overflow-hidden transition-all duration-300">
+            {/* Top-Right Cyber Accent Bar */}
+            <div className="absolute top-2.5 right-3 pointer-events-none select-none">
+              <svg width="48" height="13" viewBox="0 0 48 13" fill="none" className="drop-shadow-[0_0_8px_rgba(6,182,212,0.85)]">
+                <defs>
+                  <linearGradient id="cyberAccentGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+                    <stop offset="0%" stopColor="#818cf8" />
+                    <stop offset="55%" stopColor="#00f0ff" />
+                    <stop offset="100%" stopColor="#10e599" />
+                  </linearGradient>
+                </defs>
+                <path 
+                  d="M 2 2.5 L 37 2.5 L 45.5 11" 
+                  stroke="url(#cyberAccentGrad)" 
+                  strokeWidth="2.8" 
+                  strokeLinecap="round" 
+                  strokeLinejoin="round" 
+                />
+              </svg>
+            </div>
+
+            {/* Upper Profile Identity Section */}
             <Link
               to="/order-history"
-              className="flex items-center gap-2.5 mb-2 group/profile cursor-pointer"
+              className="flex items-center gap-2.5 mb-2.5 group/profile cursor-pointer select-none"
               title="View Player Orders & History"
             >
-              <GamerAvatar 
-                avatarId={playerAccount?.avatar || user?.avatar} 
-                name={playerAccount?.realName || user?.name || playerAccount?.playerId} 
-                size="sm" 
-                showGlow={true} 
-              />
-              <div className="flex flex-col min-w-0 flex-1 leading-tight">
-                <span className="text-[12px] font-bold text-white truncate group-hover/profile:text-sky-300 transition-colors">
-                  {playerAccount?.realName || user?.name || (playerAccount?.playerId ? `ID: ${playerAccount.playerId}` : user?.email?.split('@')[0] || 'Player')}
+              {/* Golden Octagonal Avatar Frame */}
+              <div className="relative w-[50px] h-[50px] xl:w-[54px] xl:h-[54px] shrink-0 filter drop-shadow-[0_0_12px_rgba(234,179,8,0.6)]">
+                {/* Outer Gold Bevel Border */}
+                <div 
+                  className="w-full h-full p-[2.5px] transition-transform duration-300 group-hover/profile:scale-105"
+                  style={{
+                    background: 'linear-gradient(135deg, #fef08a 0%, #eab308 30%, #ca8a04 60%, #854d0e 100%)',
+                    clipPath: 'polygon(29.29% 0%, 70.71% 0%, 100% 29.29%, 100% 70.71%, 70.71% 100%, 29.29% 100%, 0% 70.71%, 0% 29.29%)',
+                  }}
+                >
+                  {/* Dark Inset Gap */}
+                  <div 
+                    className="w-full h-full p-[1.5px] bg-[#0c0e18]"
+                    style={{
+                      clipPath: 'polygon(29.29% 0%, 70.71% 0%, 100% 29.29%, 100% 70.71%, 70.71% 100%, 29.29% 100%, 0% 70.71%, 0% 29.29%)',
+                    }}
+                  >
+                    {/* Inner Fine Gold Rim */}
+                    <div 
+                      className="w-full h-full p-[1.5px]"
+                      style={{
+                        background: 'linear-gradient(135deg, #fef08a 0%, #eab308 50%, #92400e 100%)',
+                        clipPath: 'polygon(29.29% 0%, 70.71% 0%, 100% 29.29%, 100% 70.71%, 70.71% 100%, 29.29% 100%, 0% 70.71%, 0% 29.29%)',
+                      }}
+                    >
+                      {/* Avatar Image Content */}
+                      <div 
+                        className="w-full h-full bg-[#080a14] flex items-center justify-center overflow-hidden relative"
+                        style={{
+                          clipPath: 'polygon(29.29% 0%, 70.71% 0%, 100% 29.29%, 100% 70.71%, 70.71% 100%, 29.29% 100%, 0% 70.71%, 0% 29.29%)',
+                        }}
+                      >
+                        {avatarSrc ? (
+                          <img 
+                            src={avatarSrc} 
+                            alt={formattedName} 
+                            className="w-full h-full object-cover select-none"
+                            onError={(e) => {
+                              e.target.style.display = 'none';
+                              if (e.target.nextSibling) e.target.nextSibling.style.display = 'flex';
+                            }}
+                          />
+                        ) : null}
+                        <span 
+                          style={{ display: avatarSrc ? 'none' : 'flex' }} 
+                          className="w-full h-full items-center justify-center text-xl select-none"
+                        >
+                          {avatarPreset?.icon || '👑'}
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Glowing Purple Accent Divider */}
+              <div className="w-[2.5px] h-7 bg-gradient-to-b from-indigo-400 via-indigo-500 to-purple-600 rounded-full shrink-0 shadow-[0_0_8px_rgba(99,102,241,0.65)]" />
+
+              {/* User Identity Info */}
+              <div className="flex flex-col min-w-0 flex-1 leading-tight justify-center">
+                <span className="text-[14px] xl:text-[15px] font-black text-white truncate font-sans tracking-wide group-hover/profile:text-sky-200 transition-colors">
+                  {formattedName}
                 </span>
-                <span className="text-[9.5px] text-emerald-400 font-semibold truncate flex items-center gap-1 mt-0.5">
-                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
-                  {playerAccount?.serverId ? `Zone ${playerAccount.serverId}` : (user?.role ? user.role.toUpperCase() : (language === 'km' ? 'សកម្ម' : 'Active'))}
-                </span>
+                <div className="flex items-center gap-1.5 mt-1">
+                  <span className="w-2 h-2 rounded-full bg-[#10e599] shadow-[0_0_8px_#10e599] shrink-0" />
+                  <span className="text-[11.5px] xl:text-[12px] font-bold text-[#10e599] drop-shadow-[0_0_6px_rgba(16,229,153,0.4)] truncate tracking-tight">
+                    {zoneText}
+                  </span>
+                </div>
               </div>
             </Link>
 
-            <div className="flex items-center gap-1.5">
+            {/* Action Buttons: Profile & Logout */}
+            <div className="grid grid-cols-2 gap-2 mt-2.5">
+              {/* Profile Button */}
               <button
                 type="button"
                 onClick={() => window.dispatchEvent(new CustomEvent('open-player-profile'))}
-                className="flex-1 py-1.5 px-2 rounded-lg bg-slate-800/80 hover:bg-slate-700/80 border border-slate-700/60 hover:border-cyan-400/50 text-slate-300 hover:text-cyan-300 text-[11px] font-semibold flex items-center justify-center gap-1 transition-all cursor-pointer"
-                title="Edit Profile"
+                className="h-10 px-2 rounded-xl bg-gradient-to-r from-[#111536] to-[#171c46] hover:from-[#181d4a] hover:to-[#22275e] border border-indigo-500/60 hover:border-indigo-400 text-white shadow-[0_0_14px_rgba(99,102,241,0.22)] hover:shadow-[0_0_20px_rgba(99,102,241,0.45)] flex items-center justify-center gap-1.5 active:scale-[0.97] transition-all duration-200 cursor-pointer"
+                title="Profile"
               >
-                <span>⚙️</span>
-                <span>Profile</span>
+                <svg className="w-4 h-4 text-[#c7d2fe] shrink-0" viewBox="0 0 24 24" fill="currentColor">
+                  <path d="M12 12c2.7 0 4.8-2.1 4.8-4.8S14.7 2.4 12 2.4 7.2 4.5 7.2 7.2 9.3 12 12 12zm0 2.4c-3.2 0-9.6 1.6-9.6 4.8v2.4h19.2v-2.4c0-3.2-6.4-4.8-9.6-4.8z"/>
+                </svg>
+                <span className="text-indigo-400/50 text-xs font-light select-none">|</span>
+                <span className="text-white text-[12px] font-bold tracking-wide">Profile</span>
               </button>
 
+              {/* Logout Button */}
               <button
+                type="button"
                 onClick={logout}
-                className="flex-1 py-1.5 px-2 rounded-lg bg-slate-800/80 hover:bg-rose-950/50 border border-slate-700/60 hover:border-rose-500/40 text-slate-300 hover:text-rose-200 text-[11px] font-semibold flex items-center justify-center gap-1 transition-all cursor-pointer"
+                className="h-10 px-2 rounded-xl bg-gradient-to-r from-[#071628] to-[#0c2038] hover:from-[#0d233e] hover:to-[#132c4e] border border-cyan-500/60 hover:border-cyan-400 text-white shadow-[0_0_14px_rgba(6,182,212,0.22)] hover:shadow-[0_0_20px_rgba(6,182,212,0.45)] flex items-center justify-center gap-1.5 active:scale-[0.97] transition-all duration-200 cursor-pointer"
+                title={language === 'km' ? 'ចាកចេញ' : 'Logout'}
               >
-                <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                <svg className="w-4 h-4 text-[#00e5ff] shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.2}>
                   <path strokeLinecap="round" strokeLinejoin="round" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
                 </svg>
-                <span>{language === 'km' ? 'ចាកចេញ' : 'Logout'}</span>
+                <span className="text-cyan-400/50 text-xs font-light select-none">|</span>
+                <span className="text-white text-[12px] font-bold tracking-wide">{language === 'km' ? 'ចាកចេញ' : 'Logout'}</span>
               </button>
             </div>
           </div>

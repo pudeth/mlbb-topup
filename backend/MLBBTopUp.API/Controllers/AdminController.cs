@@ -1166,40 +1166,40 @@ public class AdminController : BaseController
     {
         var realPackages = new[]
         {
-            new MLBBTopUp.Core.Entities.Product { DiamondAmount = 55, Price = 0.95m, CostPrice = 0.74m, ResellerPrice = 0.95m, Status = "Active", Description = "55 Diamonds Starter", CreatedAt = DateTime.UtcNow },
-            new MLBBTopUp.Core.Entities.Product { DiamondAmount = 86, Price = 1.35m, CostPrice = 1.17m, ResellerPrice = 1.35m, Status = "Active", Description = "86 Diamonds Bonus", CreatedAt = DateTime.UtcNow },
-            new MLBBTopUp.Core.Entities.Product { DiamondAmount = 110, Price = 1.70m, CostPrice = 1.45m, ResellerPrice = 1.70m, Status = "Active", Description = "110 Diamonds Bonus", CreatedAt = DateTime.UtcNow },
-            new MLBBTopUp.Core.Entities.Product { DiamondAmount = 165, Price = 2.40m, CostPrice = 2.22m, ResellerPrice = 2.40m, Status = "Active", Description = "165 Diamonds (Hot Deal)", CreatedAt = DateTime.UtcNow },
-            new MLBBTopUp.Core.Entities.Product { DiamondAmount = 172, Price = 2.50m, CostPrice = 2.31m, ResellerPrice = 2.50m, Status = "Active", Description = "172 Diamonds Standard", CreatedAt = DateTime.UtcNow },
-            new MLBBTopUp.Core.Entities.Product { DiamondAmount = 210, Price = 1.55m, CostPrice = 1.45m, ResellerPrice = 1.55m, Status = "Active", Description = "Weekly Pass (220 Diamonds + 70 Aurora)", CreatedAt = DateTime.UtcNow },
-            new MLBBTopUp.Core.Entities.Product { DiamondAmount = 440, Price = 3.10m, CostPrice = 2.90m, ResellerPrice = 3.10m, Status = "Active", Description = "2 Weekly Pass (440 Diamonds + 140 Aurora)", CreatedAt = DateTime.UtcNow },
-            new MLBBTopUp.Core.Entities.Product { DiamondAmount = 660, Price = 4.65m, CostPrice = 4.35m, ResellerPrice = 4.65m, Status = "Active", Description = "3 Weekly Pass (29 tickets)", CreatedAt = DateTime.UtcNow },
-            new MLBBTopUp.Core.Entities.Product { DiamondAmount = 880, Price = 6.20m, CostPrice = 5.80m, ResellerPrice = 6.20m, Status = "Active", Description = "4 Weekly Pass Bundle", CreatedAt = DateTime.UtcNow },
-            new MLBBTopUp.Core.Entities.Product { DiamondAmount = 1100, Price = 7.75m, CostPrice = 7.25m, ResellerPrice = 7.75m, Status = "Active", Description = "5 Weekly Pass Bundle", CreatedAt = DateTime.UtcNow },
-            new MLBBTopUp.Core.Entities.Product { DiamondAmount = 1320, Price = 9.30m, CostPrice = 8.70m, ResellerPrice = 9.30m, Status = "Active", Description = "6 Weekly Pass Bundle", CreatedAt = DateTime.UtcNow },
-            new MLBBTopUp.Core.Entities.Product { DiamondAmount = 605, Price = 5.50m, CostPrice = 5.12m, ResellerPrice = 5.50m, Status = "Active", Description = "165 + 2Weekly Pass", CreatedAt = DateTime.UtcNow },
-            new MLBBTopUp.Core.Entities.Product { DiamondAmount = 257, Price = 3.69m, CostPrice = 3.34m, ResellerPrice = 3.69m, Status = "Active", Description = "257 Diamonds Popular", CreatedAt = DateTime.UtcNow },
-            new MLBBTopUp.Core.Entities.Product { DiamondAmount = 275, Price = 3.85m, CostPrice = 3.55m, ResellerPrice = 3.85m, Status = "Active", Description = "275 Diamonds (29 tickets)", CreatedAt = DateTime.UtcNow },
-            new MLBBTopUp.Core.Entities.Product { DiamondAmount = 312, Price = 4.55m, CostPrice = 3.88m, ResellerPrice = 4.55m, Status = "Active", Description = "312 Diamonds (Starlight Ready)", CreatedAt = DateTime.UtcNow },
-            new MLBBTopUp.Core.Entities.Product { DiamondAmount = 343, Price = 4.99m, CostPrice = 4.25m, ResellerPrice = 4.99m, Status = "Active", Description = "343 Diamonds (29 tickets)", CreatedAt = DateTime.UtcNow },
-            new MLBBTopUp.Core.Entities.Product { DiamondAmount = 429, Price = 6.30m, CostPrice = 5.68m, ResellerPrice = 6.30m, Status = "Active", Description = "429 Diamonds (29 tickets)", CreatedAt = DateTime.UtcNow },
-            new MLBBTopUp.Core.Entities.Product { DiamondAmount = 500, Price = 8.50m, CostPrice = 7.64m, ResellerPrice = 8.50m, Status = "Active", Description = "VIP Twilight Pass", CreatedAt = DateTime.UtcNow },
-            new MLBBTopUp.Core.Entities.Product { DiamondAmount = 514, Price = 7.35m, CostPrice = 6.28m, ResellerPrice = 7.35m, Status = "Active", Description = "514 Diamonds Best Value", CreatedAt = DateTime.UtcNow },
-            new MLBBTopUp.Core.Entities.Product { DiamondAmount = 565, Price = 7.80m, CostPrice = 7.31m, ResellerPrice = 7.80m, Status = "Active", Description = "565 Diamonds Special", CreatedAt = DateTime.UtcNow },
-            new MLBBTopUp.Core.Entities.Product { DiamondAmount = 600, Price = 8.50m, CostPrice = 7.25m, ResellerPrice = 8.50m, Status = "Active", Description = "600 Diamonds Pro Pack", CreatedAt = DateTime.UtcNow },
-            new MLBBTopUp.Core.Entities.Product { DiamondAmount = 706, Price = 9.99m, CostPrice = 9.08m, ResellerPrice = 9.99m, Status = "Active", Description = "706 Diamonds VIP", CreatedAt = DateTime.UtcNow },
-            new MLBBTopUp.Core.Entities.Product { DiamondAmount = 878, Price = 12.80m, CostPrice = 10.90m, ResellerPrice = 12.80m, Status = "Active", Description = "878 Diamonds VIP PRO", CreatedAt = DateTime.UtcNow },
-            new MLBBTopUp.Core.Entities.Product { DiamondAmount = 963, Price = 13.60m, CostPrice = 11.60m, ResellerPrice = 13.60m, Status = "Active", Description = "963 Diamonds Grand Pack", CreatedAt = DateTime.UtcNow },
-            new MLBBTopUp.Core.Entities.Product { DiamondAmount = 1050, Price = 15.50m, CostPrice = 13.20m, ResellerPrice = 15.50m, Status = "Active", Description = "1050 Diamonds Royal Chest", CreatedAt = DateTime.UtcNow },
-            new MLBBTopUp.Core.Entities.Product { DiamondAmount = 1412, Price = 22.00m, CostPrice = 18.80m, ResellerPrice = 22.00m, Status = "Active", Description = "1412 Diamonds Treasury", CreatedAt = DateTime.UtcNow },
-            new MLBBTopUp.Core.Entities.Product { DiamondAmount = 2195, Price = 29.99m, CostPrice = 27.49m, ResellerPrice = 29.99m, Status = "Active", Description = "2195 Diamonds Mythic Pack", CreatedAt = DateTime.UtcNow },
-            new MLBBTopUp.Core.Entities.Product { DiamondAmount = 2452, Price = 32.50m, CostPrice = 27.70m, ResellerPrice = 32.50m, Status = "Active", Description = "2452 Diamonds Mythic Plus", CreatedAt = DateTime.UtcNow },
-            new MLBBTopUp.Core.Entities.Product { DiamondAmount = 2901, Price = 39.99m, CostPrice = 34.00m, ResellerPrice = 39.99m, Status = "Active", Description = "2901 Diamonds Legendary Pack", CreatedAt = DateTime.UtcNow },
-            new MLBBTopUp.Core.Entities.Product { DiamondAmount = 3688, Price = 49.99m, CostPrice = 45.86m, ResellerPrice = 49.99m, Status = "Active", Description = "3688 Diamonds Epic Vault", CreatedAt = DateTime.UtcNow },
-            new MLBBTopUp.Core.Entities.Product { DiamondAmount = 4390, Price = 62.99m, CostPrice = 53.60m, ResellerPrice = 62.99m, Status = "Active", Description = "4390 Diamonds Supreme Chest", CreatedAt = DateTime.UtcNow },
-            new MLBBTopUp.Core.Entities.Product { DiamondAmount = 5532, Price = 73.99m, CostPrice = 69.24m, ResellerPrice = 73.99m, Status = "Active", Description = "5532 Diamonds Immortal Pack", CreatedAt = DateTime.UtcNow },
-            new MLBBTopUp.Core.Entities.Product { DiamondAmount = 6944, Price = 92.99m, CostPrice = 79.20m, ResellerPrice = 92.99m, Status = "Active", Description = "6944 Diamonds Titan Pack", CreatedAt = DateTime.UtcNow },
-            new MLBBTopUp.Core.Entities.Product { DiamondAmount = 9288, Price = 125.00m, CostPrice = 115.00m, ResellerPrice = 125.00m, Status = "Active", Description = "9288 Diamonds ULTIMATE", CreatedAt = DateTime.UtcNow }
+            new MLBBTopUp.Core.Entities.Product { DiamondAmount = 55, ProviderPackageId = 268, Price = 0.95m, CostPrice = 0.74m, ResellerPrice = 0.95m, Status = "Active", Description = "55 Diamonds Starter", CreatedAt = DateTime.UtcNow },
+            new MLBBTopUp.Core.Entities.Product { DiamondAmount = 86, ProviderPackageId = 269, Price = 1.35m, CostPrice = 1.17m, ResellerPrice = 1.35m, Status = "Active", Description = "86 Diamonds Bonus", CreatedAt = DateTime.UtcNow },
+            new MLBBTopUp.Core.Entities.Product { DiamondAmount = 110, ProviderPackageId = 268, Price = 1.70m, CostPrice = 1.45m, ResellerPrice = 1.70m, Status = "Active", Description = "110 Diamonds Bonus", CreatedAt = DateTime.UtcNow },
+            new MLBBTopUp.Core.Entities.Product { DiamondAmount = 165, ProviderPackageId = 270, Price = 2.40m, CostPrice = 2.22m, ResellerPrice = 2.40m, Status = "Active", Description = "165 Diamonds (Hot Deal)", CreatedAt = DateTime.UtcNow },
+            new MLBBTopUp.Core.Entities.Product { DiamondAmount = 172, ProviderPackageId = 271, Price = 2.50m, CostPrice = 2.31m, ResellerPrice = 2.50m, Status = "Active", Description = "172 Diamonds Standard", CreatedAt = DateTime.UtcNow },
+            new MLBBTopUp.Core.Entities.Product { DiamondAmount = 210, ProviderPackageId = 371, Price = 1.55m, CostPrice = 1.45m, ResellerPrice = 1.55m, Status = "Active", Description = "Weekly Pass (220 Diamonds + 70 Aurora)", CreatedAt = DateTime.UtcNow },
+            new MLBBTopUp.Core.Entities.Product { DiamondAmount = 440, ProviderPackageId = 4967, Price = 3.10m, CostPrice = 2.90m, ResellerPrice = 3.10m, Status = "Active", Description = "2 Weekly Pass (440 Diamonds + 140 Aurora)", CreatedAt = DateTime.UtcNow },
+            new MLBBTopUp.Core.Entities.Product { DiamondAmount = 660, ProviderPackageId = 4968, Price = 4.65m, CostPrice = 4.35m, ResellerPrice = 4.65m, Status = "Active", Description = "3 Weekly Pass (29 tickets)", CreatedAt = DateTime.UtcNow },
+            new MLBBTopUp.Core.Entities.Product { DiamondAmount = 880, ProviderPackageId = 4969, Price = 6.20m, CostPrice = 5.80m, ResellerPrice = 6.20m, Status = "Active", Description = "4 Weekly Pass Bundle", CreatedAt = DateTime.UtcNow },
+            new MLBBTopUp.Core.Entities.Product { DiamondAmount = 1100, ProviderPackageId = 4970, Price = 7.75m, CostPrice = 7.25m, ResellerPrice = 7.75m, Status = "Active", Description = "5 Weekly Pass Bundle", CreatedAt = DateTime.UtcNow },
+            new MLBBTopUp.Core.Entities.Product { DiamondAmount = 1320, ProviderPackageId = 4971, Price = 9.30m, CostPrice = 8.70m, ResellerPrice = 9.30m, Status = "Active", Description = "6 Weekly Pass Bundle", CreatedAt = DateTime.UtcNow },
+            new MLBBTopUp.Core.Entities.Product { DiamondAmount = 605, ProviderPackageId = 4967, Price = 5.50m, CostPrice = 5.12m, ResellerPrice = 5.50m, Status = "Active", Description = "165 + 2Weekly Pass", CreatedAt = DateTime.UtcNow },
+            new MLBBTopUp.Core.Entities.Product { DiamondAmount = 257, ProviderPackageId = 272, Price = 3.69m, CostPrice = 3.34m, ResellerPrice = 3.69m, Status = "Active", Description = "257 Diamonds Popular", CreatedAt = DateTime.UtcNow },
+            new MLBBTopUp.Core.Entities.Product { DiamondAmount = 275, ProviderPackageId = 273, Price = 3.85m, CostPrice = 3.55m, ResellerPrice = 3.85m, Status = "Active", Description = "275 Diamonds (29 tickets)", CreatedAt = DateTime.UtcNow },
+            new MLBBTopUp.Core.Entities.Product { DiamondAmount = 312, ProviderPackageId = 273, Price = 4.55m, CostPrice = 3.88m, ResellerPrice = 4.55m, Status = "Active", Description = "312 Diamonds (Starlight Ready)", CreatedAt = DateTime.UtcNow },
+            new MLBBTopUp.Core.Entities.Product { DiamondAmount = 343, ProviderPackageId = 274, Price = 4.99m, CostPrice = 4.25m, ResellerPrice = 4.99m, Status = "Active", Description = "343 Diamonds (29 tickets)", CreatedAt = DateTime.UtcNow },
+            new MLBBTopUp.Core.Entities.Product { DiamondAmount = 429, ProviderPackageId = 276, Price = 6.30m, CostPrice = 5.68m, ResellerPrice = 6.30m, Status = "Active", Description = "429 Diamonds (29 tickets)", CreatedAt = DateTime.UtcNow },
+            new MLBBTopUp.Core.Entities.Product { DiamondAmount = 500, ProviderPackageId = 370, Price = 8.50m, CostPrice = 7.64m, ResellerPrice = 8.50m, Status = "Active", Description = "VIP Twilight Pass", CreatedAt = DateTime.UtcNow },
+            new MLBBTopUp.Core.Entities.Product { DiamondAmount = 514, ProviderPackageId = 278, Price = 7.35m, CostPrice = 6.28m, ResellerPrice = 7.35m, Status = "Active", Description = "514 Diamonds Best Value", CreatedAt = DateTime.UtcNow },
+            new MLBBTopUp.Core.Entities.Product { DiamondAmount = 565, ProviderPackageId = 280, Price = 7.80m, CostPrice = 7.31m, ResellerPrice = 7.80m, Status = "Active", Description = "565 Diamonds Special", CreatedAt = DateTime.UtcNow },
+            new MLBBTopUp.Core.Entities.Product { DiamondAmount = 600, ProviderPackageId = 281, Price = 8.50m, CostPrice = 7.25m, ResellerPrice = 8.50m, Status = "Active", Description = "600 Diamonds Pro Pack", CreatedAt = DateTime.UtcNow },
+            new MLBBTopUp.Core.Entities.Product { DiamondAmount = 706, ProviderPackageId = 283, Price = 9.99m, CostPrice = 9.08m, ResellerPrice = 9.99m, Status = "Active", Description = "706 Diamonds VIP", CreatedAt = DateTime.UtcNow },
+            new MLBBTopUp.Core.Entities.Product { DiamondAmount = 878, ProviderPackageId = 285, Price = 12.80m, CostPrice = 10.90m, ResellerPrice = 12.80m, Status = "Active", Description = "878 Diamonds VIP PRO", CreatedAt = DateTime.UtcNow },
+            new MLBBTopUp.Core.Entities.Product { DiamondAmount = 963, ProviderPackageId = 286, Price = 13.60m, CostPrice = 11.60m, ResellerPrice = 13.60m, Status = "Active", Description = "963 Diamonds Grand Pack", CreatedAt = DateTime.UtcNow },
+            new MLBBTopUp.Core.Entities.Product { DiamondAmount = 1050, ProviderPackageId = 288, Price = 15.50m, CostPrice = 13.20m, ResellerPrice = 15.50m, Status = "Active", Description = "1050 Diamonds Royal Chest", CreatedAt = DateTime.UtcNow },
+            new MLBBTopUp.Core.Entities.Product { DiamondAmount = 1412, ProviderPackageId = 293, Price = 22.00m, CostPrice = 18.80m, ResellerPrice = 22.00m, Status = "Active", Description = "1412 Diamonds Treasury", CreatedAt = DateTime.UtcNow },
+            new MLBBTopUp.Core.Entities.Product { DiamondAmount = 2195, ProviderPackageId = 300, Price = 29.99m, CostPrice = 27.49m, ResellerPrice = 29.99m, Status = "Active", Description = "2195 Diamonds Mythic Pack", CreatedAt = DateTime.UtcNow },
+            new MLBBTopUp.Core.Entities.Product { DiamondAmount = 2452, ProviderPackageId = 303, Price = 32.50m, CostPrice = 27.70m, ResellerPrice = 32.50m, Status = "Active", Description = "2452 Diamonds Mythic Plus", CreatedAt = DateTime.UtcNow },
+            new MLBBTopUp.Core.Entities.Product { DiamondAmount = 2901, ProviderPackageId = 308, Price = 39.99m, CostPrice = 34.00m, ResellerPrice = 39.99m, Status = "Active", Description = "2901 Diamonds Legendary Pack", CreatedAt = DateTime.UtcNow },
+            new MLBBTopUp.Core.Entities.Product { DiamondAmount = 3688, ProviderPackageId = 316, Price = 49.99m, CostPrice = 45.86m, ResellerPrice = 49.99m, Status = "Active", Description = "3688 Diamonds Epic Vault", CreatedAt = DateTime.UtcNow },
+            new MLBBTopUp.Core.Entities.Product { DiamondAmount = 4390, ProviderPackageId = 324, Price = 62.99m, CostPrice = 53.60m, ResellerPrice = 62.99m, Status = "Active", Description = "4390 Diamonds Supreme Chest", CreatedAt = DateTime.UtcNow },
+            new MLBBTopUp.Core.Entities.Product { DiamondAmount = 5532, ProviderPackageId = 337, Price = 73.99m, CostPrice = 69.24m, ResellerPrice = 73.99m, Status = "Active", Description = "5532 Diamonds Immortal Pack", CreatedAt = DateTime.UtcNow },
+            new MLBBTopUp.Core.Entities.Product { DiamondAmount = 6944, ProviderPackageId = 347, Price = 92.99m, CostPrice = 79.20m, ResellerPrice = 92.99m, Status = "Active", Description = "6944 Diamonds Titan Pack", CreatedAt = DateTime.UtcNow },
+            new MLBBTopUp.Core.Entities.Product { DiamondAmount = 9288, ProviderPackageId = 350, Price = 125.00m, CostPrice = 115.00m, ResellerPrice = 125.00m, Status = "Active", Description = "9288 Diamonds ULTIMATE", CreatedAt = DateTime.UtcNow }
         };
 
         // Upsert official packages and clean up obsolete products
@@ -1228,6 +1228,7 @@ public class AdminController : BaseController
             var match = existingProducts.FirstOrDefault(p => p.DiamondAmount == pkg.DiamondAmount);
             if (match != null)
             {
+                match.ProviderPackageId = pkg.ProviderPackageId;
                 match.Price = pkg.Price;
                 match.CostPrice = pkg.CostPrice;
                 match.ResellerPrice = pkg.ResellerPrice;
