@@ -94,34 +94,116 @@ public class RealTopUpProviderClient : ITopUpProviderClient
     // Upstream Khmer TopUp Wholesale Cost Matrix (used for strict cost-ceiling protection)
     private static readonly Dictionary<int, decimal> KhmerTopUpPackageCosts = new()
     {
-        // MLBB Official Packages
-        [569] = 0.25m,   // 14 Diamonds
-        [570] = 0.49m,   // 28 Diamonds
-        [571] = 0.73m,   // 42 Diamonds
-        [268] = 0.79m,   // 55 Diamonds
+        // MLBB Official Packages (from upstream Khmer TopUp supplier matrix)
+        [268] = 0.76m,   // 55 Diamonds
         [269] = 1.25m,   // 86 Diamonds
-        [270] = 2.36m,   // 165 Diamonds
-        [271] = 2.46m,   // 172 Diamonds
-        [272] = 3.55m,   // 257 Diamonds
-        [273] = 3.69m,   // 275 Diamonds
-        [274] = 4.78m,   // 343 Diamonds
+        [270] = 2.28m,   // 165 Diamonds
+        [271] = 2.47m,   // 172 Diamonds
+        [272] = 3.54m,   // 257 Diamonds
+        [273] = 3.78m,   // 275 Diamonds
+        [274] = 4.79m,   // 343 Diamonds
+        [275] = 4.93m,   // 344 Diamonds
         [276] = 5.99m,   // 429 Diamonds
-        [278] = 7.06m,   // 514 Diamonds
+        [277] = 6.18m,   // 430 Diamonds
+        [278] = 7.07m,   // 514 Diamonds
+        [279] = 7.40m,   // 516 Diamonds
         [280] = 7.58m,   // 565 Diamonds
         [281] = 8.32m,   // 600 Diamonds
-        [283] = 9.70m,   // 706 Diamonds
+        [282] = 8.64m,   // 602 Diamonds
+        [283] = 9.69m,   // 706 Diamonds
+        [284] = 10.94m,  // 792 Diamonds
+        [285] = 12.16m,  // 878 Diamonds
+        [286] = 13.24m,  // 963 Diamonds
+        [287] = 13.40m,  // 964 Diamonds
         [288] = 14.63m,  // 1050 Diamonds
-        [300] = 29.17m,  // 2195 Diamonds
-        [316] = 48.68m,  // 3688 Diamonds
-        [337] = 73.49m,  // 5532 Diamonds
-        [350] = 122.05m, // 9288 Diamonds
-        // MLBB Passes
+        [289] = 14.72m,  // 1060 Diamonds
+        [290] = 15.86m,  // 1136 Diamonds
+        [291] = 17.08m,  // 1222 Diamonds
+        [292] = 18.33m,  // 1308 Diamonds
+        [293] = 19.40m,  // 1412 Diamonds
+        [294] = 20.64m,  // 1498 Diamonds
+        [295] = 21.86m,  // 1584 Diamonds
+        [296] = 23.09m,  // 1670 Diamonds
+        [297] = 24.33m,  // 1756 Diamonds
+        [298] = 25.56m,  // 1842 Diamonds
+        [299] = 26.78m,  // 1928 Diamonds
+        [300] = 29.36m,  // 2195 Diamonds
+        [301] = 30.59m,  // 2281 Diamonds
+        [302] = 31.81m,  // 2367 Diamonds
+        [303] = 33.05m,  // 2453 Diamonds
+        [304] = 34.27m,  // 2539 Diamonds
+        [305] = 35.53m,  // 2625 Diamonds
+        [306] = 36.74m,  // 2711 Diamonds
+        [307] = 37.99m,  // 2797 Diamonds
+        [308] = 39.04m,  // 2901 Diamonds
+        [309] = 40.27m,  // 2987 Diamonds
+        [310] = 41.50m,  // 3073 Diamonds
+        [311] = 42.75m,  // 3159 Diamonds
+        [312] = 43.97m,  // 3245 Diamonds
+        [313] = 45.21m,  // 3331 Diamonds
+        [314] = 46.43m,  // 3417 Diamonds
+        [315] = 47.68m,  // 3503 Diamonds
+        [316] = 48.95m,  // 3688 Diamonds
+        [317] = 50.20m,  // 3774 Diamonds
+        [318] = 51.42m,  // 3860 Diamonds
+        [319] = 52.67m,  // 3946 Diamonds
+        [320] = 53.89m,  // 4032 Diamonds
+        [321] = 55.12m,  // 4118 Diamonds
+        [322] = 56.34m,  // 4204 Diamonds
+        [323] = 57.59m,  // 4290 Diamonds
+        [324] = 58.66m,  // 4394 Diamonds
+        [325] = 59.90m,  // 4480 Diamonds
+        [326] = 61.12m,  // 4566 Diamonds
+        [327] = 62.36m,  // 4652 Diamonds
+        [328] = 63.58m,  // 4738 Diamonds
+        [329] = 64.82m,  // 4824 Diamonds
+        [330] = 66.04m,  // 4910 Diamonds
+        [331] = 67.28m,  // 4996 Diamonds
+        [332] = 68.34m,  // 5100 Diamonds
+        [333] = 69.58m,  // 5186 Diamonds
+        [334] = 70.81m,  // 5272 Diamonds
+        [335] = 72.05m,  // 5358 Diamonds
+        [336] = 73.27m,  // 5444 Diamonds
+        [337] = 73.93m,  // 5532 Diamonds
+        [338] = 75.15m,  // 5618 Diamonds
+        [339] = 76.38m,  // 5704 Diamonds
+        [340] = 77.61m,  // 5790 Diamonds
+        [341] = 78.84m,  // 5876 Diamonds
+        [342] = 80.09m,  // 5962 Diamonds
+        [343] = 81.31m,  // 6048 Diamonds
+        [344] = 82.55m,  // 6134 Diamonds
+        [345] = 83.61m,  // 6238 Diamonds
+        [346] = 91.01m,  // 6754 Diamonds
+        [347] = 93.30m,  // 6944 Diamonds
+        [348] = 103.26m, // 7727 Diamonds
+        [349] = 112.95m, // 8433 Diamonds
+        [350] = 122.76m, // 9288 Diamonds
+        [351] = 132.47m, // 9994 Diamonds
+        [352] = 133.71m, // 10080 Diamonds
+        [353] = 142.15m, // 10700 Diamonds
+        [354] = 152.11m, // 11483 Diamonds
+        [355] = 161.81m, // 12189 Diamonds
+        [356] = 171.73m, // 12976 Diamonds
+        [357] = 181.41m, // 13682 Diamonds
+        [358] = 196.68m, // 14820 Diamonds
+        [359] = 206.37m, // 15526 Diamonds
+        [360] = 245.54m, // 18576 Diamonds
+        [361] = 255.22m, // 19282 Diamonds
+        [362] = 260.15m, // 19626 Diamonds
+        // MLBB Passes & Specials
         [371] = 1.54m,   // Weekly Diamond Pass
         [4967] = 2.97m,  // 2x Weekly Pass
         [4968] = 4.46m,  // 3x Weekly Pass
         [4969] = 5.94m,  // 4x Weekly Pass
         [4970] = 7.43m,  // 5x Weekly Pass
-        [370] = 8.10m,   // Twilight Pass
+        [370] = 8.14m,   // Twilight Pass
+        [372] = 0.79m,   // Weekly Elite Pack
+        [369] = 3.99m,   // Monthly Elite Pack
+        [5276] = 0.81m,  // Diamond Pass
+        [5284] = 0.79m,  // SuperValue
+        [569] = 0.25m,   // 14 Diamonds
+        [570] = 0.49m,   // 28 Diamonds
+        [571] = 0.73m,   // 42 Diamonds
 
         // Free Fire SGMY Packages
         [374] = 0.24m,   // 25 Diamonds
@@ -484,7 +566,7 @@ public class RealTopUpProviderClient : ITopUpProviderClient
                           (!isNumericServer && !string.IsNullOrWhiteSpace(cleanServer)));
 
         var validFreeFirePackages = new HashSet<int> { 390, 384, 383, 385, 386, 387, 388, 389, 4852, 5021, 5022, 5023, 5024, 5025, 5026, 5028, 5029, 5030, 5031, 5032, 3077, 374, 391, 376, 377, 378, 379, 380, 381, 5292, 5293, 5294, 5295, 5298, 5299, 5296, 5297, 5301, 5302, 5303, 5146, 5147, 5148 };
-        var validMlbbPackages = new HashSet<int> { 569, 570, 571, 268, 269, 270, 271, 272, 273, 274, 276, 278, 280, 281, 283, 288, 300, 316, 337, 350, 371, 4967, 4968, 4969, 4970, 370 };
+        var validMlbbPackages = KhmerTopUpPackageCosts.Keys.Where(k => !validFreeFirePackages.Contains(k)).ToHashSet();
 
         // Normalize customer payment to USD
         decimal paidUsd = 0m;
@@ -498,7 +580,7 @@ public class RealTopUpProviderClient : ITopUpProviderClient
 
         // OWNER STRICT RULE:
         // System MUST NEVER buy a package with provider that is more expensive than what the customer paid.
-        // If customer paid $8.25 (or ~33,825 KHR), force Package 4852 ($7.76 wholesale) for Free Fire or Package 370 ($8.10 wholesale) for MLBB Twilight Pass.
+        // If customer paid $8.25 (or ~33,825 KHR), force Package 4852 ($7.76 wholesale) for Free Fire or Package 370 ($8.14 wholesale) for MLBB Twilight Pass.
         if (isFreeFire && (diamondAmount == 2600 || 
                            (Math.Abs(paidUsd - 8.25m) <= 0.60m && (productName?.Contains("monthly", StringComparison.OrdinalIgnoreCase) == true || diamondAmount <= 2600)) ||
                            (productName != null && productName.Contains("monthly", StringComparison.OrdinalIgnoreCase) && !productName.Contains("x2", StringComparison.OrdinalIgnoreCase) && !productName.Contains("2x", StringComparison.OrdinalIgnoreCase) && !productName.Contains("x3", StringComparison.OrdinalIgnoreCase) && !productName.Contains("3x", StringComparison.OrdinalIgnoreCase) && !productName.Contains("x4", StringComparison.OrdinalIgnoreCase) && !productName.Contains("4x", StringComparison.OrdinalIgnoreCase))))
@@ -525,7 +607,7 @@ public class RealTopUpProviderClient : ITopUpProviderClient
                                  productName?.Contains("twilight", StringComparison.OrdinalIgnoreCase) == true ||
                                  sku?.Contains("twilight", StringComparison.OrdinalIgnoreCase) == true))
         {
-            _logger.LogInformation("[Strict Price Rule] Matched MLBB Twilight Pass ($8.25 paid / 500 diamonds). Strictly assigned Package #370 ($8.10 wholesale).");
+            _logger.LogInformation("[Strict Price Rule] Matched MLBB Twilight Pass ($8.25 paid / 500 diamonds). Strictly assigned Package #370 ($8.14 wholesale).");
             packageId = 370;
         }
         else if (!isFreeFire && (diamondAmount == 210 || diamondAmount == 220 || 
@@ -704,39 +786,118 @@ public class RealTopUpProviderClient : ITopUpProviderClient
         }
         else
         {
-            // MLBB Exact Diamond Count Resolution (prevents overshooting and losing profit)
+            // MLBB Exact Diamond Count Resolution (100% Deterministic match to Provider Package IDs)
             int exactMlbbPackage = diamondAmount switch
             {
-                // Membership Passes
+                // Membership Passes & Specials
                 210 or 220 => 371,   // Weekly Diamond Pass ($1.54)
                 440 => (paidUsd <= 0 || paidUsd >= 2.70m) ? 4967 : 371,  // 2x Weekly Pass ($2.97)
                 660 => (paidUsd <= 0 || paidUsd >= 4.00m) ? 4968 : (paidUsd >= 2.70m ? 4967 : 371),  // 3x Weekly Pass ($4.46)
                 880 => (paidUsd <= 0 || paidUsd >= 5.50m) ? 4969 : (paidUsd >= 4.00m ? 4968 : (paidUsd >= 2.70m ? 4967 : 371)),  // 4x Weekly Pass ($5.94)
                 1100 => (paidUsd <= 0 || paidUsd >= 7.00m) ? 4970 : (paidUsd >= 5.50m ? 4969 : (paidUsd >= 4.00m ? 4968 : (paidUsd >= 2.70m ? 4967 : 371))), // 5x Weekly Pass ($7.43)
                 1320 => (paidUsd <= 0 || paidUsd >= 7.00m) ? 4970 : (paidUsd >= 5.50m ? 4969 : (paidUsd >= 4.00m ? 4968 : (paidUsd >= 2.70m ? 4967 : 371))), // 6x Weekly Pass
-                500 => 370,   // Twilight Pass ($8.10)
-                605 => (paidUsd >= 5.00m ? 274 : 273), // 165+2WDP Combo Offer ($4.78)
-                // Direct Diamonds
-                11 or 14 => 569,  // 14 Diamonds Special ($0.25)
-                28 => 570,        // 28 Diamonds Special ($0.49)
-                42 => 571,        // 42 Diamonds Special ($0.73)
-                55 => 268,        // 55 Diamonds Main ($0.79)
-                86 or 110 => 269, // 86 Diamonds Main ($1.25)
-                165 => 270,       // 165 Diamonds Main ($2.36)
-                172 => 271,       // 172 Diamonds Main ($2.46)
-                257 => 272,       // 257 Diamonds Main ($3.55)
-                275 or 312 => 273,// 275 Diamonds Main ($3.69)
-                343 or 344 => 274,// 343 Diamonds Main ($4.78)
-                429 => 276,       // 429 Diamonds Main ($5.99)
-                514 => 278,       // 514 Diamonds Main ($7.06)
-                565 => 280,       // 565 Diamonds Main ($7.58)
-                600 => 281,       // 600 Diamonds Main ($8.32)
-                706 or 878 or 963 => 283, // 706 Diamonds Main ($9.70)
-                1050 or 1412 => 288,      // 1050 Diamonds Main ($14.63)
-                2195 or 2452 or 2901 => 300, // 2195 Diamonds Main ($29.17)
-                3688 or 4390 => 316,         // 3688 Diamonds Main ($48.68)
-                5532 or 6944 => 337,         // 5532 Diamonds Main ($73.49)
-                9288 => 350,                 // 9288 Diamonds Main ($122.05)
+                500 => 370,   // Twilight Pass ($8.14)
+                // Direct Diamonds Exact Matches (100% matched to Provider Package IDs)
+                11 or 14 => 569,   // 14 Diamonds Special ($0.25)
+                28 => 570,         // 28 Diamonds Special ($0.49)
+                42 => 571,         // 42 Diamonds Special ($0.73)
+                55 => 268,         // 55 Diamonds ($0.76)
+                86 => 269,         // 86 Diamonds ($1.25)
+                110 => 269,        // 86+ Bonus ($1.25)
+                165 => 270,        // 165 Diamonds ($2.28)
+                172 => 271,        // 172 Diamonds ($2.47)
+                257 => 272,        // 257 Diamonds ($3.54)
+                275 or 312 => 273, // 275 Diamonds ($3.78)
+                343 => 274,        // 343 Diamonds ($4.79)
+                344 => 275,        // 344 Diamonds ($4.93)
+                429 => 276,        // 429 Diamonds ($5.99)
+                430 => 277,        // 430 Diamonds ($6.18)
+                514 => 278,        // 514 Diamonds ($7.07)
+                516 => 279,        // 516 Diamonds ($7.40)
+                565 => 280,        // 565 Diamonds ($7.58)
+                600 => 281,        // 600 Diamonds ($8.32)
+                602 => 282,        // 602 Diamonds ($8.64)
+                605 => 274,        // Combo ($4.79)
+                706 => 283,        // 706 Diamonds ($9.69)
+                792 => 284,        // 792 Diamonds ($10.94)
+                878 => 285,        // 878 Diamonds ($12.16)
+                963 => 286,        // 963 Diamonds ($13.24)
+                964 => 287,        // 964 Diamonds ($13.40)
+                1050 => 288,       // 1050 Diamonds ($14.63)
+                1060 => 289,       // 1060 Diamonds ($14.72)
+                1136 => 290,       // 1136 Diamonds ($15.86)
+                1222 => 291,       // 1222 Diamonds ($17.08)
+                1308 => 292,       // 1308 Diamonds ($18.33)
+                1412 => 293,       // 1412 Diamonds ($19.40)
+                1498 => 294,       // 1498 Diamonds ($20.64)
+                1584 => 295,       // 1584 Diamonds ($21.86)
+                1670 => 296,       // 1670 Diamonds ($23.09)
+                1756 => 297,       // 1756 Diamonds ($24.33)
+                1842 => 298,       // 1842 Diamonds ($25.56)
+                1928 => 299,       // 1928 Diamonds ($26.78)
+                2195 => 300,       // 2195 Diamonds ($29.36)
+                2281 => 301,       // 2281 Diamonds ($30.59)
+                2367 => 302,       // 2367 Diamonds ($31.81)
+                2452 or 2453 => 303, // 2453 Diamonds ($33.05)
+                2539 => 304,       // 2539 Diamonds ($34.27)
+                2625 => 305,       // 2625 Diamonds ($35.53)
+                2711 => 306,       // 2711 Diamonds ($36.74)
+                2797 => 307,       // 2797 Diamonds ($37.99)
+                2901 => 308,       // 2901 Diamonds ($39.04)
+                2987 => 309,       // 2987 Diamonds ($40.27)
+                3073 => 310,       // 3073 Diamonds ($41.50)
+                3159 => 311,       // 3159 Diamonds ($42.75)
+                3245 => 312,       // 3245 Diamonds ($43.97)
+                3331 => 313,       // 3331 Diamonds ($45.21)
+                3417 => 314,       // 3417 Diamonds ($46.43)
+                3503 => 315,       // 3503 Diamonds ($47.68)
+                3688 => 316,       // 3688 Diamonds ($48.95)
+                3774 => 317,       // 3774 Diamonds ($50.20)
+                3860 => 318,       // 3860 Diamonds ($51.42)
+                3946 => 319,       // 3946 Diamonds ($52.67)
+                4032 => 320,       // 4032 Diamonds ($53.89)
+                4118 => 321,       // 4118 Diamonds ($55.12)
+                4204 => 322,       // 4204 Diamonds ($56.34)
+                4290 => 323,       // 4290 Diamonds ($57.59)
+                4390 or 4394 => 324, // 4394 Diamonds ($58.66)
+                4480 => 325,       // 4480 Diamonds ($59.90)
+                4566 => 326,       // 4566 Diamonds ($61.12)
+                4652 => 327,       // 4652 Diamonds ($62.36)
+                4738 => 328,       // 4738 Diamonds ($63.58)
+                4824 => 329,       // 4824 Diamonds ($64.82)
+                4910 => 330,       // 4910 Diamonds ($66.04)
+                4996 => 331,       // 4996 Diamonds ($67.28)
+                5100 => 332,       // 5100 Diamonds ($68.34)
+                5186 => 333,       // 5186 Diamonds ($69.58)
+                5272 => 334,       // 5272 Diamonds ($70.81)
+                5358 => 335,       // 5358 Diamonds ($72.05)
+                5444 => 336,       // 5444 Diamonds ($73.27)
+                5532 => 337,       // 5532 Diamonds ($73.93)
+                5618 => 338,       // 5618 Diamonds ($75.15)
+                5704 => 339,       // 5704 Diamonds ($76.38)
+                5790 => 340,       // 5790 Diamonds ($77.61)
+                5876 => 341,       // 5876 Diamonds ($78.84)
+                5962 => 342,       // 5962 Diamonds ($80.09)
+                6048 => 343,       // 6048 Diamonds ($81.31)
+                6134 => 344,       // 6134 Diamonds ($82.55)
+                6238 => 345,       // 6238 Diamonds ($83.61)
+                6754 => 346,       // 6754 Diamonds ($91.01)
+                6944 => 347,       // 6944 Diamonds ($93.30)
+                7727 => 348,       // 7727 Diamonds ($103.26)
+                8433 => 349,       // 8433 Diamonds ($112.95)
+                9288 => 350,       // 9288 Diamonds ($122.76)
+                9994 => 351,       // 9994 Diamonds ($132.47)
+                10080 => 352,      // 10080 Diamonds ($133.71)
+                10700 => 353,      // 10700 Diamonds ($142.15)
+                11483 => 354,      // 11483 Diamonds ($152.11)
+                12189 => 355,      // 12189 Diamonds ($161.81)
+                12976 => 356,      // 12976 Diamonds ($171.73)
+                13682 => 357,      // 13682 Diamonds ($181.41)
+                14820 => 358,      // 14820 Diamonds ($196.68)
+                15526 => 359,      // 15526 Diamonds ($206.37)
+                18576 => 360,      // 18576 Diamonds ($245.54)
+                19282 => 361,      // 19282 Diamonds ($255.22)
+                19626 => 362,      // 19626 Diamonds ($260.15)
                 _ => 0
             };
 
@@ -747,7 +908,23 @@ public class RealTopUpProviderClient : ITopUpProviderClient
             }
             else if (mlbbContext.Contains("twilight"))
             {
-                packageId = 370; // Twilight Pass ($8.10)
+                packageId = 370; // Twilight Pass ($8.14)
+            }
+            else if (mlbbContext.Contains("monthly elite") || mlbbContext.Contains("monthly_elite"))
+            {
+                packageId = 369; // Monthly Elite Pack ($3.99)
+            }
+            else if (mlbbContext.Contains("weekly elite") || mlbbContext.Contains("weekly_elite"))
+            {
+                packageId = 372; // Weekly Elite Pack ($0.79)
+            }
+            else if (mlbbContext.Contains("supervalue") || mlbbContext.Contains("super value"))
+            {
+                packageId = 5284; // SuperValue ($0.79)
+            }
+            else if (mlbbContext.Contains("diamond pass") || mlbbContext.Contains("diamond_pass"))
+            {
+                packageId = 5276; // Diamond Pass ($0.81)
             }
             else if (mlbbContext.Contains("5wdp") || mlbbContext.Contains("5 weekly") || mlbbContext.Contains("5x weekly"))
             {
@@ -777,23 +954,32 @@ public class RealTopUpProviderClient : ITopUpProviderClient
                     < 28 => 569,    // 14 Diamonds Special ($0.25)
                     < 42 => 570,    // 28 Diamonds Special ($0.49)
                     < 55 => 571,    // 42 Diamonds Special ($0.73)
-                    < 86 => 268,    // 55 Diamonds Main ($0.79)
+                    < 86 => 268,    // 55 Diamonds Main ($0.76)
                     < 165 => 269,   // 86 Diamonds Main ($1.25)
-                    < 172 => 270,   // 165 Diamonds Main ($2.36)
-                    < 257 => 271,   // 172 Diamonds Main ($2.46)
-                    < 275 => 272,   // 257 Diamonds Main ($3.55)
-                    < 343 => 273,   // 275 Diamonds Main ($3.69)
-                    < 429 => 274,   // 343 Diamonds Main ($4.78)
+                    < 172 => 270,   // 165 Diamonds Main ($2.28)
+                    < 257 => 271,   // 172 Diamonds Main ($2.47)
+                    < 275 => 272,   // 257 Diamonds Main ($3.54)
+                    < 343 => 273,   // 275 Diamonds Main ($3.78)
+                    < 429 => 274,   // 343 Diamonds Main ($4.79)
                     < 514 => 276,   // 429 Diamonds Main ($5.99)
-                    < 565 => 278,   // 514 Diamonds Main ($7.06)
+                    < 565 => 278,   // 514 Diamonds Main ($7.07)
                     < 600 => 280,   // 565 Diamonds Main ($7.58)
                     < 706 => 281,   // 600 Diamonds Main ($8.32)
-                    < 1050 => 283,  // 706 Diamonds Main ($9.70)
-                    < 2195 => 288,  // 1050 / 1412 Diamonds Main ($14.63)
-                    < 3688 => 300,  // 2195 / 2452 / 2901 Diamonds Main ($29.17)
-                    < 5532 => 316,  // 3688 / 4390 Diamonds Main ($48.68)
-                    < 9288 => 337,  // 5532 / 6944 Diamonds Main ($73.49)
-                    _ => 350        // 9288 Diamonds Main ($122.05)
+                    < 792 => 283,   // 706 Diamonds Main ($9.69)
+                    < 878 => 284,   // 792 Diamonds Main ($10.94)
+                    < 963 => 285,   // 878 Diamonds Main ($12.16)
+                    < 1050 => 286,  // 963 Diamonds Main ($13.24)
+                    < 1412 => 288,  // 1050 Diamonds Main ($14.63)
+                    < 2195 => 293,  // 1412 Diamonds Main ($19.40)
+                    < 2453 => 300,  // 2195 Diamonds Main ($29.36)
+                    < 2901 => 303,  // 2453 Diamonds Main ($33.05)
+                    < 3688 => 308,  // 2901 Diamonds Main ($39.04)
+                    < 4394 => 316,  // 3688 Diamonds Main ($48.95)
+                    < 5532 => 324,  // 4394 Diamonds Main ($58.66)
+                    < 6944 => 337,  // 5532 Diamonds Main ($73.93)
+                    < 9288 => 347,  // 6944 Diamonds Main ($93.30)
+                    < 18576 => 350, // 9288 Diamonds Main ($122.76)
+                    _ => 360        // 18576 Diamonds Main ($245.54)
                 };
             }
         }
