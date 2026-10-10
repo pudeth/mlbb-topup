@@ -28,16 +28,12 @@ const Layout = ({ children }) => {
 
   const isAdminDashboard = (location.pathname.startsWith('/admin') || location.pathname.startsWith('/topup/admin')) 
     && !location.pathname.includes('login');
+  const isKAdminPath = (location.pathname.toLowerCase() === '/k' || location.pathname.toLowerCase().startsWith('/k/')) &&
+    (location.hash.toLowerCase() === '#99' || location.hash.toLowerCase() === '#99/');
+
   const isAuthPath = location.pathname.startsWith('/login') || 
     location.pathname.startsWith('/register') || 
-    location.pathname === '/K' || 
-    location.pathname === '/k' || 
-    location.pathname.startsWith('/K/') || 
-    location.pathname.startsWith('/k/') || 
-    location.pathname.toLowerCase().startsWith('/k99') || 
-    location.pathname.toLowerCase().startsWith('/k-99') || 
-    location.pathname.includes('admin-login') || 
-    location.pathname.endsWith('/admin/login');
+    isKAdminPath;
 
   // Automatically scroll to top ONLY on actual page (pathname) navigation, NOT on search params
   const prevPathnameRef = useRef(location.pathname);

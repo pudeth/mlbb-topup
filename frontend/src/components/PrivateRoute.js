@@ -13,7 +13,7 @@ const PrivateRoute = ({ children }) => {
     );
   }
 
-  return isAuthenticated() ? children : <Navigate to="/K#99" />;
+  return isAuthenticated() ? children : <Navigate to="/" replace />;
 };
 
 export default PrivateRoute;

@@ -33,6 +33,32 @@ function PlayerLoginRedirect() {
   return null;
 }
 
+// Strict Secret Admin Login Gate: ONLY allows access if the exact secret hash (#99) is present in the URL
+function StrictSecretAdminLogin() {
+  const [isAuthorized, setIsAuthorized] = React.useState(() => {
+    if (typeof window === 'undefined') return false;
+    const h = (window.location.hash || '').toLowerCase();
+    return h === '#99' || h === '#99/';
+  });
+
+  React.useEffect(() => {
+    const checkHash = () => {
+      const h = (window.location.hash || '').toLowerCase();
+      setIsAuthorized(h === '#99' || h === '#99/');
+    };
+
+    window.addEventListener('hashchange', checkHash);
+    return () => window.removeEventListener('hashchange', checkHash);
+  }, []);
+
+  if (!isAuthorized) {
+    // If hacker or developer opens /K or /k without #99, silently bounce them to Storefront Home
+    return <Navigate to="/" replace />;
+  }
+
+  return <Login />;
+}
+
 // Subdomain-aware Home: If accessing through an admin subdomain (e.g. admin.*), routes directly to /admin
 function SmartHome() {
   const isSubdomainAdmin = typeof window !== 'undefined' && 
@@ -76,19 +102,21 @@ function App() {
               <Route path="/order-history" element={<OrderHistory />} />
               <Route path="/player-login" element={<OrderHistory />} />
               
-              {/* Dedicated Secret Admin Login Routes: https://mlbb-topup-jet.vercel.app/K#99 */}
-              <Route path="/K" element={<Login />} />
-              <Route path="/k" element={<Login />} />
-              <Route path="/K99" element={<Login />} />
-              <Route path="/k99" element={<Login />} />
-              <Route path="/K-99" element={<Login />} />
-              <Route path="/k-99" element={<Login />} />
-              <Route path="/admin-login" element={<Navigate to="/K#99" replace />} />
-              <Route path="/admin/login" element={<Navigate to="/K#99" replace />} />
-              <Route path="/topup/admin-login" element={<Navigate to="/K#99" replace />} />
-              <Route path="/topup/admin/login" element={<Navigate to="/K#99" replace />} />
+              {/* STRICT SECRET ADMIN LOGIN GATE: ONLY allows access via https://mlbb-topup-jet.vercel.app/K#99 */}
+              <Route path="/K" element={<StrictSecretAdminLogin />} />
+              <Route path="/k" element={<StrictSecretAdminLogin />} />
 
-              {/* Admin Dashboard Protected routes */}
+              {/* Anti-Hacker Decoys: If hackers try /admin-login, /admin/login, or workarounds, silently bounce to Storefront Home */}
+              <Route path="/admin-login" element={<Navigate to="/" replace />} />
+              <Route path="/admin/login" element={<Navigate to="/" replace />} />
+              <Route path="/topup/admin-login" element={<Navigate to="/" replace />} />
+              <Route path="/topup/admin/login" element={<Navigate to="/" replace />} />
+              <Route path="/K99" element={<Navigate to="/" replace />} />
+              <Route path="/k99" element={<Navigate to="/" replace />} />
+              <Route path="/K-99" element={<Navigate to="/" replace />} />
+              <Route path="/k-99" element={<Navigate to="/" replace />} />
+
+              {/* Admin Dashboard Protected routes: If not authenticated/admin, AdminRoute silently bounces to / */}
               <Route path="/admin" element={
                 <AdminRoute>
                   <AdminDashboard />
@@ -99,9 +127,9 @@ function App() {
                   <AdminDashboard />
                 </AdminRoute>
               } />
-              <Route path="/topup/admin" element={<Navigate to="/admin" replace />} />
-              <Route path="/topup/admin/*" element={<Navigate to="/admin" replace />} />
-              <Route path="/dashboard" element={<Navigate to="/admin" replace />} />
+              <Route path="/topup/admin" element={<Navigate to="/" replace />} />
+              <Route path="/topup/admin/*" element={<Navigate to="/" replace />} />
+              <Route path="/dashboard" element={<Navigate to="/" replace />} />
             </Routes>
           </Layout>
         </Router>

@@ -1,10 +1,9 @@
 import React from 'react';
-import { Navigate, useLocation } from 'react-router-dom';
+import { Navigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 
 const AdminRoute = ({ children }) => {
   const { isAuthenticated, isAdmin, loading } = useAuth();
-  const location = useLocation();
 
   if (loading) {
     return (
@@ -14,12 +13,9 @@ const AdminRoute = ({ children }) => {
     );
   }
 
-  if (!isAuthenticated()) {
-    return <Navigate to="/K#99" state={{ from: location.pathname }} replace />;
-  }
-
-  if (!isAdmin()) {
-    return <Navigate to="/K#99" state={{ from: location.pathname, requireAdmin: true }} replace />;
+  if (!isAuthenticated() || !isAdmin()) {
+    // Strictly bounce any hacker or unauthorized visitor to storefront home without revealing the secret login link
+    return <Navigate to="/" replace />;
   }
 
   return children;
