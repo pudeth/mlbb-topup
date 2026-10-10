@@ -303,6 +303,24 @@ export const resolveRegionInfo = (regionCode) => {
   };
 };
 
+// Restricted Free Fire regions that are not allowed for Cambodia/Singapore distributor top-ups
+// Regions: Vietnam, India, Taiwan, Thailand, and Indonesia
+export const RESTRICTED_FREEFIRE_REGIONS = new Set([
+  'VN', 'VIETNAM',
+  'IND', 'INDIA',
+  'TW', 'TAIWAN',
+  'TH', 'THAILAND',
+  'ID', 'INDONESIA'
+]);
+export const isRestrictedFreeFireRegion = (regionCode) => {
+  if (!regionCode) return false;
+  const code = (regionCode || '').toUpperCase().trim();
+  return RESTRICTED_FREEFIRE_REGIONS.has(code) ||
+    code.includes('VIETNAM') || code.includes('INDIA') ||
+    code.includes('TAIWAN') || code.includes('THAILAND') ||
+    code.includes('INDONESIA');
+};
+
 // Bulletproof resolver for real player in-game names across all games
 export const resolveRealPlayerName = (pId, fallbackRealName, user, playerAccount) => {
   if (!pId) return '';
@@ -958,7 +976,8 @@ const TopUp = () => {
           }
 
           // 2. Secondary Backend Proxy Check (FreefireJornal multi-region lookup)
-          if (!accountConfirmed) {
+          // If we don't have region or profileData, check backend proxy to get exact region
+          if (!accountConfirmed || !profileData?.region) {
             try {
               const ffProxyRes = await topupAPI.getFreefireNickname(pId);
               if (ffProxyRes?.data?.found === true && ffProxyRes.data.nickname && ffProxyRes.data.nickname.trim() !== '') {
@@ -966,14 +985,14 @@ const TopUp = () => {
                 accountConfirmed = true;
                 profileData = {
                   nickname: realName,
-                  region: ffProxyRes.data.region || 'SG',
+                  region: ffProxyRes.data.region || profileData?.region || 'SG',
                   level: ffProxyRes.data.level,
                   likes: ffProxyRes.data.likes,
                   avatarUrl: ffProxyRes.data.avatarUrl,
                   rank: ffProxyRes.data.rank,
                   rankPoints: ffProxyRes.data.rankPoints,
                 };
-              } else if (ffProxyRes?.data?.found === false) {
+              } else if (!accountConfirmed && ffProxyRes?.data?.found === false) {
                 accountConfirmed = false;
                 realName = null;
               }
@@ -993,8 +1012,38 @@ const TopUp = () => {
             lastVerifiedKeyRef.current = verifyKey;
             autoRecheckDoneRef.current = false;
             setAutoRecheckCountdown(0);
+
+            // Strict Free Fire regional lock: Vietnam, India, Taiwan, Thailand, and Indonesia are blocked
+            if (isRestrictedFreeFireRegion(detectedRegion)) {
+              setVerifiedAccount({
+                valid: false,
+                isRegionBlocked: true,
+                blockedRegion: detectedRegion,
+                name: realName,
+                country: regInfo.name,
+                region: detectedRegion,
+                server: detectedRegion,
+                error: language === 'km'
+                  ? 'តំបន់វៀតណាម ឥណ្ឌា តៃវ៉ាន់ ថៃ និងឥណ្ឌូនេស៊ី មិនត្រូវបានអនុញ្ញាតឱ្យបញ្ចូលទេ។'
+                  : 'Vietnam, India, Taiwan, Thailand, and Indonesia regions are not allowed to recharge.',
+                id: pId,
+                game: 'freefire',
+                level: profileData?.level || null,
+                likes: profileData?.likes || null,
+                avatarUrl: profileData?.avatarUrl || null,
+                rank: profileData?.rank || null,
+                rankPoints: profileData?.rankPoints || null,
+              });
+              setError(language === 'km'
+                ? 'តំបន់វៀតណាម ឥណ្ឌា តៃវ៉ាន់ ថៃ និងឥណ្ឌូនេស៊ី មិនត្រូវបានអនុញ្ញាតឱ្យបញ្ចូលទេ។'
+                : 'Vietnam, India, Taiwan, Thailand, and Indonesia regions are not allowed to recharge.');
+              setPlayerCardAlert(true);
+              return;
+            }
+
             setVerifiedAccount({
               valid: true,
+              isRegionBlocked: false,
               name: realName,
               country: regInfo.name,
               region: detectedRegion,
@@ -1284,7 +1333,7 @@ const TopUp = () => {
 
   // Auto-check 1 time if account was initially not found
   useEffect(() => {
-    if (verifiedAccount && !verifiedAccount.valid && !autoRecheckDoneRef.current && !accountChecking) {
+    if (verifiedAccount && !verifiedAccount.valid && !verifiedAccount.isRegionBlocked && !autoRecheckDoneRef.current && !accountChecking) {
       const pId = (formData.playerID || '').trim();
       const sId = (formData.serverID || '').trim();
       if (!pId) return;
@@ -1820,7 +1869,7 @@ const TopUp = () => {
     !loading &&
     !isTopupDisabled &&
     !accountChecking &&
-    (!verifiedAccount || verifiedAccount.valid !== false);
+    (!verifiedAccount || (verifiedAccount.valid !== false && !verifiedAccount.isRegionBlocked));
 
   const handleProceedToPayment = async () => {
     if (isTopupDisabled) {
@@ -1849,8 +1898,15 @@ const TopUp = () => {
       return;
     }
 
-    // Strict Account Verification Guard: User CANNOT pay if account is not found or unverified
-    if (!verifiedAccount || !verifiedAccount.valid) {
+    // Strict Account Verification Guard: User CANNOT pay if account is not found, unverified, or region is blocked
+    if (!verifiedAccount || !verifiedAccount.valid || verifiedAccount.isRegionBlocked) {
+      if (verifiedAccount?.isRegionBlocked) {
+        setError(verifiedAccount.error || (language === 'km'
+          ? 'តំបន់វៀតណាម ឥណ្ឌា តៃវ៉ាន់ ថៃ និងឥណ្ឌូនេស៊ី មិនត្រូវបានអនុញ្ញាតឱ្យបញ្ចូលទេ។'
+          : 'Vietnam, India, Taiwan, Thailand, and Indonesia regions are not allowed to recharge.'));
+        scrollToPlayerInfo('player');
+        return;
+      }
       setError(language === 'km'
         ? 'រកមិនឃើញគណនីអ្នកលេងទេ។ សូមបញ្ចូល Player ID និង Server ID ឡើងវិញឲ្យបានត្រឹមត្រូវមុននឹងបង់ប្រាក់។'
         : 'Player account not found. Please verify and re-enter your Player ID and Server ID before making payment.');
@@ -2773,6 +2829,16 @@ const TopUp = () => {
                   </button>
                 </div>
               </div>
+              {/* Region Block Notice directly below User ID input matching uploaded screenshot */}
+              {verifiedAccount?.isRegionBlocked && (
+                <div className="pt-2 animate-fadeIn">
+                  <p className="text-xs sm:text-[13px] font-bold text-red-500 font-khmer flex items-center gap-1.5 leading-snug">
+                    <span>{language === 'km'
+                      ? 'តំបន់វៀតណាម ឥណ្ឌា តៃវ៉ាន់ ថៃ និងឥណ្ឌូនេស៊ី មិនត្រូវបានអនុញ្ញាតឱ្យបញ្ចូលទេ។'
+                      : 'Vietnam, India, Taiwan, Thailand, and Indonesia regions are not allowed to recharge.'}</span>
+                  </p>
+                </div>
+              )}
             </div>
 
             {/* SERVER ID Field (NO PASTE BUTTON - only clear ✕) */}
@@ -2828,6 +2894,7 @@ const TopUp = () => {
             {isFreefire && (() => {
               const currentRegionCode = verifiedAccount?.region || verifiedAccount?.server || formData.serverID || 'Global';
               const regInfo = resolveRegionInfo(currentRegionCode);
+              const isBlocked = verifiedAccount?.isRegionBlocked || isRestrictedFreeFireRegion(currentRegionCode);
               return (
                 <div>
                   <label className="flex items-center gap-1.5 text-xs sm:text-sm font-bold text-slate-200 mb-2 font-sans">
@@ -2837,18 +2904,26 @@ const TopUp = () => {
                     <span>SERVER REGION</span>
                   </label>
                   <div className={`w-full h-11 sm:h-12 bg-[#04091a] border rounded-xl px-3.5 flex items-center justify-between gap-2 transition-all ${
-                    verifiedAccount?.valid ? 'border-emerald-500/50' : 'border-cyan-900/70'
+                    isBlocked
+                      ? 'border-rose-500/80 bg-rose-950/20'
+                      : verifiedAccount?.valid
+                      ? 'border-emerald-500/50'
+                      : 'border-cyan-900/70'
                   }`}>
                     <div className="flex items-center gap-2">
                       <span className="text-base leading-none">{regInfo.flag}</span>
-                      <span className="text-xs sm:text-sm font-bold text-white">
+                      <span className={`text-xs sm:text-sm font-bold ${isBlocked ? 'text-rose-300' : 'text-white'}`}>
                         {regInfo.server}
                       </span>
                     </div>
                     <span className={`text-[10px] font-mono px-2 py-0.5 rounded font-black uppercase tracking-wider ${
-                      verifiedAccount?.valid ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/40' : 'bg-slate-800 text-slate-400'
+                      isBlocked
+                        ? 'bg-rose-500/25 text-rose-300 border border-rose-500/50'
+                        : verifiedAccount?.valid
+                        ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/40'
+                        : 'bg-slate-800 text-slate-400'
                     }`}>
-                      {regInfo.code}
+                      {isBlocked ? `${regInfo.code} • BLOCKED` : regInfo.code}
                     </span>
                   </div>
                 </div>
@@ -2885,8 +2960,35 @@ const TopUp = () => {
             </div>
           )}
 
+          {/* Prominent Server Region Blocked Warning Card */}
+          {verifiedAccount?.isRegionBlocked && (
+            <div className="p-3.5 sm:p-4 rounded-2xl bg-gradient-to-r from-rose-950/80 via-rose-900/40 to-rose-950/80 border border-rose-500/60 text-rose-200 text-xs sm:text-sm flex items-start gap-3 shadow-xl animate-fadeIn">
+              <div className="w-8 h-8 rounded-full bg-rose-500/20 border border-rose-500/50 flex items-center justify-center text-rose-400 text-base shrink-0 font-bold">
+                ⛔
+              </div>
+              <div className="space-y-1 min-w-0 flex-1">
+                <div className="font-black text-rose-300 text-sm flex items-center justify-between">
+                  <span>{language === 'km' ? 'តំបន់ហ្គេមមិនត្រូវបានអនុញ្ញាត (Region Blocked)' : 'Server Region Blocked'}</span>
+                  <span className="text-[10px] uppercase font-mono px-2 py-0.5 rounded bg-rose-500/25 text-rose-300 font-bold border border-rose-500/40">
+                    {language === 'km' ? 'មិនអាចទូទាត់បាន' : 'Payment Blocked'}
+                  </span>
+                </div>
+                <p className="text-[11px] sm:text-xs text-rose-200/90 leading-relaxed font-khmer font-bold">
+                  {language === 'km'
+                    ? 'តំបន់វៀតណាម ឥណ្ឌា តៃវ៉ាន់ ថៃ និងឥណ្ឌូនេស៊ី មិនត្រូវបានអនុញ្ញាតឱ្យបញ្ចូលទេ។'
+                    : 'Vietnam, India, Taiwan, Thailand, and Indonesia regions are not allowed to recharge.'}
+                </p>
+                {verifiedAccount.name && (
+                  <p className="text-[11px] text-slate-300 pt-0.5">
+                    Player: <span className="font-mono font-bold text-white">{verifiedAccount.name}</span> ({verifiedAccount.region})
+                  </p>
+                )}
+              </div>
+            </div>
+          )}
+
           {/* Prominent Account Not Found Warning Card */}
-          {verifiedAccount && !verifiedAccount.valid && (
+          {verifiedAccount && !verifiedAccount.valid && !verifiedAccount.isRegionBlocked && (
             <div className="p-3.5 sm:p-4 rounded-2xl bg-gradient-to-r from-rose-950/80 via-rose-900/40 to-rose-950/80 border border-rose-500/60 text-rose-200 text-xs sm:text-sm flex items-start gap-3 shadow-xl animate-fadeIn">
               <div className="w-8 h-8 rounded-full bg-rose-500/20 border border-rose-500/50 flex items-center justify-center text-rose-400 text-base shrink-0 font-bold">
                 ✕
@@ -2934,6 +3036,11 @@ const TopUp = () => {
                   <path d="M5 13l4 4L19 7" />
                 </svg>
               </div>
+            </div>
+          ) : verifiedAccount?.isRegionBlocked ? (
+            <div className="w-full h-11 sm:h-12 rounded-xl bg-gradient-to-r from-rose-900/90 via-rose-800 to-rose-900/90 border border-rose-500/60 text-rose-200 font-black text-xs sm:text-sm uppercase tracking-wider flex items-center justify-center gap-2 shadow-lg shadow-rose-950/40 select-none">
+              <span className="text-base">⛔</span>
+              <span>{language === 'km' ? 'តំបន់មិនអនុញ្ញាតឱ្យបញ្ចូលពេជ្រ (REGION BLOCKED)' : 'REGION BLOCKED (TOP-UP NOT ALLOWED)'}</span>
             </div>
           ) : (
             <button
@@ -3544,7 +3651,14 @@ const TopUp = () => {
                 }
                 return;
               }
-              if (!verifiedAccount || !verifiedAccount.valid) {
+              if (!verifiedAccount || !verifiedAccount.valid || verifiedAccount.isRegionBlocked) {
+                if (verifiedAccount?.isRegionBlocked) {
+                  setError(verifiedAccount.error || (language === 'km'
+                    ? 'តំបន់វៀតណាម ឥណ្ឌា តៃវ៉ាន់ ថៃ និងឥណ្ឌូនេស៊ី មិនត្រូវបានអនុញ្ញាតឱ្យបញ្ចូលទេ។'
+                    : 'Vietnam, India, Taiwan, Thailand, and Indonesia regions are not allowed to recharge.'));
+                  scrollToPlayerInfo('player');
+                  return;
+                }
                 setError(language === 'km'
                   ? 'រកមិនឃើញគណនីអ្នកលេងទេ។ សូមបញ្ចូល Player ID និង Server ID ឡើងវិញឲ្យបានត្រឹមត្រូវមុននឹងបង់ប្រាក់។'
                   : 'Player account not found. Please verify and re-enter your Player ID and Server ID before making payment.');

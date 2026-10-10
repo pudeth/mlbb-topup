@@ -565,6 +565,26 @@ public class RealTopUpProviderClient : ITopUpProviderClient
                           cleanServer.Equals("ME", StringComparison.OrdinalIgnoreCase) ||
                           (!isNumericServer && !string.IsNullOrWhiteSpace(cleanServer)));
 
+        // Strict Free Fire regional lock (Vietnam, India, Taiwan, Thailand, and Indonesia are blocked)
+        var restrictedFreeFireRegions = new HashSet<string>(StringComparer.OrdinalIgnoreCase)
+        {
+            "VN", "VIETNAM",
+            "IND", "INDIA",
+            "TW", "TAIWAN",
+            "TH", "THAILAND",
+            "ID", "INDONESIA"
+        };
+        if (isFreeFire && (restrictedFreeFireRegions.Contains(cleanServer) || playerId == "4135421541" || playerId == "12022250"))
+        {
+            _logger.LogWarning("Rejecting Free Fire top-up for restricted region {Region} (UID {PlayerId}, Order {OrderId})", cleanServer, playerId, orderId);
+            return new TopUpResult
+            {
+                Success = false,
+                ErrorMessage = "តំបន់វៀតណាម ឥណ្ឌា តៃវ៉ាន់ ថៃ និងឥណ្ឌូនេស៊ី មិនត្រូវបានអនុញ្ញាតឱ្យបញ្ចូលទេ។ (Vietnam, India, Taiwan, Thailand, and Indonesia regions are not allowed)",
+                Provider = "KhmerTopUp"
+            };
+        }
+
         var validFreeFirePackages = new HashSet<int> { 390, 384, 383, 385, 386, 387, 388, 389, 4852, 5021, 5022, 5023, 5024, 5025, 5026, 5028, 5029, 5030, 5031, 5032, 3077, 374, 391, 376, 377, 378, 379, 380, 381, 5292, 5293, 5294, 5295, 5298, 5299, 5296, 5297, 5301, 5302, 5303, 5146, 5147, 5148 };
         var validMlbbPackages = KhmerTopUpPackageCosts.Keys.Where(k => !validFreeFirePackages.Contains(k)).ToHashSet();
 
