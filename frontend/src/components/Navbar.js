@@ -197,10 +197,10 @@ const Navbar = () => {
           <>
             <div className={`transition-all duration-300 ease-[cubic-bezier(0.16,1,0.3,1)] pointer-events-auto ${
               isScrolled
-                ? 'max-w-md sm:max-w-lg md:max-w-xl mx-auto rounded-full bg-[#03091e]/95 backdrop-blur-2xl border-2 border-[#0062ff] shadow-[0_12px_40px_rgba(0,0,0,0.92),0_0_28px_rgba(0,98,255,0.35)] ring-1 ring-white/10 px-2 sm:px-4 h-12 sm:h-14 relative overflow-visible'
+                ? 'w-fit max-w-full ml-auto rounded-full bg-[#03091e]/95 backdrop-blur-2xl border-2 border-[#0062ff] shadow-[0_12px_40px_rgba(0,0,0,0.92),0_0_28px_rgba(0,98,255,0.35)] ring-1 ring-white/10 px-2 sm:px-3 h-12 sm:h-14 relative overflow-visible'
                 : 'max-w-7xl mx-auto rounded-2xl bg-transparent px-1 sm:px-2 h-12 sm:h-14 relative'
             }`}>
-            <div className="flex items-center justify-between h-full">
+            <div className={`flex items-center ${isScrolled ? 'justify-end' : 'justify-between'} h-full w-full`}>
           
               {/* Logo (Avatar Medallion + Title) - Hidden when isScrolled per user request */}
               {!isScrolled && (
@@ -216,12 +216,8 @@ const Navbar = () => {
                 <SmartSearchBar isMobile={false} />
               </div>
 
-              {/* Actions (Capsule Pills) - Evenly distributed across capsule when scrolled */}
-              <div className={`flex items-center select-none ${
-                isScrolled
-                  ? 'w-full justify-between px-1 sm:px-2'
-                  : 'gap-1.5 sm:gap-2 shrink-0'
-              }`}>
+              {/* Actions - Auto-scaling flexible buttons grouped on the right side */}
+              <div className="flex items-center justify-end gap-1.5 sm:gap-2.5 select-none shrink-0 ml-auto">
                 {/* Search Button matching Reference Image 2 */}
                 <button
                   type="button"
