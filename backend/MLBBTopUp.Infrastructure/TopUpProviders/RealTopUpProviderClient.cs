@@ -84,6 +84,81 @@ public class RealTopUpProviderClient : ITopUpProviderClient
         { 9288, ("mlbb_9288", "9288", "mlbb-9288", "7740_1548_diamonds", "9288 Diamonds (7740+1548 Bonus)") }
     };
 
+    // Upstream Khmer TopUp Wholesale Cost Matrix (used for strict cost-ceiling protection)
+    private static readonly Dictionary<int, decimal> KhmerTopUpPackageCosts = new()
+    {
+        // MLBB Official Packages
+        [569] = 0.25m,   // 14 Diamonds
+        [570] = 0.49m,   // 28 Diamonds
+        [571] = 0.73m,   // 42 Diamonds
+        [268] = 0.79m,   // 55 Diamonds
+        [269] = 1.25m,   // 86 Diamonds
+        [270] = 2.36m,   // 165 Diamonds
+        [271] = 2.46m,   // 172 Diamonds
+        [272] = 3.55m,   // 257 Diamonds
+        [273] = 3.69m,   // 275 Diamonds
+        [274] = 4.78m,   // 343 Diamonds
+        [276] = 5.99m,   // 429 Diamonds
+        [278] = 7.06m,   // 514 Diamonds
+        [280] = 7.58m,   // 565 Diamonds
+        [281] = 8.32m,   // 600 Diamonds
+        [283] = 9.70m,   // 706 Diamonds
+        [288] = 14.63m,  // 1050 Diamonds
+        [300] = 29.17m,  // 2195 Diamonds
+        [316] = 48.68m,  // 3688 Diamonds
+        [337] = 73.49m,  // 5532 Diamonds
+        [350] = 122.05m, // 9288 Diamonds
+        // MLBB Passes
+        [371] = 1.54m,   // Weekly Diamond Pass
+        [4967] = 2.97m,  // 2x Weekly Pass
+        [4968] = 4.46m,  // 3x Weekly Pass
+        [4969] = 5.94m,  // 4x Weekly Pass
+        [4970] = 7.43m,  // 5x Weekly Pass
+        [370] = 8.10m,   // Twilight Pass
+
+        // Free Fire SGMY Packages
+        [374] = 0.24m,   // 25 Diamonds
+        [5293] = 0.36m,  // 40/50 Diamonds
+        [391] = 0.90m,   // 100 Diamonds
+        [5295] = 1.73m,  // 205 Diamonds
+        [376] = 2.74m,   // 310 Diamonds
+        [377] = 4.59m,   // 520 Diamonds
+        [5299] = 5.27m,  // 650/830 Diamonds
+        [378] = 9.01m,   // 1060 Diamonds
+        [5146] = 9.95m,  // 1590 Diamonds
+        [379] = 18.21m,  // 2180 Diamonds
+        [5147] = 19.99m, // 3270 Diamonds
+        [380] = 45.07m,  // 5600 Diamonds
+        [5148] = 49.44m, // 8400 Diamonds
+        [381] = 92.82m,  // 11500 Diamonds
+        // Free Fire Passes
+        [384] = 0.32m,   // Weekly Lite
+        [5028] = 0.63m,  // Weekly Lite x2
+        [5029] = 0.94m,  // Weekly Lite x3
+        [383] = 1.57m,   // Weekly Membership
+        [5024] = 3.12m,  // Weekly Membership x2
+        [5025] = 4.67m,  // Weekly Membership x3
+        [5026] = 6.24m,  // Weekly Membership x4
+        [4852] = 7.76m,  // Monthly Membership (2600 Diamonds)
+        [5021] = 15.03m, // Monthly Membership x2 (5000 Diamonds)
+        [5022] = 22.55m, // Monthly Membership x3 (7800 Diamonds)
+        [5023] = 30.06m, // Monthly Membership x4 (10000 Diamonds)
+        // Free Fire Level Passes
+        [390] = 0.29m,   // Level 6
+        [385] = 0.61m,   // Level 10
+        [386] = 0.61m,   // Level 15
+        [387] = 0.61m,   // Level 20
+        [388] = 0.61m,   // Level 25
+        [389] = 0.90m,   // Level 30
+        // Free Fire Combos & Evo
+        [5030] = 9.50m,  // 3 in 1
+        [5031] = 9.33m,  // Weekly + Monthly
+        [5032] = 18.15m, // 2 Weekly + Monthly
+        [5301] = 0.65m,  // Evo 3
+        [5302] = 0.90m,  // Evo 7
+        [5303] = 2.55m,  // Evo 30
+    };
+
     public RealTopUpProviderClient(
         ILogger<RealTopUpProviderClient> logger,
         IConfiguration configuration,
@@ -370,23 +445,26 @@ public class RealTopUpProviderClient : ITopUpProviderClient
         var cleanServer = serverId?.Trim() ?? string.Empty;
         var isNumericServer = System.Text.RegularExpressions.Regex.IsMatch(cleanServer, @"^\d{3,6}$");
 
-        // Comprehensive Free Fire detection
-        bool isFreeFire = (gameName?.Contains("freefire", StringComparison.OrdinalIgnoreCase) == true) ||
+        bool isMlbbExplicit = (gameName?.Contains("mobile legend", StringComparison.OrdinalIgnoreCase) == true) ||
+                              (gameName?.Contains("mlbb", StringComparison.OrdinalIgnoreCase) == true);
+
+        // Comprehensive Free Fire detection (guaranteed never to misclassify MLBB)
+        bool isFreeFire = !isMlbbExplicit && (
+                          (gameName?.Contains("freefire", StringComparison.OrdinalIgnoreCase) == true) ||
                           (gameName?.Contains("free fire", StringComparison.OrdinalIgnoreCase) == true) ||
                           (gameName?.Contains("ff", StringComparison.OrdinalIgnoreCase) == true) ||
                           (productName?.Contains("freefire", StringComparison.OrdinalIgnoreCase) == true) ||
                           (productName?.Contains("weeklylite", StringComparison.OrdinalIgnoreCase) == true) ||
+                          (productName?.Contains("weekly lit", StringComparison.OrdinalIgnoreCase) == true) ||
                           (productName?.Contains("evo", StringComparison.OrdinalIgnoreCase) == true) ||
                           (sku?.Contains("freefire", StringComparison.OrdinalIgnoreCase) == true) ||
                           (sku?.Contains("ff", StringComparison.OrdinalIgnoreCase) == true) ||
-                          string.IsNullOrWhiteSpace(cleanServer) ||
                           cleanServer.Equals("FREEFIRE", StringComparison.OrdinalIgnoreCase) ||
                           cleanServer.Equals("FF", StringComparison.OrdinalIgnoreCase) ||
                           cleanServer.Equals("SG", StringComparison.OrdinalIgnoreCase) ||
                           cleanServer.Equals("SGMY", StringComparison.OrdinalIgnoreCase) ||
                           cleanServer.Equals("KH", StringComparison.OrdinalIgnoreCase) ||
                           cleanServer.Equals("KH/SG", StringComparison.OrdinalIgnoreCase) ||
-                          cleanServer.Equals("GLOBAL", StringComparison.OrdinalIgnoreCase) ||
                           cleanServer.Equals("BR", StringComparison.OrdinalIgnoreCase) ||
                           cleanServer.Equals("US", StringComparison.OrdinalIgnoreCase) ||
                           cleanServer.Equals("IND", StringComparison.OrdinalIgnoreCase) ||
@@ -396,7 +474,7 @@ public class RealTopUpProviderClient : ITopUpProviderClient
                           cleanServer.Equals("BD", StringComparison.OrdinalIgnoreCase) ||
                           cleanServer.Equals("MENA", StringComparison.OrdinalIgnoreCase) ||
                           cleanServer.Equals("ME", StringComparison.OrdinalIgnoreCase) ||
-                          !isNumericServer; // In Mobile Legends, server is strictly numeric! If it's letters like "SG", it's Free Fire!
+                          (!isNumericServer && !string.IsNullOrWhiteSpace(cleanServer)));
 
         var validFreeFirePackages = new HashSet<int> { 390, 384, 383, 385, 386, 387, 388, 389, 4852, 5021, 5022, 5023, 5024, 5025, 5026, 5028, 5029, 5030, 5031, 5032, 3077, 374, 391, 376, 377, 378, 379, 380, 381, 5292, 5293, 5294, 5295, 5298, 5299, 5296, 5297, 5301, 5302, 5303, 5146, 5147, 5148 };
 
@@ -422,176 +500,282 @@ public class RealTopUpProviderClient : ITopUpProviderClient
         }
         else if (isFreeFire)
         {
-            // Free Fire Official Packages (khmer-topup.com slug: freefire-sgmy)
-            var pNameLower = (productName ?? string.Empty).ToLowerInvariant().Trim();
-            var skuLower = (sku ?? string.Empty).ToLowerInvariant().Trim();
-            var passContext = $"{skuLower} {pNameLower}".Trim();
+            // Exact Free Fire Diamond Count Lookup (100% Deterministic)
+            int exactFfPackage = diamondAmount switch
+            {
+                // Membership Passes
+                2600 => 4852, // 1x Monthly ($7.76 wholesale)
+                5000 or 5200 => 5021, // 2x Monthly ($15.03 wholesale)
+                7800 => 5022, // 3x Monthly ($22.55 wholesale)
+                10400 or 10000 => 5023, // 4x Monthly ($30.06 wholesale)
+                445 or 450 => 383,  // 1x Weekly ($1.57 wholesale)
+                890 or 900 => 5024,  // 2x Weekly ($3.12 wholesale)
+                1335 or 1350 => 5025, // 3x Weekly ($4.67 wholesale)
+                1780 or 1800 => 5026, // 4x Weekly ($6.24 wholesale)
+                90 => 384,   // 1x Weekly Lite ($0.32 wholesale)
+                180 => 5028, // 2x Weekly Lite ($0.63 wholesale)
+                270 => 5029, // 3x Weekly Lite ($0.94 wholesale)
+                // Level Up Milestone Passes
+                200 => 390,  // Level 6 ($0.29 wholesale)
+                300 => 385,  // Level 10 ($0.61 wholesale)
+                400 => 386,  // Level 15 ($0.61 wholesale)
+                500 => 387,  // Level 20 ($0.61 wholesale)
+                600 => 388,  // Level 25 ($0.61 wholesale)
+                800 => 389,  // Level 30 ($0.90 wholesale)
+                // Direct Diamonds
+                25 => 374,    // 25 Diamonds ($0.24 wholesale)
+                40 or 50 => 5293, // 40/50 Diamonds ($0.36 wholesale)
+                100 => 391,   // 100 Diamonds ($0.90 wholesale)
+                205 => 5295,  // 205 Diamonds ($1.73 wholesale)
+                310 => 376,   // 310 Diamonds ($2.74 wholesale)
+                520 => 377,   // 520 Diamonds ($4.59 wholesale)
+                830 => 5299,  // 830 Diamonds ($5.27 wholesale)
+                1060 => 378,  // 1060 Diamonds ($9.01 wholesale)
+                1580 or 1590 => 5146, // 1590 Diamonds ($9.95 wholesale)
+                2180 => 379,  // 2180 Diamonds ($18.21 wholesale)
+                3240 or 3270 => 5147, // 3270 Diamonds ($19.99 wholesale)
+                5600 => 380,  // 5600 Diamonds ($45.07 wholesale)
+                7780 or 8400 => 5148, // 8400 Diamonds ($49.44 wholesale)
+                11500 => 381, // 11500 Diamonds ($92.82 wholesale)
+                _ => 0
+            };
 
-            bool hasX4 = System.Text.RegularExpressions.Regex.IsMatch(pNameLower, @"(\bx4\b|\bx\s*4\b|\b4x\b|\b4\s*(monthly|weekly|lit))");
-            bool hasX3 = System.Text.RegularExpressions.Regex.IsMatch(pNameLower, @"(\bx3\b|\bx\s*3\b|\b3x\b|\b3\s*(monthly|weekly|lit))");
-            bool hasX2 = System.Text.RegularExpressions.Regex.IsMatch(pNameLower, @"(\bx2\b|\bx\s*2\b|\b2x\b|\b2\s*(monthly|weekly|lit))");
+            if (exactFfPackage > 0)
+            {
+                packageId = exactFfPackage;
+            }
+            else
+            {
+                // Free Fire Official Packages (khmer-topup.com slug: freefire-sgmy)
+                var pNameLower = (productName ?? string.Empty).ToLowerInvariant().Trim();
+                var skuLower = (sku ?? string.Empty).ToLowerInvariant().Trim();
+                var passContext = $"{skuLower} {pNameLower}".Trim();
 
-            // Check for Level Up Packages (e.g. Level 6 pass is $0.29 for 200 diamonds)
-            bool isLevelPass = passContext.Contains("level") ||
-                               passContext.Contains("lvl") ||
-                               (productId.HasValue && productId.Value >= 385 && productId.Value <= 390) ||
-                               (diamondAmount == 200 && passContext.Contains("pass"));
+                bool hasX4 = System.Text.RegularExpressions.Regex.IsMatch(pNameLower, @"(\bx4\b|\bx\s*4\b|\b4x\b|\b4\s*(monthly|weekly|lit))");
+                bool hasX3 = System.Text.RegularExpressions.Regex.IsMatch(pNameLower, @"(\bx3\b|\bx\s*3\b|\b3x\b|\b3\s*(monthly|weekly|lit))");
+                bool hasX2 = System.Text.RegularExpressions.Regex.IsMatch(pNameLower, @"(\bx2\b|\bx\s*2\b|\b2x\b|\b2\s*(monthly|weekly|lit))");
 
-            if (isLevelPass)
-            {
-                if (passContext.Contains("level 30") || passContext.Contains("lvl 30") || passContext.Contains("level-30") || (productId.HasValue && productId.Value == 389) || diamondAmount == 800) packageId = 389;      // Level 30 ($0.90)
-                else if (passContext.Contains("level 25") || passContext.Contains("lvl 25") || passContext.Contains("level-25") || (productId.HasValue && productId.Value == 388) || diamondAmount == 600) packageId = 388; // Level 25 ($0.61)
-                else if (passContext.Contains("level 20") || passContext.Contains("lvl 20") || passContext.Contains("level-20") || (productId.HasValue && productId.Value == 387) || diamondAmount == 500) packageId = 387; // Level 20 ($0.61)
-                else if (passContext.Contains("level 15") || passContext.Contains("lvl 15") || passContext.Contains("level-15") || (productId.HasValue && productId.Value == 386) || diamondAmount == 400) packageId = 386; // Level 15 ($0.61)
-                else if (passContext.Contains("level 10") || passContext.Contains("lvl 10") || passContext.Contains("level-10") || (productId.HasValue && productId.Value == 385) || diamondAmount == 300) packageId = 385; // Level 10 ($0.61)
-                else packageId = 390;                                 // Level 6  ($0.29)
+                // Check for Level Up Packages (e.g. Level 6 pass is $0.29 for 200 diamonds)
+                bool isLevelPass = passContext.Contains("level") ||
+                                   passContext.Contains("lvl") ||
+                                   (productId.HasValue && productId.Value >= 385 && productId.Value <= 390) ||
+                                   (diamondAmount == 200 && passContext.Contains("pass"));
+
+                if (isLevelPass)
+                {
+                    if (passContext.Contains("level 30") || passContext.Contains("lvl 30") || passContext.Contains("level-30") || (productId.HasValue && productId.Value == 389) || diamondAmount == 800) packageId = 389;      // Level 30 ($0.90)
+                    else if (passContext.Contains("level 25") || passContext.Contains("lvl 25") || passContext.Contains("level-25") || (productId.HasValue && productId.Value == 388) || diamondAmount == 600) packageId = 388; // Level 25 ($0.61)
+                    else if (passContext.Contains("level 20") || passContext.Contains("lvl 20") || passContext.Contains("level-20") || (productId.HasValue && productId.Value == 387) || diamondAmount == 500) packageId = 387; // Level 20 ($0.61)
+                    else if (passContext.Contains("level 15") || passContext.Contains("lvl 15") || passContext.Contains("level-15") || (productId.HasValue && productId.Value == 386) || diamondAmount == 400) packageId = 386; // Level 15 ($0.61)
+                    else if (passContext.Contains("level 10") || passContext.Contains("lvl 10") || passContext.Contains("level-10") || (productId.HasValue && productId.Value == 385) || diamondAmount == 300) packageId = 385; // Level 10 ($0.61)
+                    else packageId = 390;                                 // Level 6  ($0.29)
+                }
+                else if (passContext.Contains("3 in 1") || passContext.Contains("3-in-1"))
+                {
+                    packageId = 5030; // 3 in 1 membership ($9.50)
+                }
+                else if (passContext.Contains("2weekly+monthly") || passContext.Contains("2 weekly+monthly"))
+                {
+                    packageId = 5032; // 2Weekly+monthly ($18.15)
+                }
+                else if (passContext.Contains("weekly + monthly") || passContext.Contains("weekly+monthly"))
+                {
+                    packageId = 5031; // Weekly + monthly ($9.33)
+                }
+                else if (passContext.Contains("evo"))
+                {
+                    if (passContext.Contains("30")) packageId = 5303;
+                    else if (passContext.Contains("7")) packageId = 5302;
+                    else packageId = 5301;
+                }
+                else if (pNameLower.Contains("weeklylite") || pNameLower.Contains("weekly lite") || pNameLower.Contains("weekly lit") || pNameLower.Contains("lite") || pNameLower.Contains("lit") || diamondAmount == 90 || diamondAmount == 180 || diamondAmount == 270)
+                {
+                    if (hasX3 || (diamondAmount >= 260 && diamondAmount <= 280)) packageId = 5029; // Weekly Lite x3 ($0.94)
+                    else if (hasX2 || (diamondAmount >= 170 && diamondAmount <= 190)) packageId = 5028; // Weekly Lite x2 ($0.63)
+                    else packageId = 384; // Weekly Lite ($0.32)
+                }
+                else if (pNameLower.Contains("monthly") || diamondAmount == 2600 || diamondAmount == 5000 || diamondAmount == 7800 || diamondAmount == 10400)
+                {
+                    if (hasX4 || diamondAmount >= 10000) packageId = 5023; // Monthly x4 ($30.06)
+                    else if (hasX3 || diamondAmount >= 7500) packageId = 5022; // Monthly x3 ($22.55)
+                    else if (hasX2 || (diamondAmount >= 5000 && diamondAmount < 7500)) packageId = 5021; // Monthly x2 ($15.03)
+                    else packageId = 4852; // Monthly Membership ($7.76)
+                }
+                else if (pNameLower.Contains("weekly") || diamondAmount == 445 || diamondAmount == 450 || diamondAmount == 890 || diamondAmount == 1335 || diamondAmount == 1780)
+                {
+                    if (hasX4 || diamondAmount >= 1700) packageId = 5026; // Weekly x4 ($6.24)
+                    else if (hasX3 || diamondAmount >= 1300) packageId = 5025; // Weekly x3 ($4.67)
+                    else if (hasX2 || (diamondAmount >= 800 && diamondAmount < 1300)) packageId = 5024; // Weekly x2 ($3.12)
+                    else packageId = 383; // Weekly Membership ($1.57)
+                }
+                else
+                {
+                    packageId = diamondAmount switch
+                    {
+                        <= 25 => 374,   // 25 Diamonds ($0.24)
+                        <= 50 => 5293,  // 40/50 Diamonds ($0.36)
+                        <= 100 => 391,  // 100 Diamonds ($0.90) - OFFICIAL
+                        <= 205 => 5295, // 205 Diamonds ($1.73)
+                        <= 310 => 376,  // 310 Diamonds ($2.74)
+                        <= 520 => 377,  // 520 Diamonds ($4.59)
+                        <= 830 => 5299, // 830 Diamonds ($5.27)
+                        <= 1060 => 378, // 1060 Diamonds ($9.01)
+                        <= 1600 => 5146,// 1580 Diamonds ($9.95)
+                        <= 2180 => 379, // 2180 Diamonds ($18.21)
+                        <= 3300 => 5147,// 3240 Diamonds ($19.99)
+                        <= 5600 => 380, // 5600 Diamonds ($45.07)
+                        <= 8400 => 5148,// 7780 Diamonds ($49.44)
+                        _ => 381        // 11500 Diamonds ($92.82)
+                    };
+                }
             }
-            else if (passContext.Contains("3 in 1") || passContext.Contains("3-in-1"))
+        }
+        else
+        {
+            // MLBB Exact Diamond Count Resolution (prevents overshooting and losing profit)
+            int exactMlbbPackage = diamondAmount switch
             {
-                packageId = 5030; // 3 in 1 membership ($9.50)
+                // Membership Passes
+                210 => 371,   // Weekly Diamond Pass ($1.54)
+                440 => 4967,  // 2x Weekly Pass ($2.97)
+                660 => 4968,  // 3x Weekly Pass ($4.46)
+                880 => 4969,  // 4x Weekly Pass ($5.94)
+                1100 => 4970, // 5x Weekly Pass ($7.43)
+                1320 => 4970, // 6x Weekly Pass
+                500 => 370,   // Twilight Pass ($8.10)
+                // Direct Diamonds
+                11 or 14 => 569,  // 14 Diamonds Special ($0.25)
+                28 => 570,        // 28 Diamonds Special ($0.49)
+                42 => 571,        // 42 Diamonds Special ($0.73)
+                55 => 268,        // 55 Diamonds Main ($0.79)
+                86 => 269,        // 86 Diamonds Main ($1.25)
+                110 => 269,       // 86+ Bonus ($1.25)
+                165 => 270,       // 165 Diamonds Main ($2.36)
+                172 => 271,       // 172 Diamonds Main ($2.46)
+                257 => 272,       // 257 Diamonds Main ($3.55)
+                275 => 273,       // 275 Diamonds Main ($3.69)
+                312 => 273,       // 275 Diamonds ($3.69)
+                343 or 344 => 274,// 343 Diamonds Main ($4.78)
+                429 => 276,       // 429 Diamonds Main ($5.99)
+                514 => 278,       // 514 Diamonds Main ($7.06)
+                565 => 280,       // 565 Diamonds Main ($7.58)
+                600 => 281,       // 600 Diamonds Main ($8.32)
+                706 => 283,       // 706 Diamonds Main ($9.70)
+                878 or 963 => 283,// 706 Main ($9.70)
+                1050 => 288,      // 1050 Diamonds Main ($14.63)
+                1412 => 288,      // 1050 Main ($14.63)
+                2195 or 2452 or 2901 => 300, // 2195 Diamonds Main ($29.17)
+                3688 or 4390 => 316,         // 3688 Diamonds Main ($48.68)
+                5532 or 6944 => 337,         // 5532 Diamonds Main ($73.49)
+                9288 => 350,                 // 9288 Diamonds Main ($122.05)
+                _ => 0
+            };
+
+            if (exactMlbbPackage > 0)
+            {
+                packageId = exactMlbbPackage;
             }
-            else if (passContext.Contains("2weekly+monthly") || passContext.Contains("2 weekly+monthly"))
+            else if (sku?.Contains("2wdp", StringComparison.OrdinalIgnoreCase) == true)
             {
-                packageId = 5032; // 2Weekly+monthly ($18.15)
+                packageId = 4967; // 2x Weekly ($2.97)
             }
-            else if (passContext.Contains("weekly + monthly") || passContext.Contains("weekly+monthly"))
+            else if (sku?.Contains("3wdp", StringComparison.OrdinalIgnoreCase) == true)
             {
-                packageId = 5031; // Weekly + monthly ($9.33)
+                packageId = 4968; // 3x Weekly ($4.46)
             }
-            else if (passContext.Contains("evo"))
+            else if (sku?.Contains("4wdp", StringComparison.OrdinalIgnoreCase) == true)
             {
-                if (passContext.Contains("30")) packageId = 5303;
-                else if (passContext.Contains("7")) packageId = 5302;
-                else packageId = 5301;
+                packageId = 4969; // 4x Weekly ($5.94)
             }
-            else if (pNameLower.Contains("weeklylite") || pNameLower.Contains("weekly lite") || pNameLower.Contains("weekly lit") || pNameLower.Contains("lite") || pNameLower.Contains("lit") || diamondAmount == 90 || diamondAmount == 180 || diamondAmount == 270)
+            else if (sku?.Contains("5wdp", StringComparison.OrdinalIgnoreCase) == true)
             {
-                if (hasX3 || (diamondAmount >= 260 && diamondAmount <= 280)) packageId = 5029; // Weekly Lite x3 ($0.94)
-                else if (hasX2 || (diamondAmount >= 170 && diamondAmount <= 190)) packageId = 5028; // Weekly Lite x2 ($0.63)
-                else packageId = 384; // Weekly Lite ($0.32)
+                packageId = 4970; // 5x Weekly ($7.43)
             }
-            else if (pNameLower.Contains("monthly") || diamondAmount == 2600 || diamondAmount == 5000 || diamondAmount == 7800 || diamondAmount == 10400)
+            else if (sku?.Contains("wdp", StringComparison.OrdinalIgnoreCase) == true || 
+                     sku?.Contains("weekly", StringComparison.OrdinalIgnoreCase) == true)
             {
-                if (hasX4 || diamondAmount >= 10000) packageId = 5023; // Monthly x4 ($30.06)
-                else if (hasX3 || diamondAmount >= 7500) packageId = 5022; // Monthly x3 ($22.55)
-                else if (hasX2 || (diamondAmount >= 5000 && diamondAmount < 7500)) packageId = 5021; // Monthly x2 ($15.03)
-                else packageId = 4852; // Monthly Membership ($7.76)
+                packageId = 371; // Weekly Pass ($1.54)
             }
-            else if (pNameLower.Contains("weekly") || diamondAmount == 445 || diamondAmount == 450 || diamondAmount == 890 || diamondAmount == 1335 || diamondAmount == 1780)
+            else if (sku?.Contains("twilight", StringComparison.OrdinalIgnoreCase) == true)
             {
-                if (hasX4 || diamondAmount >= 1700) packageId = 5026; // Weekly x4 ($6.24)
-                else if (hasX3 || diamondAmount >= 1300) packageId = 5025; // Weekly x3 ($4.67)
-                else if (hasX2 || (diamondAmount >= 800 && diamondAmount < 1300)) packageId = 5024; // Weekly x2 ($3.12)
-                else packageId = 383; // Weekly Membership ($1.57)
+                packageId = 370; // Twilight Pass ($8.10)
             }
             else
             {
                 packageId = diamondAmount switch
                 {
-                    <= 25 => 374,   // 25 Diamonds ($0.24)
-                    <= 50 => 5293,  // 40/50 Diamonds ($0.36)
-                    <= 100 => 391,  // 100 Diamonds ($0.90) - OFFICIAL
-                    <= 205 => 5295, // 205 Diamonds ($1.73)
-                    <= 310 => 376,  // 310 Diamonds ($2.74)
-                    <= 520 => 377,  // 520 Diamonds ($4.59)
-                    <= 830 => 5299, // 830 Diamonds
-                    <= 1060 => 378, // 1060 Diamonds ($9.02)
-                    <= 1600 => 5146,// 1580 Diamonds
-                    <= 2180 => 379, // 2180 Diamonds ($18.22)
-                    <= 3300 => 5147,// 3240 Diamonds
-                    <= 5600 => 380, // 5600 Diamonds ($45.09)
-                    <= 8400 => 5148,// 7780 Diamonds
-                    _ => 381        // 11500 Diamonds ($92.86)
+                    <= 15 => 569,   // 14 Diamonds Special ($0.25)
+                    <= 30 => 570,   // 28 Diamonds Special ($0.49)
+                    <= 45 => 571,   // 42 Diamonds Special ($0.73)
+                    <= 60 => 268,   // 55 Diamonds Main ($0.79)
+                    <= 95 => 269,   // 86 Diamonds Main ($1.25)
+                    <= 125 => 269,  // 86 Diamonds Main ($1.25)
+                    <= 168 => 270,  // 165 Diamonds Main ($2.36)
+                    <= 200 => 271,  // 172 Diamonds Main ($2.46)
+                    <= 260 => 272,  // 257 Diamonds Main ($3.55)
+                    <= 300 => 273,  // 275 Diamonds Main ($3.69)
+                    <= 350 => 274,  // 343 Diamonds Main ($4.78)
+                    <= 450 => 276,  // 429 Diamonds Main ($5.99)
+                    <= 520 => 278,  // 514 Diamonds Main ($7.06)
+                    <= 570 => 280,  // 565 Diamonds Main ($7.58)
+                    <= 650 => 281,  // 600 Diamonds Main ($8.32)
+                    <= 800 => 283,  // 706 Diamonds Main ($9.70)
+                    <= 1200 => 288, // 1050 Diamonds Main ($14.63)
+                    <= 2500 => 300, // 2195 Diamonds Main ($29.17)
+                    <= 4000 => 316, // 3688 Diamonds Main ($48.68)
+                    <= 6000 => 337, // 5532 Diamonds Main ($73.49)
+                    _ => 350        // 9288 Diamonds Main ($122.05)
                 };
             }
         }
-        else if (sku?.Contains("2wdp", StringComparison.OrdinalIgnoreCase) == true || diamondAmount == 440)
-        {
-            packageId = 4967; // 2x Weekly ($2.97)
-        }
-        else if (sku?.Contains("3wdp", StringComparison.OrdinalIgnoreCase) == true || diamondAmount == 660)
-        {
-            packageId = 4968; // 3x Weekly ($4.46)
-        }
-        else if (sku?.Contains("4wdp", StringComparison.OrdinalIgnoreCase) == true || diamondAmount == 880)
-        {
-            packageId = 4969; // 4x Weekly ($5.94)
-        }
-        else if (sku?.Contains("5wdp", StringComparison.OrdinalIgnoreCase) == true || diamondAmount == 1100)
-        {
-            packageId = 4970; // 5x Weekly ($7.43)
-        }
-        else if (sku?.Contains("wdp", StringComparison.OrdinalIgnoreCase) == true || 
-                 sku?.Contains("weekly", StringComparison.OrdinalIgnoreCase) == true || 
-                 diamondAmount == 210)
-        {
-            packageId = 371; // Weekly Pass ($1.54)
-        }
-        else if (sku?.Contains("twilight", StringComparison.OrdinalIgnoreCase) == true || diamondAmount == 500)
-        {
-            packageId = 370; // Twilight Pass ($8.10)
-        }
-        else
-        {
-            packageId = diamondAmount switch
-            {
-                <= 15 => 569,   // 14 Diamonds Special ($0.25)
-                <= 30 => 570,   // 28 Diamonds Special ($0.49)
-                <= 45 => 571,   // 42 Diamonds Special ($0.73)
-                <= 60 => 268,   // 55 Diamonds Main ($0.79)
-                <= 95 => 269,   // 86 Diamonds Main ($1.25)
-                <= 125 => 269,  // 86 Diamonds Main ($1.25)
-                <= 168 => 270,  // 165 Diamonds Main ($2.36)
-                <= 200 => 271,  // 172 Diamonds Main ($2.46)
-                <= 260 => 272,  // 257 Diamonds Main ($3.55)
-                <= 300 => 273,  // 275 Diamonds Main ($3.69)
-                <= 350 => 274,  // 343 Diamonds Main ($4.78)
-                <= 450 => 276,  // 429 Diamonds Main ($5.99)
-                <= 520 => 278,  // 514 Diamonds Main ($7.06)
-                <= 570 => 280,  // 565 Diamonds Main ($7.58)
-                <= 650 => 281,  // 600 Diamonds Main ($8.32)
-                <= 800 => 283,  // 706 Diamonds Main ($9.70)
-                <= 1200 => 288, // 1050 Diamonds Main ($14.63)
-                <= 2500 => 300, // 2195 Diamonds Main ($29.17)
-                <= 4000 => 316, // 3688 Diamonds Main ($48.68)
-                <= 6000 => 337, // 5532 Diamonds Main ($73.49)
-                _ => 350        // 9288 Diamonds Main ($122.05)
-            };
-        }
 
-        // Financial Safety Guard: Ensure upstream provider package cost never exceeds customer payment!
+        // UNIVERSAL FINANCIAL SAFETY GUARD:
+        // Ensure upstream provider package cost never exceeds customer payment!
         if (orderAmount.HasValue && orderAmount.Value > 0)
         {
             var customerPaid = orderAmount.Value;
 
-            // Free Fire Monthly Protection:
-            // 5021 ($15.03), 5022 ($22.55), 5023 ($30.06) must never be sent if customer paid for 1x Monthly ($8.25)
+            // 1. Pass Multiplier Safe Automatic Downgrades:
             if ((packageId == 5021 || packageId == 5022 || packageId == 5023) && customerPaid < 12.00m)
             {
-                _logger.LogWarning("[Price Safeguard] Overriding KhmerTopUp Package {OriginalId} to 4852 (Monthly $7.76) for Order #{OrderId}: Customer paid ${Paid:F2}, which is below multiplier threshold.",
+                _logger.LogWarning("[Price Safeguard] Downgrading Free Fire Monthly multiplier package {OriginalId} to 4852 (1x Monthly $7.76) for Order #{OrderId}: Customer paid ${Paid:F2}, below multiplier threshold.",
                     packageId, orderId, customerPaid);
                 packageId = 4852;
             }
-            // Free Fire Weekly Protection:
             else if ((packageId == 5024 || packageId == 5025 || packageId == 5026) && customerPaid < 2.50m)
             {
-                _logger.LogWarning("[Price Safeguard] Overriding KhmerTopUp Package {OriginalId} to 383 (Weekly $1.57) for Order #{OrderId}: Customer paid ${Paid:F2}, which is below multiplier threshold.",
+                _logger.LogWarning("[Price Safeguard] Downgrading Free Fire Weekly multiplier package {OriginalId} to 383 (1x Weekly $1.57) for Order #{OrderId}: Customer paid ${Paid:F2}, below multiplier threshold.",
                     packageId, orderId, customerPaid);
                 packageId = 383;
             }
-            // Free Fire Weekly Lite Protection:
             else if ((packageId == 5028 || packageId == 5029) && customerPaid < 0.50m)
             {
-                _logger.LogWarning("[Price Safeguard] Overriding KhmerTopUp Package {OriginalId} to 384 (Weekly Lite $0.32) for Order #{OrderId}: Customer paid ${Paid:F2}, which is below multiplier threshold.",
+                _logger.LogWarning("[Price Safeguard] Downgrading Free Fire Weekly Lite multiplier package {OriginalId} to 384 (Weekly Lite $0.32) for Order #{OrderId}: Customer paid ${Paid:F2}, below multiplier threshold.",
                     packageId, orderId, customerPaid);
                 packageId = 384;
             }
-            // MLBB Weekly Pass Multiplier Protection:
             else if ((packageId == 4967 || packageId == 4968 || packageId == 4969 || packageId == 4970) && customerPaid < 2.50m)
             {
-                _logger.LogWarning("[Price Safeguard] Overriding KhmerTopUp Package {OriginalId} to 371 (1x WDP $1.54) for Order #{OrderId}: Customer paid ${Paid:F2}, which is below multiplier threshold.",
+                _logger.LogWarning("[Price Safeguard] Downgrading MLBB Weekly multiplier package {OriginalId} to 371 (1x WDP $1.54) for Order #{OrderId}: Customer paid ${Paid:F2}, below multiplier threshold.",
                     packageId, orderId, customerPaid);
                 packageId = 371;
+            }
+
+            // 2. Strict Universal Cost-Ceiling Verification across ALL packages:
+            if (KhmerTopUpPackageCosts.TryGetValue(packageId, out var wholesaleCost))
+            {
+                // If wholesale cost strictly exceeds what the customer paid, BLOCK the order to prevent money loss!
+                if (wholesaleCost > (customerPaid * 1.02m) && wholesaleCost > (customerPaid + 0.05m))
+                {
+                    _logger.LogError("[CRITICAL PRICE GUARD BLOCKED ORDER #{OrderId}] Package {PackageId} wholesale cost ${Cost:F2} exceeds customer payment ${Paid:F2}. Halting upstream order to prevent money loss.",
+                        orderId, packageId, wholesaleCost, customerPaid);
+
+                    return new TopUpResult
+                    {
+                        Success = false,
+                        ErrorMessage = $"Financial Safety Guard Blocked: Upstream provider package #{packageId} cost (${wholesaleCost:F2}) is higher than customer order amount (${customerPaid:F2}). Automated purchase was safely stopped to prevent store loss."
+                    };
+                }
             }
         }
 
