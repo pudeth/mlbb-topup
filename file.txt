@@ -1,0 +1,212 @@
+====================================================================================================
+               MLBB & FREE FIRE - PROVIDER PACKAGE ID & SAFETY VERIFICATION LIST
+====================================================================================================
+Generated: 2026-10-10
+Provider: KhmerTopUp (https://khmer-topup.com) / FazerCards Backup
+Status: 100% PROTECTED (Universal Cost Ceiling & Strict Multiplier Safeguards Active)
+
+====================================================================================================
+                      HOW YOUR STORE IS GUARANTEED SAFE FROM OVERPAYING
+====================================================================================================
+1. UNIVERSAL COST-CEILING GUARD:
+   - Upstream Provider Wholesale Cost CAN NEVER exceed Customer Payment.
+   - If wholesale cost > customer payment (e.g., customer paid $8.25, but upstream tries to purchase 
+     a package costing > $8.25), the automated order is INSTANTLY HALTED & BLOCKED to prevent money loss.
+
+2. STRICT PRICE LOCKS:
+   - Free Fire Monthly ($8.25): Strictly locked to Package #4852 ($7.76 wholesale).
+     Upstream multiplier package #5021 ($15.03) is completely blocked unless customer paid >= $14.50.
+   - Free Fire Weekly ($1.68): Strictly locked to Package #383 ($1.57 wholesale).
+     Upstream multiplier package #5024 ($3.12) is completely blocked unless customer paid >= $2.90.
+   - Free Fire Weekly Lite ($0.35): Strictly locked to Package #384 ($0.32 wholesale).
+   - MLBB Twilight Pass ($8.25): Strictly locked to Package #370 ($8.14 wholesale).
+   - MLBB Weekly Diamond Pass ($1.55): Strictly locked to Package #371 ($1.54 wholesale).
+
+3. AUTOMATIC DOWNGRADE CASCADES:
+   - MLBB Weekly Pass Bundles: If a customer buys single or pays below multiplier threshold, the order
+     automatically cascades down safely:
+     Package #4970 (5x) -> #4969 (4x) -> #4968 (3x) -> #4967 (2x) -> #371 (1x WDP $1.54).
+   - Free Fire Multipliers: Automatically downscale to single passes if payment < threshold.
+
+
+====================================================================================================
+                       PART 1: FREE FIRE (FF SGMY) OFFICIAL PACKAGES
+====================================================================================================
+
+--- MEMBERSHIP PASSES ---
+PKG ID  | PACKAGE NAME                 | DIAMONDS | BUY COST | SELL PRICE | PROFIT  | SAFEGUARD RULE
+--------+------------------------------+----------+----------+------------+---------+----------------------------------------------
+4852    | 1x Monthly Membership        | 2,600💎  | $7.76    | $8.25      | +$0.49  | STRICT $8.25 LOCK: Never buys 5021 ($15.03)
+5021    | 2x Monthly Membership        | 5,000💎  | $15.03   | $15.95     | +$0.92  | Auto-downgrades to #4852 if paid < $14.50
+5022    | 3x Monthly Membership        | 7,800💎  | $22.55   | $23.95     | +$1.40  | Auto-downgrades to #4852 if paid < $21.00
+5023    | 4x Monthly Membership        | 10,000💎 | $30.06   | $31.95     | +$1.89  | Auto-downgrades to #4852 if paid < $28.00
+383     | 1x Weekly Membership         | 445💎    | $1.57    | $1.68      | +$0.11  | STRICT $1.68 LOCK: Never buys 5024 ($3.12)
+5024    | 2x Weekly Membership         | 890💎    | $3.12    | $3.35      | +$0.23  | Auto-downgrades to #383 if paid < $2.90
+5025    | 3x Weekly Membership         | 1,335💎  | $4.67    | $4.98      | +$0.31  | Auto-downgrades to #383 if paid < $4.20
+5026    | 4x Weekly Membership         | 1,780💎  | $6.24    | $6.65      | +$0.41  | Auto-downgrades to #383 if paid < $5.80
+384     | 1x Weekly Lite Pass          | 90💎     | $0.32    | $0.35      | +$0.03  | STRICT $0.35 LOCK: Never buys 5028 ($0.63)
+5028    | 2x Weekly Lite Pass          | 180💎    | $0.63    | $0.68      | +$0.05  | Auto-downgrades to #384 if paid < $0.55
+5029    | 3x Weekly Lite Pass          | 270💎    | $0.94    | $1.00      | +$0.06  | Auto-downgrades to #384 if paid < $0.85
+
+--- LEVEL UP PASSES ---
+PKG ID  | PACKAGE NAME                 | DIAMONDS | BUY COST | SELL PRICE | PROFIT  | SAFEGUARD RULE
+--------+------------------------------+----------+----------+------------+---------+----------------------------------------------
+390     | Level Up - Level 6           | 200💎    | $0.29    | $0.32      | +$0.03  | Exact ID & Diamond matching
+385     | Level Up - Level 10          | 300💎    | $0.61    | $0.66      | +$0.05  | Exact ID & Diamond matching
+386     | Level Up - Level 15          | 400💎    | $0.61    | $0.66      | +$0.05  | Exact ID & Diamond matching
+387     | Level Up - Level 20          | 500💎    | $0.61    | $0.66      | +$0.05  | Exact ID & Diamond matching
+388     | Level Up - Level 25          | 600💎    | $0.61    | $0.66      | +$0.05  | Exact ID & Diamond matching
+389     | Level Up - Level 30          | 800💎    | $0.90    | $0.96      | +$0.06  | Exact ID & Diamond matching
+
+--- SPECIAL COMBOS & EVO ---
+PKG ID  | PACKAGE NAME                 | DIAMONDS | BUY COST | SELL PRICE | PROFIT  | SAFEGUARD RULE
+--------+------------------------------+----------+----------+------------+---------+----------------------------------------------
+5030    | 3 in 1 Membership            | Special  | $9.50    | $10.20     | +$0.70  | Context match
+5031    | Weekly + Monthly Pass        | Special  | $9.33    | $9.95      | +$0.62  | Context match
+5032    | 2 Weekly + Monthly Pass      | Special  | $18.15   | $19.30     | +$1.15  | Context match
+5301    | Evo 3                        | Special  | $0.65    | $0.75      | +$0.10  | Context match
+5302    | Evo 7                        | Special  | $0.90    | $1.00      | +$0.10  | Context match
+5303    | Evo 30                       | Special  | $2.55    | $2.80      | +$0.25  | Context match
+
+--- DIRECT DIAMONDS ---
+PKG ID  | PACKAGE NAME                 | DIAMONDS | BUY COST | SELL PRICE | PROFIT  | SAFEGUARD RULE
+--------+------------------------------+----------+----------+------------+---------+----------------------------------------------
+374     | 25 Diamonds                  | 25💎     | $0.24    | $0.26      | +$0.02  | Cost-ceiling protected
+5293    | 50 Diamonds                  | 50💎     | $0.36    | $0.45      | +$0.09  | Cost-ceiling protected
+391     | 100 Diamonds                 | 100💎    | $0.90    | $0.96      | +$0.06  | Cost-ceiling protected
+5295    | 205 Diamonds                 | 205💎    | $1.73    | $1.90      | +$0.17  | Cost-ceiling protected
+376     | 310 Diamonds                 | 310💎    | $2.74    | $2.90      | +$0.16  | Cost-ceiling protected
+377     | 520 Diamonds                 | 520💎    | $4.59    | $4.85      | +$0.26  | Cost-ceiling protected
+5299    | 830 Diamonds                 | 830💎    | $5.27    | $5.80      | +$0.53  | Cost-ceiling protected
+378     | 1060 Diamonds                | 1,060💎  | $9.01    | $9.55      | +$0.54  | Cost-ceiling protected
+5146    | 1590 Diamonds                | 1,590💎  | $9.95    | $11.00     | +$1.05  | Cost-ceiling protected
+379     | 2180 Diamonds                | 2,180💎  | $18.21   | $19.30     | +$1.09  | Cost-ceiling protected
+5147    | 3270 Diamonds                | 3,270💎  | $19.99   | $22.00     | +$2.01  | Cost-ceiling protected
+380     | 5600 Diamonds                | 5,600💎  | $45.07   | $47.80     | +$2.73  | Cost-ceiling protected
+5148    | 8400 Diamonds                | 8,400💎  | $49.44   | $55.00     | +$5.56  | Cost-ceiling protected
+381     | 11500 Diamonds               | 11,500💎 | $92.82   | $98.00     | +$5.18  | Cost-ceiling protected
+
+
+====================================================================================================
+                   PART 2: MOBILE LEGENDS (MLBB) OFFICIAL PACKAGES
+====================================================================================================
+
+--- PASSES & SPECIALS ---
+PKG ID  | PACKAGE NAME                 | DIAMONDS | BUY COST | SELL PRICE | PROFIT  | SAFEGUARD RULE
+--------+------------------------------+----------+----------+------------+---------+----------------------------------------------
+371     | Weekly Diamond Pass (WDP)    | 210💎    | $1.54    | $1.55      | +$0.01  | STRICT $1.55 LOCK: Rejects multi-passes if paid < $2.70
+4967    | 2x Weekly Diamond Pass       | 440💎    | $2.97    | $3.10      | +$0.13  | Auto-downgrades to #371 if paid < $2.70
+4968    | 3x Weekly Diamond Pass       | 660💎    | $4.46    | $4.65      | +$0.19  | Auto-downgrades to #4967 / #371 if paid < $4.00
+4969    | 4x Weekly Diamond Pass       | 880💎    | $5.94    | $6.20      | +$0.26  | Auto-downgrades to #4968 / #371 if paid < $5.50
+4970    | 5x Weekly Diamond Pass       | 1,100💎  | $7.43    | $7.75      | +$0.32  | Auto-downgrades to #4969 / #371 if paid < $7.00
+370     | Twilight Pass                | 500💎    | $8.14    | $8.25      | +$0.11  | STRICT $8.25 LOCK: Never buys packages > $8.25
+372     | Weekly Elite Pack            | Pack     | $0.79    | $0.89      | +$0.10  | Context match
+369     | Monthly Elite Pack           | Pack     | $3.99    | $4.35      | +$0.36  | Context match
+5276    | Diamond Pass                 | Pass     | $0.81    | $0.89      | +$0.08  | Context match
+5284    | SuperValue                   | Pass     | $0.79    | $0.89      | +$0.10  | Context match
+
+--- DIRECT DIAMONDS (CORE STORE CATALOG) ---
+PKG ID  | PACKAGE NAME                 | DIAMONDS | BUY COST | SELL PRICE | PROFIT  | SAFEGUARD RULE
+--------+------------------------------+----------+----------+------------+---------+----------------------------------------------
+569     | 14 Diamonds                  | 14💎     | $0.25    | $0.28      | +$0.03  | Cost-ceiling protected
+570     | 28 Diamonds                  | 28💎     | $0.49    | $0.55      | +$0.06  | Cost-ceiling protected
+571     | 42 Diamonds                  | 42💎     | $0.73    | $0.80      | +$0.07  | Cost-ceiling protected
+268     | 55 Diamonds                  | 55💎     | $0.76    | $0.89      | +$0.13  | Cost-ceiling protected
+269     | 86 Diamonds                  | 86💎     | $1.25    | $1.39      | +$0.14  | Cost-ceiling protected
+270     | 165 Diamonds                 | 165💎    | $2.28    | $2.66      | +$0.38  | Cost-ceiling protected
+271     | 172 Diamonds                 | 172💎    | $2.47    | $2.78      | +$0.31  | Cost-ceiling protected
+272     | 257 Diamonds                 | 257💎    | $3.54    | $4.15      | +$0.61  | Cost-ceiling protected
+273     | 275 Diamonds / 312💎         | 275💎    | $3.78    | $4.44      | +$0.66  | Cost-ceiling protected
+274     | 343 Diamonds                 | 343💎    | $4.79    | $5.53      | +$0.74  | Cost-ceiling protected
+275     | 344 Diamonds                 | 344💎    | $4.93    | $5.70      | +$0.77  | Cost-ceiling protected
+276     | 429 Diamonds                 | 429💎    | $5.99    | $6.92      | +$0.93  | Cost-ceiling protected
+277     | 430 Diamonds                 | 430💎    | $6.18    | $7.10      | +$0.92  | Cost-ceiling protected
+278     | 514 Diamonds                 | 514💎    | $7.07    | $8.29      | +$1.22  | Cost-ceiling protected
+279     | 516 Diamonds                 | 516💎    | $7.40    | $8.50      | +$1.10  | Cost-ceiling protected
+280     | 565 Diamonds                 | 565💎    | $7.58    | $9.12      | +$1.54  | Cost-ceiling protected
+281     | 600 Diamonds                 | 600💎    | $8.32    | $9.68      | +$1.36  | Cost-ceiling protected
+282     | 602 Diamonds                 | 602💎    | $8.64    | $9.90      | +$1.26  | Cost-ceiling protected
+283     | 706 Diamonds                 | 706💎    | $9.69    | $11.39     | +$1.70  | Cost-ceiling protected
+284     | 792 Diamonds                 | 792💎    | $10.94   | $12.80     | +$1.86  | Cost-ceiling protected
+285     | 878 Diamonds                 | 878💎    | $12.16   | $14.17     | +$2.01  | Cost-ceiling protected
+286     | 963 Diamonds                 | 963💎    | $13.24   | $15.54     | +$2.30  | Cost-ceiling protected
+287     | 964 Diamonds                 | 964💎    | $13.40   | $15.70     | +$2.30  | Cost-ceiling protected
+288     | 1050 Diamonds                | 1,050💎  | $14.63   | $16.94     | +$2.31  | Cost-ceiling protected
+289     | 1060 Diamonds                | 1,060💎  | $14.72   | $17.10     | +$2.38  | Cost-ceiling protected
+290     | 1136 Diamonds                | 1,136💎  | $15.86   | $18.40     | +$2.54  | Cost-ceiling protected
+291     | 1222 Diamonds                | 1,222💎  | $17.08   | $19.80     | +$2.72  | Cost-ceiling protected
+292     | 1308 Diamonds                | 1,308💎  | $18.33   | $21.20     | +$2.87  | Cost-ceiling protected
+293     | 1412 Diamonds                | 1,412💎  | $19.40   | $22.78     | +$3.38  | Cost-ceiling protected
+294     | 1498 Diamonds                | 1,498💎  | $20.64   | $24.10     | +$3.46  | Cost-ceiling protected
+295     | 1584 Diamonds                | 1,584💎  | $21.86   | $25.50     | +$3.64  | Cost-ceiling protected
+296     | 1670 Diamonds                | 1,670💎  | $23.09   | $26.80     | +$3.71  | Cost-ceiling protected
+297     | 1756 Diamonds                | 1,756💎  | $24.33   | $28.10     | +$3.77  | Cost-ceiling protected
+298     | 1842 Diamonds                | 1,842💎  | $25.56   | $29.50     | +$3.94  | Cost-ceiling protected
+299     | 1928 Diamonds                | 1,928💎  | $26.78   | $31.00     | +$4.22  | Cost-ceiling protected
+300     | 2195 Diamonds                | 2,195💎  | $29.36   | $35.41     | +$6.05  | Cost-ceiling protected
+301     | 2281 Diamonds                | 2,281💎  | $30.59   | $36.80     | +$6.21  | Cost-ceiling protected
+302     | 2367 Diamonds                | 2,367💎  | $31.81   | $38.20     | +$6.39  | Cost-ceiling protected
+303     | 2453 Diamonds                | 2,453💎  | $33.05   | $39.56     | +$6.51  | Cost-ceiling protected
+304     | 2539 Diamonds                | 2,539💎  | $34.27   | $41.00     | +$6.73  | Cost-ceiling protected
+305     | 2625 Diamonds                | 2,625💎  | $35.53   | $42.50     | +$6.97  | Cost-ceiling protected
+306     | 2711 Diamonds                | 2,711💎  | $36.74   | $44.00     | +$7.26  | Cost-ceiling protected
+307     | 2797 Diamonds                | 2,797💎  | $37.99   | $45.50     | +$7.51  | Cost-ceiling protected
+308     | 2901 Diamonds                | 2,901💎  | $39.04   | $46.81     | +$7.77  | Cost-ceiling protected
+309     | 2987 Diamonds                | 2,987💎  | $40.27   | $48.20     | +$7.93  | Cost-ceiling protected
+310     | 3073 Diamonds                | 3,073💎  | $41.50   | $49.60     | +$8.10  | Cost-ceiling protected
+311     | 3159 Diamonds                | 3,159💎  | $42.75   | $51.00     | +$8.25  | Cost-ceiling protected
+312     | 3245 Diamonds                | 3,245💎  | $43.97   | $52.50     | +$8.53  | Cost-ceiling protected
+313     | 3331 Diamonds                | 3,331💎  | $45.21   | $54.00     | +$8.79  | Cost-ceiling protected
+314     | 3417 Diamonds                | 3,417💎  | $46.43   | $55.50     | +$9.07  | Cost-ceiling protected
+315     | 3503 Diamonds                | 3,503💎  | $47.68   | $57.00     | +$9.32  | Cost-ceiling protected
+316     | 3688 Diamonds                | 3,688💎  | $48.95   | $59.49     | +$10.54 | Cost-ceiling protected
+317     | 3774 Diamonds                | 3,774💎  | $50.20   | $61.00     | +$10.80 | Cost-ceiling protected
+318     | 3860 Diamonds                | 3,860💎  | $51.42   | $62.50     | +$11.08 | Cost-ceiling protected
+319     | 3946 Diamonds                | 3,946💎  | $52.67   | $64.00     | +$11.33 | Cost-ceiling protected
+320     | 4032 Diamonds                | 4,032💎  | $53.89   | $65.50     | +$11.61 | Cost-ceiling protected
+321     | 4118 Diamonds                | 4,118💎  | $55.12   | $67.00     | +$11.88 | Cost-ceiling protected
+322     | 4204 Diamonds                | 4,204💎  | $56.34   | $68.50     | +$12.16 | Cost-ceiling protected
+323     | 4290 Diamonds                | 4,290💎  | $57.59   | $70.00     | +$12.41 | Cost-ceiling protected
+324     | 4394 Diamonds                | 4,394💎  | $58.66   | $70.83     | +$12.17 | Cost-ceiling protected
+325     | 4480 Diamonds                | 4,480💎  | $59.90   | $72.50     | +$12.60 | Cost-ceiling protected
+326     | 4566 Diamonds                | 4,566💎  | $61.12   | $74.00     | +$12.88 | Cost-ceiling protected
+327     | 4652 Diamonds                | 4,652💎  | $62.36   | $75.50     | +$13.14 | Cost-ceiling protected
+328     | 4738 Diamonds                | 4,738💎  | $63.58   | $77.00     | +$13.42 | Cost-ceiling protected
+329     | 4824 Diamonds                | 4,824💎  | $64.82   | $78.50     | +$13.68 | Cost-ceiling protected
+330     | 4910 Diamonds                | 4,910💎  | $66.04   | $80.00     | +$13.96 | Cost-ceiling protected
+331     | 4996 Diamonds                | 4,996💎  | $67.28   | $81.50     | +$14.22 | Cost-ceiling protected
+332     | 5100 Diamonds                | 5,100💎  | $68.34   | $83.00     | +$14.66 | Cost-ceiling protected
+333     | 5186 Diamonds                | 5,186💎  | $69.58   | $84.50     | +$14.92 | Cost-ceiling protected
+334     | 5272 Diamonds                | 5,272💎  | $70.81   | $86.00     | +$15.19 | Cost-ceiling protected
+335     | 5358 Diamonds                | 5,358💎  | $72.05   | $87.50     | +$15.45 | Cost-ceiling protected
+336     | 5444 Diamonds                | 5,444💎  | $73.27   | $89.00     | +$15.73 | Cost-ceiling protected
+337     | 5532 Diamonds                | 5,532💎  | $73.93   | $89.25     | +$15.32 | Cost-ceiling protected
+338     | 5618 Diamonds                | 5,618💎  | $75.15   | $91.00     | +$15.85 | Cost-ceiling protected
+339     | 5704 Diamonds                | 5,704💎  | $76.38   | $92.50     | +$16.12 | Cost-ceiling protected
+340     | 5790 Diamonds                | 5,790💎  | $77.61   | $94.00     | +$16.39 | Cost-ceiling protected
+341     | 5876 Diamonds                | 5,876💎  | $78.84   | $95.50     | +$16.66 | Cost-ceiling protected
+342     | 5962 Diamonds                | 5,962💎  | $80.09   | $97.00     | +$16.91 | Cost-ceiling protected
+343     | 6048 Diamonds                | 6,048💎  | $81.31   | $98.50     | +$17.19 | Cost-ceiling protected
+344     | 6134 Diamonds                | 6,134💎  | $82.55   | $100.00    | +$17.45 | Cost-ceiling protected
+345     | 6238 Diamonds                | 6,238💎  | $83.61   | $101.50    | +$17.89 | Cost-ceiling protected
+346     | 6754 Diamonds                | 6,754💎  | $91.01   | $109.50    | +$18.49 | Cost-ceiling protected
+347     | 6944 Diamonds                | 6,944💎  | $93.30   | $112.04    | +$18.74 | Cost-ceiling protected
+348     | 7727 Diamonds                | 7,727💎  | $103.26  | $124.00    | +$20.74 | Cost-ceiling protected
+349     | 8433 Diamonds                | 8,433💎  | $112.95  | $136.00    | +$23.05 | Cost-ceiling protected
+350     | 9288 Diamonds                | 9,288💎  | $122.76  | $149.85    | +$27.09 | Cost-ceiling protected
+351     | 9994 Diamonds                | 9,994💎  | $132.47  | $160.00    | +$27.53 | Cost-ceiling protected
+352     | 10080 Diamonds               | 10,080💎 | $133.71  | $161.50    | +$27.79 | Cost-ceiling protected
+353     | 10700 Diamonds               | 10,700💎 | $142.15  | $172.00    | +$29.85 | Cost-ceiling protected
+354     | 11483 Diamonds               | 11,483💎 | $152.11  | $184.00    | +$31.89 | Cost-ceiling protected
+355     | 12189 Diamonds               | 12,189💎 | $161.81  | $195.50    | +$33.69 | Cost-ceiling protected
+356     | 12976 Diamonds               | 12,976💎 | $171.73  | $207.50    | +$35.77 | Cost-ceiling protected
+357     | 13682 Diamonds               | 13,682💎 | $181.41  | $219.00    | +$37.59 | Cost-ceiling protected
+358     | 14820 Diamonds               | 14,820💎 | $196.68  | $237.50    | +$40.82 | Cost-ceiling protected
+359     | 15526 Diamonds               | 15,526💎 | $206.37  | $249.00    | +$42.63 | Cost-ceiling protected
+360     | 18576 Diamonds               | 18,576💎 | $245.54  | $298.00    | +$52.46 | Cost-ceiling protected
+361     | 19282 Diamonds               | 19,282💎 | $255.22  | $309.00    | +$53.78 | Cost-ceiling protected
+362     | 19626 Diamonds               | 19,626💎 | $260.15  | $315.00    | +$54.85 | Cost-ceiling protected
+
+====================================================================================================
+End of File
+====================================================================================================
