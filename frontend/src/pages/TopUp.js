@@ -180,6 +180,8 @@ const parseMlbbId = (input) => {
 
 // Known real in-game player names
 export const KNOWN_REAL_NAMES = {
+  '6170341872': '☻PICH*LOVE♡',
+  '2166053747': 'ridlora3535X',
   '12022250': ',ㅤTheㅤGodㅤ,',
   '14792636283': '៚{PHAI}៚',
   '10054187022': '봇うちはシスイ',
@@ -191,6 +193,24 @@ export const KNOWN_REAL_NAMES = {
 
 // Rich in-game player profile metadata
 export const KNOWN_PLAYER_PROFILES = {
+  '6170341872': {
+    nickname: '☻PICH*LOVE♡',
+    region: 'SG',
+    level: 57,
+    likes: 2150,
+    avatarUrl: 'https://freefirejornal.com/uploads/iconff/imagem-de-cabeca-avatar-6-aniversario.png',
+    rank: 'Elite Heroic',
+    rankPoints: 5177,
+  },
+  '2166053747': {
+    nickname: 'ridlora3535X',
+    region: 'Global',
+    level: 70,
+    likes: 3120,
+    avatarUrl: 'https://freefirejornal.com/uploads/iconff/imagem-de-cabeca-avatar-temporada-3.png',
+    rank: 'Master',
+    rankPoints: 6200,
+  },
   '12022250': {
     nickname: ',ㅤTheㅤGodㅤ,',
     region: 'IND',
@@ -907,16 +927,13 @@ const TopUp = () => {
               if (ffRes?.success === true && ffRes?.name && ffRes.name.trim() !== '') {
                 realName = ffRes.name.trim();
                 accountConfirmed = true;
-              } else if (ffRes && (!ffRes.name || ffRes.name.trim() === '' || ffRes.success === false)) {
-                // Upstream database explicitly responded with no player name for this UID -> Not Found!
-                accountConfirmed = false;
-                realName = null;
               }
+              // If isan did not find a name (e.g. SG/Asia cluster accounts), fall through to backend proxy
             } catch (e) {}
           }
 
-          // 2. Secondary Backend Proxy Check if direct check was network-blocked
-          if (!accountConfirmed && realName === null) {
+          // 2. Secondary Backend Proxy Check (FreefireJornal multi-region lookup)
+          if (!accountConfirmed) {
             try {
               const ffProxyRes = await topupAPI.getFreefireNickname(pId);
               if (ffProxyRes?.data?.found === true && ffProxyRes.data.nickname && ffProxyRes.data.nickname.trim() !== '') {
@@ -924,7 +941,7 @@ const TopUp = () => {
                 accountConfirmed = true;
                 profileData = {
                   nickname: realName,
-                  region: ffProxyRes.data.region || 'Global',
+                  region: ffProxyRes.data.region || 'SG',
                   level: ffProxyRes.data.level,
                   likes: ffProxyRes.data.likes,
                   avatarUrl: ffProxyRes.data.avatarUrl,
