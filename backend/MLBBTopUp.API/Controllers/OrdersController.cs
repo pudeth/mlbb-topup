@@ -253,7 +253,7 @@ public class OrdersController : BaseController
                         else
                         {
                             var err = (topupRes.ErrorReason ?? topupRes.Message ?? "").ToLower();
-                            var isLowBalance = err.Contains("insufficient") || err.Contains("balance") || err.Contains("funds") || err.Contains("fzr.cards") || err.Contains("wallet");
+                            var isLowBalance = err.Contains("insufficient") || err.Contains("balance") || err.Contains("funds") || err.Contains("fzr.cards") || err.Contains("wallet") || err.Contains("regional") || err.Contains("admin");
                             await _orderService.UpdateOrderTopupStatusAsync(order.OrderId, isLowBalance ? "AwaitingBalance" : "Failed");
                         }
                     }

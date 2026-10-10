@@ -1133,6 +1133,17 @@ public class RealTopUpProviderClient : ITopUpProviderClient
 
             if (!string.IsNullOrEmpty(msg))
             {
+                if (msg.Contains("វៀតណាម") || msg.Contains("ឥណ្ឌា") || msg.Contains("ឥណ្ឌូនេស៊ី") || msg.Contains("តៃវ៉ាន់") || msg.Contains("ថៃ") ||
+                    msg.Contains("region", StringComparison.OrdinalIgnoreCase) || msg.Contains("country", StringComparison.OrdinalIgnoreCase))
+                {
+                    _logger.LogWarning("[Regional Server Notice] Upstream KhmerTopUp rejected region for order {OrderId}: {Msg}. Flagging for Admin manual fulfillment.", orderId, msg);
+                    return new TopUpResult 
+                    { 
+                        Success = false, 
+                        ErrorMessage = $"Regional Account Notice: {msg} (Order preserved for admin manual / international fulfillment)" 
+                    };
+                }
+
                 return new TopUpResult { Success = false, ErrorMessage = $"Khmer TopUp Error: {msg}" };
             }
         }
