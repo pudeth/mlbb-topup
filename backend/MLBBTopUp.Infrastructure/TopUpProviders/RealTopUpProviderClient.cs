@@ -580,8 +580,8 @@ public class RealTopUpProviderClient : ITopUpProviderClient
             return new TopUpResult
             {
                 Success = false,
-                ErrorMessage = "តំបន់វៀតណាម ឥណ្ឌា តៃវ៉ាន់ ថៃ និងឥណ្ឌូនេស៊ី មិនត្រូវបានអនុញ្ញាតឱ្យបញ្ចូលទេ។ (Vietnam, India, Taiwan, Thailand, and Indonesia regions are not allowed)",
-                Provider = "KhmerTopUp"
+                Status = "Failed",
+                ErrorMessage = "តំបន់វៀតណាម ឥណ្ឌា តៃវ៉ាន់ ថៃ និងឥណ្ឌូនេស៊ី មិនត្រូវបានអនុញ្ញាតឱ្យបញ្ចូលទេ។ (Vietnam, India, Taiwan, Thailand, and Indonesia regions are not allowed)"
             };
         }
 
