@@ -87,25 +87,12 @@ const OrderHistory = () => {
   const [filterTab, setFilterTab] = useState('all'); // 'all', 'completed', 'processing'
   const [copiedId, setCopiedId] = useState(null);
 
-  // Recent lookups from localStorage
-  const [recentLookups, setRecentLookups] = useState(() => {
+  // Clean up any legacy recent lookups
+  useEffect(() => {
     try {
-      const saved = localStorage.getItem('recent_player_lookups');
-      return saved ? JSON.parse(saved) : [];
-    } catch {
-      return [];
-    }
-  });
-
-  const saveRecentLookup = (pId, sId, name) => {
-    try {
-      const item = { playerId: pId, serverId: sId, name: name || `Player_${pId}` };
-      const filtered = recentLookups.filter(r => r.playerId !== pId);
-      const updated = [item, ...filtered].slice(0, 4);
-      setRecentLookups(updated);
-      localStorage.setItem('recent_player_lookups', JSON.stringify(updated));
+      localStorage.removeItem('recent_player_lookups');
     } catch {}
-  };
+  }, []);
 
   // Dedicated Paste for Player ID (intelligently detects combined Player ID + Server ID too)
   const handlePastePlayerId = async () => {
@@ -375,9 +362,6 @@ const OrderHistory = () => {
         realName: realName
       };
 
-      // Save recent lookup for quick auto-fill chips
-      saveRecentLookup(pId, sId, realName);
-
       // Atomically update global auth state (Navbar, Sidebar, OrderHistory sync simultaneously)
       loginPlayer(newPlayerAccount, authResult?.token, storedUser);
 
@@ -455,34 +439,6 @@ const OrderHistory = () => {
                     <span className="hidden sm:inline">{language === 'km' ? 'បិទភ្ជាប់ស្វ័យប្រវត្តិ' : 'Quick Paste'}</span>
                   </button>
                 </div>
-
-                {/* Recently Used Accounts (if any) */}
-                {recentLookups.length > 0 && (
-                  <div className="mb-5 p-3 rounded-2xl bg-[#070c1b] border border-slate-800">
-                    <div className="text-[10px] text-slate-400 font-bold uppercase tracking-wider mb-2 flex items-center gap-1.5">
-                      <span>🕒</span>
-                      <span>{language === 'km' ? 'គណនីដែលបានប្រើថ្មីៗ (ចុចដើម្បីជ្រើសរើស)' : 'Recent Players (Tap to auto-fill)'}</span>
-                    </div>
-                    <div className="flex items-center gap-2 flex-wrap">
-                      {recentLookups.map((r, i) => (
-                        <button
-                          key={i}
-                          type="button"
-                          onClick={() => {
-                            setFormData({ playerId: r.playerId, serverId: r.serverId });
-                            setVerifiedName(r.name || '');
-                            setFormError('');
-                          }}
-                          className="px-2.5 py-1 rounded-xl bg-slate-900 hover:bg-cyan-950/60 border border-slate-800 hover:border-cyan-500/50 text-[11px] font-bold text-slate-300 hover:text-cyan-300 flex items-center gap-1.5 transition-all cursor-pointer shadow-sm"
-                        >
-                          <span>👤</span>
-                          <span>{r.name || `ID ${r.playerId}`}</span>
-                          <span className="text-[9px] font-mono text-slate-500">({r.serverId})</span>
-                        </button>
-                      ))}
-                    </div>
-                  </div>
-                )}
 
                 {/* Form Error Banner */}
                 {formError && (
