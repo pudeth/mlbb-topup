@@ -1,5 +1,5 @@
 // Hybrid Cryptography Client (RSA-2048 + AES-256-CBC)
-// Secures API requests and responses from DevTools inspection
+// Secures API requests and responses without exposing _enc or iv properties in DevTools
 
 const DEFAULT_SERVER_PUBLIC_KEY_PEM = `-----BEGIN PUBLIC KEY-----
 MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEA2RhPsoJtXAcDWhTWdA/y
@@ -13,7 +13,6 @@ Z3obHFPY8anSH6Vyrx6fYSqYBrtzWe4jMV+BqJZcWssCCIv8GG/QnReBAB6zKOuZ
 
 let cachedRsaPublicKey = null;
 
-// Helpers: Base64 and ArrayBuffer conversions
 export const arrayBufferToBase64 = (buffer) => {
   const bytes = new Uint8Array(buffer);
   let binary = '';
@@ -40,7 +39,6 @@ const pemToDer = (pem) => {
   return base64ToArrayBuffer(clean);
 };
 
-// Check if modern Web Crypto API is available in current browser
 export const isCryptoSupported = () => {
   return typeof window !== 'undefined' &&
     window.crypto &&
@@ -48,7 +46,6 @@ export const isCryptoSupported = () => {
     typeof window.crypto.subtle.importKey === 'function';
 };
 
-// Import and cache RSA Public Key
 export const getRsaPublicKey = async (pemString = DEFAULT_SERVER_PUBLIC_KEY_PEM) => {
   if (cachedRsaPublicKey) return cachedRsaPublicKey;
   if (!isCryptoSupported()) return null;
@@ -69,7 +66,6 @@ export const getRsaPublicKey = async (pemString = DEFAULT_SERVER_PUBLIC_KEY_PEM)
   }
 };
 
-// Generate random 256-bit AES key and 16-byte IV
 export const generateAesKeyAndIv = () => {
   const rawKey = new Uint8Array(32);
   const iv = new Uint8Array(16);
@@ -78,7 +74,6 @@ export const generateAesKeyAndIv = () => {
   return { rawKey, iv };
 };
 
-// Encrypt AES key using RSA-OAEP SHA-256
 export const encryptAesKeyWithRsa = async (rawAesKey) => {
   const rsaKey = await getRsaPublicKey();
   if (!rsaKey) throw new Error('RSA public key not available');
@@ -91,7 +86,7 @@ export const encryptAesKeyWithRsa = async (rawAesKey) => {
   return arrayBufferToBase64(encryptedBuffer);
 };
 
-// Encrypt payload (data object or string) with AES-256-CBC
+// Encrypt payload combining IV (16 bytes) + AES Ciphertext into a single Base64 string
 export const encryptWithAes = async (data, rawAesKey, iv) => {
   const cryptoKey = await window.crypto.subtle.importKey(
     'raw',
@@ -110,11 +105,16 @@ export const encryptWithAes = async (data, rawAesKey, iv) => {
     encoded
   );
 
-  return arrayBufferToBase64(cipherBuffer);
+  const cipherArray = new Uint8Array(cipherBuffer);
+  const combined = new Uint8Array(16 + cipherArray.byteLength);
+  combined.set(iv, 0);
+  combined.set(cipherArray, 16);
+
+  return arrayBufferToBase64(combined.buffer);
 };
 
-// Decrypt AES-256-CBC ciphertext
-export const decryptWithAes = async (base64Cipher, rawAesKey, base64Iv) => {
+// Decrypt combined Base64 ciphertext (extracts IV from first 16 bytes)
+export const decryptWithAes = async (base64Combined, rawAesKey) => {
   const cryptoKey = await window.crypto.subtle.importKey(
     'raw',
     rawAesKey,
@@ -123,13 +123,20 @@ export const decryptWithAes = async (base64Cipher, rawAesKey, base64Iv) => {
     ['decrypt']
   );
 
-  const cipherBuffer = base64ToArrayBuffer(base64Cipher);
-  const ivBuffer = base64ToArrayBuffer(base64Iv);
+  const combinedBuffer = base64ToArrayBuffer(base64Combined);
+  const combinedBytes = new Uint8Array(combinedBuffer);
+
+  if (combinedBytes.byteLength < 16) {
+    throw new Error('Encrypted payload too short');
+  }
+
+  const iv = combinedBytes.subarray(0, 16);
+  const cipherBytes = combinedBytes.subarray(16);
 
   const decryptedBuffer = await window.crypto.subtle.decrypt(
-    { name: 'AES-CBC', iv: new Uint8Array(ivBuffer) },
+    { name: 'AES-CBC', iv },
     cryptoKey,
-    cipherBuffer
+    cipherBytes
   );
 
   const text = new TextDecoder().decode(decryptedBuffer);
@@ -140,7 +147,6 @@ export const decryptWithAes = async (base64Cipher, rawAesKey, base64Iv) => {
   }
 };
 
-// Prepare encrypted envelope for outgoing request
 export const prepareEncryptedRequest = async (data) => {
   if (!isCryptoSupported()) return { data, rawKey: null };
 
@@ -149,17 +155,17 @@ export const prepareEncryptedRequest = async (data) => {
   const encData = await encryptWithAes(data, rawKey, iv);
 
   return {
+    headers: {
+      'X-Encrypted-Key': encKey,
+      'X-Encrypted': '1'
+    },
     envelope: {
-      _enc: true,
-      key: encKey,
-      iv: arrayBufferToBase64(iv),
       data: encData
     },
     rawKey
   };
 };
 
-// Prepare encrypted header for GET/DELETE
 export const prepareEncryptedHeaders = async () => {
   if (!isCryptoSupported()) return { headers: {}, rawKey: null };
 

@@ -41,10 +41,10 @@ api.interceptors.request.use(
     try {
       // 1. POST, PUT, PATCH with request body
       if (config.data && ['post', 'put', 'patch'].includes(config.method?.toLowerCase())) {
-        const { envelope, rawKey } = await prepareEncryptedRequest(config.data);
+        const { headers, envelope, rawKey } = await prepareEncryptedRequest(config.data);
         config.data = envelope;
+        Object.assign(config.headers, headers);
         config._cryptoAesKey = rawKey;
-        config.headers['X-Encrypted'] = '1';
       }
       // 2. GET, DELETE or empty body
       else {
@@ -68,15 +68,12 @@ api.interceptors.response.use(
   async (response) => {
     const rawKey = response.config?._cryptoAesKey;
     const isEncrypted =
-      response.headers?.['x-encrypted'] === '1' || response.data?._enc === true;
+      response.headers?.['x-encrypted'] === '1' ||
+      Boolean(response.data?.data && typeof response.data.data === 'string');
 
-    if (isEncrypted && rawKey && response.data?.data && response.data?.iv) {
+    if (isEncrypted && rawKey && response.data?.data) {
       try {
-        const decryptedData = await decryptWithAes(
-          response.data.data,
-          rawKey,
-          response.data.iv
-        );
+        const decryptedData = await decryptWithAes(response.data.data, rawKey);
         response.data = decryptedData;
       } catch (err) {
         console.error('[Crypto] Failed to decrypt response body:', err);
@@ -89,15 +86,11 @@ api.interceptors.response.use(
     const rawKey = error.config?._cryptoAesKey;
     const isEncrypted =
       error.response?.headers?.['x-encrypted'] === '1' ||
-      error.response?.data?._enc === true;
+      Boolean(error.response?.data?.data && typeof error.response.data.data === 'string');
 
-    if (isEncrypted && rawKey && error.response?.data?.data && error.response?.data?.iv) {
+    if (isEncrypted && rawKey && error.response?.data?.data) {
       try {
-        const decryptedData = await decryptWithAes(
-          error.response.data.data,
-          rawKey,
-          error.response.data.iv
-        );
+        const decryptedData = await decryptWithAes(error.response.data.data, rawKey);
         error.response.data = decryptedData;
       } catch (err) {
         console.error('[Crypto] Failed to decrypt error response:', err);

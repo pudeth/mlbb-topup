@@ -41,7 +41,7 @@ public class HybridEncryptionMiddleware
 
         byte[]? aesKey = null;
 
-        // 1. Check for header-based encrypted AES key (used for GET/DELETE or header-mode requests)
+        // 1. Check for header-based encrypted AES key
         if (context.Request.Headers.TryGetValue("X-Encrypted-Key", out var encKeyHeader) && 
             !string.IsNullOrWhiteSpace(encKeyHeader))
         {
@@ -56,7 +56,7 @@ public class HybridEncryptionMiddleware
             }
         }
 
-        // 2. Check for body-based encrypted payload (used for POST/PUT/PATCH requests)
+        // 2. Check for body-based encrypted payload ({ "data": "..." } or { "key": "...", "data": "..." })
         if (context.Request.ContentLength > 0 &&
             (context.Request.ContentType?.Contains("application/json", StringComparison.OrdinalIgnoreCase) == true ||
              context.Request.ContentType?.Contains("text/plain", StringComparison.OrdinalIgnoreCase) == true))
@@ -73,20 +73,24 @@ public class HybridEncryptionMiddleware
                     using var doc = JsonDocument.Parse(bodyText);
                     var root = doc.RootElement;
 
-                    if (root.TryGetProperty("_enc", out var encProp) && encProp.GetBoolean())
+                    // Support key in body if header not present
+                    if (aesKey == null && root.TryGetProperty("key", out var keyProp))
                     {
-                        var keyStr = root.GetProperty("key").GetString();
-                        var ivStr = root.GetProperty("iv").GetString();
-                        var dataStr = root.GetProperty("data").GetString();
-
-                        if (!string.IsNullOrEmpty(keyStr) && !string.IsNullOrEmpty(ivStr) && !string.IsNullOrEmpty(dataStr))
+                        var keyStr = keyProp.GetString();
+                        if (!string.IsNullOrEmpty(keyStr))
                         {
                             aesKey = cryptoService.DecryptAesKeyWithRsa(keyStr);
                             context.Items["AesKey"] = aesKey;
+                        }
+                    }
 
-                            var iv = Convert.FromBase64String(ivStr);
-                            var cipherBytes = Convert.FromBase64String(dataStr);
-                            var plainBytes = cryptoService.DecryptAes(cipherBytes, aesKey, iv);
+                    if (aesKey != null && root.TryGetProperty("data", out var dataProp))
+                    {
+                        var dataStr = dataProp.GetString();
+                        if (!string.IsNullOrEmpty(dataStr))
+                        {
+                            var combinedBytes = Convert.FromBase64String(dataStr);
+                            var plainBytes = cryptoService.DecryptAes(combinedBytes, aesKey);
 
                             // Replace request body with decrypted plaintext stream
                             var memoryStream = new MemoryStream(plainBytes);
@@ -126,17 +130,15 @@ public class HybridEncryptionMiddleware
             responseBody.Seek(0, SeekOrigin.Begin);
             var responseBytes = responseBody.ToArray();
 
-            // Only encrypt if we have a valid response and client requested encryption
             if (responseBytes.Length > 0 && context.Response.StatusCode != StatusCodes.Status204NoContent)
             {
                 var responseIv = RandomNumberGenerator.GetBytes(16);
-                var encryptedBytes = cryptoService.EncryptAes(responseBytes, aesKey, responseIv);
+                var combinedEncryptedBytes = cryptoService.EncryptAes(responseBytes, aesKey, responseIv);
 
+                // Clean response payload: ONLY "data" field (no _enc, no iv)
                 var responsePayload = new
                 {
-                    _enc = true,
-                    iv = Convert.ToBase64String(responseIv),
-                    data = Convert.ToBase64String(encryptedBytes)
+                    data = Convert.ToBase64String(combinedEncryptedBytes)
                 };
 
                 var jsonResponse = JsonSerializer.Serialize(responsePayload);

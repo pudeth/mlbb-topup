@@ -12,7 +12,6 @@ public class CryptoService : ICryptoService
     private readonly RSA _rsa;
     private readonly string _publicKeyPem;
 
-    // Default 2048-bit RSA Key Pair (matching frontend default)
     private const string DefaultPrivateKeyPem = @"-----BEGIN PRIVATE KEY-----
 MIIEvAIBADANBgkqhkiG9w0BAQEFAASCBKYwggSiAgEAAoIBAQDZGE+ygm1cBwNa
 FNZ0D/J0trV5iWwmNgKkEjIGNwV4sGddUx+g7MEYDUWLB1y1SJILY530Bz4cwZZ9
@@ -65,7 +64,6 @@ Z3obHFPY8anSH6Vyrx6fYSqYBrtzWe4jMV+BqJZcWssCCIv8GG/QnReBAB6zKOuZ
         {
             _rsa.ImportFromPem(privKey);
             _publicKeyPem = _rsa.ExportSubjectPublicKeyInfoPem();
-            _logger.LogInformation("[CryptoService] Initialized RSA 2048 with SubjectPublicKeyInfo");
         }
         catch (Exception ex)
         {
@@ -80,7 +78,6 @@ Z3obHFPY8anSH6Vyrx6fYSqYBrtzWe4jMV+BqJZcWssCCIv8GG/QnReBAB6zKOuZ
     public byte[] DecryptAesKeyWithRsa(string base64EncryptedKey)
     {
         var cipherBytes = Convert.FromBase64String(base64EncryptedKey);
-        // Using RSA-OAEP with SHA-256 (matches browser SubtleCrypto RSA-OAEP SHA-256)
         return _rsa.Decrypt(cipherBytes, RSAEncryptionPadding.OaepSHA256);
     }
 
@@ -94,11 +91,26 @@ Z3obHFPY8anSH6Vyrx6fYSqYBrtzWe4jMV+BqJZcWssCCIv8GG/QnReBAB6zKOuZ
         aes.IV = iv;
 
         using var encryptor = aes.CreateEncryptor();
-        return encryptor.TransformFinalBlock(plainBytes, 0, plainBytes.Length);
+        var cipherBytes = encryptor.TransformFinalBlock(plainBytes, 0, plainBytes.Length);
+
+        // Prepend IV (16 bytes) to cipherBytes so frontend doesn't need separate iv property
+        var combined = new byte[iv.Length + cipherBytes.Length];
+        Buffer.BlockCopy(iv, 0, combined, 0, iv.Length);
+        Buffer.BlockCopy(cipherBytes, 0, combined, iv.Length, cipherBytes.Length);
+
+        return combined;
     }
 
-    public byte[] DecryptAes(byte[] cipherBytes, byte[] key, byte[] iv)
+    public byte[] DecryptAes(byte[] combinedBytes, byte[] key)
     {
+        if (combinedBytes.Length < 16)
+            throw new ArgumentException("Payload too short", nameof(combinedBytes));
+
+        var iv = new byte[16];
+        var cipherBytes = new byte[combinedBytes.Length - 16];
+        Buffer.BlockCopy(combinedBytes, 0, iv, 0, 16);
+        Buffer.BlockCopy(combinedBytes, 16, cipherBytes, 0, cipherBytes.Length);
+
         using var aes = Aes.Create();
         aes.KeySize = 256;
         aes.Mode = CipherMode.CBC;
@@ -113,14 +125,14 @@ Z3obHFPY8anSH6Vyrx6fYSqYBrtzWe4jMV+BqJZcWssCCIv8GG/QnReBAB6zKOuZ
     public string EncryptString(string plainText, byte[] key, byte[] iv)
     {
         var plainBytes = Encoding.UTF8.GetBytes(plainText);
-        var cipherBytes = EncryptAes(plainBytes, key, iv);
-        return Convert.ToBase64String(cipherBytes);
+        var combinedBytes = EncryptAes(plainBytes, key, iv);
+        return Convert.ToBase64String(combinedBytes);
     }
 
-    public string DecryptString(string base64Cipher, byte[] key, byte[] iv)
+    public string DecryptString(string base64Combined, byte[] key)
     {
-        var cipherBytes = Convert.FromBase64String(base64Cipher);
-        var plainBytes = DecryptAes(cipherBytes, key, iv);
+        var combinedBytes = Convert.FromBase64String(base64Combined);
+        var plainBytes = DecryptAes(combinedBytes, key);
         return Encoding.UTF8.GetString(plainBytes);
     }
 }
