@@ -622,7 +622,7 @@ public class RealTopUpProviderClient : ITopUpProviderClient
         {
             packageId = parsedSku;
         }
-        else if (isFreeFire && productId.HasValue && validFreeFirePackages.Contains(productId.Value))
+        else if (isFreeFire && productId.HasValue && (validFreeFirePackages.Contains(productId.Value) || productId.Value >= 100))
         {
             if ((productId.Value == 5021 || productId.Value == 5022 || productId.Value == 5023) && (diamondAmount == 2600 || paidUsd < 14.50m || Math.Abs(paidUsd - 8.25m) <= 0.60m))
             {
@@ -641,7 +641,7 @@ public class RealTopUpProviderClient : ITopUpProviderClient
                 packageId = productId.Value;
             }
         }
-        else if (!isFreeFire && productId.HasValue && validMlbbPackages.Contains(productId.Value))
+        else if (!isFreeFire && productId.HasValue && (validMlbbPackages.Contains(productId.Value) || productId.Value >= 100))
         {
             if ((productId.Value == 4967 || productId.Value == 4968 || productId.Value == 4969 || productId.Value == 4970) && (diamondAmount == 210 || paidUsd < 2.70m || Math.Abs(paidUsd - 1.55m) <= 0.35m))
             {

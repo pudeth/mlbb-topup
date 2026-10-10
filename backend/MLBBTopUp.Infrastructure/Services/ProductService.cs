@@ -57,6 +57,7 @@ public class ProductService : IProductService
             Price = request.Price,
             CostPrice = costPrice,
             ResellerPrice = resellerPrice,
+            ProviderPackageId = request.ProviderPackageId,
             Description = request.Description,
             Status = "Active",
             CreatedAt = DateTime.UtcNow
@@ -100,6 +101,11 @@ public class ProductService : IProductService
         if (!string.IsNullOrWhiteSpace(request.Description))
         {
             product.Description = request.Description;
+        }
+
+        if (request.ProviderPackageId.HasValue)
+        {
+            product.ProviderPackageId = request.ProviderPackageId.Value;
         }
 
         await _context.SaveChangesAsync();
@@ -146,6 +152,7 @@ public class ProductService : IProductService
             ResellerPrice = reseller,
             ProfitAmount = profit,
             ProfitMarginPct = marginPct,
+            ProviderPackageId = product.ProviderPackageId,
             Status = product.Status,
             Description = product.Description
         };

@@ -277,7 +277,9 @@ public class TopUpService : ITopUpService
                     {
                         gameName = order.GameName;
                         productName = order.ProductName;
-                        productId = order.ProductId;
+                        productId = order.ProviderPackageId.HasValue && order.ProviderPackageId.Value > 0 
+                            ? order.ProviderPackageId.Value 
+                            : order.ProductId;
                         // Prioritize confirmed USD product catalog price if available, otherwise normalize order.Amount from KHR
                         if (order.ProductPrice.HasValue && order.ProductPrice.Value > 0)
                         {

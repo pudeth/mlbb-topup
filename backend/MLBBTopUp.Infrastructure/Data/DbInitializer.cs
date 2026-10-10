@@ -14,6 +14,16 @@ public static class DbInitializer
         {
             // Ensure database schema and all tables (Products, Orders, Users, Payments) exist
             await context.Database.EnsureCreatedAsync();
+
+            // Ensure ProviderPackageId column exists in existing database
+            try
+            {
+                await context.Database.ExecuteSqlRawAsync("ALTER TABLE Products ADD COLUMN ProviderPackageId INTEGER NULL;");
+            }
+            catch
+            {
+                // Column already exists or fresh database created
+            }
             
             // Sync selling prices and exact provider wholesale costs for profit calculation
             var classicPrices = new Dictionary<int, (decimal price, decimal cost, decimal reseller, string name, string desc)>

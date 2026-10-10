@@ -369,8 +369,15 @@ const PRICING_GAMES = [
     price: '',
     costPrice: '',
     resellerPrice: '',
+    costPriceFazerCards: '',
+    costPriceKhmerTopUp: '',
+    providerPackageId: '',
     status: 'Active',
     description: '',
+    name: '',
+    tag: '',
+    game: 'mlbb',
+    customImage: '',
   });
 
   // Reseller Management Modals
@@ -2061,7 +2068,46 @@ const PRICING_GAMES = [
 
   // ==================== PRODUCT & PRICING HANDLERS ====================
 
-  const handleOpenProductModal = (product = null) => {
+  const handleOpenProductModal = (product = null, fromProviderPkg = null) => {
+    if (fromProviderPkg) {
+      const pkgId = fromProviderPkg.packageId || fromProviderPkg.package_id || '';
+      const buyCost = Number(fromProviderPkg.price || 0);
+      const safeReseller = buyCost > 0 ? (buyCost * 1.08).toFixed(2) : '';
+      const safeRetail = buyCost > 0 ? (buyCost * 1.15).toFixed(2) : '';
+
+      let detectedGame = 'mlbb';
+      const gSlug = (fromProviderPkg.gameSlug || fromProviderPkg.gameName || '').toLowerCase();
+      if (gSlug.includes('freefire') || gSlug.includes('free fire')) detectedGame = 'freefire';
+      else if (gSlug.includes('pubg')) detectedGame = 'pubgm';
+      else if (gSlug.includes('genshin')) detectedGame = 'genshin';
+      else if (gSlug.includes('pass') || (fromProviderPkg.name || '').toLowerCase().includes('pass')) detectedGame = 'special_passes';
+
+      let dm = fromProviderPkg.diamondAmount || '';
+      if (!dm && fromProviderPkg.name) {
+        const numMatch = fromProviderPkg.name.match(/(\d+)/);
+        if (numMatch) dm = numMatch[1];
+      }
+
+      setEditingProduct(null);
+      setProductFormData({
+        diamondAmount: dm,
+        price: safeRetail,
+        resellerPrice: safeReseller,
+        costPrice: buyCost ? buyCost.toFixed(2) : '',
+        costPriceFazerCards: buyCost ? buyCost.toFixed(2) : '',
+        costPriceKhmerTopUp: buyCost ? buyCost.toFixed(2) : '',
+        providerPackageId: pkgId,
+        status: 'Active',
+        description: fromProviderPkg.name || '',
+        name: fromProviderPkg.name || '',
+        tag: fromProviderPkg.tag || '',
+        game: detectedGame,
+        customImage: fromProviderPkg.name?.toLowerCase().includes('pass') ? '/images/weekly-pass.png' : '/images/diamond-chest-3d.png',
+      });
+      setProductModalOpen(true);
+      return;
+    }
+
     if (product) {
       setEditingProduct(product);
       setProductFormData({
@@ -2071,6 +2117,7 @@ const PRICING_GAMES = [
         costPrice: product.costPrice,
         costPriceFazerCards: product.costPriceFazerCards || product.costPrice,
         costPriceKhmerTopUp: product.costPriceKhmerTopUp || (product.price * 0.86),
+        providerPackageId: product.providerPackageId || (product.productId > 100 ? product.productId : ''),
         status: product.status || 'Active',
         description: product.description || '',
         name: product.name || '',
@@ -2087,6 +2134,7 @@ const PRICING_GAMES = [
         costPrice: '',
         costPriceFazerCards: '',
         costPriceKhmerTopUp: '',
+        providerPackageId: '',
         status: 'Active',
         description: '',
         name: '',
@@ -2162,14 +2210,29 @@ const PRICING_GAMES = [
       const resellerP = parseFloat(productFormData.resellerPrice) || (retailP * 0.92);
       const costFzr = parseFloat(productFormData.costPriceFazerCards) || parseFloat(productFormData.costPrice) || (retailP * 0.82);
       const costKt = parseFloat(productFormData.costPriceKhmerTopUp) || (retailP * 0.86);
+      const activeCost = providerSettings.activeProvider === 'FazerCards' ? costFzr : costKt;
+      const provPkgId = productFormData.providerPackageId ? parseInt(productFormData.providerPackageId) : null;
+
+      // Active Safety Protections Guard
+      if (activeCost > 0) {
+        if (retailP > 0 && retailP < activeCost) {
+          showToast('error', `🛡️ Active Safety Blocked: Customer Retail Price ($${retailP.toFixed(2)}) is lower than Upstream Wholesale Cost ($${activeCost.toFixed(2)})! Adjust price to avoid loss.`);
+          return;
+        }
+        if (resellerP > 0 && resellerP < activeCost) {
+          showToast('error', `🛡️ Active Safety Blocked: Reseller B2B Price ($${resellerP.toFixed(2)}) is lower than Upstream Wholesale Cost ($${activeCost.toFixed(2)})! Adjust reseller price to protect profits.`);
+          return;
+        }
+      }
 
       const payload = {
         diamondAmount: parseInt(productFormData.diamondAmount) || 0,
         price: retailP,
         resellerPrice: resellerP,
-        costPrice: providerSettings.activeProvider === 'FazerCards' ? costFzr : costKt,
+        costPrice: activeCost,
         costPriceFazerCards: costFzr,
         costPriceKhmerTopUp: costKt,
+        providerPackageId: provPkgId,
         status: productFormData.status,
         description: productFormData.description,
         game: productFormData.game || 'mlbb',
@@ -2179,13 +2242,15 @@ const PRICING_GAMES = [
       };
 
       if (editingProduct) {
-        await adminAPI.updateProduct(editingProduct.productId, payload).catch(() => {});
+        await adminAPI.updateProduct(editingProduct.productId, payload).catch((err) => {
+          throw err;
+        });
         setProducts(prev => prev.map(p => p.productId === editingProduct.productId ? { ...p, ...payload } : p));
         showToast('success', `Updated prices for ${payload.name || payload.diamondAmount} - Customer: $${retailP.toFixed(2)}, Reseller: $${resellerP.toFixed(2)} USD!`);
       } else {
         const res = await adminAPI.createProduct(payload).catch(() => ({ data: { ...payload, productId: Date.now() } }));
         setProducts(prev => [...prev, res.data || { ...payload, productId: Date.now() }]);
-        showToast('success', 'Created new package with multi-tier pricing successfully!');
+        showToast('success', `Created package #${provPkgId || ''} with Active Safety Protections verified!`);
       }
 
       // Live sync to local storage & broadcast event
@@ -2200,7 +2265,7 @@ const PRICING_GAMES = [
       setProductModalOpen(false);
       setEditingProduct(null);
     } catch (err) {
-      showToast('error', err.response?.data?.message || 'Failed to save product');
+      showToast('error', err.response?.data?.message || err.message || 'Failed to save product');
     }
   };
 
@@ -6998,6 +7063,11 @@ const PRICING_GAMES = [
                                   <td className="p-3 font-sans font-bold text-white">
                                     <div className="flex items-center gap-2 flex-wrap">
                                       <span>{p.name}</span>
+                                      {p.providerPackageId && (
+                                        <span className="text-[9px] font-mono px-1.5 py-0.5 rounded bg-blue-500/15 text-blue-300 border border-blue-500/30 font-bold" title={`Bound to Provider Package #${p.providerPackageId}`}>
+                                          #{p.providerPackageId}
+                                        </span>
+                                      )}
                                       {p.isPass && (
                                         <span className="text-[9px] px-1.5 py-0.5 rounded bg-amber-500/15 text-amber-300 border border-amber-500/30 font-bold">
                                           Pass ⭐
@@ -8023,6 +8093,14 @@ const PRICING_GAMES = [
                         <span className="px-3 py-1.5 rounded-lg bg-emerald-500/20 text-emerald-300 border border-emerald-500/40 text-xs font-bold flex items-center gap-1.5">
                           <span>🛡️</span> Cost Ceiling Guard Active
                         </span>
+                        <button
+                          type="button"
+                          onClick={() => handleOpenProductModal(null, singleLookupResult)}
+                          className="px-3 py-1.5 rounded-lg bg-cyan-500 hover:bg-cyan-400 text-black text-xs font-black shadow-glow-cyan transition-all cursor-pointer flex items-center gap-1.5"
+                          title="Add or configure package in store"
+                        >
+                          <span>⚡</span> Add to Store
+                        </button>
                       </div>
                     </div>
                   )}
@@ -8229,7 +8307,17 @@ const PRICING_GAMES = [
                                   )}
                                 </td>
                                 <td className="py-2.5 px-3.5 text-center">
-                                  {safetyBadge}
+                                  <div className="flex items-center justify-center gap-1.5 flex-wrap">
+                                    {safetyBadge}
+                                    <button
+                                      type="button"
+                                      onClick={() => handleOpenProductModal(matchingProd || null, pkg)}
+                                      className="px-2 py-0.5 rounded bg-cyan-500/20 hover:bg-cyan-500/30 text-cyan-300 border border-cyan-500/40 text-[10px] font-bold transition-colors cursor-pointer"
+                                      title="Add or configure package in store with Active Safety Protections"
+                                    >
+                                      {matchingProd ? '✏️ Edit' : '+ Add'}
+                                    </button>
+                                  </div>
                                 </td>
                               </tr>
                             );
@@ -10052,6 +10140,127 @@ const PRICING_GAMES = [
                 </select>
               </div>
 
+              {/* UPSTREAM PROVIDER PACKAGE IDENTIFIER & AUTO-FILL */}
+              <div className="p-3 rounded-2xl bg-slate-900/90 border border-slate-800 space-y-2">
+                <div className="flex items-center justify-between">
+                  <label className="block font-black text-cyan-300 uppercase tracking-wider text-[11px] flex items-center gap-1.5">
+                    <span>⚡</span> Provider Package Link (ភ្ជាប់ជាមួយ Provider)
+                  </label>
+                  <span className="text-[10px] text-cyan-400 font-mono bg-cyan-950/80 px-2 py-0.5 rounded-lg border border-cyan-500/30">
+                    KhmerTopUp / FazerCards
+                  </span>
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                  <div>
+                    <label className="block text-slate-400 text-[10px] font-semibold mb-1">
+                      Provider Package ID (<code className="text-cyan-300 font-mono font-bold">package_id</code>)
+                    </label>
+                    <input
+                      type="number"
+                      value={productFormData.providerPackageId || ''}
+                      onChange={(e) =>
+                        setProductFormData({ ...productFormData, providerPackageId: e.target.value })
+                      }
+                      className="input w-full text-xs py-2 rounded-xl font-mono text-cyan-300 font-bold"
+                      placeholder="e.g. 338, 371, 370, 4852"
+                    />
+                    <span className="text-[9px] text-slate-500 mt-0.5 block">Direct ID used by fulfillment API</span>
+                  </div>
+
+                  <div>
+                    <label className="block text-slate-400 text-[10px] font-semibold mb-1">
+                      ⚡ Quick-Fill from Catalog:
+                    </label>
+                    <select
+                      value={productFormData.providerPackageId || ''}
+                      onChange={(e) => {
+                        const selId = parseInt(e.target.value);
+                        if (!selId) return;
+                        let found = null;
+                        if (providerCatalogs && providerCatalogs.length > 0) {
+                          for (const g of providerCatalogs) {
+                            const p = (g.packages || []).find(item => (item.packageId || item.package_id) === selId);
+                            if (p) {
+                              found = { ...p, gameSlug: g.slug, gameName: g.name };
+                              break;
+                            }
+                          }
+                        }
+                        if (found) {
+                          const cost = Number(found.price || 0);
+                          let dm = found.diamondAmount || '';
+                          if (!dm && found.name) {
+                            const m = found.name.match(/(\d+)/);
+                            if (m) dm = m[1];
+                          }
+                          const isPass = found.name?.toLowerCase().includes('pass') || found.name?.toLowerCase().includes('weekly');
+                          setProductFormData(prev => ({
+                            ...prev,
+                            providerPackageId: selId,
+                            name: found.name || prev.name,
+                            diamondAmount: dm || prev.diamondAmount,
+                            costPriceKhmerTopUp: cost > 0 ? cost.toFixed(2) : prev.costPriceKhmerTopUp,
+                            costPrice: cost > 0 ? cost.toFixed(2) : prev.costPrice,
+                            costPriceFazerCards: cost > 0 ? cost.toFixed(2) : prev.costPriceFazerCards,
+                            price: cost > 0 ? (cost * 1.15).toFixed(2) : prev.price,
+                            resellerPrice: cost > 0 ? (cost * 1.08).toFixed(2) : prev.resellerPrice,
+                            customImage: isPass ? '/images/weekly-pass.png' : (parseInt(dm) >= 1000 ? '/images/treasure-chest.png' : '/images/diamond-chest-3d.png'),
+                          }));
+                          showToast('success', `⚡ Auto-filled #${selId} (${found.name}) wholesale: $${cost.toFixed(2)}`);
+                        } else {
+                          setProductFormData(prev => ({ ...prev, providerPackageId: selId }));
+                        }
+                      }}
+                      className="input w-full text-xs py-2 rounded-xl bg-slate-950 border-slate-700 font-sans text-cyan-300"
+                    >
+                      <option value="">-- Choose package to auto-fill --</option>
+                      {(() => {
+                        let pkgs = [];
+                        if (providerCatalogs && providerCatalogs.length > 0) {
+                          providerCatalogs.forEach(g => {
+                            (g.packages || []).forEach(p => {
+                              pkgs.push({
+                                id: p.packageId || p.package_id,
+                                name: p.name,
+                                price: p.price,
+                                game: g.name
+                              });
+                            });
+                          });
+                        }
+                        if (pkgs.length === 0) {
+                          pkgs = [
+                            { id: 268, name: "55 Diamonds", price: 0.76, game: "MLBB" },
+                            { id: 269, name: "86 Diamonds", price: 1.25, game: "MLBB" },
+                            { id: 270, name: "165 Diamonds", price: 2.28, game: "MLBB" },
+                            { id: 271, name: "172 Diamonds", price: 2.47, game: "MLBB" },
+                            { id: 371, name: "Weekly Diamond Pass", price: 1.54, game: "MLBB" },
+                            { id: 4967, name: "2x Weekly Pass", price: 2.97, game: "MLBB" },
+                            { id: 370, name: "Twilight Pass", price: 8.14, game: "MLBB" },
+                            { id: 338, name: "5618 Diamonds", price: 75.15, game: "MLBB" },
+                            { id: 339, name: "5704 Diamonds", price: 76.37, game: "MLBB" },
+                            { id: 340, name: "5790 Diamonds", price: 77.61, game: "MLBB" },
+                            { id: 341, name: "5876 Diamonds", price: 78.84, game: "MLBB" },
+                            { id: 342, name: "5962 Diamonds", price: 80.08, game: "MLBB" },
+                            { id: 362, name: "19626 Diamonds", price: 260.13, game: "MLBB" },
+                            { id: 4852, name: "Free Fire Monthly", price: 7.76, game: "Free Fire" },
+                            { id: 383, name: "Free Fire Weekly", price: 1.57, game: "Free Fire" },
+                            { id: 384, name: "Free Fire Weekly Lite", price: 0.32, game: "Free Fire" }
+                          ];
+                        }
+                        return pkgs.map(item => (
+                          <option key={item.id} value={item.id}>
+                            #{item.id} · {item.name} (${Number(item.price || 0).toFixed(2)})
+                          </option>
+                        ));
+                      })()}
+                    </select>
+                    <span className="text-[9px] text-slate-500 mt-0.5 block">Select to auto-populate price & details</span>
+                  </div>
+                </div>
+              </div>
+
               <div>
                 <label className="block text-slate-400 mb-1 font-semibold">Package Name / Title</label>
                 <input
@@ -10292,6 +10501,186 @@ const PRICING_GAMES = [
                   />
                 </div>
               </div>
+
+              {/* ACTIVE SAFETY PROTECTIONS & RESELLER MARGIN GUARD */}
+              {(() => {
+                const retailVal = parseFloat(productFormData.price) || 0;
+                const resellerVal = parseFloat(productFormData.resellerPrice) || 0;
+                const costFzr = parseFloat(productFormData.costPriceFazerCards) || parseFloat(productFormData.costPrice) || 0;
+                const costKt = parseFloat(productFormData.costPriceKhmerTopUp) || parseFloat(productFormData.costPrice) || 0;
+                const activeCost = providerSettings.activeProvider === 'FazerCards' ? (costFzr || costKt) : (costKt || costFzr);
+
+                const retailProfit = retailVal > 0 && activeCost > 0 ? (retailVal - activeCost) : 0;
+                const retailMargin = retailVal > 0 ? ((retailProfit / retailVal) * 100) : 0;
+
+                const resellerProfit = resellerVal > 0 && activeCost > 0 ? (resellerVal - activeCost) : 0;
+                const resellerMargin = resellerVal > 0 ? ((resellerProfit / resellerVal) * 100) : 0;
+
+                const isRetailLoss = retailVal > 0 && activeCost > 0 && retailVal < activeCost;
+                const isResellerLoss = resellerVal > 0 && activeCost > 0 && resellerVal < activeCost;
+                const isLoss = isRetailLoss || isResellerLoss;
+                const isSafe = !isLoss && retailVal > 0 && activeCost > 0;
+
+                return (
+                  <div className={`p-3.5 rounded-2xl border transition-all space-y-2.5 ${
+                    isLoss
+                      ? 'bg-rose-950/40 border-rose-500/80 shadow-glow-rose'
+                      : isSafe
+                        ? 'bg-emerald-950/30 border-emerald-500/50 shadow-sm'
+                        : 'bg-dark-input/80 border-slate-800'
+                  }`}>
+                    {/* Header with Protection Status */}
+                    <div className="flex items-center justify-between pb-1.5 border-b border-white/10">
+                      <div className="flex items-center gap-1.5">
+                        <span className="text-sm">🛡️</span>
+                        <span className="font-black text-xs tracking-wide text-white">
+                          ACTIVE SAFETY PROTECTIONS
+                        </span>
+                        <span className="text-[10px] text-slate-400 font-normal hidden sm:inline">(ប្រព័ន្ធការពារសុវត្ថិភាព)</span>
+                      </div>
+                      {isLoss ? (
+                        <span className="px-2 py-0.5 rounded-lg bg-rose-500 text-black font-black text-[10px] flex items-center gap-1 animate-pulse">
+                          <span>⚠️</span>
+                          <span>BLOCKED: LOSS RISK</span>
+                        </span>
+                      ) : isSafe ? (
+                        <span className="px-2 py-0.5 rounded-lg bg-emerald-500/20 text-emerald-300 border border-emerald-500/40 font-bold text-[10px] flex items-center gap-1">
+                          <span>✅</span>
+                          <span>SAFETY VERIFIED</span>
+                        </span>
+                      ) : (
+                        <span className="px-2 py-0.5 rounded-lg bg-slate-800 text-slate-400 text-[10px]">
+                          Enter costs & prices
+                        </span>
+                      )}
+                    </div>
+
+                    {/* Critical Loss Warning Alert */}
+                    {isLoss && (
+                      <div className="p-2 rounded-xl bg-rose-900/60 border border-rose-500/80 text-rose-200 text-[11px] leading-tight space-y-1">
+                        <div className="font-black flex items-center gap-1.5 text-rose-300">
+                          <span>🚨</span>
+                          <span>SELLING BELOW UPSTREAM WHOLESALE COST!</span>
+                        </div>
+                        <div>
+                          Wholesale Cost is <strong>${activeCost.toFixed(2)}</strong>. 
+                          {isRetailLoss && ` Customer Retail ($${retailVal.toFixed(2)}) loses $${Math.abs(retailProfit).toFixed(2)}/order.`}
+                          {isResellerLoss && ` Reseller B2B ($${resellerVal.toFixed(2)}) loses $${Math.abs(resellerProfit).toFixed(2)}/order.`}
+                        </div>
+                        <div className="text-[10px] text-rose-300/90 font-medium">
+                          Universal Cost-Ceiling Engine will strictly halt upstream orders to protect store balance.
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Live Margin Breakdown Cards */}
+                    <div className="grid grid-cols-2 gap-2 text-[11px]">
+                      {/* Customer Retail Metrics */}
+                      <div className={`p-2 rounded-xl border ${
+                        isRetailLoss 
+                          ? 'bg-rose-900/30 border-rose-500/60' 
+                          : retailProfit > 0 
+                            ? 'bg-emerald-950/40 border-emerald-500/30' 
+                            : 'bg-slate-900/60 border-slate-800'
+                      }`}>
+                        <div className="text-slate-400 text-[10px] font-semibold flex justify-between">
+                          <span>Customer Retail:</span>
+                          <span className={retailProfit >= 0 ? 'text-emerald-400 font-bold' : 'text-rose-400 font-bold'}>
+                            {retailVal > 0 ? `$${retailVal.toFixed(2)}` : '—'}
+                          </span>
+                        </div>
+                        <div className="flex justify-between items-center mt-1">
+                          <span className="text-slate-300 font-bold">Store Net:</span>
+                          <span className={`font-black font-mono ${retailProfit >= 0 ? 'text-emerald-400' : 'text-rose-400'}`}>
+                            {retailProfit >= 0 ? `+$${retailProfit.toFixed(2)}` : `-$${Math.abs(retailProfit).toFixed(2)}`}
+                          </span>
+                        </div>
+                        <div className="flex justify-between items-center text-[10px] text-slate-400 mt-0.5">
+                          <span>Margin:</span>
+                          <span className={`font-mono font-bold ${retailMargin >= 10 ? 'text-emerald-300' : retailMargin > 0 ? 'text-amber-300' : 'text-rose-400'}`}>
+                            {retailVal > 0 ? `${retailMargin.toFixed(1)}%` : '0.0%'}
+                          </span>
+                        </div>
+                      </div>
+
+                      {/* Reseller B2B Metrics */}
+                      <div className={`p-2 rounded-xl border ${
+                        isResellerLoss 
+                          ? 'bg-rose-900/30 border-rose-500/60' 
+                          : resellerProfit > 0 
+                            ? 'bg-amber-950/40 border-amber-500/30' 
+                            : 'bg-slate-900/60 border-slate-800'
+                      }`}>
+                        <div className="text-slate-400 text-[10px] font-semibold flex justify-between">
+                          <span>Reseller B2B:</span>
+                          <span className={resellerProfit >= 0 ? 'text-amber-300 font-bold' : 'text-rose-400 font-bold'}>
+                            {resellerVal > 0 ? `$${resellerVal.toFixed(2)}` : '—'}
+                          </span>
+                        </div>
+                        <div className="flex justify-between items-center mt-1">
+                          <span className="text-slate-300 font-bold">Agent Net:</span>
+                          <span className={`font-black font-mono ${resellerProfit >= 0 ? 'text-amber-300' : 'text-rose-400'}`}>
+                            {resellerProfit >= 0 ? `+$${resellerProfit.toFixed(2)}` : `-$${Math.abs(resellerProfit).toFixed(2)}`}
+                          </span>
+                        </div>
+                        <div className="flex justify-between items-center text-[10px] text-slate-400 mt-0.5">
+                          <span>Margin:</span>
+                          <span className={`font-mono font-bold ${resellerMargin >= 5 ? 'text-amber-300' : resellerMargin > 0 ? 'text-cyan-300' : 'text-rose-400'}`}>
+                            {resellerVal > 0 ? `${resellerMargin.toFixed(1)}%` : '0.0%'}
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Quick-Apply Safe Margins */}
+                    {activeCost > 0 && (
+                      <div className="pt-2 border-t border-white/10 space-y-1">
+                        <span className="text-[10px] text-slate-400 font-semibold block">
+                          ⚡ Guaranteed Safe Margin Presets:
+                        </span>
+                        <div className="grid grid-cols-3 gap-1.5">
+                          <button
+                            type="button"
+                            onClick={() => {
+                              const newReseller = (activeCost * 1.05).toFixed(2);
+                              const newRetail = (activeCost * 1.10).toFixed(2);
+                              setProductFormData(prev => ({ ...prev, resellerPrice: newReseller, price: newRetail }));
+                              showToast('success', `Applied VIP: Reseller $${newReseller} (+5%), Retail $${newRetail} (+10%)`);
+                            }}
+                            className="py-1 px-1 rounded-lg bg-slate-800 hover:bg-slate-700 text-cyan-300 text-[10px] font-bold border border-slate-700 text-center cursor-pointer transition-colors"
+                          >
+                            VIP (+5% / +10%)
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => {
+                              const newReseller = (activeCost * 1.08).toFixed(2);
+                              const newRetail = (activeCost * 1.15).toFixed(2);
+                              setProductFormData(prev => ({ ...prev, resellerPrice: newReseller, price: newRetail }));
+                              showToast('success', `Applied Safe: Reseller $${newReseller} (+8%), Retail $${newRetail} (+15%)`);
+                            }}
+                            className="py-1 px-1 rounded-lg bg-emerald-950/80 hover:bg-emerald-900 text-emerald-300 text-[10px] font-bold border border-emerald-500/40 text-center cursor-pointer transition-colors"
+                          >
+                            🛡️ Safe (+8% / +15%)
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => {
+                              const newReseller = (activeCost * 1.12).toFixed(2);
+                              const newRetail = (activeCost * 1.22).toFixed(2);
+                              setProductFormData(prev => ({ ...prev, resellerPrice: newReseller, price: newRetail }));
+                              showToast('success', `Applied Max: Reseller $${newReseller} (+12%), Retail $${newRetail} (+22%)`);
+                            }}
+                            className="py-1 px-1 rounded-lg bg-amber-950/80 hover:bg-amber-900 text-amber-300 text-[10px] font-bold border border-amber-500/40 text-center cursor-pointer transition-colors"
+                          >
+                            👑 Max (+12% / +22%)
+                          </button>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                );
+              })()}
 
               <div>
                 <label className="block text-slate-400 mb-1 font-semibold">Status</label>

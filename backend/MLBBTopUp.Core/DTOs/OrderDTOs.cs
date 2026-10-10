@@ -32,6 +32,7 @@ public class OrderResponse
     public decimal Amount { get; set; }
     public decimal? ProductPrice { get; set; }
     public decimal? CostPrice { get; set; }
+    public int? ProviderPackageId { get; set; }
     public string PaymentStatus { get; set; } = string.Empty;
     public string TopupStatus { get; set; } = string.Empty;
     public DateTime CreatedAt { get; set; }

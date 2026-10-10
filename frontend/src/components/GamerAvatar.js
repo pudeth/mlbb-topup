@@ -8,6 +8,8 @@ export const GAMING_AVATAR_PRESETS = [
     title: 'MYTHIC KING',
     category: 'ranks',
     icon: '👑',
+    image: '/images/crowned_gamer_avatar.jpg',
+    fallbackIcon: '👑',
     badge: 'ROYAL',
     borderGradient: 'from-amber-300 via-yellow-500 to-orange-600',
     glowColor: 'rgba(245,158,11,0.55)',

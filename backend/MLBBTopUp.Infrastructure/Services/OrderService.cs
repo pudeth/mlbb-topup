@@ -339,6 +339,7 @@ public class OrderService : IOrderService
             Amount = order.Amount,
             ProductPrice = order.Product?.Price,
             CostPrice = order.Product?.CostPrice,
+            ProviderPackageId = order.Product?.ProviderPackageId,
             PaymentStatus = order.PaymentStatus,
             TopupStatus = order.TopupStatus,
             CreatedAt = order.CreatedAt,
