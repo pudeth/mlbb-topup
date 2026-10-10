@@ -2370,7 +2370,7 @@ const TopUp = () => {
 
 
   return (
-    <div className="max-w-6xl mx-auto px-3 sm:px-6 py-4 sm:py-6 animate-fadeIn pb-32 sm:pb-36 space-y-4 sm:space-y-6">
+    <div className="max-w-6xl mx-auto px-3 sm:px-6 py-4 sm:py-6 animate-fadeIn pb-24 sm:pb-28 space-y-4 sm:space-y-6">
       {/* Top-Up Paused / Closed Maintenance Notice Banner (Classic Fintech & Multilingual) */}
       {isTopupDisabled && (
         <div className={`relative overflow-hidden rounded-[22px] p-4 sm:p-5 mb-6 border backdrop-blur-xl shadow-2xl transition-all duration-300 select-none ${
