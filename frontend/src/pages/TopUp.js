@@ -8,7 +8,6 @@ import { getStoredGames, getMasterTopupStatus, fetchStoredGames, fetchMasterTopu
 import ProductPackageImage from '../components/ProductPackageImage';
 import { AbaKhqrLogo } from '../components/AbaPaymentLogos';
 import WeAcceptPayments from '../components/WeAcceptPayments';
-import GamerAvatar from '../components/GamerAvatar';
 // Game-specific packages matching upstream supplier catalog
 const GAME_PACKAGES_MAP = {
   mlbb: [
@@ -1013,7 +1012,7 @@ const TopUp = () => {
             targetPid = parsed.playerID;
             targetSid = parsed.serverID;
             setFormData(prev => ({ ...prev, playerID: targetPid, serverID: targetSid }));
-            setAutoDetectedMessage(`Auto-detected: Player ID ${targetPid} | Zone ${targetSid}`);
+            setAutoDetectedMessage(`Auto-detected Player ID (${targetPid}) Zone (${targetSid})`);
             setPastedPlayerId(true);
             setTimeout(() => setPastedPlayerId(false), 2000);
             triggerAccountVerification(targetPid, targetSid);
@@ -1054,7 +1053,7 @@ const TopUp = () => {
       if (parsed.detected) {
         e.preventDefault();
         setFormData(prev => ({ ...prev, playerID: parsed.playerID, serverID: parsed.serverID }));
-        setAutoDetectedMessage(`Auto-detected: Player ID ${parsed.playerID} | Zone ${parsed.serverID}`);
+        setAutoDetectedMessage(`Auto-detected Player ID (${parsed.playerID}) Zone (${parsed.serverID})`);
         setPastedPlayerId(true);
         setTimeout(() => setPastedPlayerId(false), 2000);
         triggerAccountVerification(parsed.playerID, parsed.serverID);
@@ -1078,7 +1077,7 @@ const TopUp = () => {
       if (parsed.detected) {
         e.preventDefault();
         setFormData(prev => ({ ...prev, playerID: parsed.playerID, serverID: parsed.serverID }));
-        setAutoDetectedMessage(`Auto-detected: Player ID ${parsed.playerID} | Zone ${parsed.serverID}`);
+        setAutoDetectedMessage(`Auto-detected Player ID (${parsed.playerID}) Zone (${parsed.serverID})`);
         triggerAccountVerification(parsed.playerID, parsed.serverID);
         return;
       }
@@ -1095,7 +1094,7 @@ const TopUp = () => {
       const parsed = parseMlbbId(rawVal);
       if (parsed.detected) {
         setFormData(prev => ({ ...prev, playerID: parsed.playerID, serverID: parsed.serverID }));
-        setAutoDetectedMessage(`Auto-detected: Player ID ${parsed.playerID} | Zone ${parsed.serverID}`);
+        setAutoDetectedMessage(`Auto-detected Player ID (${parsed.playerID}) Zone (${parsed.serverID})`);
         triggerAccountVerification(parsed.playerID, parsed.serverID);
         return;
       } else {
@@ -2449,45 +2448,58 @@ const TopUp = () => {
       {/* ======================================================== */}
       <div 
         id="player-info-section" 
-        className={`mt-4 sm:mt-6 rounded-2xl sm:rounded-3xl bg-[#0b1329] border shadow-2xl overflow-hidden font-khmer transition-all duration-300 ${
+        className={`mt-4 sm:mt-6 rounded-2xl sm:rounded-3xl bg-[#030919] border shadow-2xl p-4 sm:p-5 font-khmer transition-all duration-300 ${
           playerCardAlert
             ? 'border-rose-500 ring-4 ring-rose-500/40 shadow-[0_0_35px_rgba(244,63,94,0.45)]'
             : verifiedAccount?.valid === false
             ? 'border-rose-500/70 ring-1 ring-rose-500/30'
             : verifiedAccount?.valid
-            ? 'border-emerald-500/60 ring-1 ring-emerald-500/30'
-            : 'border-slate-800/90'
+            ? 'border-cyan-500/40 shadow-[0_0_30px_rgba(6,182,212,0.12)]'
+            : 'border-cyan-900/60 shadow-[0_0_20px_rgba(6,182,212,0.06)]'
         }`}
       >
-        {/* Pink/Rose Header Ribbon matching Reference Image 2 */}
-        <div className="bg-gradient-to-r from-[#ec4899] via-[#f43f5e] to-[#ec4899] text-white px-4 sm:px-5 py-2.5 sm:py-3 flex items-center justify-between shadow-md">
-          <div className="flex items-center gap-2">
-            <span className="text-xs sm:text-sm font-black tracking-wide font-khmer">
-              {language === 'km' ? 'បញ្ចូលព័ត៌មានអ្នកលេង' : 'Player Information'}
+        {/* Header matching Reference Image 2: Glowing Pink Crown + Player Information + STEP 1 + Slanted // */}
+        <div className="flex items-center justify-between pb-3 sm:pb-4 border-b border-cyan-900/30">
+          <div className="flex items-center gap-2.5 sm:gap-3">
+            <span className="text-xl sm:text-2xl filter drop-shadow-[0_0_12px_rgba(236,72,153,0.9)] select-none">
+              👑
             </span>
-            <span className="text-[10px] sm:text-[11px] font-bold opacity-80 uppercase tracking-wider font-sans">
-              (STEP 1)
+            <h3 className="text-base sm:text-lg font-black text-white tracking-wide font-sans">
+              Player Information
+            </h3>
+            <span className="px-2.5 py-0.5 rounded-full text-[10px] sm:text-[11px] font-black uppercase tracking-wider bg-pink-500/15 border border-pink-500/50 text-pink-400">
+              STEP 1
             </span>
           </div>
 
-          <button
-            type="button"
-            onClick={() => setShowIdGuide(true)}
-            className="inline-flex items-center gap-1 text-[11px] bg-black/25 hover:bg-black/40 px-2.5 py-1 rounded-full text-white font-bold transition-colors cursor-pointer"
-          >
-            <span>💡</span>
-            <span>{language === 'km' ? 'របៀបស្វែងរក ID' : 'Where is ID?'}</span>
-          </button>
+          <div className="flex items-center gap-3">
+            <button
+              type="button"
+              onClick={() => setShowIdGuide(true)}
+              className="text-[11px] text-cyan-400/80 hover:text-cyan-300 transition-colors flex items-center gap-1 cursor-pointer"
+              title="Where is ID?"
+            >
+              <span>💡</span>
+              <span className="hidden sm:inline">{language === 'km' ? 'ស្វែងរក ID' : 'Guide'}</span>
+            </button>
+            <span className="text-pink-500 font-black text-xl italic tracking-tighter opacity-90 drop-shadow-[0_0_8px_rgba(236,72,153,0.7)] select-none">
+              {'//'}
+            </span>
+          </div>
         </div>
 
         {/* Card Body */}
-        <div className="p-4 sm:p-5 space-y-4">
-          {/* Input Fields: USER ID & SERVER ID (Full-width, 2 cols on tablet/desktop, 1 col on mobile) */}
+        <div className="pt-3 sm:pt-4 space-y-3.5 sm:space-y-4">
+          {/* Input Fields: USER ID & SERVER ID */}
           <div className={`grid gap-3 sm:gap-4 ${isMlbb || isHoyoverse || isFreefire ? 'grid-cols-1 sm:grid-cols-2' : 'grid-cols-1'}`}>
             {/* USER ID Field */}
             <div>
-              <label htmlFor="player_id_input" className="block text-[11px] sm:text-xs font-black text-slate-300 uppercase tracking-wider mb-1.5 font-sans">
-                {isTelegram ? 'TELEGRAM @' : isSteam ? 'STEAM NAME' : isGiftCard ? 'EMAIL' : 'USER ID'} <span className="text-rose-400">*</span>
+              <label htmlFor="player_id_input" className="flex items-center gap-1.5 text-xs sm:text-sm font-bold text-slate-200 mb-2 font-sans">
+                <svg className="w-4 h-4 text-cyan-400 shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                  <path fillRule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" clipRule="evenodd" />
+                </svg>
+                <span>{isTelegram ? 'Telegram @' : isSteam ? 'Steam Name' : isGiftCard ? 'Email' : 'User ID'}</span>
+                <span className="text-rose-500 font-bold">*</span>
               </label>
               <div className="relative flex items-center">
                 <input
@@ -2503,15 +2515,15 @@ const TopUp = () => {
                     }
                   }}
                   placeholder={isTelegram ? '@username' : isSteam ? 'steam_username' : isGiftCard ? 'email@domain.com' : 'User ID'}
-                  className={`w-full h-11 sm:h-12 bg-[#060b18] border rounded-xl pl-3.5 pr-24 text-sm sm:text-base font-mono text-white placeholder-slate-500 focus:outline-none transition-all ${
+                  className={`w-full h-11 sm:h-12 bg-[#04091a] border rounded-xl pl-3.5 pr-28 text-sm sm:text-base font-mono font-bold text-white placeholder-slate-500 focus:outline-none transition-all ${
                     verifiedAccount?.valid === false
                       ? 'border-rose-500/80 focus:border-rose-500 focus:ring-2 focus:ring-rose-500/20'
                       : verifiedAccount?.valid
-                      ? 'border-emerald-500/80 focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20'
-                      : 'border-slate-700/80 focus:border-pink-500 focus:ring-2 focus:ring-pink-500/20'
+                      ? 'border-emerald-500/70 focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20'
+                      : 'border-cyan-900/70 focus:border-cyan-400 focus:ring-2 focus:ring-cyan-500/20'
                   }`}
                 />
-                <div className="absolute right-1.5 top-1/2 -translate-y-1/2 flex items-center gap-1">
+                <div className="absolute right-1.5 top-1/2 -translate-y-1/2 flex items-center gap-1.5">
                   {formData.playerID && (
                     <button
                       type="button"
@@ -2521,27 +2533,31 @@ const TopUp = () => {
                         setVerifiedAccount(null);
                         lastVerifiedKeyRef.current = '';
                       }}
-                      className="w-6 h-6 rounded-full bg-slate-800 hover:bg-slate-700 text-slate-400 hover:text-white flex items-center justify-center text-xs transition-colors cursor-pointer"
+                      className="w-6 h-6 rounded-full bg-slate-800/90 hover:bg-slate-700 text-slate-400 hover:text-white flex items-center justify-center text-xs transition-colors cursor-pointer"
                       title="Clear"
                     >
                       ✕
                     </button>
                   )}
+                  {/* Single Paste button */}
                   <button
                     type="button"
                     onClick={handlePastePlayerId}
-                    className="h-8 px-2.5 rounded-lg bg-pink-500/15 hover:bg-pink-500/25 border border-pink-500/30 text-pink-300 hover:text-white text-xs font-bold flex items-center gap-1 transition-all cursor-pointer active:scale-95"
+                    className="h-8 px-2.5 sm:px-3 rounded-lg bg-[#270e28] hover:bg-[#38143a] border border-pink-500/80 text-pink-300 hover:text-white text-xs font-bold flex items-center gap-1.5 transition-all cursor-pointer active:scale-95 shadow-[0_0_10px_rgba(236,72,153,0.2)]"
                     title="Paste Player ID"
                   >
                     {pastedPlayerId ? (
                       <>
-                        <span className="text-emerald-400">✓</span>
-                        <span className="text-emerald-400 font-extrabold text-[11px]">{language === 'km' ? 'បានដាក់' : 'Pasted'}</span>
+                        <span className="text-emerald-400 text-xs">✓</span>
+                        <span className="text-emerald-400 font-bold text-[11px]">{language === 'km' ? 'បានដាក់' : 'Pasted'}</span>
                       </>
                     ) : (
                       <>
-                        <span>📋</span>
-                        <span className="font-extrabold text-[11px]">Paste</span>
+                        <svg className="w-3.5 h-3.5 text-pink-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                          <rect x="9" y="9" width="13" height="13" rx="2" ry="2" />
+                          <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1" />
+                        </svg>
+                        <span className="font-bold text-[11px] tracking-wide">Paste</span>
                       </>
                     )}
                   </button>
@@ -2549,11 +2565,15 @@ const TopUp = () => {
               </div>
             </div>
 
-            {/* SERVER ID / Zone ID (MLBB) or SERVER REGION (Free Fire) */}
+            {/* SERVER ID Field (NO PASTE BUTTON - only clear ✕) */}
             {isMlbb && (
               <div>
-                <label htmlFor="server_id_input" className="block text-[11px] sm:text-xs font-black text-slate-300 uppercase tracking-wider mb-1.5 font-sans">
-                  SERVER ID <span className="text-rose-400">*</span>
+                <label htmlFor="server_id_input" className="flex items-center gap-1.5 text-xs sm:text-sm font-bold text-slate-200 mb-2 font-sans">
+                  <svg className="w-4 h-4 text-cyan-400 shrink-0" viewBox="0 0 24 24" fill="currentColor">
+                    <path d="M12 2C6.48 2 2 3.34 2 5v14c0 1.66 4.48 3 10 3s10-1.34 10-3V5c0-1.66-4.48-3-10-3zm0 2c4.42 0 8 .9 8 1.99s-3.58 2.01-8 2.01S4 7.08 4 5.99 7.58 4 12 4zm0 16c-4.42 0-8-.9-8-1.99V16.7c1.94 1.05 4.85 1.7 8 1.7s6.06-.65 8-1.7v1.31c0 1.09-3.58 1.99-8 1.99zm0-4.5c-4.42 0-8-.9-8-1.99V12.2c1.94 1.05 4.85 1.7 8 1.7s6.06-.65 8-1.7v1.31c0 1.09-3.58 1.99-8 1.99zm0-4.5c-4.42 0-8-.9-8-1.99V7.7c1.94 1.05 4.85 1.7 8 1.7s6.06-.65 8-1.7v1.31c0 1.09-3.58 1.99-8 1.99z"/>
+                  </svg>
+                  <span>Server ID</span>
+                  <span className="text-rose-500 font-bold">*</span>
                 </label>
                 <div className="relative flex items-center">
                   <input
@@ -2568,13 +2588,13 @@ const TopUp = () => {
                         triggerAccountVerification(formData.playerID, formData.serverID);
                       }
                     }}
-                    placeholder="Server ID (e.g. 11446)"
-                    className={`w-full h-11 sm:h-12 bg-[#060b18] border rounded-xl pl-3.5 pr-9 text-sm sm:text-base font-mono text-white placeholder-slate-500 focus:outline-none transition-all ${
+                    placeholder="Server ID"
+                    className={`w-full h-11 sm:h-12 bg-[#04091a] border rounded-xl pl-3.5 pr-9 text-sm sm:text-base font-mono font-bold text-white placeholder-slate-500 focus:outline-none transition-all ${
                       verifiedAccount?.valid === false
                         ? 'border-rose-500/80 focus:border-rose-500 focus:ring-2 focus:ring-rose-500/20'
                         : verifiedAccount?.valid
-                        ? 'border-emerald-500/80 focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20'
-                        : 'border-slate-700/80 focus:border-pink-500 focus:ring-2 focus:ring-pink-500/20'
+                        ? 'border-emerald-500/70 focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20'
+                        : 'border-cyan-900/70 focus:border-cyan-400 focus:ring-2 focus:ring-cyan-500/20'
                     }`}
                   />
                   {formData.serverID && (
@@ -2585,7 +2605,7 @@ const TopUp = () => {
                         setVerifiedAccount(null);
                         lastVerifiedKeyRef.current = '';
                       }}
-                      className="absolute right-2.5 top-1/2 -translate-y-1/2 w-6 h-6 rounded-full bg-slate-800 hover:bg-slate-700 text-slate-400 hover:text-white flex items-center justify-center text-xs transition-colors cursor-pointer"
+                      className="absolute right-2.5 top-1/2 -translate-y-1/2 w-6 h-6 rounded-full bg-slate-800/90 hover:bg-slate-700 text-slate-400 hover:text-white flex items-center justify-center text-xs transition-colors cursor-pointer"
                       title="Clear"
                     >
                       ✕
@@ -2600,11 +2620,14 @@ const TopUp = () => {
               const regInfo = resolveRegionInfo(currentRegionCode);
               return (
                 <div>
-                  <label className="block text-[11px] sm:text-xs font-black text-slate-300 uppercase tracking-wider mb-1.5 font-sans">
-                    SERVER REGION
+                  <label className="flex items-center gap-1.5 text-xs sm:text-sm font-bold text-slate-200 mb-2 font-sans">
+                    <svg className="w-4 h-4 text-cyan-400 shrink-0" viewBox="0 0 24 24" fill="currentColor">
+                      <path d="M12 2C6.48 2 2 3.34 2 5v14c0 1.66 4.48 3 10 3s10-1.34 10-3V5c0-1.66-4.48-3-10-3zm0 2c4.42 0 8 .9 8 1.99s-3.58 2.01-8 2.01S4 7.08 4 5.99 7.58 4 12 4zm0 16c-4.42 0-8-.9-8-1.99V16.7c1.94 1.05 4.85 1.7 8 1.7s6.06-.65 8-1.7v1.31c0 1.09-3.58 1.99-8 1.99zm0-4.5c-4.42 0-8-.9-8-1.99V12.2c1.94 1.05 4.85 1.7 8 1.7s6.06-.65 8-1.7v1.31c0 1.09-3.58 1.99-8 1.99zm0-4.5c-4.42 0-8-.9-8-1.99V7.7c1.94 1.05 4.85 1.7 8 1.7s6.06-.65 8-1.7v1.31c0 1.09-3.58 1.99-8 1.99z"/>
+                    </svg>
+                    <span>SERVER REGION</span>
                   </label>
-                  <div className={`w-full h-11 sm:h-12 bg-[#060b18] border rounded-xl px-3.5 flex items-center justify-between gap-2 transition-all ${
-                    verifiedAccount?.valid ? 'border-emerald-500/50' : 'border-slate-700/80'
+                  <div className={`w-full h-11 sm:h-12 bg-[#04091a] border rounded-xl px-3.5 flex items-center justify-between gap-2 transition-all ${
+                    verifiedAccount?.valid ? 'border-emerald-500/50' : 'border-cyan-900/70'
                   }`}>
                     <div className="flex items-center gap-2">
                       <span className="text-base leading-none">{regInfo.flag}</span>
@@ -2624,13 +2647,16 @@ const TopUp = () => {
 
             {isHoyoverse && (
               <div>
-                <label className="block text-[11px] sm:text-xs font-black text-slate-300 uppercase tracking-wider mb-1.5 font-sans">
-                  SERVER
+                <label className="flex items-center gap-1.5 text-xs sm:text-sm font-bold text-slate-200 mb-2 font-sans">
+                  <svg className="w-4 h-4 text-cyan-400 shrink-0" viewBox="0 0 24 24" fill="currentColor">
+                    <path d="M12 2C6.48 2 2 3.34 2 5v14c0 1.66 4.48 3 10 3s10-1.34 10-3V5c0-1.66-4.48-3-10-3zm0 2c4.42 0 8 .9 8 1.99s-3.58 2.01-8 2.01S4 7.08 4 5.99 7.58 4 12 4zm0 16c-4.42 0-8-.9-8-1.99V16.7c1.94 1.05 4.85 1.7 8 1.7s6.06-.65 8-1.7v1.31c0 1.09-3.58 1.99-8 1.99zm0-4.5c-4.42 0-8-.9-8-1.99V12.2c1.94 1.05 4.85 1.7 8 1.7s6.06-.65 8-1.7v1.31c0 1.09-3.58 1.99-8 1.99zm0-4.5c-4.42 0-8-.9-8-1.99V7.7c1.94 1.05 4.85 1.7 8 1.7s6.06-.65 8-1.7v1.31c0 1.09-3.58 1.99-8 1.99z"/>
+                  </svg>
+                  <span>SERVER</span>
                 </label>
                 <select
                   value={formData.serverID}
                   onChange={(e) => setFormData(prev => ({ ...prev, serverID: e.target.value }))}
-                  className="w-full h-11 sm:h-12 bg-[#060b18] border border-slate-700/80 rounded-xl px-3.5 text-sm text-white focus:outline-none focus:border-pink-500 focus:ring-2 focus:ring-pink-500/20 transition-all"
+                  className="w-full h-11 sm:h-12 bg-[#04091a] border border-cyan-900/70 rounded-xl px-3.5 text-sm text-white focus:outline-none focus:border-cyan-400 focus:ring-2 focus:ring-cyan-500/20 transition-all"
                 >
                   <option value="Asia">Asia</option>
                   <option value="America">America</option>
@@ -2641,9 +2667,9 @@ const TopUp = () => {
             )}
           </div>
 
-          {/* Auto-detected message notice */}
+          {/* Auto-detected message notice matching Image 2 */}
           {autoDetectedMessage && (
-            <div className="text-[11px] font-semibold text-emerald-400 flex items-center gap-1.5">
+            <div className="text-xs font-semibold text-cyan-400 flex items-center gap-1.5 pt-0.5">
               <span>⚡</span>
               <span>{autoDetectedMessage}</span>
             </div>
@@ -2671,106 +2697,131 @@ const TopUp = () => {
             </div>
           )}
 
-          {/* Prominent Full-Width CHECK ID Button matching Reference Image 2 */}
-          <button
-            type="button"
-            onClick={handleVerifyAccount}
-            disabled={accountChecking || !formData.playerID.trim() || (isMlbb && !formData.serverID.trim())}
-            className={`w-full h-11 sm:h-12 rounded-xl font-black text-sm uppercase tracking-wider flex items-center justify-center gap-2 transition-all cursor-pointer shadow-lg active:scale-[0.985] disabled:cursor-not-allowed ${
-              verifiedAccount?.valid
-                ? 'bg-gradient-to-r from-emerald-600 to-teal-600 text-white shadow-emerald-500/25'
-                : formData.playerID.trim()
-                ? 'bg-gradient-to-r from-[#ec4899] via-[#f43f5e] to-[#ec4899] hover:opacity-95 text-white shadow-pink-500/25'
-                : 'bg-slate-800/80 border border-slate-700 text-slate-400 opacity-60'
-            }`}
-          >
-            {accountChecking ? (
-              <>
-                <span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                <span>{language === 'km' ? 'កំពុងពិនិត្យឈ្មោះ...' : 'Checking Player Name...'}</span>
-              </>
-            ) : verifiedAccount?.valid ? (
-              <>
-                <span className="text-base">✓</span>
-                <span>{language === 'km' ? 'ឈ្មោះត្រូវបានបញ្ជាក់ (CHECKED)' : 'ACCOUNT VERIFIED'}</span>
-              </>
-            ) : (
-              <>
-                <span>CHECK ID</span>
-                <span className="text-[11px] opacity-80 font-normal">
-                  ({language === 'km' ? 'ពិនិត្យឈ្មោះ' : 'Check Name'})
+          {/* Account Verified Banner (When Verified) or Check ID Button (When Not Verified) */}
+          {verifiedAccount?.valid ? (
+            <div className="w-full h-12 sm:h-13 rounded-xl bg-gradient-to-r from-[#00d084] via-[#00e599] to-[#00d084] text-white flex items-center justify-between px-4 sm:px-6 relative overflow-hidden shadow-[0_0_20px_rgba(0,229,153,0.35)] select-none">
+              <div className="flex items-center gap-2.5 z-10">
+                <div className="w-6 h-6 rounded-full bg-white flex items-center justify-center text-[#00d084] font-black text-sm shadow">
+                  ✓
+                </div>
+                <span className="font-black text-sm sm:text-base tracking-wider text-white uppercase font-sans">
+                  ACCOUNT VERIFIED
                 </span>
-              </>
-            )}
-          </button>
+              </div>
+              {/* Translucent checkmark watermark on the right */}
+              <div className="absolute -right-1 -bottom-2 text-white/20 pointer-events-none select-none">
+                <svg className="w-16 h-16 sm:w-20 sm:h-20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3.5" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M5 13l4 4L19 7" />
+                </svg>
+              </div>
+            </div>
+          ) : (
+            <button
+              type="button"
+              onClick={handleVerifyAccount}
+              disabled={accountChecking || !formData.playerID.trim() || (isMlbb && !formData.serverID.trim())}
+              className={`w-full h-11 sm:h-12 rounded-xl font-black text-sm uppercase tracking-wider flex items-center justify-center gap-2 transition-all cursor-pointer shadow-lg active:scale-[0.985] disabled:cursor-not-allowed ${
+                formData.playerID.trim()
+                  ? 'bg-gradient-to-r from-[#ec4899] via-[#f43f5e] to-[#ec4899] hover:opacity-95 text-white shadow-pink-500/25'
+                  : 'bg-slate-800/80 border border-slate-700 text-slate-400 opacity-60'
+              }`}
+            >
+              {accountChecking ? (
+                <>
+                  <span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                  <span>{language === 'km' ? 'កំពុងពិនិត្យឈ្មោះ...' : 'Checking Player Name...'}</span>
+                </>
+              ) : (
+                <>
+                  <span>CHECK ID</span>
+                  <span className="text-[11px] opacity-80 font-normal">
+                    ({language === 'km' ? 'ពិនិត្យឈ្មោះ' : 'Check Name'})
+                  </span>
+                </>
+              )}
+            </button>
+          )}
 
           {/* Helper Tip Note matching Reference Image 2 */}
           <div className="flex items-center gap-2 text-xs sm:text-[13px] text-slate-300 font-khmer pt-0.5">
             <span className="text-amber-400 text-base shrink-0">💡</span>
-            <span>ចូលទៅកាន់ Profile នៅក្នុង Lobby រួចចម្លង Player ID ដែលបង្ហាញក្រោមឈ្មោះរបស់អ្នក</span>
+            <span>{language === 'km' ? 'សូមបញ្ចូលលេខសម្គាល់ Player ID និង Server ID ឱ្យបានត្រឹមត្រូវ ដើម្បីធ្វើការបញ្ជាក់អត្តសញ្ញាណគណនីរបស់អ្នក' : 'Please enter the correct Player ID and Server ID to verify your account identity.'}</span>
           </div>
 
-          {/* Verified Account Showcase when Account is verified */}
+          {/* Verified Account Showcase when Account is verified (matching Image 2) */}
           {verifiedAccount?.valid && (
-            <div className="p-3.5 sm:p-4 rounded-2xl bg-[#060d21] border border-cyan-500/40 shadow-xl space-y-3 animate-fadeIn">
-              <div className="flex items-center gap-3">
+            <div className="p-3.5 sm:p-4 rounded-2xl bg-[#020717] border border-cyan-500/40 shadow-[0_0_25px_rgba(6,182,212,0.12)] space-y-3 animate-fadeIn">
+              <div className="flex items-center gap-3.5">
+                {/* Circular Golden Glowing Crown Avatar */}
                 <div className="relative shrink-0">
-                  <GamerAvatar 
-                    avatarId={verifiedAccount?.avatar || 'crown'} 
-                    name={verifiedAccount?.name || 'Player'} 
-                    size="md" 
-                    showGlow={true} 
-                  />
-                  <span className="absolute -bottom-0.5 -right-0.5 w-3.5 h-3.5 rounded-full border-2 border-[#060d21] bg-emerald-400 shadow-[0_0_8px_#34d399]" />
+                  <div className="w-14 h-14 sm:w-16 sm:h-16 rounded-full border-2 border-yellow-400 shadow-[0_0_20px_rgba(250,204,21,0.55)] bg-gradient-to-br from-yellow-500/25 via-[#060810] to-yellow-950/60 flex items-center justify-center">
+                    <span className="text-2xl sm:text-3xl filter drop-shadow-[0_0_8px_rgba(250,204,21,0.8)] select-none">👑</span>
+                  </div>
+                  {/* Circular checkmark badge at bottom-right corner */}
+                  <div className="absolute -bottom-0.5 -right-0.5 w-5 h-5 rounded-full bg-emerald-500 border-2 border-[#020717] flex items-center justify-center text-white text-[10px] font-black shadow-[0_0_8px_#10b981]">
+                    ✓
+                  </div>
                 </div>
+
                 <div className="min-w-0 flex-1">
-                    {isEditingRealName ? (
-                      <form onSubmit={handleSaveCustomRealName} className="flex items-center gap-1.5 py-0.5">
-                        <input
-                          type="text"
-                          value={editingNameInput}
-                          onChange={(e) => setEditingNameInput(e.target.value)}
-                          placeholder="Edit display name"
-                          className="h-7 px-2 text-xs bg-[#030817] border border-pink-400 rounded text-white font-bold focus:outline-none"
-                          autoFocus
-                        />
-                        <button type="submit" className="h-7 px-2.5 text-[10.5px] font-bold bg-emerald-500 hover:bg-emerald-400 text-slate-950 rounded transition-colors cursor-pointer">
-                          {language === 'km' ? 'រក្សាទុក' : 'Save'}
-                        </button>
-                        <button type="button" onClick={() => setIsEditingRealName(false)} className="h-7 px-1.5 text-[10px] text-slate-400 hover:text-white cursor-pointer">
-                          ✕
-                        </button>
-                      </form>
-                    ) : (
-                      <div className="flex items-center gap-2 flex-wrap">
-                        <h4 className="font-black text-white text-sm sm:text-base tracking-wide truncate">
-                          {verifiedAccount.name && !verifiedAccount.name.startsWith('Player_') && !verifiedAccount.name.includes('Player #') && verifiedAccount.name !== 'Verified Player'
-                            ? verifiedAccount.name
-                            : (KNOWN_REAL_NAMES[verifiedAccount.id] || (language === 'km' ? `អ្នកលេង ${selectedGame.name} (${verifiedAccount.id})` : `${selectedGame.name} Player (${verifiedAccount.id})`))}
-                        </h4>
-                        <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[8.5px] sm:text-[9px] font-black uppercase tracking-wider bg-emerald-500/20 text-emerald-300 border border-emerald-500/40">
-                          <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
-                          REAL NAME
-                        </span>
-                        <button
-                          type="button"
-                          onClick={() => {
-                            setIsEditingRealName(true);
-                            setEditingNameInput(verifiedAccount.name || '');
-                          }}
-                          className="text-slate-400 hover:text-pink-300 p-0.5 transition-colors cursor-pointer"
-                          title="Edit display name"
-                        >
-                          <svg className="w-3 h-3" viewBox="0 0 20 20" fill="currentColor">
-                            <path d="M13.586 3.586a2 2 0 112.828 2.828l-.793.793-2.828-2.828.793-.793zM11.379 5.793L3 14.172V17h2.828l8.38-8.379-2.83-2.828z" />
-                          </svg>
-                        </button>
-                      </div>
-                    )}
-                  <div className="flex items-center gap-2 text-xs text-slate-400 pt-0.5">
-                    <span className="text-cyan-300 font-mono font-bold">ID: {verifiedAccount.id}</span>
-                    <span>•</span>
-                    <span className="text-slate-300">{resolveRegionInfo(verifiedAccount.region || verifiedAccount.server).name}</span>
+                  {isEditingRealName ? (
+                    <form onSubmit={handleSaveCustomRealName} className="flex items-center gap-1.5 py-0.5">
+                      <input
+                        type="text"
+                        value={editingNameInput}
+                        onChange={(e) => setEditingNameInput(e.target.value)}
+                        placeholder="Edit display name"
+                        className="h-7 px-2 text-xs bg-[#030817] border border-pink-400 rounded text-white font-bold focus:outline-none"
+                        autoFocus
+                      />
+                      <button type="submit" className="h-7 px-2.5 text-[10.5px] font-bold bg-emerald-500 hover:bg-emerald-400 text-slate-950 rounded transition-colors cursor-pointer">
+                        {language === 'km' ? 'រក្សាទុក' : 'Save'}
+                      </button>
+                      <button type="button" onClick={() => setIsEditingRealName(false)} className="h-7 px-1.5 text-[10px] text-slate-400 hover:text-white cursor-pointer">
+                        ✕
+                      </button>
+                    </form>
+                  ) : (
+                    <div className="flex items-center gap-2 flex-wrap">
+                      <h4 className="font-black text-white text-base sm:text-lg tracking-wide truncate font-sans">
+                        {verifiedAccount.name && !verifiedAccount.name.startsWith('Player_') && !verifiedAccount.name.includes('Player #') && verifiedAccount.name !== 'Verified Player'
+                          ? verifiedAccount.name
+                          : (KNOWN_REAL_NAMES[verifiedAccount.id] || (language === 'km' ? `អ្នកលេង ${selectedGame.name} (${verifiedAccount.id})` : `${selectedGame.name} Player (${verifiedAccount.id})`))}
+                      </h4>
+                      <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[10px] sm:text-[11px] font-black uppercase tracking-wider bg-emerald-950/70 text-emerald-300 border border-emerald-500/50 shadow-[0_0_10px_rgba(16,185,129,0.2)]">
+                        <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
+                        REAL NAME
+                      </span>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setIsEditingRealName(true);
+                          setEditingNameInput(verifiedAccount.name || '');
+                        }}
+                        className="text-slate-400 hover:text-pink-300 p-0.5 transition-colors cursor-pointer"
+                        title="Edit display name"
+                      >
+                        <svg className="w-3 h-3" viewBox="0 0 20 20" fill="currentColor">
+                          <path d="M13.586 3.586a2 2 0 112.828 2.828l-.793.793-2.828-2.828.793-.793zM11.379 5.793L3 14.172V17h2.828l8.38-8.379-2.83-2.828z" />
+                        </svg>
+                      </button>
+                    </div>
+                  )}
+
+                  <div className="flex items-center gap-2.5 text-xs sm:text-sm text-slate-300 pt-1 font-mono">
+                    <span className="flex items-center gap-1 text-cyan-400 font-bold">
+                      <svg className="w-3.5 h-3.5 text-cyan-400 shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                        <path fillRule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" clipRule="evenodd" />
+                      </svg>
+                      ID: {verifiedAccount.id}
+                    </span>
+                    <span className="text-cyan-800 font-normal">|</span>
+                    <span className="flex items-center gap-1 text-cyan-400 font-bold">
+                      <svg className="w-3.5 h-3.5 text-cyan-400 shrink-0" viewBox="0 0 24 24" fill="currentColor">
+                        <path d="M12 2C6.48 2 2 3.34 2 5v14c0 1.66 4.48 3 10 3s10-1.34 10-3V5c0-1.66-4.48-3-10-3zm0 2c4.42 0 8 .9 8 1.99s-3.58 2.01-8 2.01S4 7.08 4 5.99 7.58 4 12 4zm0 16c-4.42 0-8-.9-8-1.99V16.7c1.94 1.05 4.85 1.7 8 1.7s6.06-.65 8-1.7v1.31c0 1.09-3.58 1.99-8 1.99zm0-4.5c-4.42 0-8-.9-8-1.99V12.2c1.94 1.05 4.85 1.7 8 1.7s6.06-.65 8-1.7v1.31c0 1.09-3.58 1.99-8 1.99zm0-4.5c-4.42 0-8-.9-8-1.99V7.7c1.94 1.05 4.85 1.7 8 1.7s6.06-.65 8-1.7v1.31c0 1.09-3.58 1.99-8 1.99z"/>
+                      </svg>
+                      Zone: {verifiedAccount.server || (formData.serverID ? formData.serverID : resolveRegionInfo(verifiedAccount.region).name)}
+                    </span>
                   </div>
                 </div>
               </div>
