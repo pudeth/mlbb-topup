@@ -737,6 +737,9 @@ const TopUp = () => {
 
   const inFlightVerifyRef = useRef(false);
   const lastVerifiedKeyRef = useRef('');
+  const autoRecheckDoneRef = useRef(false);
+  const [autoRecheckCountdown, setAutoRecheckCountdown] = useState(0);
+  const [checkingNotice, setCheckingNotice] = useState('');
 
   // Smooth scroll back to Step 2 Diamond Packages
   const scrollToPackages = useCallback(() => {
@@ -765,8 +768,8 @@ const TopUp = () => {
     }, 350);
   }, []);
 
-  // Centralized, robust account verification function
-  const triggerAccountVerification = useCallback(async (overridePid, overrideSid) => {
+  // Centralized, robust account verification function (with 1-time auto check & retry capability)
+  const triggerAccountVerification = useCallback(async (overridePid, overrideSid, isRetryAttempt = false) => {
     const rawPid = overridePid !== undefined ? String(overridePid) : formData.playerID;
     const rawSid = overrideSid !== undefined ? String(overrideSid) : formData.serverID;
     const pId = (rawPid || '').trim();
@@ -779,7 +782,11 @@ const TopUp = () => {
       if (!sId) return; // Wait until Server ID is available for MLBB
     }
 
-    const verifyKey = `${selectedGame?.id || 'mlbb'}_${pId}_${sId}`;
+    const isFreefireGame = selectedGame?.id?.includes('freefire') || selectedGame?.id?.includes('ff');
+    const verifyKey = isFreefireGame
+      ? `${selectedGame?.id || 'ff'}_${pId}`
+      : `${selectedGame?.id || 'mlbb'}_${pId}_${sId}`;
+
     if (lastVerifiedKeyRef.current === verifyKey && verifiedAccount?.valid) {
       return;
     }
@@ -787,6 +794,11 @@ const TopUp = () => {
 
     inFlightVerifyRef.current = true;
     setAccountChecking(true);
+    setCheckingNotice(
+      isRetryAttempt
+        ? (language === 'km' ? 'កំពុងផ្ទៀងផ្ទាត់ស្វ័យប្រវត្តម្តងទៀត...' : 'Auto-checking 1 time...')
+        : (language === 'km' ? 'កំពុងពិនិត្យឈ្មោះ...' : 'Auto-checking Player Name...')
+    );
     setVerifiedAccount(null);
 
     try {
@@ -856,7 +868,9 @@ const TopUp = () => {
         }
 
         if (realName) {
-          lastVerifiedKeyRef.current = `${selectedGame?.id || 'mlbb'}_${pId}_${sId}`;
+          lastVerifiedKeyRef.current = verifyKey;
+          autoRecheckDoneRef.current = false;
+          setAutoRecheckCountdown(0);
           setVerifiedAccount({
             valid: true,
             name: realName,
@@ -867,9 +881,10 @@ const TopUp = () => {
           setError('');
           playSuccessSound();
         } else {
-          lastVerifiedKeyRef.current = '';
+          lastVerifiedKeyRef.current = verifyKey;
           setVerifiedAccount({
             valid: false,
+            notFound: true,
             error: language === 'km' 
               ? 'រកមិនឃើញគណនីអ្នកលេងទេ។ សូមពិនិត្យមើល Player ID និង Server ID ឡើងវិញ' 
               : 'Player account not found. Please verify your Player ID and Server Zone ID.',
@@ -965,7 +980,9 @@ const TopUp = () => {
 
             setFormData(prev => ({ ...prev, serverID: detectedRegion }));
 
-            lastVerifiedKeyRef.current = `${selectedGame?.id || 'ff'}_${pId}_${detectedRegion}`;
+            lastVerifiedKeyRef.current = verifyKey;
+            autoRecheckDoneRef.current = false;
+            setAutoRecheckCountdown(0);
             setVerifiedAccount({
               valid: true,
               name: realName,
@@ -984,7 +1001,7 @@ const TopUp = () => {
             playSuccessSound();
           } else {
             // Real negative verification -> "Account Not Found"
-            lastVerifiedKeyRef.current = '';
+            lastVerifiedKeyRef.current = verifyKey;
             setVerifiedAccount({
               valid: false,
               notFound: true,
@@ -1024,7 +1041,9 @@ const TopUp = () => {
             selectedGame?.id?.includes('google');
 
           if (realName && realName.trim() && !realName.includes('Player #')) {
-            lastVerifiedKeyRef.current = `${selectedGame?.id || 'game'}_${pId}_${sId}`;
+            lastVerifiedKeyRef.current = verifyKey;
+            autoRecheckDoneRef.current = false;
+            setAutoRecheckCountdown(0);
             setVerifiedAccount({
               valid: true,
               name: realName,
@@ -1035,7 +1054,9 @@ const TopUp = () => {
             setError('');
             playSuccessSound();
           } else if (isVoucherOrNoLookupGame) {
-            lastVerifiedKeyRef.current = `${selectedGame?.id || 'game'}_${pId}_${sId}`;
+            lastVerifiedKeyRef.current = verifyKey;
+            autoRecheckDoneRef.current = false;
+            setAutoRecheckCountdown(0);
             setVerifiedAccount({
               valid: true,
               name: pId,
@@ -1046,7 +1067,7 @@ const TopUp = () => {
             setError('');
           } else {
             // Real negative verification -> "Account Not Found"
-            lastVerifiedKeyRef.current = '';
+            lastVerifiedKeyRef.current = verifyKey;
             setVerifiedAccount({
               valid: false,
               notFound: true,
@@ -1075,12 +1096,15 @@ const TopUp = () => {
     } finally {
       inFlightVerifyRef.current = false;
       setAccountChecking(false);
+      setCheckingNotice('');
     }
   }, [formData.playerID, formData.serverID, selectedGame?.id, language, verifiedAccount?.valid]);
 
   // Click handler for manual check button
   const handleVerifyAccount = useCallback(() => {
     lastVerifiedKeyRef.current = '';
+    autoRecheckDoneRef.current = false;
+    setAutoRecheckCountdown(0);
     triggerAccountVerification(formData.playerID, formData.serverID);
   }, [formData.playerID, formData.serverID, triggerAccountVerification]);
 
@@ -1197,6 +1221,8 @@ const TopUp = () => {
     }
     if (verifiedAccount) setVerifiedAccount(null);
     lastVerifiedKeyRef.current = '';
+    autoRecheckDoneRef.current = false;
+    setAutoRecheckCountdown(0);
   };
 
   // Handle typing in Server ID
@@ -1205,9 +1231,11 @@ const TopUp = () => {
     setFormData(prev => ({ ...prev, serverID: val }));
     if (verifiedAccount) setVerifiedAccount(null);
     lastVerifiedKeyRef.current = '';
+    autoRecheckDoneRef.current = false;
+    setAutoRecheckCountdown(0);
   };
 
-  // Debounced auto-check when typing
+  // Debounced auto-check when typing (auto check 1 time per entered ID)
   useEffect(() => {
     const pId = (formData.playerID || '').trim();
     const sId = (formData.serverID || '').trim();
@@ -1220,16 +1248,16 @@ const TopUp = () => {
         if (key === lastVerifiedKeyRef.current) return;
         const timer = setTimeout(() => {
           triggerAccountVerification(pId, sId);
-        }, 600);
+        }, 450);
         return () => clearTimeout(timer);
       }
     } else if (selectedGame?.id?.includes('freefire') || selectedGame?.id?.includes('ff')) {
       if (pId.length >= 7) {
-        const key = `${selectedGame.id}_${pId}`;
+        const key = `${selectedGame.id || 'ff'}_${pId}`;
         if (key === lastVerifiedKeyRef.current) return;
         const timer = setTimeout(() => {
           triggerAccountVerification(pId, sId || 'Global');
-        }, 600);
+        }, 450);
         return () => clearTimeout(timer);
       }
     } else {
@@ -1238,11 +1266,38 @@ const TopUp = () => {
         if (key === lastVerifiedKeyRef.current) return;
         const timer = setTimeout(() => {
           triggerAccountVerification(pId, sId);
-        }, 600);
+        }, 450);
         return () => clearTimeout(timer);
       }
     }
   }, [formData.playerID, formData.serverID, selectedGame?.id, triggerAccountVerification]);
+
+  // Auto-check 1 time if account was initially not found
+  useEffect(() => {
+    if (verifiedAccount && !verifiedAccount.valid && !autoRecheckDoneRef.current && !accountChecking) {
+      const pId = (formData.playerID || '').trim();
+      const sId = (formData.serverID || '').trim();
+      if (!pId) return;
+      if (selectedGame?.id?.startsWith('mlbb') && (!sId || sId.toLowerCase() === 'global')) return;
+
+      setAutoRecheckCountdown(2);
+      const timer1 = setTimeout(() => {
+        setAutoRecheckCountdown(1);
+      }, 1000);
+
+      const timer2 = setTimeout(() => {
+        setAutoRecheckCountdown(0);
+        autoRecheckDoneRef.current = true;
+        lastVerifiedKeyRef.current = '';
+        triggerAccountVerification(pId, sId, true);
+      }, 2000);
+
+      return () => {
+        clearTimeout(timer1);
+        clearTimeout(timer2);
+      };
+    }
+  }, [verifiedAccount, accountChecking, formData.playerID, formData.serverID, selectedGame?.id, triggerAccountVerification]);
 
 
   // Payment states
@@ -2838,6 +2893,16 @@ const TopUp = () => {
                     ? 'សូមពិនិត្យមើល Player ID និង Server ID នៅក្នុង Profile ហ្គេមរបស់អ្នកឡើងវិញ រួចចុច Paste ឬបញ្ចូលម្តងទៀត។ ប្រព័ន្ធមិនអនុញ្ញាតឲ្យបង់ប្រាក់ទេ ប្រសិនបើគ្មានគណនីត្រឹមត្រូវ។'
                     : 'Please double-check your Player ID and Server ID from your in-game profile, then paste or re-enter them. Payment cannot proceed until account is verified.'}
                 </p>
+                {autoRecheckCountdown > 0 && (
+                  <div className="pt-1.5 flex items-center gap-2 text-amber-300 font-bold text-[11px] sm:text-xs">
+                    <span className="w-3.5 h-3.5 border-2 border-amber-300/40 border-t-amber-300 rounded-full animate-spin" />
+                    <span>
+                      {language === 'km'
+                        ? `ប្រព័ន្ធកំពុងផ្ទៀងផ្ទាត់ស្វ័យប្រវត្តម្តងទៀត (${autoRecheckCountdown}s)...`
+                        : `Auto-checking 1 time in ${autoRecheckCountdown}s...`}
+                    </span>
+                  </div>
+                )}
               </div>
             </div>
           )}
@@ -2868,6 +2933,8 @@ const TopUp = () => {
               className={`w-full h-11 sm:h-12 rounded-xl font-black text-sm uppercase tracking-wider flex items-center justify-center gap-2 transition-all cursor-pointer shadow-lg active:scale-[0.985] disabled:cursor-not-allowed ${
                 accountChecking
                   ? 'bg-gradient-to-r from-[#ec4899] via-[#f43f5e] to-[#ec4899] text-white opacity-90'
+                  : autoRecheckCountdown > 0
+                  ? 'bg-gradient-to-r from-amber-600 via-rose-600 to-rose-700 text-white shadow-rose-500/25 border border-amber-400/50 animate-pulse'
                   : verifiedAccount && !verifiedAccount.valid
                   ? 'bg-gradient-to-r from-rose-600 via-rose-700 to-red-600 hover:opacity-95 text-white shadow-rose-500/25 border border-rose-400/50'
                   : formData.playerID.trim()
@@ -2878,14 +2945,23 @@ const TopUp = () => {
               {accountChecking ? (
                 <>
                   <span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                  <span>{language === 'km' ? 'កំពុងពិនិត្យឈ្មោះ...' : 'Checking Player Name...'}</span>
+                  <span>{checkingNotice || (language === 'km' ? 'កំពុងពិនិត្យឈ្មោះ...' : 'Auto-checking Player Name...')}</span>
+                </>
+              ) : autoRecheckCountdown > 0 ? (
+                <>
+                  <span className="w-4 h-4 border-2 border-white/40 border-t-white rounded-full animate-spin" />
+                  <span>
+                    {language === 'km'
+                      ? `រកមិនឃើញ • ពិនិត្យស្វ័យប្រវត្តក្នុង ${autoRecheckCountdown}s...`
+                      : `Not Found • Auto-checking 1x in ${autoRecheckCountdown}s...`}
+                  </span>
                 </>
               ) : verifiedAccount && !verifiedAccount.valid ? (
                 <>
                   <span className="text-base">⚠️</span>
                   <span>{language === 'km' ? 'រកមិនឃើញគណនី (Account Not Found)' : 'Account Not Found'}</span>
                   <span className="text-[11px] opacity-80 font-normal">
-                    ({language === 'km' ? 'ចុចដើម្បីពិនិត្យម្តងទៀត' : 'Click to Re-check'})
+                    ({language === 'km' ? 'បានពិនិត្យ 1 ដង • ចុចដើម្បីពិនិត្យម្តងទៀត' : 'Auto-checked 1x • Click to Retry'})
                   </span>
                 </>
               ) : (
