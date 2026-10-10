@@ -1173,21 +1173,7 @@ const TopUp = () => {
   const [currency, setCurrency] = useState('USD'); // 'USD' or 'KHR'
   const [productCategoryTab, setProductCategoryTab] = useState('all'); // 'all', 'passes', 'diamonds'
   const [layoutMode, setLayoutMode] = useState('tiles'); // 'list', 'tiles', 'grid'
-  const [listScroll, setListScroll] = useState({ atTop: true, atBottom: false, progress: 0 });
   const productListRef = useRef(null);
-  const handleListScroll = (e) => {
-    const el = e.currentTarget;
-    const max = el.scrollHeight - el.clientHeight;
-    const next = { atTop: el.scrollTop <= 4, atBottom: el.scrollTop >= max - 4, progress: max > 0 ? el.scrollTop / max : 1 };
-    setListScroll(prev => (prev.atTop === next.atTop && prev.atBottom === next.atBottom && Math.abs(prev.progress - next.progress) < 0.02) ? prev : next);
-  };
-  useEffect(() => {
-    const el = productListRef.current;
-    if (!el) return;
-    el.scrollTop = 0;
-    const max = el.scrollHeight - el.clientHeight;
-    setListScroll({ atTop: true, atBottom: max <= 4, progress: max > 0 ? 0 : 1 });
-  }, [productCategoryTab, layoutMode, selectedGame.id, products.length]);
   const checkoutSectionRef = useRef(null);
 
   // Full Display Package Selection Modal
@@ -2971,41 +2957,30 @@ const TopUp = () => {
               </div>
             </div>
   
-            {/* ===== Scrollable Product Frame ===== */}
-            <div className="relative rounded-2xl border border-slate-800 bg-[#060d24] overflow-hidden">
+            {/* ===== Full Display Package Showcase (SHOW ALL) ===== */}
+            <div className="relative rounded-2xl border border-slate-800/90 bg-[#060d24] overflow-hidden shadow-xl">
               {/* Frame header */}
-              <div className="flex items-center justify-between gap-2 px-3 py-2 border-b border-slate-800 bg-[#071232]/80 backdrop-blur">
-                <span className="flex items-center gap-1.5 text-[11px] sm:text-xs font-bold text-sky-200">
-                  <svg className="w-3.5 h-3.5 text-cyan-300" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><path d="M6 3h12l4 6-10 12L2 9z" /><path d="M2 9h20M12 21L8 9l4-6 4 6-4 12" /></svg>
-                  <span>{language === 'km' ? 'កញ្ចប់' : 'Packages'}</span>
-                  <span className="px-1.5 py-0.5 rounded-md bg-sky-500/15 border border-sky-400/30 text-[10px] font-mono text-sky-300">
+              <div className="flex items-center justify-between gap-2 px-3.5 py-2.5 border-b border-slate-800 bg-[#071232]/90 backdrop-blur">
+                <span className="flex items-center gap-2 text-[11px] sm:text-xs font-bold text-sky-200">
+                  <svg className="w-4 h-4 text-cyan-300 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><path d="M6 3h12l4 6-10 12L2 9z" /><path d="M2 9h20M12 21L8 9l4-6 4 6-4 12" /></svg>
+                  <span className="font-black">{language === 'km' ? 'កញ្ចប់ពេជ្រទាំងអស់' : 'All Diamond Packages'}</span>
+                  <span className="px-2 py-0.5 rounded-full bg-cyan-500/15 border border-cyan-400/30 text-[10px] font-mono text-cyan-300 font-black">
                     {inlineFilteredProducts.length}
                   </span>
                 </span>
                 
-                <span className={`flex items-center gap-1 text-[10px] font-semibold transition-opacity ${listScroll.atBottom && listScroll.atTop ? 'opacity-0' : 'opacity-100'} text-slate-400 font-khmer`}>
-                  <svg className="w-3 h-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M12 5v14M5 12l7 7 7-7" /></svg>
-                  <span>{language === 'km' ? 'អូសមើល' : 'Scroll'}</span>
+                <span className="flex items-center gap-1.5 text-[10px] font-bold text-emerald-400 font-khmer px-2 py-0.5 rounded-md bg-emerald-500/10 border border-emerald-500/20">
+                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
+                  <span>{language === 'km' ? 'បង្ហាញទាំងអស់' : 'Showing All'}</span>
                 </span>
               </div>
-              {/* Scroll progress bar */}
-              <div className="h-[2px] bg-slate-800/60">
-                <div className="h-full bg-cyan-400 transition-[width] duration-150" style={{ width: `${Math.round(listScroll.progress * 100)}%` }} />
-              </div>
-              {/* Top fade */}
-              <div className={`pointer-events-none absolute left-0 right-0 top-[38px] h-6 z-10 bg-gradient-to-b from-[#060d24] to-transparent transition-opacity duration-200 ${listScroll.atTop ? 'opacity-0' : 'opacity-100'}`} />
+
+              {/* Package Cards Grid: Full Display, NO height limits, NO inner scrollbar */}
               <div
                 ref={productListRef}
-                onScroll={handleListScroll}
-                className="product-scroll-frame max-h-[56vh] sm:max-h-[600px] overflow-y-auto overscroll-contain p-2 sm:p-3"
+                className="w-full p-2 sm:p-3.5"
               >
                 {renderProductCards(inlineFilteredProducts, false)}
-              </div>
-              {/* Bottom fade + scroll-down hint */}
-              <div className={`pointer-events-none absolute left-0 right-0 bottom-0 h-14 z-10 bg-gradient-to-t from-[#030817] via-[#030817]/80 to-transparent flex items-end justify-center pb-1.5 transition-opacity duration-200 ${listScroll.atBottom ? 'opacity-0' : 'opacity-100'}`}>
-                <span className="w-6 h-6 rounded-full bg-sky-500/20 border border-sky-400/40 flex items-center justify-center text-sky-300 animate-bounce">
-                  <svg className="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.6" strokeLinecap="round" strokeLinejoin="round"><path d="M6 9l6 6 6-6" /></svg>
-                </span>
               </div>
             </div>
 
