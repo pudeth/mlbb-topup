@@ -313,25 +313,6 @@ export const SmartSearchBar = ({ isMobile = false, onFilterClick }) => {
             </button>
           )}
         </div>
-
-        {/* Filter Sliders Button (on mobile) */}
-        {isMobile && (
-          <button
-            type="button"
-            onClick={onFilterClick || (() => {
-              const el = document.getElementById('games-section');
-              if (el) el.scrollIntoView({ behavior: 'smooth' });
-            })}
-            className={`ml-2 w-10 h-10 rounded-2xl ${
-              isOpen && query.trim().length > 0 ? 'bg-[#0f172a] border-sky-500/60 text-sky-300' : 'bg-[#0b101e] border-slate-700/80 text-slate-300'
-            } border hover:text-white flex items-center justify-center shrink-0 shadow-sm active:scale-95 transition-all cursor-pointer`}
-            aria-label="Filter games"
-          >
-            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4" />
-            </svg>
-          </button>
-        )}
       </div>
 
       {/* ========================================================= */}

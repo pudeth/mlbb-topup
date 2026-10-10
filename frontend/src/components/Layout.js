@@ -3,7 +3,6 @@ import { useLocation } from 'react-router-dom';
 import Navbar from './Navbar';
 import Footer from './Footer';
 import AiAssistant from './AiAssistant';
-import MobileBottomNav from './MobileBottomNav';
 import DesktopSidebar from './DesktopSidebar';
 import { PlayerLoginModal } from './PlayerLoginModal';
 import ProfileModal from './ProfileModal';
@@ -89,7 +88,6 @@ const Layout = ({ children }) => {
         <main className={`flex-grow ${isAuthPath ? 'pb-0 flex flex-col justify-center' : 'pb-6 lg:pb-12'}`}>
           {children}
         </main>
-        {!isAuthPath && <MobileBottomNav />}
         {!hideFooter && <Footer />}
       </div>
 
