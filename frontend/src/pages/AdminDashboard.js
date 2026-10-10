@@ -433,6 +433,15 @@ const PRICING_GAMES = [
     setAsActive: false,
   });
 
+  // Live Provider Package Lookup State
+  const [providerCatalogs, setProviderCatalogs] = useState([]);
+  const [providerLookupLoading, setProviderLookupLoading] = useState(false);
+  const [providerLookupSearch, setProviderLookupSearch] = useState('');
+  const [providerLookupGameFilter, setProviderLookupGameFilter] = useState('ALL');
+  const [singleLookupId, setSingleLookupId] = useState('');
+  const [singleLookupResult, setSingleLookupResult] = useState(null);
+  const [singleLookupLoading, setSingleLookupLoading] = useState(false);
+
   // Event Banner Management State with Cloud Database Sync
   const [eventBanners, setEventBanners] = useState(() => getAllStoredBanners());
   const [bannerModalOpen, setBannerModalOpen] = useState(false);
@@ -1816,6 +1825,9 @@ const PRICING_GAMES = [
           setProviderSettings(merged);
         }
         if (suppRes.data) setSupplierBalanceData(suppRes.data);
+        adminAPI.getProviderPackages().then(res => {
+          if (res?.data?.games) setProviderCatalogs(res.data.games);
+        }).catch(() => {});
       } else if (activeTab === 'users') {
         const usersRes = await adminAPI.getAllUsers().catch(() => ({ data: [] }));
         setUsers(usersRes.data || []);
@@ -2770,6 +2782,47 @@ const PRICING_GAMES = [
       showToast('error', err.response?.data?.message || 'Token connection failed');
     } finally {
       setTestingFzrTokenId(null);
+    }
+  };
+
+  // ==================== LIVE PROVIDER PACKAGE LOOKUP HANDLERS ====================
+
+  const handleRefreshProviderPackages = async (force = true) => {
+    setProviderLookupLoading(true);
+    try {
+      const res = await adminAPI.getProviderPackages({ refresh: force });
+      if (res?.data?.games) {
+        setProviderCatalogs(res.data.games);
+        const total = res.data.games.reduce((acc, g) => acc + (g.packages?.length || 0), 0);
+        showToast('success', `Live Provider Packages Synced! (${res.data.games.length} games, ${total} packages live)`);
+      }
+    } catch (err) {
+      showToast('error', 'Failed to sync provider packages: ' + (err?.message || String(err)));
+    } finally {
+      setProviderLookupLoading(false);
+    }
+  };
+
+  const handleLookupSinglePackage = async (idToLook) => {
+    const id = Number(idToLook || singleLookupId);
+    if (!id || id <= 0) {
+      showToast('error', 'Please enter a valid Package ID');
+      return;
+    }
+    setSingleLookupLoading(true);
+    setSingleLookupResult(null);
+    try {
+      const res = await adminAPI.lookupProviderPackage(id);
+      if (res?.data?.package) {
+        setSingleLookupResult(res.data.package);
+        showToast('success', `Found Package #${id}: ${res.data.package.name} ($${res.data.package.price})`);
+      } else {
+        showToast('error', `Package #${id} not found in provider catalog`);
+      }
+    } catch (err) {
+      showToast('error', `Package #${id} not found: ` + (err?.response?.data?.message || err?.message));
+    } finally {
+      setSingleLookupLoading(false);
     }
   };
 
@@ -7876,6 +7929,321 @@ const PRICING_GAMES = [
                       <span>{sendingTestTelegram ? 'Sending Telegram Message...' : 'Send Test Khmer Alert ($20 / $15 / $10 / $5 / $0)'}</span>
                     </button>
                   </div>
+                </div>
+              </div>
+
+              {/* ========================================================= */}
+              {/* LIVE PROVIDER PACKAGE LOOKUP & PRICE VERIFICATION */}
+              {/* ========================================================= */}
+              <div className="card bg-slate-900/90 border border-cyan-500/30 rounded-3xl p-5 sm:p-7 shadow-2xl backdrop-blur-xl space-y-6">
+                {/* Header */}
+                <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-slate-800 pb-5">
+                  <div className="flex items-start gap-3.5">
+                    <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-cyan-500/20 to-blue-600/30 border border-cyan-500/40 flex items-center justify-center text-2xl shadow-lg shadow-cyan-500/10 shrink-0">
+                      🔍
+                    </div>
+                    <div>
+                      <h3 className="text-lg sm:text-xl font-black text-white flex items-center gap-2">
+                        <span>Live Provider Package Lookup & Price Guard</span>
+                        <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-cyan-500/20 text-cyan-300 border border-cyan-500/40">
+                          ALWAYS ACTIVE 🛡️
+                        </span>
+                      </h3>
+                      <p className="text-xs text-slate-400 mt-1 max-w-2xl leading-relaxed">
+                        Query live packages, wholesale buy costs, and active safety rules directly from your upstream provider (<strong className="text-cyan-300">KhmerTopUp / FazerCards</strong>). 
+                        Every automated purchase strictly checks the live provider cost against customer payment to prevent overpaying.
+                      </p>
+                    </div>
+                  </div>
+
+                  <div className="flex items-center gap-2.5 shrink-0">
+                    <button
+                      type="button"
+                      onClick={() => handleRefreshProviderPackages(true)}
+                      disabled={providerLookupLoading}
+                      className="px-4 py-2.5 rounded-xl bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-400 hover:to-blue-500 text-white font-black text-xs shadow-lg shadow-cyan-500/25 flex items-center gap-2 transition-all transform hover:scale-105 cursor-pointer disabled:opacity-50"
+                    >
+                      <span className={providerLookupLoading ? "animate-spin" : ""}>🔄</span>
+                      <span>{providerLookupLoading ? 'Syncing...' : 'Sync Live Provider Prices'}</span>
+                    </button>
+                  </div>
+                </div>
+
+                {/* Quick Single Package ID Lookup Card */}
+                <div className="p-4 sm:p-5 rounded-2xl bg-slate-950/70 border border-slate-800 space-y-3">
+                  <div className="flex items-center justify-between">
+                    <span className="text-xs font-bold text-slate-300 uppercase tracking-wider flex items-center gap-1.5">
+                      <span>⚡</span> Quick Package ID Lookup
+                    </span>
+                    <span className="text-[11px] text-slate-400">e.g. Try ID 268 (MLBB 55💎), 371 (WDP), 4852 (FF Monthly), 370 (Twilight)</span>
+                  </div>
+                  <div className="flex flex-col sm:flex-row gap-2.5">
+                    <input
+                      type="number"
+                      placeholder="Enter Provider Package ID (e.g. 268, 371, 4852)..."
+                      value={singleLookupId}
+                      onChange={(e) => setSingleLookupId(e.target.value)}
+                      onKeyDown={(e) => { if (e.key === 'Enter') handleLookupSinglePackage(); }}
+                      className="input flex-1 font-mono text-xs py-2.5 px-3.5 rounded-xl bg-slate-900 border-slate-700 text-cyan-300 focus:border-cyan-400"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => handleLookupSinglePackage()}
+                      disabled={singleLookupLoading}
+                      className="px-5 py-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-cyan-300 font-bold text-xs border border-cyan-500/30 flex items-center justify-center gap-2 transition-all cursor-pointer shrink-0 disabled:opacity-50"
+                    >
+                      <span>{singleLookupLoading ? '⏳' : '🔎'}</span>
+                      <span>Check Package</span>
+                    </button>
+                  </div>
+
+                  {/* Single Lookup Result Box */}
+                  {singleLookupResult && (
+                    <div className="mt-3 p-4 rounded-xl bg-cyan-950/40 border border-cyan-500/40 flex flex-col sm:flex-row sm:items-center justify-between gap-3 animate-fadeIn">
+                      <div className="space-y-1">
+                        <div className="flex items-center gap-2">
+                          <span className="font-mono text-xs font-black px-2 py-0.5 rounded bg-cyan-500/20 text-cyan-300 border border-cyan-500/40">
+                            ID #{singleLookupResult.packageId || singleLookupResult.package_id}
+                          </span>
+                          <span className="font-black text-white text-sm">
+                            {singleLookupResult.name}
+                          </span>
+                          <span className="text-xs text-slate-400">
+                            ({singleLookupResult.gameName || singleLookupResult.gameSlug || 'Provider Package'})
+                          </span>
+                        </div>
+                        <div className="text-xs text-slate-300 font-mono flex items-center gap-4">
+                          <span>Live Wholesale Buy: <strong className="text-emerald-400 font-black">${Number(singleLookupResult.price || 0).toFixed(2)} USD</strong></span>
+                          {singleLookupResult.diamondAmount && (
+                            <span>Amount: <strong className="text-amber-300">{singleLookupResult.diamondAmount} 💎</strong></span>
+                          )}
+                        </div>
+                      </div>
+                      <div className="flex items-center gap-2 shrink-0">
+                        <span className="px-3 py-1.5 rounded-lg bg-emerald-500/20 text-emerald-300 border border-emerald-500/40 text-xs font-bold flex items-center gap-1.5">
+                          <span>🛡️</span> Cost Ceiling Guard Active
+                        </span>
+                      </div>
+                    </div>
+                  )}
+                </div>
+
+                {/* Filter and Search Bar for Full Catalog */}
+                <div className="space-y-3">
+                  <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-3">
+                    {/* Game Filter Pills */}
+                    <div className="flex flex-wrap items-center gap-1.5">
+                      {[
+                        { id: 'ALL', label: 'All Games 🌐' },
+                        { id: 'mobile-legends', label: 'MLBB ⚔️' },
+                        { id: 'freefire', label: 'Free Fire 🔥' },
+                        { id: 'pubg', label: 'PUBG 🪂' },
+                        { id: 'honor-of-kings', label: 'Honor of Kings 👑' },
+                        { id: 'blood-strike', label: 'Blood Strike 🎯' },
+                      ].map(pill => (
+                        <button
+                          key={pill.id}
+                          type="button"
+                          onClick={() => setProviderLookupGameFilter(pill.id)}
+                          className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer ${
+                            providerLookupGameFilter === pill.id
+                              ? 'bg-cyan-500 text-slate-950 shadow-md shadow-cyan-500/30'
+                              : 'bg-slate-800 text-slate-300 hover:bg-slate-700 border border-slate-700/60'
+                          }`}
+                        >
+                          {pill.label}
+                        </button>
+                      ))}
+                    </div>
+
+                    {/* Search Input */}
+                    <div className="relative min-w-[260px]">
+                      <input
+                        type="text"
+                        placeholder="Search by Package ID or name..."
+                        value={providerLookupSearch}
+                        onChange={(e) => setProviderLookupSearch(e.target.value)}
+                        className="input w-full font-mono text-xs py-2 pl-8 pr-3 rounded-xl bg-slate-950/80 border-slate-700 text-slate-200 focus:border-cyan-400"
+                      />
+                      <span className="absolute left-2.5 top-1/2 -translate-y-1/2 text-slate-400 text-xs">🔍</span>
+                    </div>
+                  </div>
+
+                  {/* Provider Packages Table */}
+                  <div className="overflow-x-auto rounded-2xl border border-slate-800 bg-slate-950/50 shadow-inner max-h-[480px]">
+                    <table className="w-full text-left text-xs text-slate-300">
+                      <thead className="bg-slate-900/90 text-[11px] uppercase font-black tracking-wider text-slate-400 border-b border-slate-800 sticky top-0 z-10">
+                        <tr>
+                          <th className="py-3 px-3.5">Pkg ID</th>
+                          <th className="py-3 px-3">Game</th>
+                          <th className="py-3 px-3.5">Package Name</th>
+                          <th className="py-3 px-3.5 text-right">Provider Buy Cost</th>
+                          <th className="py-3 px-3.5 text-right">Store Sell Price</th>
+                          <th className="py-3 px-3.5 text-right">Est. Profit</th>
+                          <th className="py-3 px-3.5 text-center">Safety Rule</th>
+                        </tr>
+                      </thead>
+                      <tbody className="divide-y divide-slate-800/60 font-mono text-xs">
+                        {(() => {
+                          let allPkgs = [];
+                          if (providerCatalogs && providerCatalogs.length > 0) {
+                            providerCatalogs.forEach(g => {
+                              (g.packages || []).forEach(p => {
+                                allPkgs.push({
+                                  ...p,
+                                  gameSlug: g.slug,
+                                  gameName: g.name
+                                });
+                              });
+                            });
+                          }
+
+                          if (providerLookupGameFilter !== 'ALL') {
+                            allPkgs = allPkgs.filter(p =>
+                              (p.gameSlug || '').toLowerCase().includes(providerLookupGameFilter.toLowerCase()) ||
+                              (p.gameName || '').toLowerCase().includes(providerLookupGameFilter.toLowerCase())
+                            );
+                          }
+
+                          if (providerLookupSearch.trim()) {
+                            const q = providerLookupSearch.toLowerCase().trim();
+                            allPkgs = allPkgs.filter(p =>
+                              String(p.packageId || p.package_id || '').includes(q) ||
+                              (p.name || '').toLowerCase().includes(q) ||
+                              (p.gameName || '').toLowerCase().includes(q)
+                            );
+                          }
+
+                          if (allPkgs.length === 0) {
+                            return (
+                              <tr>
+                                <td colSpan={7} className="py-10 text-center text-slate-400">
+                                  <div className="flex flex-col items-center gap-2">
+                                    <span className="text-2xl">📦</span>
+                                    <span>No provider packages loaded yet.</span>
+                                    <button
+                                      type="button"
+                                      onClick={() => handleRefreshProviderPackages(true)}
+                                      className="mt-2 px-3 py-1.5 rounded-lg bg-cyan-500/20 text-cyan-300 border border-cyan-500/40 text-xs font-bold hover:bg-cyan-500/30 cursor-pointer"
+                                    >
+                                      🔄 Load / Sync Live Provider Catalog Now
+                                    </button>
+                                  </div>
+                                </td>
+                              </tr>
+                            );
+                          }
+
+                          return allPkgs.slice(0, 150).map((pkg) => {
+                            const pkgId = pkg.packageId || pkg.package_id;
+                            const buyCost = Number(pkg.price || 0);
+
+                            // Find matching catalog product price if available
+                            const matchingProd = products.find(p =>
+                              p.productId === pkgId ||
+                              (pkg.diamondAmount && p.diamondAmount === pkg.diamondAmount)
+                            );
+                            const sellPrice = matchingProd ? Number(matchingProd.price || 0) : null;
+                            const profit = sellPrice !== null && sellPrice > 0 ? (sellPrice - buyCost) : null;
+
+                            // Safety tag
+                            const isFfMonthly = pkgId === 4852;
+                            const isTwilight = pkgId === 370;
+                            const isWdp = pkgId === 371;
+                            const isFfWeekly = pkgId === 383;
+                            const isMultiplier = [5021, 5022, 5023, 5024, 5025, 5026, 4967, 4968, 4969, 4970].includes(pkgId);
+
+                            let safetyBadge = (
+                              <span className="text-[10px] px-2 py-0.5 rounded bg-emerald-500/15 text-emerald-400 border border-emerald-500/30">
+                                🛡️ Ceiling Guard
+                              </span>
+                            );
+                            if (isFfMonthly || isTwilight) {
+                              safetyBadge = (
+                                <span className="text-[10px] px-2 py-0.5 rounded bg-amber-500/20 text-amber-300 border border-amber-500/40 font-bold">
+                                  🔒 Locked $8.25
+                                </span>
+                              );
+                            } else if (isWdp) {
+                              safetyBadge = (
+                                <span className="text-[10px] px-2 py-0.5 rounded bg-cyan-500/20 text-cyan-300 border border-cyan-500/40 font-bold">
+                                  🔒 Locked $1.55
+                                </span>
+                              );
+                            } else if (isFfWeekly) {
+                              safetyBadge = (
+                                <span className="text-[10px] px-2 py-0.5 rounded bg-cyan-500/20 text-cyan-300 border border-cyan-500/40 font-bold">
+                                  🔒 Locked $1.68
+                                </span>
+                              );
+                            } else if (isMultiplier) {
+                              safetyBadge = (
+                                <span className="text-[10px] px-2 py-0.5 rounded bg-purple-500/20 text-purple-300 border border-purple-500/40 font-bold">
+                                  ⚡ Cascade Safe
+                                </span>
+                              );
+                            }
+
+                            return (
+                              <tr key={pkgId} className="hover:bg-slate-900/80 transition-colors">
+                                <td className="py-2.5 px-3.5">
+                                  <button
+                                    type="button"
+                                    onClick={() => {
+                                      navigator.clipboard.writeText(String(pkgId));
+                                      showToast('success', `Copied Package ID #${pkgId}`);
+                                    }}
+                                    className="font-bold text-cyan-300 hover:text-white flex items-center gap-1 group cursor-pointer"
+                                    title="Click to copy ID"
+                                  >
+                                    <span>#{pkgId}</span>
+                                    <span className="text-[10px] opacity-0 group-hover:opacity-100 text-slate-400">📋</span>
+                                  </button>
+                                </td>
+                                <td className="py-2.5 px-3 font-sans text-xs text-slate-300 truncate max-w-[130px]">
+                                  {pkg.gameName || pkg.gameSlug}
+                                </td>
+                                <td className="py-2.5 px-3.5 font-sans font-bold text-white">
+                                  <div className="flex items-center gap-2">
+                                    <span>{pkg.name}</span>
+                                    {pkg.tag && (
+                                      <span className="text-[10px] px-1.5 py-0.2 rounded bg-slate-800 text-slate-400">
+                                        {pkg.tag}
+                                      </span>
+                                    )}
+                                  </div>
+                                </td>
+                                <td className="py-2.5 px-3.5 text-right font-black text-rose-300">
+                                  ${buyCost.toFixed(2)}
+                                </td>
+                                <td className="py-2.5 px-3.5 text-right font-bold text-slate-200">
+                                  {sellPrice !== null ? `$${sellPrice.toFixed(2)}` : '—'}
+                                </td>
+                                <td className="py-2.5 px-3.5 text-right font-black">
+                                  {profit !== null ? (
+                                    <span className={profit >= 0 ? "text-emerald-400" : "text-rose-400"}>
+                                      {profit >= 0 ? `+$${profit.toFixed(2)}` : `-$${Math.abs(profit).toFixed(2)}`}
+                                    </span>
+                                  ) : (
+                                    <span className="text-slate-500">—</span>
+                                  )}
+                                </td>
+                                <td className="py-2.5 px-3.5 text-center">
+                                  {safetyBadge}
+                                </td>
+                              </tr>
+                            );
+                          });
+                        })()}
+                      </tbody>
+                    </table>
+                  </div>
+                  {providerCatalogs && providerCatalogs.length > 0 && (
+                    <div className="flex items-center justify-between text-[11px] text-slate-400 pt-1">
+                      <span>Live Catalog Provider: <strong className="text-cyan-300">KhmerTopUp API</strong></span>
+                      <span>Showing top packages · Search above to find any item</span>
+                    </div>
+                  )}
                 </div>
               </div>
             </div>

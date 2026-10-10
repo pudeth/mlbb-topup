@@ -15,6 +15,9 @@ public class SupplierGatewayManager : ISupplierGatewayManager
     private readonly string _settingsFilePath;
     private SupplierSettingsModel _settings;
     private readonly object _lock = new();
+    private List<ProviderGameCatalogDto>? _cachedCatalogs;
+    private DateTime _lastCatalogFetch = DateTime.MinValue;
+    private readonly SemaphoreSlim _catalogLock = new(1, 1);
 
     public SupplierGatewayManager(
         ILogger<SupplierGatewayManager> logger,
@@ -625,4 +628,119 @@ public class SupplierGatewayManager : ISupplierGatewayManager
     public string GetActiveApiKey() => _settings.ActiveProvider == "KhmerTopUp" ? _settings.KhmerTopUpApiKey : _settings.FazerCardsApiKey;
 
     public bool IsAutoDispatchEnabled() => _settings.AutoDispatchOnPayment;
+
+    public async Task<List<ProviderGameCatalogDto>> LookupProviderPackagesAsync(bool forceRefresh = false)
+    {
+        if (!forceRefresh && _cachedCatalogs != null && _cachedCatalogs.Count > 0 &&
+            DateTime.UtcNow - _lastCatalogFetch < TimeSpan.FromMinutes(20))
+        {
+            return _cachedCatalogs;
+        }
+
+        await _catalogLock.WaitAsync();
+        try
+        {
+            if (!forceRefresh && _cachedCatalogs != null && _cachedCatalogs.Count > 0 &&
+                DateTime.UtcNow - _lastCatalogFetch < TimeSpan.FromMinutes(20))
+            {
+                return _cachedCatalogs;
+            }
+
+            var ktKey = !string.IsNullOrWhiteSpace(_settings.KhmerTopUpApiKey)
+                ? _settings.KhmerTopUpApiKey
+                : "kt_28c2640c86717199395d973670cf039a30ba2716";
+
+            using var req = new HttpRequestMessage(HttpMethod.Get, "https://khmer-topup.com/api/v1/games");
+            req.Headers.Add("X-API-Key", ktKey);
+            req.Headers.Add("Authorization", $"Bearer {ktKey}");
+
+            var res = await _httpClient.SendAsync(req);
+            if (res.IsSuccessStatusCode)
+            {
+                var content = await res.Content.ReadAsStringAsync();
+                using var doc = JsonDocument.Parse(content);
+
+                if (doc.RootElement.TryGetProperty("games", out var gamesArray) && gamesArray.ValueKind == JsonValueKind.Array)
+                {
+                    var result = new List<ProviderGameCatalogDto>();
+                    foreach (var gameElem in gamesArray.EnumerateArray())
+                    {
+                        var game = new ProviderGameCatalogDto
+                        {
+                            Slug = gameElem.TryGetProperty("slug", out var s) ? s.GetString() ?? "" : "",
+                            Name = gameElem.TryGetProperty("name", out var n) ? n.GetString() ?? "" : "",
+                            Image = gameElem.TryGetProperty("image", out var img) && img.ValueKind == JsonValueKind.String ? img.GetString() : null,
+                            Category = gameElem.TryGetProperty("category", out var cat) && cat.ValueKind == JsonValueKind.String ? cat.GetString() : null,
+                            IdLabel = gameElem.TryGetProperty("id_label", out var idl) && idl.ValueKind == JsonValueKind.String ? idl.GetString() : null,
+                            ServerLabel = gameElem.TryGetProperty("server_label", out var svl) && svl.ValueKind == JsonValueKind.String ? svl.GetString() : null,
+                        };
+
+                        if (gameElem.TryGetProperty("packages", out var pkgsArray) && pkgsArray.ValueKind == JsonValueKind.Array)
+                        {
+                            foreach (var pkgElem in pkgsArray.EnumerateArray())
+                            {
+                                int pkgId = pkgElem.TryGetProperty("package_id", out var pid) ? pid.GetInt32() : 0;
+                                string pkgName = pkgElem.TryGetProperty("name", out var pnm) ? pnm.GetString() ?? "" : "";
+                                decimal price = 0m;
+                                if (pkgElem.TryGetProperty("price", out var prc))
+                                {
+                                    if (prc.ValueKind == JsonValueKind.Number && prc.TryGetDecimal(out var dPrice))
+                                        price = dPrice;
+                                    else if (decimal.TryParse(prc.GetString(), out var sPrice))
+                                        price = sPrice;
+                                }
+                                string? tag = pkgElem.TryGetProperty("tag", out var tg) && tg.ValueKind == JsonValueKind.String ? tg.GetString() : null;
+
+                                int? diamonds = null;
+                                var match = System.Text.RegularExpressions.Regex.Match(pkgName, @"\b(\d+)\s*(Diamonds|Diamond|UC|Tokens|Coins)?\b", System.Text.RegularExpressions.RegexOptions.IgnoreCase);
+                                if (match.Success && int.TryParse(match.Groups[1].Value, out var parsedD))
+                                {
+                                    diamonds = parsedD;
+                                }
+
+                                game.Packages.Add(new ProviderPackageDto
+                                {
+                                    PackageId = pkgId,
+                                    Name = pkgName,
+                                    Price = price,
+                                    Tag = tag,
+                                    GameSlug = game.Slug,
+                                    GameName = game.Name,
+                                    DiamondAmount = diamonds
+                                });
+                            }
+                        }
+                        result.Add(game);
+                    }
+
+                    _cachedCatalogs = result;
+                    _lastCatalogFetch = DateTime.UtcNow;
+                    _logger.LogInformation("Successfully refreshed live provider package catalog: {Count} games and {Packages} packages loaded.",
+                        result.Count, result.Sum(g => g.Packages.Count));
+                    return result;
+                }
+            }
+            else
+            {
+                _logger.LogWarning("KhmerTopUp games endpoint returned HTTP {Code}", res.StatusCode);
+            }
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error fetching live provider package catalog from KhmerTopUp: {Message}", ex.Message);
+        }
+        finally
+        {
+            _catalogLock.Release();
+        }
+
+        return _cachedCatalogs ?? new List<ProviderGameCatalogDto>();
+    }
+
+    public async Task<ProviderPackageDto?> LookupPackageByIdAsync(int packageId)
+    {
+        var catalogs = await LookupProviderPackagesAsync(false);
+        return catalogs.SelectMany(c => c.Packages).FirstOrDefault(p => p.PackageId == packageId);
+    }
 }
+

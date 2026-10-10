@@ -1036,7 +1036,20 @@ public class RealTopUpProviderClient : ITopUpProviderClient
             }
 
             // 2. Strict Universal Cost-Ceiling Verification across ALL packages:
-            if (KhmerTopUpPackageCosts.TryGetValue(packageId, out var wholesaleCost))
+            // ALWAYS PERFORM LIVE PROVIDER LOOKUP:
+            // Look up the exact package with provider to confirm live name, availability, and live price
+            var livePkg = await _gatewayManager.LookupPackageByIdAsync(packageId);
+            if (livePkg != null)
+            {
+                _logger.LogInformation("[Provider Always Lookup] Confirmed Package #{PackageId} ({Name}) on KhmerTopUp at live wholesale price ${Price:F2} USD (Customer paid: ${Paid:F2} USD)",
+                    packageId, livePkg.Name, livePkg.Price, paidUsd);
+            }
+
+            decimal wholesaleCost = (livePkg != null && livePkg.Price > 0m) 
+                ? livePkg.Price 
+                : (KhmerTopUpPackageCosts.TryGetValue(packageId, out var staticCost) ? staticCost : 0m);
+
+            if (wholesaleCost > 0m)
             {
                 // If wholesale cost strictly exceeds what the customer paid, BLOCK the order to prevent money loss!
                 if (wholesaleCost > paidUsd)

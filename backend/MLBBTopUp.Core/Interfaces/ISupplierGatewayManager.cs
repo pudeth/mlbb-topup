@@ -64,4 +64,29 @@ public interface ISupplierGatewayManager
     string GetActiveProvider();
     string GetActiveApiKey();
     bool IsAutoDispatchEnabled();
+    Task<List<ProviderGameCatalogDto>> LookupProviderPackagesAsync(bool forceRefresh = false);
+    Task<ProviderPackageDto?> LookupPackageByIdAsync(int packageId);
 }
+
+public class ProviderPackageDto
+{
+    public int PackageId { get; set; }
+    public string Name { get; set; } = string.Empty;
+    public decimal Price { get; set; }
+    public string? Tag { get; set; }
+    public string GameSlug { get; set; } = string.Empty;
+    public string GameName { get; set; } = string.Empty;
+    public int? DiamondAmount { get; set; }
+}
+
+public class ProviderGameCatalogDto
+{
+    public string Slug { get; set; } = string.Empty;
+    public string Name { get; set; } = string.Empty;
+    public string? Image { get; set; }
+    public string? Category { get; set; }
+    public string? IdLabel { get; set; }
+    public string? ServerLabel { get; set; }
+    public List<ProviderPackageDto> Packages { get; set; } = new();
+}
+

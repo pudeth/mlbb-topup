@@ -2164,6 +2164,52 @@ public class AdminController : BaseController
         }
     }
 
+    /// <summary>
+    /// Always lookup live packages and wholesale prices directly from upstream provider (KhmerTopUp)
+    /// </summary>
+    [HttpGet("supplier/packages")]
+    [HttpGet("provider/packages")]
+    public async Task<IActionResult> GetProviderPackages([FromQuery] string? game, [FromQuery] bool refresh = false)
+    {
+        try
+        {
+            var catalogs = await _gatewayManager.LookupProviderPackagesAsync(refresh);
+            if (!string.IsNullOrWhiteSpace(game))
+            {
+                var filtered = catalogs.Where(c => c.Slug.Contains(game, StringComparison.OrdinalIgnoreCase) ||
+                                                    c.Name.Contains(game, StringComparison.OrdinalIgnoreCase)).ToList();
+                return Ok(new { success = true, count = filtered.Count, games = filtered, source = "live_provider" });
+            }
+            return Ok(new { success = true, count = catalogs.Count, games = catalogs, source = "live_provider" });
+        }
+        catch (Exception ex)
+        {
+            return StatusCode(500, new { success = false, message = $"Failed to lookup provider packages: {ex.Message}" });
+        }
+    }
+
+    /// <summary>
+    /// Lookup single package details and live price from upstream provider by package_id
+    /// </summary>
+    [HttpGet("supplier/package-lookup/{packageId}")]
+    [HttpGet("provider/package-lookup/{packageId}")]
+    public async Task<IActionResult> LookupProviderPackageById(int packageId)
+    {
+        try
+        {
+            var pkg = await _gatewayManager.LookupPackageByIdAsync(packageId);
+            if (pkg == null)
+            {
+                return NotFound(new { success = false, message = $"Package #{packageId} not found in provider catalog." });
+            }
+            return Ok(new { success = true, package = pkg });
+        }
+        catch (Exception ex)
+        {
+            return StatusCode(500, new { success = false, message = $"Error looking up package: {ex.Message}" });
+        }
+    }
+
     // ==================== BAKONG KHQR GATEWAY & ACCOUNT SWITCHER ====================
 
     private static readonly string _bakongAccountsFilePath = Path.Combine(AppContext.BaseDirectory, "bakong_accounts.json");
