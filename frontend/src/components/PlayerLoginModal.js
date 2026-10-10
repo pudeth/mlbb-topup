@@ -1,5 +1,4 @@
 import React, { useState, useEffect } from 'react';
-import { Link } from 'react-router-dom';
 import { topupAPI, authAPI } from '../services/api';
 import { useLanguage } from '../context/LanguageContext';
 import { useAuth } from '../context/AuthContext';
@@ -389,16 +388,9 @@ export const PlayerLoginModal = ({ isOpen, onClose, onSuccess }) => {
           </button>
         </form>
 
-        {/* Footer Policy & Admin Access Link */}
-        <div className="mt-4 pt-3 border-t border-slate-800/80 flex items-center justify-between text-[10px] text-slate-500">
+        {/* Footer Policy */}
+        <div className="mt-4 pt-3 border-t border-slate-800/80 flex items-center justify-center text-[10px] text-slate-500">
           <span>{language === 'km' ? 'ចូលដោយសុវត្ថិភាព 100%' : '100% Safe Player Sync'}</span>
-          <Link
-            to="/login"
-            onClick={onClose}
-            className="text-slate-400 hover:text-amber-400 font-semibold transition-colors"
-          >
-            Admin Portal →
-          </Link>
         </div>
 
       </div>
