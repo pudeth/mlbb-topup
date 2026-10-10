@@ -94,13 +94,13 @@ const Navbar = () => {
         window.requestAnimationFrame(() => {
           const y = window.scrollY || 0;
           setIsScrolled((prev) => {
-            // Hysteresis deadband: trigger scrolled state when past 45px, revert only when within 15px of top
-            if (!prev && y > 45) {
+            // Hysteresis deadband: trigger scrolled state when past 28px, revert only when within 10px of top
+            if (!prev && y > 28) {
               setLangDropdownOpen(false);
               setUserMenuOpen(false);
               return true;
             }
-            if (prev && y < 15) {
+            if (prev && y < 10) {
               setLangDropdownOpen(false);
               setUserMenuOpen(false);
               return false;
@@ -142,82 +142,81 @@ const Navbar = () => {
 
   return (
     <>
-      {/* Top micro moving marquee announcement bar (Safe-Area aware for Dynamic Island & phone status frames) */}
-      {!isAuthPage && (
-        <div 
-          style={{
-            paddingLeft: 'max(8px, env(safe-area-inset-left, 0px))',
-            paddingRight: 'max(8px, env(safe-area-inset-right, 0px))'
-          }}
-          className={`marquee-safe-top bg-gradient-to-r from-cyan-950 via-slate-900 to-indigo-950 border-b border-cyan-500/20 overflow-hidden relative select-none transition-all duration-300 ${
-            isScrolled ? 'opacity-0 pointer-events-none' : 'opacity-100'
-          }`}
-        >
-          <div className="flex items-center gap-2 py-1.5 sm:py-2">
-            {/* Live pulsing dot */}
-            <div className="pl-2 sm:pl-4 pr-1 flex items-center gap-1.5 shrink-0 z-10 bg-gradient-to-r from-cyan-950 via-cyan-950/90 to-transparent">
-              <span className="flex h-2 w-2 relative">
-                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
-                <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
-              </span>
-            </div>
-
-            {/* Marquee Track */}
-            <div className="overflow-hidden flex-1 relative">
-              <div className="animate-marquee flex items-center gap-8 whitespace-nowrap text-xs font-semibold text-cyan-200">
-                {[...trustNotices, ...trustNotices, ...trustNotices].map((item, idx) => (
-                  <div key={idx} className="inline-flex items-center gap-2">
-                    <span className="text-amber-400 text-sm">{item.icon}</span>
-                    <span className="font-bold text-white">{item.title}</span>
-                    <span className="text-slate-400 text-[11px] font-normal">• {item.desc}</span>
-                    <span className="text-slate-600 pl-4">|</span>
-                  </div>
-                ))}
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
-
       <header 
         style={{
+          paddingTop: 'max(8px, env(safe-area-inset-top, 0px))',
           paddingLeft: 'max(8px, env(safe-area-inset-left, 0px))',
           paddingRight: 'max(8px, env(safe-area-inset-right, 0px))'
         }}
         className={`sticky top-0 z-[9995] transition-all duration-300 ease-[cubic-bezier(0.16,1,0.3,1)] ${
-        (isScrolled || isAuthPage) ? 'header-scrolled-padding' : ''
-      } ${
-        isAuthPage 
-          ? '' 
-          : isScrolled
-          ? 'px-2 sm:px-4 pb-2 pointer-events-none bg-gradient-to-b from-[#020617]/95 via-[#020617]/80 to-transparent'
-          : 'pt-2 sm:pt-2.5 pb-2 px-2 sm:px-6 bg-dark-bg/90 backdrop-blur-xl border-b border-slate-800/80 shadow-2xl pointer-events-auto'
-      }`}>
+          isAuthPage 
+            ? 'pointer-events-none' 
+            : isScrolled
+            ? 'pb-2 pointer-events-none bg-transparent'
+            : 'pb-2 bg-[#020617]/90 backdrop-blur-xl border-b border-slate-800/80 shadow-2xl pointer-events-auto'
+        }`}
+      >
         {!isAuthPage && (
           <>
-            <div className={`transition-all duration-300 ease-[cubic-bezier(0.16,1,0.3,1)] pointer-events-auto ${
-              isScrolled
-                ? 'w-fit max-w-full ml-auto rounded-full bg-[#03091e]/95 backdrop-blur-2xl border-2 border-[#0062ff] shadow-[0_12px_40px_rgba(0,0,0,0.92),0_0_28px_rgba(0,98,255,0.35)] ring-1 ring-white/10 px-2 sm:px-3 h-12 sm:h-14 relative overflow-visible'
-                : 'max-w-7xl mx-auto rounded-2xl bg-transparent px-1 sm:px-2 h-12 sm:h-14 relative'
-            }`}>
-            <div className={`flex items-center ${isScrolled ? 'justify-end' : 'justify-between'} h-full w-full`}>
-          
-              {/* Logo (Avatar Medallion + Title) - Hidden when isScrolled per user request */}
-              {!isScrolled && (
-                <div className="flex items-center select-none min-w-0 pr-1">
-                  <Link to="/" className="group flex items-center">
-                    <BrandLogo size="sm" hideTitle={false} />
-                  </Link>
+            {/* Top Micro Marquee Ticker (Collapses smoothly on scroll) */}
+            <div 
+              className={`transition-all duration-300 ease-[cubic-bezier(0.16,1,0.3,1)] overflow-hidden select-none ${
+                isScrolled ? 'max-h-0 opacity-0 -translate-y-2 pointer-events-none mb-0' : 'max-h-10 opacity-100 translate-y-0 mb-1.5'
+              }`}
+            >
+              <div className="flex items-center gap-2 py-1 bg-gradient-to-r from-cyan-950/70 via-slate-900/80 to-indigo-950/70 rounded-full border border-cyan-500/20 px-2 sm:px-3">
+                {/* Live pulsing dot */}
+                <div className="pl-1 pr-1 flex items-center gap-1.5 shrink-0 z-10">
+                  <span className="flex h-2 w-2 relative">
+                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                    <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
+                  </span>
                 </div>
-              )}
 
-              {/* Desktop Central Smart Search Bar (Visible on desktop when unscrolled) */}
-              <div className={`hidden lg:flex items-center flex-1 max-w-xl mx-2 sm:mx-4 ${isScrolled ? 'hidden' : ''}`}>
+                {/* Marquee Track */}
+                <div className="overflow-hidden flex-1 relative">
+                  <div className="animate-marquee flex items-center gap-8 whitespace-nowrap text-[11px] font-semibold text-cyan-200">
+                    {[...trustNotices, ...trustNotices, ...trustNotices].map((item, idx) => (
+                      <div key={idx} className="inline-flex items-center gap-2">
+                        <span className="text-amber-400 text-xs">{item.icon}</span>
+                        <span className="font-bold text-white">{item.title}</span>
+                        <span className="text-slate-400 text-[10px] font-normal">• {item.desc}</span>
+                        <span className="text-slate-600 pl-4">|</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Main Navbar Bar */}
+            <div className="max-w-7xl mx-auto w-full h-11 sm:h-12 relative flex items-center justify-between">
+              
+              {/* Brand Logo - Smooth slide-out & fade-out on scroll without unmounting */}
+              <div className={`flex items-center select-none min-w-0 pr-1 transition-all duration-300 ease-[cubic-bezier(0.16,1,0.3,1)] transform ${
+                isScrolled 
+                  ? 'opacity-0 -translate-x-8 scale-90 max-w-0 pointer-events-none overflow-hidden' 
+                  : 'opacity-100 translate-x-0 scale-100 max-w-[260px] pointer-events-auto'
+              }`}>
+                <Link to="/" className="group flex items-center shrink-0">
+                  <BrandLogo size="sm" hideTitle={false} />
+                </Link>
+              </div>
+
+              {/* Desktop Central Smart Search Bar (Smooth fade-out on scroll) */}
+              <div className={`hidden lg:flex items-center flex-1 max-w-xl mx-2 sm:mx-4 transition-all duration-300 ease-[cubic-bezier(0.16,1,0.3,1)] ${
+                isScrolled ? 'opacity-0 scale-95 max-w-0 pointer-events-none overflow-hidden' : 'opacity-100 scale-100'
+              }`}>
                 <SmartSearchBar isMobile={false} />
               </div>
 
-              {/* Actions - Auto-scaling flexible buttons grouped on the right side */}
-              <div className="flex items-center justify-end gap-1.5 sm:gap-2.5 select-none shrink-0 ml-auto">
+              {/* Cyber Floating Action Capsule Dock (Search, Language, Profile) */}
+              <div className={`ml-auto shrink-0 select-none pointer-events-auto transition-all duration-300 ease-[cubic-bezier(0.16,1,0.3,1)] ${
+                isScrolled
+                  ? 'rounded-full bg-[#03091e]/95 backdrop-blur-2xl border-2 border-cyan-400 shadow-[0_12px_40px_rgba(0,0,0,0.92),0_0_28px_rgba(0,200,255,0.45)] ring-1 ring-cyan-300/40 p-1'
+                  : 'rounded-full bg-[#060e26]/80 backdrop-blur-xl border border-blue-500/35 shadow-[0_4px_20px_rgba(0,0,0,0.4)] p-1'
+              }`}>
+                <div className="flex items-center gap-1.5 sm:gap-2">
                 {/* Search Button matching Reference Image 2 */}
                 <button
                   type="button"
@@ -271,7 +270,9 @@ const Navbar = () => {
                       />
 
                       {/* High-End Cyber Gaming Dropdown Card with viewport safety clamping */}
-                      <div className="fixed sm:absolute left-3 right-3 sm:left-auto sm:right-0 top-16 sm:top-full mt-2 w-auto max-w-sm sm:w-80 mx-auto rounded-[22px] bg-[#040816] border-2 border-[#0055ff]/80 shadow-[0_15px_50px_rgba(0,0,0,0.95),0_0_28px_rgba(0,85,255,0.3)] p-2.5 z-[100] animate-profileDropdown font-khmer select-none">
+                      <div 
+                        style={{ top: 'max(64px, calc(env(safe-area-inset-top, 0px) + 52px))' }}
+                        className="fixed sm:absolute left-3 right-3 sm:left-auto sm:right-0 sm:!top-full sm:mt-2 w-auto max-w-sm sm:w-80 mx-auto rounded-[22px] bg-[#040816] border-2 border-[#0055ff]/80 shadow-[0_15px_50px_rgba(0,0,0,0.95),0_0_28px_rgba(0,85,255,0.3)] p-2.5 z-[100] animate-profileDropdown font-khmer select-none">
                         {/* Top Caret Pointer Triangle on desktop */}
                         <div className="hidden sm:block absolute -top-2 right-6 sm:right-7 w-3.5 h-3.5 rotate-45 bg-[#0a1838] border-t-2 border-l-2 border-[#0055ff]/80 z-20 pointer-events-none" />
 
@@ -424,7 +425,9 @@ const Navbar = () => {
                     {userMenuOpen && (
                       <>
                         <div className="fixed inset-0 z-40" onClick={closeAllMenus} />
-                        <div className="fixed sm:absolute left-3 right-3 sm:left-auto sm:right-0 top-16 sm:top-full mt-2 w-auto max-w-sm sm:w-80 mx-auto rounded-[22px] bg-[#040816] border-2 border-[#0055ff]/80 shadow-[0_15px_50px_rgba(0,0,0,0.95),0_0_28px_rgba(0,85,255,0.3)] p-2.5 z-50 animate-profileDropdown font-khmer select-none">
+                        <div 
+                          style={{ top: 'max(64px, calc(env(safe-area-inset-top, 0px) + 52px))' }}
+                          className="fixed sm:absolute left-3 right-3 sm:left-auto sm:right-0 sm:!top-full sm:mt-2 w-auto max-w-sm sm:w-80 mx-auto rounded-[22px] bg-[#040816] border-2 border-[#0055ff]/80 shadow-[0_15px_50px_rgba(0,0,0,0.95),0_0_28px_rgba(0,85,255,0.3)] p-2.5 z-50 animate-profileDropdown font-khmer select-none">
                           {/* Top Caret Pointer Triangle matching Reference Image 1 on desktop */}
                           <div className="hidden sm:block absolute -top-2 right-6 w-3.5 h-3.5 rotate-45 bg-[#0a1838] border-t-2 border-l-2 border-[#0055ff]/80 z-20 pointer-events-none" />
 
