@@ -68,6 +68,20 @@ const OrderHistory = () => {
   const { language } = useLanguage();
   const { playerAccount, loginPlayer, logout, user } = useAuth();
 
+  const [effectivePlayer, setEffectivePlayer] = useState(() => playerAccount || getStoredPlayerAccount());
+
+  useEffect(() => {
+    const p = playerAccount || getStoredPlayerAccount();
+    if (p) {
+      setEffectivePlayer(p);
+      if (!playerAccount && loginPlayer) {
+        loginPlayer(p);
+      }
+    } else {
+      setEffectivePlayer(null);
+    }
+  }, [playerAccount, loginPlayer]);
+
   // Lookup form state
   const [formData, setFormData] = useState({
     playerId: '',
@@ -209,47 +223,71 @@ const OrderHistory = () => {
 
   // Fetch orders for active player - always loads local first, then merges remote
   const loadOrdersForPlayer = useCallback(async (pId, sId) => {
-    if (!pId) return;
     setLoadingOrders(true);
     setOrdersError('');
 
     // 1. Load local orders immediately so UI shows instantly (never empty)
-    const localOrders = getLocalOrders(pId);
-    if (localOrders.length > 0) {
-      setOrders(localOrders);
+    const cleanP = pId ? String(pId).trim() : '';
+    const localOrders = cleanP ? getLocalOrders(cleanP) : getLocalOrders();
+    const allDeviceOrders = getLocalOrders();
+
+    let initialOrders = localOrders;
+    if (initialOrders.length === 0 && cleanP) {
+      const pDigits = cleanP.replace(/\D/g, '');
+      if (pDigits && pDigits.length >= 4) {
+        const digitMatched = allDeviceOrders.filter(o => {
+          const oDigits = String(o.playerId || o.playerID || '').replace(/\D/g, '');
+          return oDigits && (oDigits === pDigits || oDigits.startsWith(pDigits) || pDigits.startsWith(oDigits));
+        });
+        if (digitMatched.length > 0) initialOrders = digitMatched;
+      }
+    }
+
+    if (initialOrders.length === 0 && !cleanP && allDeviceOrders.length > 0) {
+      initialOrders = allDeviceOrders;
+    }
+
+    if (initialOrders.length > 0) {
+      setOrders(initialOrders);
     }
 
     try {
       // 2. Fetch remote orders (server has authoritative data)
       let remoteOrders = [];
-      try {
-        const res = await ordersAPI.getByPlayer(pId, sId);
-        if (Array.isArray(res.data)) {
-          remoteOrders = res.data;
-        }
-      } catch (e) {
-        // Fallback: my-orders endpoint if user is logged in
+      if (cleanP) {
         try {
-          const res = await ordersAPI.getMyOrders();
-          if (Array.isArray(res.data)) {
-            remoteOrders = res.data.filter(o =>
-              String(o.playerID || o.playerId).trim() === String(pId).trim()
-            );
+          const res = await ordersAPI.getByPlayer(cleanP, sId);
+          if (Array.isArray(res.data) && res.data.length > 0) {
+            remoteOrders = res.data;
           }
-        } catch (err2) {}
+        } catch (e) {}
+
+        // Fallback: my-orders endpoint if user is logged in
+        if (remoteOrders.length === 0) {
+          try {
+            const res = await ordersAPI.getMyOrders();
+            if (Array.isArray(res.data)) {
+              const pDigits = cleanP.replace(/\D/g, '');
+              remoteOrders = res.data.filter(o => {
+                const oDigits = String(o.playerID || o.playerId || '').replace(/\D/g, '');
+                return oDigits === pDigits || String(o.playerID || o.playerId).trim() === cleanP;
+              });
+            }
+          } catch (err2) {}
+        }
       }
 
       // 3. Merge remote + local so nothing is ever lost
-      const merged = mergeOrders(remoteOrders, localOrders);
+      const merged = mergeOrders(remoteOrders, initialOrders.length > 0 ? initialOrders : allDeviceOrders);
 
       // 4. Save any remote orders that weren't in local storage
       remoteOrders.forEach(o => saveLocalOrder(o));
 
       // 5. Update state with merged list
-      setOrders(merged.length > 0 ? merged : localOrders);
+      setOrders(merged.length > 0 ? merged : initialOrders);
     } catch (err) {
       // On complete failure, still show what we have locally
-      if (localOrders.length === 0) {
+      if (initialOrders.length === 0) {
         setOrdersError(language === 'km' ? 'មិនអាចទាញយកទិន្នន័យបញ្ជាទិញបានទេ' : 'Failed to load order history');
       }
     } finally {
@@ -260,23 +298,27 @@ const OrderHistory = () => {
   // Listen for real-time order updates (e.g. from TopUp.js after payment)
   useEffect(() => {
     const handleOrderUpdate = () => {
-      if (playerAccount?.playerId) {
-        const fresh = getLocalOrders(playerAccount.playerId);
-        if (fresh.length > 0) {
-          setOrders(prev => mergeOrders([], [...fresh, ...prev]));
-        }
+      const activePId = effectivePlayer?.playerId;
+      const fresh = activePId ? getLocalOrders(activePId) : getLocalOrders();
+      if (fresh.length > 0) {
+        setOrders(prev => mergeOrders([], [...fresh, ...prev]));
       }
     };
     window.addEventListener('orders-updated', handleOrderUpdate);
     return () => window.removeEventListener('orders-updated', handleOrderUpdate);
-  }, [playerAccount]);
+  }, [effectivePlayer]);
 
-  // Load orders if playerAccount is already active
+  // Load orders if effectivePlayer is already active or if device has local orders
   useEffect(() => {
-    if (playerAccount?.playerId) {
-      loadOrdersForPlayer(playerAccount.playerId, playerAccount.serverId);
+    if (effectivePlayer?.playerId) {
+      loadOrdersForPlayer(effectivePlayer.playerId, effectivePlayer.serverId);
+    } else {
+      const deviceOrders = getLocalOrders();
+      if (deviceOrders.length > 0) {
+        setOrders(deviceOrders);
+      }
     }
-  }, [playerAccount, loadOrdersForPlayer]);
+  }, [effectivePlayer, loadOrdersForPlayer]);
 
   // Submit Lookup / Player Login
   const handlePlayerLogin = async (e) => {
@@ -364,6 +406,7 @@ const OrderHistory = () => {
 
       // Atomically update global auth state (Navbar, Sidebar, OrderHistory sync simultaneously)
       loginPlayer(newPlayerAccount, authResult?.token, storedUser);
+      setEffectivePlayer(newPlayerAccount);
 
       // Step 3: Fetch orders immediately
       await loadOrdersForPlayer(pId, sId);
@@ -374,7 +417,6 @@ const OrderHistory = () => {
       setSubmitting(false);
     }
   };
-
 
   // Copy Order ID
   const handleCopyOrderId = (id) => {
@@ -393,6 +435,111 @@ const OrderHistory = () => {
 
   // Calculate quick stats
   const totalCompleted = orders.filter(o => o.topupStatus === 'Completed').length;
+
+  // Reusable Order Card Renderer
+  const renderOrderCard = (order) => {
+    const isCompleted = order.topupStatus === 'Completed';
+    const isProcessing = order.topupStatus === 'Processing' || order.topupStatus === 'AwaitingBalance';
+    const isFailed = order.topupStatus === 'Failed' || order.paymentStatus === 'Failed';
+    const isPass = (order.productName || '').toLowerCase().includes('pass');
+
+    const statusConfig = isCompleted
+      ? {
+          label: language === 'km' ? 'ជោគជ័យ' : 'Completed',
+          cls: 'bg-emerald-950/80 text-emerald-300 border-emerald-500/50 shadow-[0_0_10px_rgba(52,211,153,0.3)]',
+          icon: '✓'
+        }
+      : isFailed
+        ? {
+            label: language === 'km' ? 'បរាជ័យ' : 'Failed',
+            cls: 'bg-rose-950/80 text-rose-300 border-rose-500/50 shadow-[0_0_10px_rgba(244,63,94,0.3)]',
+            icon: '✕'
+          }
+        : {
+            label: isProcessing ? (language === 'km' ? 'កំពុងផ្ញើពេជ្រ' : 'Processing') : (language === 'km' ? 'រង់ចាំទូទាត់' : 'Pending'),
+            cls: 'bg-amber-950/80 text-amber-300 border-amber-500/50 shadow-[0_0_10px_rgba(245,158,11,0.3)]',
+            icon: '⚡'
+          };
+
+    return (
+      <div
+        key={order.orderId || `${order.createdAt}_${order.playerId}`}
+        className="group relative rounded-2xl p-3.5 sm:p-4 bg-gradient-to-r from-[#0d1428] via-[#091020] to-[#060a14] border border-slate-800/90 hover:border-sky-500/50 hover:shadow-[0_10px_25px_-5px_rgba(0,0,0,0.8),0_0_15px_rgba(56,189,248,0.15)] transition-all duration-200"
+      >
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+          {/* Left: Artwork / Game & Order Title */}
+          <div className="flex items-center gap-3 min-w-0">
+            {/* 3D Package Gem / Pass Art */}
+            <div className="relative w-12 h-12 sm:w-14 sm:h-14 rounded-xl bg-slate-950/80 border border-slate-800 p-1 flex items-center justify-center shrink-0">
+              <span className="text-2xl">
+                {isPass ? '🎟️' : '💎'}
+              </span>
+            </div>
+
+            <div className="min-w-0">
+              {/* Order ID & Status */}
+              <div className="flex items-center gap-2 flex-wrap">
+                <span
+                  onClick={() => handleCopyOrderId(order.orderId)}
+                  className="font-mono text-xs sm:text-sm font-black text-white hover:text-cyan-300 flex items-center gap-1 cursor-pointer transition-colors"
+                  title="Click to Copy Order ID"
+                >
+                  <span>#{order.orderId}</span>
+                  <span className="text-[10px] text-slate-500">
+                    {copiedId === order.orderId ? '✓' : '📋'}
+                  </span>
+                </span>
+
+                {/* Status Badge */}
+                <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[9px] sm:text-[10px] font-black border uppercase tracking-wider ${statusConfig.cls}`}>
+                  <span>{statusConfig.icon}</span>
+                  <span>{statusConfig.label}</span>
+                </span>
+              </div>
+
+              {/* Package Name & Diamond count */}
+              <div className="text-xs sm:text-sm font-bold text-slate-200 mt-1 truncate">
+                {order.productName || `${order.diamondAmount} Diamonds`}
+              </div>
+
+              {/* Date & Game */}
+              <div className="text-[10px] sm:text-[11px] text-slate-400 mt-0.5 flex items-center gap-2 font-mono">
+                <span>{order.createdAt ? formatDateTime(order.createdAt, { seconds: true }) : 'Recent'}</span>
+                <span className="text-slate-600">•</span>
+                <span className="text-sky-300 font-semibold">{order.gameName || 'Mobile Legends'}</span>
+                {order.playerId && (
+                  <>
+                    <span className="text-slate-600">•</span>
+                    <span className="text-slate-400">ID: {order.playerId}</span>
+                  </>
+                )}
+              </div>
+            </div>
+          </div>
+
+          {/* Right: Amount & View Details Button */}
+          <div className="flex items-center justify-between sm:justify-end gap-3 shrink-0 pt-2 sm:pt-0 border-t sm:border-t-0 border-slate-800/80">
+            <div className="text-left sm:text-right">
+              <div className="font-mono font-black text-sm sm:text-base text-[#00F5B8] drop-shadow-[0_0_8px_rgba(0,245,184,0.3)]">
+                ${parseFloat(order.amount || 0).toFixed(2)}
+              </div>
+              <div className="text-[9px] font-mono text-slate-400">
+                ~{Math.round((parseFloat(order.amount) || 0) * 4100).toLocaleString()} ៛
+              </div>
+            </div>
+
+            <Link
+              to={`/order-status/${order.orderId}`}
+              className="px-3 py-1.5 rounded-xl bg-slate-900 hover:bg-slate-800 border border-slate-700 hover:border-cyan-400 text-xs font-bold text-cyan-300 hover:text-white flex items-center gap-1 transition-all shadow-sm"
+            >
+              <span>{language === 'km' ? 'មើលវិក្កយបត្រ' : 'Details'}</span>
+              <span className="text-[10px]">→</span>
+            </Link>
+          </div>
+        </div>
+      </div>
+    );
+  };
 
   return (
     <div className="min-h-screen bg-[#070b16] text-white pt-4 pb-24 px-3 sm:px-6 lg:px-8 font-khmer select-none">

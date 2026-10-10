@@ -48,16 +48,54 @@ export const getLocalOrders = (playerId = null) => {
       }
     }
 
+    const cleanQuery = playerId ? String(playerId).trim() : '';
+
+    const matchesPlayer = (o, query) => {
+      if (!query) return true;
+      const cleanQ = String(query).trim();
+      const p1 = String(o.playerId || '').trim();
+      const p2 = String(o.playerID || '').trim();
+      if (p1 === cleanQ || p2 === cleanQ) return true;
+      if (p1.toLowerCase() === cleanQ.toLowerCase() || p2.toLowerCase() === cleanQ.toLowerCase()) return true;
+
+      // Numeric-only digit matching for accounts formatted as "1225368571 (11446)" or "1225368571"
+      const qDigits = cleanQ.replace(/\D/g, '');
+      const oDigits1 = p1.replace(/\D/g, '');
+      const oDigits2 = p2.replace(/\D/g, '');
+      if (qDigits && qDigits.length >= 4) {
+        if (oDigits1 === qDigits || oDigits2 === qDigits) return true;
+        if (oDigits1.startsWith(qDigits) || qDigits.startsWith(oDigits1)) return true;
+        if (oDigits2.startsWith(qDigits) || qDigits.startsWith(oDigits2)) return true;
+      }
+      return false;
+    };
+
+    // Also check dedicated player backup key if present in localStorage
+    if (cleanQuery) {
+      try {
+        const qDigits = cleanQuery.replace(/\D/g, '');
+        const backupRaw = localStorage.getItem(`orders_player_${cleanQuery}`) || (qDigits ? localStorage.getItem(`orders_player_${qDigits}`) : null);
+        if (backupRaw) {
+          const parsedBackup = JSON.parse(backupRaw);
+          if (Array.isArray(parsedBackup) && parsedBackup.length > 0) {
+            const normalizedBackup = parsedBackup.map(normalizeOrder).filter(Boolean);
+            const combinedMap = new Map();
+            list.forEach(o => combinedMap.set(String(o.orderId || o.createdAt), o));
+            normalizedBackup.forEach(o => combinedMap.set(String(o.orderId || o.createdAt), o));
+            list = Array.from(combinedMap.values());
+          }
+        }
+      } catch {}
+    }
+
     if (isCleared) {
-      const cleanQuery = playerId ? String(playerId).trim() : '';
       if (cleanQuery) {
-        return list.filter(o => String(o.playerId).trim() === cleanQuery || String(o.playerID).trim() === cleanQuery);
+        return list.filter(o => matchesPlayer(o, cleanQuery));
       }
       return list;
     }
 
     // Clean stale historical test seeds if present, replacing with real KhmerTopUp transactions
-    const cleanQuery = playerId ? String(playerId).trim() : '';
     const hasStaleSeeds = list.some(o => String(o.productName).includes('3 in 1') || String(o.billNumber).startsWith('ORD-'));
     if (list.length < 10 || hasStaleSeeds || !list.some(o => String(o.billNumber).startsWith('KT-'))) {
       const seeds = (historicalSeeds || []).map(normalizeOrder).filter(Boolean);
@@ -78,7 +116,7 @@ export const getLocalOrders = (playerId = null) => {
     });
 
     if (cleanQuery) {
-      return list.filter(o => String(o.playerId).trim() === cleanQuery || String(o.playerID).trim() === cleanQuery);
+      return list.filter(o => matchesPlayer(o, cleanQuery));
     }
     return list;
   } catch (err) {

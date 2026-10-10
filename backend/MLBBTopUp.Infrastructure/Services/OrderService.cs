@@ -215,12 +215,18 @@ public class OrderService : IOrderService
 
     public async Task<IEnumerable<OrderResponse>> GetOrdersByPlayerAsync(string playerId, string? serverId)
     {
-        var p = (playerId ?? string.Empty).Trim();
-        var s = (serverId ?? string.Empty).Trim();
+        var (cleanPlayerId, cleanServerId) = SanitizePlayerAndServerId(playerId, serverId);
+        var p = cleanPlayerId.Trim();
+        var s = cleanServerId.Trim();
+        var rawP = (playerId ?? string.Empty).Trim();
+
+        // Extract pure digits for flexible matching
+        var digitsMatch = System.Text.RegularExpressions.Regex.Match(rawP, @"\d{5,12}");
+        var pDigits = digitsMatch.Success ? digitsMatch.Value : p;
 
         var query = _context.Orders
             .Include(o => o.Product)
-            .Where(o => o.PlayerID == p);
+            .Where(o => o.PlayerID == p || o.PlayerID == rawP || o.PlayerID.Contains(pDigits));
 
         if (!string.IsNullOrEmpty(s) && !s.Equals("Global", StringComparison.OrdinalIgnoreCase))
         {

@@ -1398,6 +1398,52 @@ const PRICING_GAMES = [
     });
   };
 
+  // Helper to check if a provider package is already present in store catalog
+  const findExistingStoreProduct = (providerPkg) => {
+    if (!providerPkg) return null;
+    const allStoreProds = getMergedProductsList();
+    const pkgId = Number(providerPkg.packageId || providerPkg.package_id || providerPkg.providerPackageId || providerPkg.productId || 0);
+    const rawName = String(providerPkg.name || '').toLowerCase().trim();
+    const normName = rawName.replace(/[^a-z0-9]/g, '');
+    const gSlug = String(providerPkg.gameSlug || providerPkg.gameName || providerPkg.game || '').toLowerCase();
+    const pkgDiamond = Number(providerPkg.diamondAmount || 0);
+
+    return allStoreProds.find(p => {
+      const pProvId = Number(p.providerPackageId || p.packageId || getResolvedProviderPackageId(p) || 0);
+      const pProdId = Number(p.productId || 0);
+
+      // 1. Direct upstream Provider ID match (highest confidence)
+      if (pkgId > 0 && pProvId > 0 && pProvId === pkgId) return true;
+      if (pkgId > 0 && pProdId > 0 && pProdId === pkgId) return true;
+
+      // 2. Matching within game scope
+      const pName = String(p.name || '').toLowerCase().trim();
+      const pNormName = pName.replace(/[^a-z0-9]/g, '');
+      const pGame = String(p.game || '').toLowerCase();
+
+      const gameMatches =
+        (gSlug.includes('free') && (pGame.includes('free') || pGame === 'freefire')) ||
+        ((gSlug.includes('legend') || gSlug.includes('mlbb')) && (pGame.includes('mlbb') || pGame.includes('legend') || pGame === 'special_passes')) ||
+        (gSlug.includes('pubg') && (pGame.includes('pubg') || pGame === 'pubgm')) ||
+        (gSlug.includes('genshin') && pGame.includes('genshin')) ||
+        (gSlug.includes('honor') && (pGame.includes('hok') || pGame.includes('honor'))) ||
+        (gSlug.includes('steam') && pGame.includes('steam')) ||
+        (gSlug.includes('telegram') && pGame.includes('telegram')) ||
+        (!gSlug || !pGame);
+
+      if (gameMatches) {
+        if (normName && pNormName && normName === pNormName) return true;
+        if (pkgDiamond > 0 && Number(p.diamondAmount) === pkgDiamond) {
+          const isPass1 = Boolean(providerPkg.isPass || rawName.includes('pass') || rawName.includes('bundle') || rawName.includes('lite') || rawName.includes('weekly') || rawName.includes('monthly'));
+          const isPass2 = Boolean(p.isPass || pName.includes('pass') || pName.includes('bundle') || pName.includes('lite') || pName.includes('weekly') || pName.includes('monthly'));
+          if (isPass1 === isPass2) return true;
+        }
+      }
+
+      return false;
+    }) || null;
+  };
+
   const [packageSearch, setPackageSearch] = useState('');
   const [packageAnalyticsGameFilter, setPackageAnalyticsGameFilter] = useState('ALL');
   const [packageAnalyticsSortBy, setPackageAnalyticsSortBy] = useState('game'); // 'game' | 'sold' | 'profit' | 'unitProfit' | 'margin' | 'retail' | 'cost' | 'reseller' | 'revenue' | 'name'
@@ -2168,6 +2214,17 @@ const PRICING_GAMES = [
   // ==================== PRODUCT & PRICING HANDLERS ====================
 
   const handleOpenProductModal = (product = null, fromProviderPkg = null) => {
+    // If opening from a provider package, check if it already exists in the store!
+    if (fromProviderPkg && !product) {
+      const existingInStore = findExistingStoreProduct(fromProviderPkg);
+      if (existingInStore) {
+        // Switch to editing the existing product instead of creating a duplicate
+        product = existingInStore;
+        fromProviderPkg = null;
+        showToast('info', `Package #${existingInStore.providerPackageId || existingInStore.productId} (${existingInStore.name}) is already in your store. Switched to edit mode.`);
+      }
+    }
+
     if (fromProviderPkg) {
       const pkgId = fromProviderPkg.packageId || fromProviderPkg.package_id || '';
       const buyCost = Number(fromProviderPkg.price || 0);
@@ -2347,6 +2404,18 @@ const PRICING_GAMES = [
         setProducts(prev => prev.map(p => p.productId === editingProduct.productId ? { ...p, ...payload } : p));
         showToast('success', `Updated prices for ${payload.name || payload.diamondAmount} - Customer: $${retailP.toFixed(2)}, Reseller: $${resellerP.toFixed(2)} USD!`);
       } else {
+        // Prevent duplicate creation if package is already in store
+        const duplicate = findExistingStoreProduct({
+          providerPackageId: provPkgId,
+          diamondAmount: parseInt(productFormData.diamondAmount) || 0,
+          game: productFormData.game || 'mlbb',
+          name: productFormData.name || `${productFormData.diamondAmount} Diamonds`,
+        });
+        if (duplicate) {
+          showToast('error', `⚠️ Cannot add duplicate: "${duplicate.name || duplicate.diamondAmount}" (#${duplicate.providerPackageId || duplicate.productId}) is already active in your store! Please edit the existing package.`);
+          return;
+        }
+
         const res = await adminAPI.createProduct(payload).catch(() => ({ data: { ...payload, productId: Date.now() } }));
         setProducts(prev => [...prev, res.data || { ...payload, productId: Date.now() }]);
         showToast('success', `Created package #${provPkgId || ''} with Active Safety Protections verified!`);
@@ -8187,42 +8256,92 @@ const PRICING_GAMES = [
                   </div>
 
                   {/* Single Lookup Result Box */}
-                  {singleLookupResult && (
-                    <div className="mt-3 p-4 rounded-xl bg-cyan-950/40 border border-cyan-500/40 flex flex-col sm:flex-row sm:items-center justify-between gap-3 animate-fadeIn">
-                      <div className="space-y-1">
-                        <div className="flex items-center gap-2">
-                          <span className="font-mono text-xs font-black px-2 py-0.5 rounded bg-cyan-500/20 text-cyan-300 border border-cyan-500/40">
-                            ID #{singleLookupResult.packageId || singleLookupResult.package_id}
-                          </span>
-                          <span className="font-black text-white text-sm">
-                            {singleLookupResult.name}
-                          </span>
-                          <span className="text-xs text-slate-400">
-                            ({singleLookupResult.gameName || singleLookupResult.gameSlug || 'Provider Package'})
-                          </span>
+                  {singleLookupResult && (() => {
+                    const existingInStore = findExistingStoreProduct(singleLookupResult);
+                    const buyCost = Number(singleLookupResult.price || 0);
+                    const storePrice = existingInStore ? Number(existingInStore.price || 0) : null;
+                    const profit = (storePrice !== null && storePrice > 0) ? (storePrice - buyCost) : null;
+
+                    return (
+                      <div className={`mt-3 p-4 rounded-xl border flex flex-col sm:flex-row sm:items-center justify-between gap-3 animate-fadeIn ${
+                        existingInStore
+                          ? 'bg-slate-900/95 border-emerald-500/50 shadow-lg shadow-emerald-950/20'
+                          : 'bg-cyan-950/40 border-cyan-500/40'
+                      }`}>
+                        <div className="space-y-1">
+                          <div className="flex items-center gap-2 flex-wrap">
+                            <span className="font-mono text-xs font-black px-2 py-0.5 rounded bg-cyan-500/20 text-cyan-300 border border-cyan-500/40">
+                              ID #{singleLookupResult.packageId || singleLookupResult.package_id}
+                            </span>
+                            <span className="font-black text-white text-sm">
+                              {singleLookupResult.name}
+                            </span>
+                            <span className="text-xs text-slate-400">
+                              ({singleLookupResult.gameName || singleLookupResult.gameSlug || 'Provider Package'})
+                            </span>
+                            {existingInStore ? (
+                              <span className="text-[10px] font-black px-2 py-0.5 rounded-md bg-emerald-500/20 text-emerald-300 border border-emerald-500/40 flex items-center gap-1 shadow-sm">
+                                <span>✓</span> ALREADY IN STORE (មានក្នុងហាងរួចហើយ)
+                              </span>
+                            ) : (
+                              <span className="text-[10px] font-black px-2 py-0.5 rounded-md bg-cyan-500/20 text-cyan-300 border border-cyan-500/40">
+                                NEW PROVIDER ITEM
+                              </span>
+                            )}
+                          </div>
+                          <div className="text-xs text-slate-300 font-mono flex items-center gap-3 sm:gap-4 flex-wrap">
+                            <span>Live Buy: <strong className="text-emerald-400 font-black">${buyCost.toFixed(2)} USD</strong></span>
+                            {storePrice !== null && (
+                              <span>Store Sell Price: <strong className="text-cyan-300 font-black">${storePrice.toFixed(2)} USD</strong></span>
+                            )}
+                            {profit !== null && (
+                              <span>Est. Profit: <strong className={profit >= 0 ? "text-emerald-400 font-black" : "text-rose-400 font-black"}>
+                                {profit >= 0 ? `+$${profit.toFixed(2)}` : `-$${Math.abs(profit).toFixed(2)}`}
+                              </strong></span>
+                            )}
+                            {singleLookupResult.diamondAmount && (
+                              <span>Amount: <strong className="text-amber-300">{singleLookupResult.diamondAmount} 💎</strong></span>
+                            )}
+                          </div>
                         </div>
-                        <div className="text-xs text-slate-300 font-mono flex items-center gap-4">
-                          <span>Live Wholesale Buy: <strong className="text-emerald-400 font-black">${Number(singleLookupResult.price || 0).toFixed(2)} USD</strong></span>
-                          {singleLookupResult.diamondAmount && (
-                            <span>Amount: <strong className="text-amber-300">{singleLookupResult.diamondAmount} 💎</strong></span>
+                        <div className="flex items-center gap-2 shrink-0 flex-wrap">
+                          <span className="px-2.5 py-1.5 rounded-lg bg-emerald-500/15 text-emerald-300 border border-emerald-500/30 text-xs font-bold flex items-center gap-1.5">
+                            <span>🛡️</span> Cost Ceiling Guard Active
+                          </span>
+
+                          {existingInStore ? (
+                            <>
+                              <button
+                                type="button"
+                                onClick={() => handleOpenProductModal(existingInStore)}
+                                className="px-3 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-cyan-300 border border-cyan-500/40 text-xs font-bold shadow-sm transition-all cursor-pointer flex items-center gap-1.5"
+                                title="Edit existing package price & settings in store"
+                              >
+                                <span>✏️</span> Edit in Store
+                              </button>
+                              <button
+                                type="button"
+                                disabled
+                                className="px-3 py-1.5 rounded-lg bg-slate-800/80 text-slate-400 border border-slate-700/60 text-xs font-bold flex items-center gap-1.5 cursor-not-allowed opacity-60"
+                                title="This package is already active in your store. Duplicate packages cannot be added."
+                              >
+                                <span>🚫</span> Cannot Add More
+                              </button>
+                            </>
+                          ) : (
+                            <button
+                              type="button"
+                              onClick={() => handleOpenProductModal(null, singleLookupResult)}
+                              className="px-3 py-1.5 rounded-lg bg-cyan-500 hover:bg-cyan-400 text-black text-xs font-black shadow-glow-cyan transition-all cursor-pointer flex items-center gap-1.5"
+                              title="Add or configure package in store"
+                            >
+                              <span>⚡</span> Add to Store
+                            </button>
                           )}
                         </div>
                       </div>
-                      <div className="flex items-center gap-2 shrink-0">
-                        <span className="px-3 py-1.5 rounded-lg bg-emerald-500/20 text-emerald-300 border border-emerald-500/40 text-xs font-bold flex items-center gap-1.5">
-                          <span>🛡️</span> Cost Ceiling Guard Active
-                        </span>
-                        <button
-                          type="button"
-                          onClick={() => handleOpenProductModal(null, singleLookupResult)}
-                          className="px-3 py-1.5 rounded-lg bg-cyan-500 hover:bg-cyan-400 text-black text-xs font-black shadow-glow-cyan transition-all cursor-pointer flex items-center gap-1.5"
-                          title="Add or configure package in store"
-                        >
-                          <span>⚡</span> Add to Store
-                        </button>
-                      </div>
-                    </div>
-                  )}
+                    );
+                  })()}
                 </div>
 
                 {/* Filter and Search Bar for Full Catalog */}
@@ -8335,13 +8454,10 @@ const PRICING_GAMES = [
                             const pkgId = pkg.packageId || pkg.package_id;
                             const buyCost = Number(pkg.price || 0);
 
-                            // Find matching catalog product price if available
-                            const matchingProd = products.find(p =>
-                              p.productId === pkgId ||
-                              (pkg.diamondAmount && p.diamondAmount === pkg.diamondAmount)
-                            );
+                            // Find matching catalog product price from complete store catalog
+                            const matchingProd = findExistingStoreProduct(pkg);
                             const sellPrice = matchingProd ? Number(matchingProd.price || 0) : null;
-                            const profit = sellPrice !== null && sellPrice > 0 ? (sellPrice - buyCost) : null;
+                            const profit = (sellPrice !== null && sellPrice > 0) ? (sellPrice - buyCost) : null;
 
                             // Safety tag
                             const isFfMonthly = pkgId === 4852;
@@ -8414,7 +8530,11 @@ const PRICING_GAMES = [
                                   ${buyCost.toFixed(2)}
                                 </td>
                                 <td className="py-2.5 px-3.5 text-right font-bold text-slate-200">
-                                  {sellPrice !== null ? `$${sellPrice.toFixed(2)}` : '—'}
+                                  {sellPrice !== null ? (
+                                    <span className="text-cyan-300 font-black">${sellPrice.toFixed(2)}</span>
+                                  ) : (
+                                    <span className="text-slate-500">—</span>
+                                  )}
                                 </td>
                                 <td className="py-2.5 px-3.5 text-right font-black">
                                   {profit !== null ? (
@@ -8428,14 +8548,30 @@ const PRICING_GAMES = [
                                 <td className="py-2.5 px-3.5 text-center">
                                   <div className="flex items-center justify-center gap-1.5 flex-wrap">
                                     {safetyBadge}
-                                    <button
-                                      type="button"
-                                      onClick={() => handleOpenProductModal(matchingProd || null, pkg)}
-                                      className="px-2 py-0.5 rounded bg-cyan-500/20 hover:bg-cyan-500/30 text-cyan-300 border border-cyan-500/40 text-[10px] font-bold transition-colors cursor-pointer"
-                                      title="Add or configure package in store with Active Safety Protections"
-                                    >
-                                      {matchingProd ? '✏️ Edit' : '+ Add'}
-                                    </button>
+                                    {matchingProd ? (
+                                      <div className="flex items-center gap-1">
+                                        <span className="text-[9px] px-1.5 py-0.5 rounded bg-emerald-500/20 text-emerald-300 border border-emerald-500/40 font-bold" title="This package is already in store">
+                                          ✓ In Store
+                                        </span>
+                                        <button
+                                          type="button"
+                                          onClick={() => handleOpenProductModal(matchingProd)}
+                                          className="px-2 py-0.5 rounded bg-slate-800 hover:bg-slate-700 text-cyan-300 border border-slate-700 text-[10px] font-bold transition-colors cursor-pointer"
+                                          title="Edit existing package price & margin"
+                                        >
+                                          ✏️ Edit
+                                        </button>
+                                      </div>
+                                    ) : (
+                                      <button
+                                        type="button"
+                                        onClick={() => handleOpenProductModal(null, pkg)}
+                                        className="px-2 py-0.5 rounded bg-cyan-500/20 hover:bg-cyan-500/30 text-cyan-300 border border-cyan-500/40 text-[10px] font-bold transition-colors cursor-pointer"
+                                        title="Add package to store with Active Safety Protections"
+                                      >
+                                        + Add
+                                      </button>
+                                    )}
                                   </div>
                                 </td>
                               </tr>
@@ -10380,6 +10516,56 @@ const PRICING_GAMES = [
                 </div>
               </div>
 
+              {/* Duplicate Detection Alert if Package is already in store */}
+              {!editingProduct && productFormData.providerPackageId && (() => {
+                const dup = findExistingStoreProduct({
+                  providerPackageId: productFormData.providerPackageId,
+                  game: productFormData.game,
+                  name: productFormData.name,
+                  diamondAmount: productFormData.diamondAmount
+                });
+                if (dup) {
+                  return (
+                    <div className="p-3 rounded-2xl bg-amber-500/15 border border-amber-500/40 text-amber-200 text-xs flex items-center justify-between gap-3 animate-fadeIn">
+                      <div className="space-y-0.5">
+                        <div className="flex items-center gap-1.5 font-bold text-amber-300">
+                          <span>⚠️</span> Already in Store: #{dup.providerPackageId || dup.productId}
+                        </div>
+                        <div className="text-[11px] text-amber-200/90 font-mono">
+                          "{dup.name}" is already active in your catalog (${Number(dup.price).toFixed(2)}). You cannot add duplicates.
+                        </div>
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setEditingProduct(dup);
+                          setProductFormData({
+                            diamondAmount: dup.diamondAmount,
+                            price: dup.price,
+                            resellerPrice: dup.resellerPrice,
+                            costPrice: dup.costPrice,
+                            costPriceFazerCards: dup.costPriceFazerCards || dup.costPrice,
+                            costPriceKhmerTopUp: dup.costPriceKhmerTopUp || (dup.price * 0.86),
+                            providerPackageId: dup.providerPackageId || getResolvedProviderPackageId(dup) || '',
+                            status: dup.status || 'Active',
+                            description: dup.description || '',
+                            name: dup.name || '',
+                            tag: dup.tag || '',
+                            game: dup.game || 'mlbb',
+                            customImage: dup.customImage || '',
+                          });
+                          showToast('info', `Switched to editing existing package "${dup.name}"`);
+                        }}
+                        className="px-3 py-1.5 rounded-xl bg-amber-400 hover:bg-amber-300 text-slate-950 font-black text-xs shrink-0 cursor-pointer transition-all shadow-md"
+                      >
+                        ✏️ Switch to Edit
+                      </button>
+                    </div>
+                  );
+                }
+                return null;
+              })()}
+
               <div>
                 <label className="block text-slate-400 mb-1 font-semibold">Package Name / Title</label>
                 <input
@@ -10823,9 +11009,33 @@ const PRICING_GAMES = [
                 >
                   Cancel
                 </button>
-                <button type="submit" className="btn btn-primary text-xs py-2 px-4 cursor-pointer shadow-glow-cyan">
-                  Save Price & Sync
-                </button>
+                {(() => {
+                  const dup = (!editingProduct && productFormData.providerPackageId) ? findExistingStoreProduct({
+                    providerPackageId: productFormData.providerPackageId,
+                    game: productFormData.game,
+                    name: productFormData.name,
+                    diamondAmount: productFormData.diamondAmount
+                  }) : null;
+
+                  if (!editingProduct && dup) {
+                    return (
+                      <button
+                        type="button"
+                        disabled
+                        className="btn bg-rose-950/70 text-rose-300 border border-rose-500/50 text-xs py-2 px-4 cursor-not-allowed opacity-75 font-bold shadow-none"
+                        title={`Package #${dup.providerPackageId || dup.productId} already exists in your store`}
+                      >
+                        🚫 Cannot Add Duplicate
+                      </button>
+                    );
+                  }
+
+                  return (
+                    <button type="submit" className="btn btn-primary text-xs py-2 px-4 cursor-pointer shadow-glow-cyan">
+                      Save Price & Sync
+                    </button>
+                  );
+                })()}
               </div>
             </form>
           </div>

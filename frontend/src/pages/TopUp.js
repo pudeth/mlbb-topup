@@ -1781,8 +1781,11 @@ const TopUp = () => {
             if (res?.data?.token) {
               localStorage.setItem('token', res.data.token);
               localStorage.setItem('user', JSON.stringify(res.data.user || res.data));
+              window.dispatchEvent(new Event('storage'));
             }
           }).catch(() => {});
+
+          window.dispatchEvent(new Event('storage'));
         } catch (e) {}
       }
 
@@ -3361,20 +3364,39 @@ const TopUp = () => {
               )}
             </div>
 
-            <button
-              type="button"
-              onClick={() => {
-                closeAbaCheckoutPopup();
-                setPaymentData(null);
-                setOrderId(null);
-                setPaymentPaid(false);
-                setAwaitingBalance(false);
-                setConfirmSent(false);
-              }}
-              className="w-full py-3 rounded-xl bg-gradient-to-r from-emerald-500 to-teal-500 text-slate-950 font-black text-sm uppercase tracking-wider hover:opacity-95 shadow-lg transition-all cursor-pointer"
-            >
-              Done
-            </button>
+            <div className="grid grid-cols-2 gap-2 pt-1">
+              <Link
+                to="/order-history"
+                onClick={() => {
+                  closeAbaCheckoutPopup();
+                  setPaymentData(null);
+                  setOrderId(null);
+                  setPaymentPaid(false);
+                  setAwaitingBalance(false);
+                  setConfirmSent(false);
+                }}
+                className="py-3 px-3 rounded-xl bg-slate-800 hover:bg-slate-700 border border-slate-700 text-white font-bold text-xs uppercase tracking-wider flex items-center justify-center gap-1.5 transition-all shadow-md cursor-pointer"
+              >
+                <span>📜</span>
+                <span>{language === 'km' ? 'មើលប្រវត្តិ' : 'Order History'}</span>
+              </Link>
+
+              <button
+                type="button"
+                onClick={() => {
+                  closeAbaCheckoutPopup();
+                  setPaymentData(null);
+                  setOrderId(null);
+                  setPaymentPaid(false);
+                  setAwaitingBalance(false);
+                  setConfirmSent(false);
+                }}
+                className="py-3 px-3 rounded-xl bg-gradient-to-r from-emerald-500 to-teal-500 text-slate-950 font-black text-xs uppercase tracking-wider hover:opacity-95 shadow-lg transition-all cursor-pointer flex items-center justify-center gap-1"
+              >
+                <span>✓</span>
+                <span>{language === 'km' ? 'រួចរាល់' : 'Done'}</span>
+              </button>
+            </div>
           </div>
         </div>
       )}
