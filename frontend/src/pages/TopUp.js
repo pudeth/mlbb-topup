@@ -440,7 +440,6 @@ const TopUp = () => {
   const [autoDetectedMessage, setAutoDetectedMessage] = useState('');
   const [showIdGuide, setShowIdGuide] = useState(false);
   const [pastedPlayerId, setPastedPlayerId] = useState(false);
-  const [pastedServerId, setPastedServerId] = useState(false);
   const [playerCardAlert, setPlayerCardAlert] = useState(false);
   const [activeBannerIdx, setActiveBannerIdx] = useState(0);
 
@@ -1045,51 +1044,6 @@ const TopUp = () => {
     }
   };
 
-  // Handle Server ID Paste Button
-  const handlePasteServerId = async () => {
-    try {
-      let clipboardText = '';
-      if (navigator.clipboard && navigator.clipboard.readText) {
-        clipboardText = await navigator.clipboard.readText();
-      }
-
-      if (clipboardText && clipboardText.trim()) {
-        const rawVal = clipboardText.trim();
-        if (selectedGame?.id?.startsWith('mlbb')) {
-          const parsed = parseMlbbId(rawVal);
-          if (parsed.detected) {
-            setFormData(prev => ({ ...prev, playerID: parsed.playerID, serverID: parsed.serverID }));
-            setAutoDetectedMessage(`Auto-detected: Player ID ${parsed.playerID} | Zone ${parsed.serverID}`);
-            setPastedServerId(true);
-            setTimeout(() => setPastedServerId(false), 2000);
-            triggerAccountVerification(parsed.playerID, parsed.serverID);
-            return;
-          } else {
-            setFormData(prev => ({ ...prev, serverID: rawVal }));
-            setPastedServerId(true);
-            setTimeout(() => setPastedServerId(false), 2000);
-            if (formData.playerID && formData.playerID.trim()) {
-              triggerAccountVerification(formData.playerID.trim(), rawVal);
-            } else {
-              setTimeout(() => {
-                document.getElementById('player_id_input')?.focus();
-              }, 150);
-            }
-          }
-        } else {
-          setFormData(prev => ({ ...prev, serverID: rawVal }));
-          setPastedServerId(true);
-          setTimeout(() => setPastedServerId(false), 2000);
-        }
-      } else {
-        document.getElementById('server_id_input')?.focus();
-      }
-    } catch (err) {
-      console.warn('Clipboard read notice:', err?.message);
-      document.getElementById('server_id_input')?.focus();
-    }
-  };
-
   // Native onPaste event on Player ID input (Ctrl+V / right click)
   const handlePlayerIdPaste = (e) => {
     const text = e.clipboardData?.getData('text') || '';
@@ -1125,8 +1079,6 @@ const TopUp = () => {
         e.preventDefault();
         setFormData(prev => ({ ...prev, playerID: parsed.playerID, serverID: parsed.serverID }));
         setAutoDetectedMessage(`Auto-detected: Player ID ${parsed.playerID} | Zone ${parsed.serverID}`);
-        setPastedServerId(true);
-        setTimeout(() => setPastedServerId(false), 2000);
         triggerAccountVerification(parsed.playerID, parsed.serverID);
         return;
       }
@@ -2617,7 +2569,7 @@ const TopUp = () => {
                       }
                     }}
                     placeholder="Server ID (e.g. 11446)"
-                    className={`w-full h-11 sm:h-12 bg-[#060b18] border rounded-xl pl-3.5 pr-24 text-sm sm:text-base font-mono text-white placeholder-slate-500 focus:outline-none transition-all ${
+                    className={`w-full h-11 sm:h-12 bg-[#060b18] border rounded-xl pl-3.5 pr-9 text-sm sm:text-base font-mono text-white placeholder-slate-500 focus:outline-none transition-all ${
                       verifiedAccount?.valid === false
                         ? 'border-rose-500/80 focus:border-rose-500 focus:ring-2 focus:ring-rose-500/20'
                         : verifiedAccount?.valid
@@ -2625,40 +2577,20 @@ const TopUp = () => {
                         : 'border-slate-700/80 focus:border-pink-500 focus:ring-2 focus:ring-pink-500/20'
                     }`}
                   />
-                  <div className="absolute right-1.5 top-1/2 -translate-y-1/2 flex items-center gap-1">
-                    {formData.serverID && (
-                      <button
-                        type="button"
-                        onClick={() => {
-                          setFormData(prev => ({ ...prev, serverID: '' }));
-                          setVerifiedAccount(null);
-                          lastVerifiedKeyRef.current = '';
-                        }}
-                        className="w-6 h-6 rounded-full bg-slate-800 hover:bg-slate-700 text-slate-400 hover:text-white flex items-center justify-center text-xs transition-colors cursor-pointer"
-                        title="Clear"
-                      >
-                        ✕
-                      </button>
-                    )}
+                  {formData.serverID && (
                     <button
                       type="button"
-                      onClick={handlePasteServerId}
-                      className="h-8 px-2.5 rounded-lg bg-pink-500/15 hover:bg-pink-500/25 border border-pink-500/30 text-pink-300 hover:text-white text-xs font-bold flex items-center gap-1 transition-all cursor-pointer active:scale-95"
-                      title="Paste Server ID"
+                      onClick={() => {
+                        setFormData(prev => ({ ...prev, serverID: '' }));
+                        setVerifiedAccount(null);
+                        lastVerifiedKeyRef.current = '';
+                      }}
+                      className="absolute right-2.5 top-1/2 -translate-y-1/2 w-6 h-6 rounded-full bg-slate-800 hover:bg-slate-700 text-slate-400 hover:text-white flex items-center justify-center text-xs transition-colors cursor-pointer"
+                      title="Clear"
                     >
-                      {pastedServerId ? (
-                        <>
-                          <span className="text-emerald-400">✓</span>
-                          <span className="text-emerald-400 font-extrabold text-[11px]">{language === 'km' ? 'បានដាក់' : 'Pasted'}</span>
-                        </>
-                      ) : (
-                        <>
-                          <span>📋</span>
-                          <span className="font-extrabold text-[11px]">Paste</span>
-                        </>
-                      )}
+                      ✕
                     </button>
-                  </div>
+                  )}
                 </div>
               </div>
             )}
