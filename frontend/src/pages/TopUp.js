@@ -1172,7 +1172,7 @@ const TopUp = () => {
   const timeLeftRef = useRef(360); // 6-minute (360 seconds) transaction lifetime (ABA PayWay standard)
   const [currency, setCurrency] = useState('USD'); // 'USD' or 'KHR'
   const [productCategoryTab, setProductCategoryTab] = useState('all'); // 'all', 'passes', 'diamonds'
-  const [layoutMode, setLayoutMode] = useState('tiles'); // 'list', 'tiles', 'grid'
+  const [layoutMode, setLayoutMode] = useState('list'); // 'list', 'tiles', 'grid'
   const productListRef = useRef(null);
   const checkoutSectionRef = useRef(null);
 
@@ -2152,9 +2152,9 @@ const TopUp = () => {
       );
     }
 
-    // MODE 3: COMPACT LIST ROWS
+    // MODE 3: 2-COLUMN COMPACT PACKAGE CARDS (NO SELECT BUTTON)
     return (
-      <div className="space-y-2 sm:space-y-2.5">
+      <div className="grid grid-cols-2 gap-2 sm:gap-2.5 md:gap-3">
         {itemsList.map((pkg) => {
           const isSelected = selectedProduct?.productId === pkg.productId;
           const isPass = isPassItem(pkg);
@@ -2179,55 +2179,56 @@ const TopUp = () => {
             <div
               key={pkg.productId}
               onClick={() => setSelectedProduct(pkg)}
-              className={`group relative flex items-center justify-between p-2.5 sm:p-3 rounded-2xl cursor-pointer select-none transition-all duration-200 overflow-hidden ${
+              className={`group relative flex items-center justify-between p-2 sm:p-2.5 md:p-3 rounded-xl sm:rounded-2xl cursor-pointer select-none transition-all duration-200 overflow-hidden active:scale-[0.98] ${
                 isSelected
-                  ? 'bg-gradient-to-r from-[#24173d] via-[#170f28] to-[#0c0817] border-2 border-amber-400 ring-2 ring-amber-400/50 scale-[1.01] z-10 shadow-lg shadow-amber-500/20'
-                  : 'bg-gradient-to-r from-[#0f172a]/95 via-[#0b1220]/95 to-[#070b14]/98 border border-slate-800/90 hover:border-sky-400/60 hover:bg-[#131d33]/90 hover:translate-x-0.5'
+                  ? 'bg-gradient-to-r from-[#24173d] via-[#1a122e] to-[#0d091a] border-2 border-amber-400 ring-2 ring-amber-400/50 shadow-lg shadow-amber-500/25 -translate-y-0.5 z-10'
+                  : 'bg-gradient-to-r from-[#0f172a]/95 via-[#0b1220]/95 to-[#070b14]/98 border border-slate-800/90 hover:border-cyan-400/60 hover:bg-[#121c32]/90 hover:-translate-y-0.5 shadow-sm'
               }`}
             >
               {ribbon && (
-                <span className={`absolute top-0 left-0 px-2 py-0.5 rounded-br-xl bg-gradient-to-r ${ribbon.cls} text-[8.5px] sm:text-[9.5px] font-black uppercase tracking-wider z-20`}>
+                <span className={`absolute top-0 left-0 px-1.5 sm:px-2 py-0.5 rounded-br-lg sm:rounded-br-xl bg-gradient-to-r ${ribbon.cls} text-[7.5px] sm:text-[8.5px] font-black uppercase tracking-wider z-20`}>
                   {ribbon.text}
                 </span>
               )}
 
               {/* Left Side: Artwork + Info */}
-              <div className="flex items-center gap-2.5 sm:gap-3.5 min-w-0 flex-1 pr-2">
-                <div className="relative w-11 h-11 sm:w-13 sm:h-13 rounded-xl bg-slate-950/70 border border-slate-800 flex items-center justify-center shrink-0 p-1">
+              <div className="flex items-center gap-1.5 sm:gap-2.5 min-w-0 flex-1 pr-1.5">
+                <div className="relative w-9 h-9 sm:w-11 sm:h-11 md:w-12 md:h-12 rounded-lg sm:rounded-xl bg-slate-950/70 border border-slate-800 flex items-center justify-center shrink-0 p-0.5 sm:p-1">
                   <ProductPackageImage pkg={pkg} size="md" className="transition-transform duration-300 group-hover:scale-110 drop-shadow-md" />
                 </div>
                 <div className="min-w-0 flex-1">
-                  <h3 className={`text-xs sm:text-sm font-black truncate transition-colors ${isSelected ? 'text-amber-300' : 'text-white group-hover:text-sky-300'}`}>
+                  <h3 className={`text-[10.5px] sm:text-xs md:text-sm font-black truncate transition-colors leading-tight ${isSelected ? 'text-amber-300' : 'text-white group-hover:text-cyan-300'}`}>
                     {pkg.name}
                   </h3>
-                  <div className="flex items-center gap-1.5 mt-0.5 text-[10px] sm:text-xs font-semibold text-slate-400">
+                  <div className="flex items-center gap-1 mt-0.5 text-[8.5px] sm:text-[10px] md:text-xs font-semibold text-slate-400 truncate">
                     {isPass ? (
-                      <span className="text-amber-400 font-bold truncate">⚡ Daily Pass Rewards</span>
+                      <span className="text-amber-400 font-bold truncate">⚡ Daily Pass</span>
                     ) : (
-                      <span className="text-cyan-300 font-bold truncate">💎 {pkg.diamondAmount} Diamonds</span>
+                      <span className="text-cyan-300 font-bold truncate">💎 {pkg.diamondAmount}</span>
                     )}
                   </div>
                 </div>
               </div>
 
-              {/* Right Side: Stacked Price + Action Button */}
-              <div className="flex items-center gap-2 sm:gap-3 shrink-0">
-                <div className="text-right flex flex-col justify-center leading-tight">
-                  <span className={`font-mono font-black text-xs sm:text-sm md:text-base block whitespace-nowrap leading-none tracking-tight ${isSelected ? 'text-amber-300' : 'text-[#00F5B8]'}`}>
+              {/* Right Side: Stacked Price + Selection Checkmark (NO Select Button) */}
+              <div className="flex items-center gap-1 sm:gap-1.5 shrink-0 text-right">
+                <div className="flex flex-col justify-center leading-tight">
+                  <span className={`font-mono font-black text-xs sm:text-sm md:text-[15px] whitespace-nowrap leading-none tracking-tight ${isSelected ? 'text-amber-300' : 'text-[#00F5B8]'}`}>
                     {currency === 'KHR'
                       ? `${Math.round(pkg.price * 4100).toLocaleString()} ៛`
                       : `$${pkg.price.toFixed(2)}`}
                   </span>
-                  <span className="text-[9px] sm:text-[10px] font-mono font-medium text-slate-400 whitespace-nowrap block mt-1">
+                  <span className="text-[7.5px] sm:text-[8.5px] md:text-[9.5px] font-mono text-slate-400 whitespace-nowrap mt-0.5">
                     {currency === 'KHR'
-                      ? `~$${pkg.price.toFixed(2)} USD`
+                      ? `~$${pkg.price.toFixed(2)}`
                       : `~${Math.round(pkg.price * 4100).toLocaleString()} ៛`}
                   </span>
                 </div>
-                <div className={`h-7 sm:h-8.5 px-2.5 sm:px-3 rounded-xl flex items-center justify-center gap-1.5 text-[11px] sm:text-xs font-black transition-all shrink-0 ${isSelected ? 'bg-gradient-to-r from-amber-400 to-yellow-400 text-slate-950' : 'bg-gradient-to-r from-[#00E599] to-[#00F5B8] text-slate-950 group-hover:scale-105 active:scale-95'}`}>
-                  <svg className="w-3.5 h-3.5 fill-current shrink-0" viewBox="0 0 24 24"><path d="M7 18c-1.1 0-1.99.9-1.99 2S5.9 22 7 22s2-.9 2-2-.9-2-2-2zM1 2v2h2l3.6 7.59-1.35 2.45c-.16.28-.25.61-.25.96 0 1.1.9 2 2 2h12v-2H7.42c-.14 0-.25-.11-.25-.25l.03-.12.9-1.63h7.45c.75 0 1.41-.41 1.75-1.03l3.58-6.49c.08-.14.12-.31.12-.48 0-.55-.45-1-1-1H5.21l-.94-2H1zm16 16c-1.1 0-1.99.9-1.99 2s.89 2 1.99 2 2-.9 2-2-.9-2-2-2z" /></svg>
-                  <span className="font-khmer">{language === 'km' ? 'ទិញ' : 'Select'}</span>
-                </div>
+                {isSelected && (
+                  <span className="w-4 h-4 sm:w-5 sm:h-5 rounded-full bg-amber-400 text-slate-950 flex items-center justify-center shrink-0 shadow-sm animate-scaleUp">
+                    <svg className="w-2.5 h-2.5 sm:w-3 sm:h-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3.5" strokeLinecap="round" strokeLinejoin="round"><path d="M20 6L9 17l-5-5" /></svg>
+                  </span>
+                )}
               </div>
             </div>
           );
@@ -2936,14 +2937,14 @@ const TopUp = () => {
                   className="w-full appearance-none bg-[#0a1024] hover:bg-[#0f1733] border border-slate-700/80 hover:border-slate-600 focus:border-cyan-400 text-cyan-300 text-xs font-bold rounded-xl pl-3 pr-7 py-2 cursor-pointer focus:outline-none focus:ring-1 focus:ring-cyan-400/40 transition-all font-khmer shadow-sm truncate"
                   aria-label="Select layout size"
                 >
+                  <option value="list" className="bg-slate-900 text-cyan-300 font-bold">
+                    ≡ {language === 'km' ? 'បញ្ជី ២ជួរ (2-Column)' : '2-Column List View'}
+                  </option>
                   <option value="tiles" className="bg-slate-900 text-white">
                     ⊞ {language === 'km' ? 'ក្រឡា (Tiles)' : 'Tiles View'}
                   </option>
                   <option value="grid" className="bg-slate-900 text-white">
                     ⊟ {language === 'km' ? 'រូបធំ (Large)' : 'Large View'}
-                  </option>
-                  <option value="list" className="bg-slate-900 text-white">
-                    ≡ {language === 'km' ? 'បញ្ជី (List)' : 'List View'}
                   </option>
                   <option value="modal" className="bg-slate-900 text-cyan-300 font-bold">
                     ↗ {language === 'km' ? 'បង្ហាញទាំងអស់ (ផ្ទាំងពេញ)' : 'Show All (Full Display)'}

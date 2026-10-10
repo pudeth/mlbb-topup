@@ -550,7 +550,7 @@ const GameSelection = () => {
             <div
               key={game.id}
               onClick={isInactive ? (e) => e.preventDefault() : () => handleGameClick(game)}
-              className={`group relative rounded-xl sm:rounded-3xl p-2 sm:p-3.5 transition-all duration-300 flex flex-col justify-between select-none overflow-hidden ${
+              className={`group relative rounded-xl sm:rounded-2xl p-2 sm:p-2.5 transition-all duration-300 flex flex-col select-none overflow-hidden ${
                 isInactive
                   ? 'bg-gradient-to-b from-[#0c1222]/90 to-[#070b16]/95 border border-slate-800/80 opacity-80 cursor-not-allowed'
                   : 'bg-gradient-to-b from-[#0f172a]/95 via-[#0b1222]/95 to-[#070b16]/98 border border-slate-800/90 hover:border-cyan-500/60 shadow-[0_4px_20px_rgba(0,0,0,0.6)] hover:shadow-[0_12px_35px_rgba(14,165,233,0.25)] hover:-translate-y-1 cursor-pointer'
@@ -588,7 +588,7 @@ const GameSelection = () => {
               </div>
 
               {/* Game Details: Title, Server Name & Genre */}
-              <div className="mb-1.5 sm:mb-2.5 text-left min-w-0">
+              <div className="text-left min-w-0">
                 <h3 className="font-black text-[10.5px] xs:text-xs sm:text-base text-white group-hover:text-cyan-300 transition-colors truncate leading-tight tracking-tight">
                   {game.name}
                 </h3>
@@ -612,31 +612,6 @@ const GameSelection = () => {
                   <span className="w-1.5 h-1.5 rounded-full bg-sky-400 shrink-0 inline-block" />
                   <span className="truncate">{game.genre}</span>
                 </p>
-              </div>
-
-              {/* Action Button */}
-              <div className="mt-auto w-full">
-                {isInactive ? (
-                  <button
-                    type="button"
-                    disabled
-                    className="w-full h-7 sm:h-9 rounded-lg sm:rounded-xl bg-slate-800/90 text-slate-400 font-bold text-[10px] xs:text-xs sm:text-sm flex items-center justify-center gap-1 cursor-not-allowed border border-slate-700/60"
-                  >
-                    <span>{language === 'km' ? 'បិទមើល' : 'Closed'}</span>
-                  </button>
-                ) : (
-                  <button
-                    type="button"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      handleGameClick(game);
-                    }}
-                    className="w-full h-7 sm:h-9 rounded-lg sm:rounded-xl bg-gradient-to-r from-blue-600 via-sky-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white font-black text-[10px] xs:text-xs sm:text-sm flex items-center justify-center gap-1 shadow-md shadow-sky-500/20 active:scale-95 transition-all cursor-pointer"
-                  >
-                    <span>{language === 'km' ? 'បញ្ចូល' : 'Top Up'}</span>
-                    <span className="text-xs sm:text-sm">›</span>
-                  </button>
-                )}
               </div>
             </div>
           );

@@ -69,11 +69,6 @@ const Navbar = () => {
     setUserMenuOpen((prev) => !prev);
   };
 
-  const toggleMobileMenu = () => {
-    setLangDropdownOpen(false);
-    setUserMenuOpen(false);
-    setMobileMenuOpen((prev) => !prev);
-  };
 
   const openSearchModal = () => {
     setLangDropdownOpen(false);
@@ -241,19 +236,6 @@ const Navbar = () => {
                   </svg>
                 </button>
 
-                {/* 1. Notification Bell with Red Badge 1 */}
-                <button
-                  type="button"
-                  title="Notifications"
-                  className="relative w-9 h-9 sm:w-10 sm:h-10 rounded-full border border-[#0055ff]/40 bg-[#081329]/90 hover:bg-[#0e204c] hover:border-[#0088ff]/70 text-slate-200 hover:text-white flex items-center justify-center transition-all duration-200 active:scale-95 shadow-sm cursor-pointer shrink-0"
-                >
-                  <svg className="w-4 h-4 sm:w-5 sm:h-5 text-white/95" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
-                  </svg>
-                  <span className="absolute -top-1 -right-0.5 min-w-[17px] h-[17px] px-1 rounded-full bg-[#ff3b5c] text-white font-black text-[9px] sm:text-[10px] flex items-center justify-center shadow-[0_0_10px_rgba(255,59,92,0.8)] border border-white/20 animate-pulse">
-                    1
-                  </span>
-                </button>
 
                 {/* 2. Language Selector Dropdown */}
                 <div className="relative z-[100]">
@@ -605,29 +587,6 @@ const Navbar = () => {
                   </div>
                 )}
 
-                {/* 4. Quick Games & Categories 4-Square Grid Button matching Reference Image 1 */}
-                <button
-                  type="button"
-                  onClick={() => {
-                    closeAllMenus();
-                    const gamesSection = document.getElementById('games-section');
-                    if (gamesSection) {
-                      gamesSection.scrollIntoView({ behavior: 'smooth' });
-                    } else {
-                      toggleMobileMenu();
-                    }
-                  }}
-                  className="w-9 h-9 sm:w-10 sm:h-10 rounded-full border border-[#0055ff]/50 bg-[#081329]/90 hover:bg-[#0e204c] hover:border-[#0088ff]/80 text-white flex items-center justify-center transition-all duration-200 active:scale-95 shadow-sm cursor-pointer group shrink-0"
-                  title="All Games & Categories / ហ្គេមទាំងអស់"
-                  aria-label="Toggle all games menu"
-                >
-                  <svg className="w-3.5 h-3.5 sm:w-4 sm:h-4 fill-white group-hover:scale-110 transition-transform" viewBox="0 0 24 24">
-                    <rect x="3.5" y="3.5" width="7" height="7" rx="2" />
-                    <rect x="13.5" y="3.5" width="7" height="7" rx="2" />
-                    <rect x="3.5" y="13.5" width="7" height="7" rx="2" />
-                    <rect x="13.5" y="13.5" width="7" height="7" rx="2" />
-                  </svg>
-                </button>
               </div>
             </div>
           </div>
