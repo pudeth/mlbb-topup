@@ -53,6 +53,30 @@ public class TopUpService : ITopUpService
             }
         }
 
+        if (p == "1225368571")
+        {
+            return new CheckAccountResult
+            {
+                Valid = true,
+                PlayerId = p,
+                ServerId = string.IsNullOrWhiteSpace(s) ? "11446" : s,
+                Username = "Pu Deth",
+                Country = "Cambodia"
+            };
+        }
+
+        if (p == "1000")
+        {
+            return new CheckAccountResult
+            {
+                Valid = true,
+                PlayerId = p,
+                ServerId = string.IsNullOrWhiteSpace(s) ? "Global" : s,
+                Username = "Pu Deth (Test Account)",
+                Country = "Cambodia"
+            };
+        }
+
         if (p == "12022250")
         {
             return new CheckAccountResult

@@ -159,7 +159,7 @@ const parseMlbbId = (input) => {
       detected: true,
     };
   }
-  const bracketMatch = raw.match(/(?:id\s*:\s*)?(\d{5,12})\s*[[({]\s*(\d{3,7})\s*[)\]}]/i) ||
+  const bracketMatch = raw.match(/(?:id\s*:\s*)?(\d{4,12})\s*[[({]\s*(\d{3,7})\s*[)\]}]/i) ||
                        raw.match(/(\d+)\s*[[({]\s*(\d+)\s*[)\]}]/);
   if (bracketMatch) {
     return {
@@ -168,7 +168,7 @@ const parseMlbbId = (input) => {
       detected: true,
     };
   }
-  const sepMatch = raw.match(/(?:id\s*:\s*)?(\d{6,12})\s*[-/_|\s,]\s*(\d{3,7})(?:\D|$)/i);
+  const sepMatch = raw.match(/(?:id\s*:\s*)?(\d{4,12})\s*[-/_|\s,]\s*(\d{3,7})(?:\D|$)/i);
   if (sepMatch) {
     return {
       playerID: sepMatch[1],
@@ -187,6 +187,7 @@ export const KNOWN_REAL_NAMES = {
   '219110511': 'Dᴏɴᴀᴛσ【ʜᴀᴄᴋ】',
   '10887979': 'ᴹᴿStivenᵀᶜ†',
   '1225368571': 'Pu Deth',
+  '1000': 'Pu Deth (Test Account)',
 };
 
 // Rich in-game player profile metadata
@@ -439,6 +440,8 @@ const TopUp = () => {
   const [autoDetectedMessage, setAutoDetectedMessage] = useState('');
   const [showIdGuide, setShowIdGuide] = useState(false);
   const [pastedPlayerId, setPastedPlayerId] = useState(false);
+  const [pastedServerId, setPastedServerId] = useState(false);
+  const [playerCardAlert, setPlayerCardAlert] = useState(false);
   const [activeBannerIdx, setActiveBannerIdx] = useState(0);
 
   const selectedGameIdRef = useRef(selectedGame.id);
@@ -687,15 +690,363 @@ const TopUp = () => {
     }
   };
 
-  // Form data starts clean and empty by default
-  const [formData, setFormData] = useState({
+  // Form data starts clean and empty by default (MLBB starts with blank serverID, not Global)
+  const [formData, setFormData] = useState(() => ({
     playerID: '',
-    serverID: 'Global',
+    serverID: (matchedGame?.id?.startsWith('mlbb')) ? '' : 'Global',
     productId: products[0]?.productId || 100,
     paymentMethod: 'abapayway',
-  });
+  }));
 
+  const inFlightVerifyRef = useRef(false);
+  const lastVerifiedKeyRef = useRef('');
+
+  // Smooth scroll back to Step 1 Player Information with focus and visual alert
+  const scrollToPlayerInfo = useCallback((fieldToFocus = 'player') => {
+    setPlayerCardAlert(true);
+    setTimeout(() => setPlayerCardAlert(false), 3000);
+    const section = document.getElementById('player-info-section');
+    if (section) {
+      section.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }
+    setTimeout(() => {
+      if (fieldToFocus === 'server') {
+        const sEl = document.getElementById('server_id_input');
+        if (sEl) sEl.focus();
+      } else {
+        const pEl = document.getElementById('player_id_input');
+        if (pEl) pEl.focus();
+      }
+    }, 350);
+  }, []);
+
+  // Centralized, robust account verification function
+  const triggerAccountVerification = useCallback(async (overridePid, overrideSid) => {
+    const rawPid = overridePid !== undefined ? String(overridePid) : formData.playerID;
+    const rawSid = overrideSid !== undefined ? String(overrideSid) : formData.serverID;
+    const pId = (rawPid || '').trim();
+    let sId = (rawSid || '').trim();
+
+    if (!pId) return;
+
+    if (selectedGame?.id?.startsWith('mlbb')) {
+      if (sId.toLowerCase() === 'global') sId = '';
+      if (!sId) return; // Wait until Server ID is available for MLBB
+    }
+
+    const verifyKey = `${selectedGame?.id || 'mlbb'}_${pId}_${sId}`;
+    if (lastVerifiedKeyRef.current === verifyKey && verifiedAccount?.valid) {
+      return;
+    }
+    if (inFlightVerifyRef.current) return;
+
+    inFlightVerifyRef.current = true;
+    setAccountChecking(true);
+    setVerifiedAccount(null);
+
+    try {
+      let realName = null;
+      let realCountry = 'Cambodia';
+
+      if (selectedGame?.id?.startsWith('mlbb')) {
+        // 0. Check verified known real accounts & custom local storage
+        if (KNOWN_REAL_NAMES[pId]) {
+          realName = KNOWN_REAL_NAMES[pId];
+        } else {
+          try {
+            const customNames = JSON.parse(localStorage.getItem('custom_player_names') || '{}');
+            if (customNames[pId]) realName = customNames[pId];
+          } catch (e) {}
+        }
+
+        // 1. Direct Live Real MLBB Verification (Isan API)
+        if (!realName) {
+          try {
+            const directCheck = await fetch(`https://api.isan.eu.org/nickname/ml?id=${pId}&server=${sId}`).then(r => r.json());
+            if (directCheck?.name) {
+              realName = directCheck.name;
+              realCountry = directCheck.country || 'Cambodia';
+            }
+          } catch (e) {
+            console.warn('Direct MLBB check notice:', e?.message);
+          }
+        }
+
+        // 1b. Smart Zone Fallback for known accounts if typo occurred
+        if (!realName && pId === '1225368571' && sId !== '11446') {
+          try {
+            const retryCheck = await fetch(`https://api.isan.eu.org/nickname/ml?id=${pId}&server=11446`).then(r => r.json());
+            if (retryCheck?.name) {
+              realName = retryCheck.name;
+              realCountry = retryCheck.country || 'Cambodia';
+              sId = '11446';
+              setFormData(prev => ({ ...prev, serverID: '11446' }));
+            }
+          } catch (e) {}
+        }
+
+        // 2. Backend API Verification
+        if (!realName) {
+          try {
+            const res = await topupAPI.checkAccount(pId, sId);
+            if (res.data?.username && !res.data.username.startsWith('MLBB_Pro_') && !res.data.username.startsWith('Player #')) {
+              realName = res.data.username;
+              realCountry = res.data.country || 'Cambodia';
+              if (res.data.serverId) sId = res.data.serverId;
+            }
+          } catch (apiErr) {
+            console.warn('Backend check notice:', apiErr?.message);
+          }
+        }
+
+        // 3. Render cloud microservice
+        if (!realName) {
+          try {
+            const khqrCheck = await fetch(`https://mlbb-khqr-api.onrender.com/api/mlbb/check?id=${pId}&server=${sId}`).then(r => r.json());
+            if (khqrCheck?.username && !khqrCheck.username.startsWith('Player #')) {
+              realName = khqrCheck.username;
+              realCountry = khqrCheck.country || 'Cambodia';
+            }
+          } catch (khqrErr) {}
+        }
+
+        if (realName) {
+          lastVerifiedKeyRef.current = `${selectedGame?.id || 'mlbb'}_${pId}_${sId}`;
+          setVerifiedAccount({
+            valid: true,
+            name: realName,
+            country: realCountry,
+            id: pId,
+            server: sId
+          });
+          setError('');
+          playSuccessSound();
+        } else {
+          lastVerifiedKeyRef.current = '';
+          setVerifiedAccount({
+            valid: false,
+            error: language === 'km' 
+              ? 'រកមិនឃើញគណនីអ្នកលេងទេ។ សូមពិនិត្យមើល Player ID និង Server ID ឡើងវិញ' 
+              : 'Player account not found. Please verify your Player ID and Server Zone ID.',
+            id: pId,
+            server: sId
+          });
+          setPlayerCardAlert(true);
+          setTimeout(() => setPlayerCardAlert(false), 2500);
+        }
+      } else {
+        // Non-MLBB games
+        let accountConfirmed = false;
+
+        if (selectedGame?.id?.includes('freefire') || selectedGame?.id?.includes('ff')) {
+          if (!/^\d{7,12}$/.test(pId)) {
+            setVerifiedAccount({
+              valid: false,
+              error: language === 'km' ? 'រកមិនឃើញគណនី Free Fire ទេ។ UID ត្រូវតែជាលេខ 7-12 ខ្ទង់។' : 'Free Fire account not found. UID must be 7-12 digits.',
+              id: pId,
+              server: sId || 'Global'
+            });
+            return;
+          }
+
+          let profileData = KNOWN_PLAYER_PROFILES[pId] || null;
+
+          if (profileData) {
+            realName = profileData.nickname;
+            accountConfirmed = true;
+          } else if (KNOWN_REAL_NAMES[pId]) {
+            realName = KNOWN_REAL_NAMES[pId];
+            accountConfirmed = true;
+          } else {
+            try {
+              const customNames = JSON.parse(localStorage.getItem('custom_player_names') || '{}');
+              if (customNames[pId]) {
+                realName = customNames[pId];
+                accountConfirmed = true;
+              }
+            } catch (e) {}
+          }
+
+          if (!accountConfirmed) {
+            try {
+              const ffProxyRes = await topupAPI.getFreefireNickname(pId);
+              if (ffProxyRes?.data?.found === true) {
+                accountConfirmed = true;
+                if (ffProxyRes.data.nickname) realName = ffProxyRes.data.nickname;
+                profileData = {
+                  nickname: ffProxyRes.data.nickname,
+                  region: ffProxyRes.data.region || 'Global',
+                  level: ffProxyRes.data.level,
+                  likes: ffProxyRes.data.likes,
+                  avatarUrl: ffProxyRes.data.avatarUrl,
+                  rank: ffProxyRes.data.rank,
+                  rankPoints: ffProxyRes.data.rankPoints,
+                };
+              } else if (ffProxyRes?.data?.found === false && ffProxyRes?.data?.message === 'Player not found') {
+                setVerifiedAccount({
+                  valid: false,
+                  error: language === 'km' ? 'រកមិនឃើញគណនី Free Fire ទេ។ សូមពិនិត្យ UID ឡើងវិញ។' : 'Free Fire account not found. Please verify your UID.',
+                  id: pId,
+                  server: sId || 'Global'
+                });
+                setAccountChecking(false);
+                return;
+              } else {
+                const ffRes = await fetch(`https://api.isan.eu.org/nickname/ff?id=${pId}`).then(r => r.json()).catch(() => null);
+                if (ffRes?.success === true && ffRes?.id && String(ffRes.id) === String(pId)) {
+                  accountConfirmed = true;
+                }
+              }
+            } catch (e) {
+              try {
+                const ffRes = await fetch(`https://api.isan.eu.org/nickname/ff?id=${pId}`).then(r => r.json());
+                if (ffRes?.success === true && ffRes?.id && String(ffRes.id) === String(pId)) {
+                  accountConfirmed = true;
+                }
+              } catch (e2) {}
+            }
+          }
+
+          if (accountConfirmed) {
+            const finalName = realName || profileData?.nickname || resolveRealPlayerName(pId, realName);
+            const detectedRegion = profileData?.region || sId || 'Global';
+            const regInfo = resolveRegionInfo(detectedRegion);
+
+            setFormData(prev => ({ ...prev, serverID: detectedRegion }));
+
+            lastVerifiedKeyRef.current = `${selectedGame?.id || 'ff'}_${pId}_${detectedRegion}`;
+            setVerifiedAccount({
+              valid: true,
+              name: finalName || (language === 'km' ? `អ្នកលេង Free Fire (${pId})` : `Free Fire Player (${pId})`),
+              country: regInfo.name,
+              region: detectedRegion,
+              server: detectedRegion,
+              id: pId,
+              game: 'freefire',
+              level: profileData?.level || 70,
+              likes: profileData?.likes || 0,
+              avatarUrl: profileData?.avatarUrl || null,
+              rank: profileData?.rank || 'Bronze I',
+              rankPoints: profileData?.rankPoints || null,
+            });
+            setError('');
+            playSuccessSound();
+          } else {
+            lastVerifiedKeyRef.current = '';
+            setVerifiedAccount({
+              valid: false,
+              error: language === 'km' ? 'រកមិនឃើញគណនី Free Fire ទេ។ សូមពិនិត្យលេខ UID ឡើងវិញ។' : 'Free Fire account not found. Please verify your UID.',
+              id: pId,
+              server: sId || 'Global'
+            });
+            setPlayerCardAlert(true);
+            setTimeout(() => setPlayerCardAlert(false), 2500);
+          }
+        } else {
+          // Other games (Genshin, PUBG, etc.)
+          try {
+            let checkUrl = '';
+            if (selectedGame?.id?.includes('genshin')) {
+              checkUrl = `https://api.isan.eu.org/nickname/genshin?id=${pId}&server=${sId}`;
+            } else if (selectedGame?.id?.includes('pubg')) {
+              checkUrl = `https://api.isan.eu.org/nickname/pubg?id=${pId}`;
+            }
+
+            if (checkUrl) {
+              const gCheck = await fetch(checkUrl).then(r => r.json());
+              if (gCheck?.name) {
+                realName = gCheck.name;
+              }
+            }
+          } catch (e) {}
+
+          lastVerifiedKeyRef.current = `${selectedGame?.id || 'game'}_${pId}_${sId}`;
+          setVerifiedAccount({
+            valid: true,
+            name: realName || '',
+            country: 'Global',
+            id: pId,
+            server: sId
+          });
+          setError('');
+          playSuccessSound();
+        }
+      }
+    } catch (err) {
+      console.error('Verification error:', err);
+      lastVerifiedKeyRef.current = '';
+      setVerifiedAccount({
+        valid: false,
+        error: language === 'km' ? 'មិនអាចភ្ជាប់ទៅកាន់ប្រព័ន្ធផ្ទៀងផ្ទាត់បានទេ។' : 'Connection notice: Could not reach verification server. Please check Player ID.',
+        id: pId,
+        server: sId
+      });
+      setPlayerCardAlert(true);
+      setTimeout(() => setPlayerCardAlert(false), 2500);
+    } finally {
+      inFlightVerifyRef.current = false;
+      setAccountChecking(false);
+    }
+  }, [formData.playerID, formData.serverID, selectedGame?.id, language, verifiedAccount?.valid]);
+
+  // Click handler for manual check button
+  const handleVerifyAccount = useCallback(() => {
+    lastVerifiedKeyRef.current = '';
+    triggerAccountVerification(formData.playerID, formData.serverID);
+  }, [formData.playerID, formData.serverID, triggerAccountVerification]);
+
+  // Handle Player ID Paste Button
   const handlePastePlayerId = async () => {
+    try {
+      let clipboardText = '';
+      if (navigator.clipboard && navigator.clipboard.readText) {
+        clipboardText = await navigator.clipboard.readText();
+      }
+
+      if (clipboardText && clipboardText.trim()) {
+        const rawVal = clipboardText.trim();
+        let targetPid = rawVal;
+        let targetSid = formData.serverID;
+
+        if (selectedGame?.id?.startsWith('mlbb')) {
+          const parsed = parseMlbbId(rawVal);
+          if (parsed.detected) {
+            targetPid = parsed.playerID;
+            targetSid = parsed.serverID;
+            setFormData(prev => ({ ...prev, playerID: targetPid, serverID: targetSid }));
+            setAutoDetectedMessage(`Auto-detected: Player ID ${targetPid} | Zone ${targetSid}`);
+            setPastedPlayerId(true);
+            setTimeout(() => setPastedPlayerId(false), 2000);
+            triggerAccountVerification(targetPid, targetSid);
+            return;
+          } else {
+            setFormData(prev => ({ ...prev, playerID: rawVal }));
+            setAutoDetectedMessage('');
+            if (targetSid && targetSid.toLowerCase() !== 'global') {
+              triggerAccountVerification(rawVal, targetSid);
+            } else {
+              setTimeout(() => {
+                document.getElementById('server_id_input')?.focus();
+              }, 150);
+            }
+          }
+        } else {
+          setFormData(prev => ({ ...prev, playerID: rawVal }));
+          triggerAccountVerification(rawVal, targetSid || 'Global');
+        }
+        setPastedPlayerId(true);
+        setTimeout(() => setPastedPlayerId(false), 2000);
+      } else {
+        document.getElementById('player_id_input')?.focus();
+      }
+    } catch (err) {
+      console.warn('Clipboard read notice:', err?.message);
+      document.getElementById('player_id_input')?.focus();
+    }
+  };
+
+  // Handle Server ID Paste Button
+  const handlePasteServerId = async () => {
     try {
       let clipboardText = '';
       if (navigator.clipboard && navigator.clipboard.readText) {
@@ -709,30 +1060,147 @@ const TopUp = () => {
           if (parsed.detected) {
             setFormData(prev => ({ ...prev, playerID: parsed.playerID, serverID: parsed.serverID }));
             setAutoDetectedMessage(`Auto-detected: Player ID ${parsed.playerID} | Zone ${parsed.serverID}`);
+            setPastedServerId(true);
+            setTimeout(() => setPastedServerId(false), 2000);
+            triggerAccountVerification(parsed.playerID, parsed.serverID);
+            return;
           } else {
-            setFormData(prev => ({ ...prev, playerID: rawVal }));
-            setAutoDetectedMessage('');
+            setFormData(prev => ({ ...prev, serverID: rawVal }));
+            setPastedServerId(true);
+            setTimeout(() => setPastedServerId(false), 2000);
+            if (formData.playerID && formData.playerID.trim()) {
+              triggerAccountVerification(formData.playerID.trim(), rawVal);
+            } else {
+              setTimeout(() => {
+                document.getElementById('player_id_input')?.focus();
+              }, 150);
+            }
           }
         } else {
-          setFormData(prev => ({ ...prev, playerID: rawVal }));
+          setFormData(prev => ({ ...prev, serverID: rawVal }));
+          setPastedServerId(true);
+          setTimeout(() => setPastedServerId(false), 2000);
         }
-        setVerifiedAccount(null);
-        setPastedPlayerId(true);
-        setTimeout(() => setPastedPlayerId(false), 2000);
       } else {
-        const el = document.getElementById('player_id_input');
-        if (el) {
-          el.focus();
-        }
+        document.getElementById('server_id_input')?.focus();
       }
     } catch (err) {
       console.warn('Clipboard read notice:', err?.message);
-      const el = document.getElementById('player_id_input');
-      if (el) {
-        el.focus();
+      document.getElementById('server_id_input')?.focus();
+    }
+  };
+
+  // Native onPaste event on Player ID input (Ctrl+V / right click)
+  const handlePlayerIdPaste = (e) => {
+    const text = e.clipboardData?.getData('text') || '';
+    if (!text.trim()) return;
+    const rawVal = text.trim();
+    if (selectedGame?.id?.startsWith('mlbb')) {
+      const parsed = parseMlbbId(rawVal);
+      if (parsed.detected) {
+        e.preventDefault();
+        setFormData(prev => ({ ...prev, playerID: parsed.playerID, serverID: parsed.serverID }));
+        setAutoDetectedMessage(`Auto-detected: Player ID ${parsed.playerID} | Zone ${parsed.serverID}`);
+        setPastedPlayerId(true);
+        setTimeout(() => setPastedPlayerId(false), 2000);
+        triggerAccountVerification(parsed.playerID, parsed.serverID);
+        return;
+      }
+      if (formData.serverID && formData.serverID.trim() && formData.serverID.toLowerCase() !== 'global') {
+        setTimeout(() => triggerAccountVerification(rawVal, formData.serverID.trim()), 60);
+      }
+    } else {
+      setTimeout(() => triggerAccountVerification(rawVal, formData.serverID || 'Global'), 60);
+    }
+  };
+
+  // Native onPaste event on Server ID input (Ctrl+V / right click)
+  const handleServerIdPaste = (e) => {
+    const text = e.clipboardData?.getData('text') || '';
+    if (!text.trim()) return;
+    const rawVal = text.trim();
+    if (selectedGame?.id?.startsWith('mlbb')) {
+      const parsed = parseMlbbId(rawVal);
+      if (parsed.detected) {
+        e.preventDefault();
+        setFormData(prev => ({ ...prev, playerID: parsed.playerID, serverID: parsed.serverID }));
+        setAutoDetectedMessage(`Auto-detected: Player ID ${parsed.playerID} | Zone ${parsed.serverID}`);
+        setPastedServerId(true);
+        setTimeout(() => setPastedServerId(false), 2000);
+        triggerAccountVerification(parsed.playerID, parsed.serverID);
+        return;
+      }
+      if (formData.playerID && formData.playerID.trim()) {
+        setTimeout(() => triggerAccountVerification(formData.playerID.trim(), rawVal), 60);
       }
     }
   };
+
+  // Handle typing in Player ID
+  const handlePlayerIdChange = (e) => {
+    const rawVal = e.target.value;
+    if (selectedGame?.id?.startsWith('mlbb')) {
+      const parsed = parseMlbbId(rawVal);
+      if (parsed.detected) {
+        setFormData(prev => ({ ...prev, playerID: parsed.playerID, serverID: parsed.serverID }));
+        setAutoDetectedMessage(`Auto-detected: Player ID ${parsed.playerID} | Zone ${parsed.serverID}`);
+        triggerAccountVerification(parsed.playerID, parsed.serverID);
+        return;
+      } else {
+        setFormData(prev => ({ ...prev, playerID: rawVal }));
+        setAutoDetectedMessage('');
+      }
+    } else {
+      setFormData(prev => ({ ...prev, playerID: rawVal }));
+    }
+    if (verifiedAccount) setVerifiedAccount(null);
+    lastVerifiedKeyRef.current = '';
+  };
+
+  // Handle typing in Server ID
+  const handleServerIdChange = (e) => {
+    const val = e.target.value;
+    setFormData(prev => ({ ...prev, serverID: val }));
+    if (verifiedAccount) setVerifiedAccount(null);
+    lastVerifiedKeyRef.current = '';
+  };
+
+  // Debounced auto-check when typing
+  useEffect(() => {
+    const pId = (formData.playerID || '').trim();
+    const sId = (formData.serverID || '').trim();
+
+    if (!pId) return;
+
+    if (selectedGame?.id?.startsWith('mlbb')) {
+      if (pId.length >= 4 && sId.length >= 3 && sId.toLowerCase() !== 'global') {
+        const key = `${selectedGame.id}_${pId}_${sId}`;
+        if (key === lastVerifiedKeyRef.current) return;
+        const timer = setTimeout(() => {
+          triggerAccountVerification(pId, sId);
+        }, 600);
+        return () => clearTimeout(timer);
+      }
+    } else if (selectedGame?.id?.includes('freefire') || selectedGame?.id?.includes('ff')) {
+      if (pId.length >= 7) {
+        const key = `${selectedGame.id}_${pId}`;
+        if (key === lastVerifiedKeyRef.current) return;
+        const timer = setTimeout(() => {
+          triggerAccountVerification(pId, sId || 'Global');
+        }, 600);
+        return () => clearTimeout(timer);
+      }
+    } else {
+      if (pId.length >= 4) {
+        const key = `${selectedGame.id}_${pId}_${sId}`;
+        if (key === lastVerifiedKeyRef.current) return;
+        const timer = setTimeout(() => {
+          triggerAccountVerification(pId, sId);
+        }, 600);
+        return () => clearTimeout(timer);
+      }
+    }
+  }, [formData.playerID, formData.serverID, selectedGame?.id, triggerAccountVerification]);
 
 
   // Payment states
@@ -1096,251 +1564,6 @@ const TopUp = () => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [rawGameParam]);
 
-  const handlePlayerIdChange = (e) => {
-    const rawVal = e.target.value;
-    if (selectedGame.id.startsWith('mlbb')) {
-      const parsed = parseMlbbId(rawVal);
-      if (parsed.detected) {
-        setFormData(prev => ({ ...prev, playerID: parsed.playerID, serverID: parsed.serverID }));
-        setAutoDetectedMessage(`Auto-detected: Player ID ${parsed.playerID} | Zone ${parsed.serverID}`);
-      } else {
-        setFormData(prev => ({ ...prev, playerID: rawVal }));
-        setAutoDetectedMessage('');
-      }
-    } else {
-      setFormData(prev => ({ ...prev, playerID: rawVal }));
-    }
-    setVerifiedAccount(null);
-  };
-
-  const handleVerifyAccount = async () => {
-    if (!formData.playerID.trim()) return;
-    setAccountChecking(true);
-    setVerifiedAccount(null);
-
-    const pId = formData.playerID.trim();
-    let sId = formData.serverID.trim() || '11446';
-
-    try {
-      let realName = null;
-      let realCountry = 'Cambodia';
-
-      if (selectedGame.id.startsWith('mlbb')) {
-        // 1. Direct Live Real MLBB Verification (Isan API)
-        try {
-          const directCheck = await fetch(`https://api.isan.eu.org/nickname/ml?id=${pId}&server=${sId}`).then(r => r.json());
-          if (directCheck?.name) {
-            realName = directCheck.name;
-            realCountry = directCheck.country || 'Cambodia';
-          }
-        } catch (e) {
-          console.warn('Direct MLBB check notice:', e?.message);
-        }
-
-        // 1b. Smart Zone Fallback for known accounts if typo occurred (e.g. 11442 vs 11446)
-        if (!realName && pId === '1225368571' && sId !== '11446') {
-          try {
-            const retryCheck = await fetch(`https://api.isan.eu.org/nickname/ml?id=${pId}&server=11446`).then(r => r.json());
-            if (retryCheck?.name) {
-              realName = retryCheck.name;
-              realCountry = retryCheck.country || 'Cambodia';
-              sId = '11446';
-              setFormData(prev => ({ ...prev, serverID: '11446' }));
-            }
-          } catch (e) {}
-        }
-
-        // 2. Backend API Verification
-        if (!realName) {
-          try {
-            const res = await topupAPI.checkAccount(pId, sId);
-            if (res.data?.username && !res.data.username.startsWith('MLBB_Pro_') && !res.data.username.startsWith('Player #')) {
-              realName = res.data.username;
-              realCountry = res.data.country || 'Cambodia';
-              if (res.data.serverId) sId = res.data.serverId;
-            }
-          } catch (apiErr) {
-            console.warn('Backend check notice:', apiErr?.message);
-          }
-        }
-
-        // 3. Render cloud microservice
-        if (!realName) {
-          try {
-            const khqrCheck = await fetch(`https://mlbb-khqr-api.onrender.com/api/mlbb/check?id=${pId}&server=${sId}`).then(r => r.json());
-            if (khqrCheck?.username && !khqrCheck.username.startsWith('Player #')) {
-              realName = khqrCheck.username;
-              realCountry = khqrCheck.country || 'Cambodia';
-            }
-          } catch (khqrErr) {}
-        }
-
-        if (realName) {
-          setVerifiedAccount({
-            valid: true,
-            name: realName,
-            country: realCountry,
-            id: pId,
-            server: sId
-          });
-        } else {
-          setVerifiedAccount({
-            valid: false,
-            error: 'Player account not found. Please verify your Player ID and Server Zone ID.',
-            id: pId,
-            server: sId
-          });
-        }
-      } else {
-        // Non-MLBB games — smart per-game verification
-        let accountConfirmed = false;
-
-        if (selectedGame.id.includes('freefire') || selectedGame.id.includes('ff')) {
-          // 1. Strict numeric format check: Free Fire UID must be 7 to 12 digits
-          if (!/^\d{7,12}$/.test(pId)) {
-            setVerifiedAccount({
-              valid: false,
-              error: language === 'km' ? 'រកមិនឃើញគណនី Free Fire ទេ។ UID ត្រូវតែជាលេខ 7-12 ខ្ទង់។' : 'Free Fire account not found. UID must be 7-12 digits.',
-              id: pId,
-              server: sId || 'Global'
-            });
-            return;
-          }
-
-          // 2. Dedicated Real In-Game Name Resolution for Free Fire Players
-          // Check known verified accounts and custom saved names first
-          let profileData = KNOWN_PLAYER_PROFILES[pId] || null;
-
-          if (profileData) {
-            realName = profileData.nickname;
-            accountConfirmed = true;
-          } else if (KNOWN_REAL_NAMES[pId]) {
-            realName = KNOWN_REAL_NAMES[pId];
-            accountConfirmed = true;
-          } else {
-            try {
-              const customNames = JSON.parse(localStorage.getItem('custom_player_names') || '{}');
-              if (customNames[pId]) {
-                realName = customNames[pId];
-                accountConfirmed = true;
-              }
-            } catch (e) {}
-          }
-
-          // If not cached locally, query backend proxy (freefirejornal.com via topupAPI)
-          if (!accountConfirmed) {
-            try {
-              const ffProxyRes = await topupAPI.getFreefireNickname(pId);
-              if (ffProxyRes?.data?.found === true) {
-                accountConfirmed = true;
-                if (ffProxyRes.data.nickname) realName = ffProxyRes.data.nickname;
-                profileData = {
-                  nickname: ffProxyRes.data.nickname,
-                  region: ffProxyRes.data.region || 'Global',
-                  level: ffProxyRes.data.level,
-                  likes: ffProxyRes.data.likes,
-                  avatarUrl: ffProxyRes.data.avatarUrl,
-                  rank: ffProxyRes.data.rank,
-                  rankPoints: ffProxyRes.data.rankPoints,
-                };
-              } else if (ffProxyRes?.data?.found === false && ffProxyRes?.data?.message === 'Player not found') {
-                // Explicitly not found — fail immediately
-                setVerifiedAccount({
-                  valid: false,
-                  error: language === 'km' ? 'រកមិនឃើញគណនី Free Fire ទេ។ សូមពិនិត្យ UID ឡើងវិញ។' : 'Free Fire account not found. Please verify your UID.',
-                  id: pId,
-                  server: sId || 'Global'
-                });
-                setAccountChecking(false);
-                return;
-              } else {
-                // Proxy failed/timed out — fall back to Isan API existence check only
-                const ffRes = await fetch(`https://api.isan.eu.org/nickname/ff?id=${pId}`).then(r => r.json()).catch(() => null);
-                if (ffRes?.success === true && ffRes?.id && String(ffRes.id) === String(pId)) {
-                  accountConfirmed = true;
-                }
-              }
-            } catch (e) {
-              // Network error — fall back to Isan
-              try {
-                const ffRes = await fetch(`https://api.isan.eu.org/nickname/ff?id=${pId}`).then(r => r.json());
-                if (ffRes?.success === true && ffRes?.id && String(ffRes.id) === String(pId)) {
-                  accountConfirmed = true;
-                }
-              } catch (e2) {}
-            }
-          }
-
-          if (accountConfirmed) {
-            const finalName = realName || profileData?.nickname || resolveRealPlayerName(pId, realName);
-            const detectedRegion = profileData?.region || sId || 'Global';
-            const regInfo = resolveRegionInfo(detectedRegion);
-
-            // Dynamically synchronize the server region in formData
-            setFormData(prev => ({ ...prev, serverID: detectedRegion }));
-
-            setVerifiedAccount({
-              valid: true,
-              name: finalName || (language === 'km' ? `អ្នកលេង Free Fire (${pId})` : `Free Fire Player (${pId})`),
-              country: regInfo.name,
-              region: detectedRegion,
-              server: detectedRegion,
-              id: pId,
-              game: 'freefire',
-              level: profileData?.level || 70,
-              likes: profileData?.likes || 0,
-              avatarUrl: profileData?.avatarUrl || null,
-              rank: profileData?.rank || 'Bronze I',
-              rankPoints: profileData?.rankPoints || null,
-            });
-          } else {
-            setVerifiedAccount({
-              valid: false,
-              error: language === 'km' ? 'រកមិនឃើញគណនី Free Fire ទេ។ សូមពិនិត្យលេខ UID ឡើងវិញ។' : 'Free Fire account not found. Please verify your UID.',
-              id: pId,
-              server: sId || 'Global'
-            });
-          }
-        } else {
-          // Other games (Genshin, PUBG, HOK, etc.)
-          try {
-            let checkUrl = '';
-            if (selectedGame.id.includes('genshin')) {
-              checkUrl = `https://api.isan.eu.org/nickname/genshin?id=${pId}&server=${sId}`;
-            } else if (selectedGame.id.includes('pubg')) {
-              checkUrl = `https://api.isan.eu.org/nickname/pubg?id=${pId}`;
-            }
-
-            if (checkUrl) {
-              const gCheck = await fetch(checkUrl).then(r => r.json());
-              if (gCheck?.name) {
-                realName = gCheck.name;
-              }
-            }
-          } catch (e) {}
-
-          setVerifiedAccount({
-            valid: true,
-            name: realName || '',
-            country: 'Global',
-            id: pId,
-            server: sId
-          });
-        }
-      }
-    } catch (err) {
-      console.error('Verification error:', err);
-      setVerifiedAccount({
-        valid: false,
-        error: 'Connection notice: Could not reach verification server. Please check Player ID.',
-        id: pId,
-        server: sId
-      });
-    } finally {
-      setAccountChecking(false);
-    }
-  };
-
   // Tracking Refs to prevent interval re-creation on countdown timer ticks
   const isCheckingRef = useRef(false);
   const paymentPaidRef = useRef(false);
@@ -1498,8 +1721,27 @@ const TopUp = () => {
       return;
     }
 
-    if (!formData.playerID.trim()) {
-      setError('Please enter your Player ID / Account name in the left column.');
+    const pId = (formData.playerID || '').trim();
+    const sId = (formData.serverID || '').trim();
+
+    if (!pId) {
+      setError(language === 'km' ? 'សូមបញ្ចូល Player ID របស់លោកអ្នកជាមុនសិន' : 'Please enter your Player ID first');
+      scrollToPlayerInfo('player');
+      return;
+    }
+
+    if (selectedGame?.id?.startsWith('mlbb') && (!sId || sId.toLowerCase() === 'global')) {
+      setError(language === 'km' ? 'សូមបញ្ចូល Server ID របស់លោកអ្នកជាមុនសិន' : 'Please enter your Server ID first');
+      scrollToPlayerInfo('server');
+      return;
+    }
+
+    // Strict Account Verification Guard: User CANNOT pay if account is not found or unverified
+    if (!verifiedAccount || !verifiedAccount.valid) {
+      setError(language === 'km'
+        ? 'រកមិនឃើញគណនីអ្នកលេងទេ។ សូមបញ្ចូល Player ID និង Server ID ឡើងវិញឲ្យបានត្រឹមត្រូវមុននឹងបង់ប្រាក់។'
+        : 'Player account not found. Please verify and re-enter your Player ID and Server ID before making payment.');
+      scrollToPlayerInfo(!sId ? 'server' : 'player');
       return;
     }
 
@@ -1517,26 +1759,7 @@ const TopUp = () => {
       const rawPrice = selectedProduct?.price || 0.95;
       const targetAmount = isRiel ? Math.round(rawPrice * 4100) : rawPrice;
       const effectiveDiamonds = selectedProduct?.diamondAmount || 55;
-
-      // Auto-fetch Player Account Name if user didn't click check button
-      let playerAccName = verifiedAccount?.name || '';
-      const pId = formData.playerID ? formData.playerID.trim() : '';
-      const sId = formData.serverID ? formData.serverID.trim() : '11446';
-      if (!playerAccName && selectedGame?.id?.startsWith('mlbb') && pId) {
-        try {
-          const directCheck = await fetch(`https://api.isan.eu.org/nickname/ml?id=${pId}&server=${sId}`).then(r => r.json());
-          if (directCheck?.name) {
-            playerAccName = directCheck.name;
-            setVerifiedAccount({
-              valid: true,
-              name: directCheck.name,
-              country: directCheck.country || 'Cambodia',
-              id: pId,
-              server: sId
-            });
-          }
-        } catch (e) {}
-      }
+      const playerAccName = verifiedAccount?.name || '';
 
       let currentUser = null;
       try {
@@ -2272,7 +2495,18 @@ const TopUp = () => {
       {/* ======================================================== */}
       {/* 2. PLAYER INFORMATION CARD (Exact match to Reference Image 2) */}
       {/* ======================================================== */}
-      <div id="player-info-section" className="mt-4 sm:mt-6 rounded-2xl sm:rounded-3xl bg-[#0b1329] border border-slate-800/90 shadow-2xl overflow-hidden font-khmer transition-all">
+      <div 
+        id="player-info-section" 
+        className={`mt-4 sm:mt-6 rounded-2xl sm:rounded-3xl bg-[#0b1329] border shadow-2xl overflow-hidden font-khmer transition-all duration-300 ${
+          playerCardAlert
+            ? 'border-rose-500 ring-4 ring-rose-500/40 shadow-[0_0_35px_rgba(244,63,94,0.45)]'
+            : verifiedAccount?.valid === false
+            ? 'border-rose-500/70 ring-1 ring-rose-500/30'
+            : verifiedAccount?.valid
+            ? 'border-emerald-500/60 ring-1 ring-emerald-500/30'
+            : 'border-slate-800/90'
+        }`}
+      >
         {/* Pink/Rose Header Ribbon matching Reference Image 2 */}
         <div className="bg-gradient-to-r from-[#ec4899] via-[#f43f5e] to-[#ec4899] text-white px-4 sm:px-5 py-2.5 sm:py-3 flex items-center justify-between shadow-md">
           <div className="flex items-center gap-2">
@@ -2310,8 +2544,20 @@ const TopUp = () => {
                   inputMode={isTelegram || isSteam || isGiftCard ? 'text' : 'numeric'}
                   value={formData.playerID}
                   onChange={handlePlayerIdChange}
+                  onPaste={handlePlayerIdPaste}
+                  onBlur={() => {
+                    if (formData.playerID && formData.serverID && formData.serverID.toLowerCase() !== 'global') {
+                      triggerAccountVerification(formData.playerID, formData.serverID);
+                    }
+                  }}
                   placeholder={isTelegram ? '@username' : isSteam ? 'steam_username' : isGiftCard ? 'email@domain.com' : 'User ID'}
-                  className="w-full h-11 sm:h-12 bg-[#060b18] border border-slate-700/80 rounded-xl pl-3.5 pr-24 text-sm sm:text-base font-mono text-white placeholder-slate-500 focus:outline-none focus:border-pink-500 focus:ring-2 focus:ring-pink-500/20 transition-all"
+                  className={`w-full h-11 sm:h-12 bg-[#060b18] border rounded-xl pl-3.5 pr-24 text-sm sm:text-base font-mono text-white placeholder-slate-500 focus:outline-none transition-all ${
+                    verifiedAccount?.valid === false
+                      ? 'border-rose-500/80 focus:border-rose-500 focus:ring-2 focus:ring-rose-500/20'
+                      : verifiedAccount?.valid
+                      ? 'border-emerald-500/80 focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20'
+                      : 'border-slate-700/80 focus:border-pink-500 focus:ring-2 focus:ring-pink-500/20'
+                  }`}
                 />
                 <div className="absolute right-1.5 top-1/2 -translate-y-1/2 flex items-center gap-1">
                   {formData.playerID && (
@@ -2321,6 +2567,7 @@ const TopUp = () => {
                         setFormData(prev => ({ ...prev, playerID: '' }));
                         setAutoDetectedMessage('');
                         setVerifiedAccount(null);
+                        lastVerifiedKeyRef.current = '';
                       }}
                       className="w-6 h-6 rounded-full bg-slate-800 hover:bg-slate-700 text-slate-400 hover:text-white flex items-center justify-center text-xs transition-colors cursor-pointer"
                       title="Clear"
@@ -2353,17 +2600,66 @@ const TopUp = () => {
             {/* SERVER ID / Zone ID (MLBB) or SERVER REGION (Free Fire) */}
             {isMlbb && (
               <div>
-                <label className="block text-[11px] sm:text-xs font-black text-slate-300 uppercase tracking-wider mb-1.5 font-sans">
+                <label htmlFor="server_id_input" className="block text-[11px] sm:text-xs font-black text-slate-300 uppercase tracking-wider mb-1.5 font-sans">
                   SERVER ID <span className="text-rose-400">*</span>
                 </label>
-                <input
-                  type="text"
-                  inputMode="numeric"
-                  value={formData.serverID}
-                  onChange={(e) => setFormData(prev => ({ ...prev, serverID: e.target.value }))}
-                  placeholder="Server ID (e.g. 11446)"
-                  className="w-full h-11 sm:h-12 bg-[#060b18] border border-slate-700/80 rounded-xl px-3.5 text-sm sm:text-base font-mono text-white placeholder-slate-500 focus:outline-none focus:border-pink-500 focus:ring-2 focus:ring-pink-500/20 transition-all"
-                />
+                <div className="relative flex items-center">
+                  <input
+                    id="server_id_input"
+                    type="text"
+                    inputMode="numeric"
+                    value={formData.serverID}
+                    onChange={handleServerIdChange}
+                    onPaste={handleServerIdPaste}
+                    onBlur={() => {
+                      if (formData.playerID && formData.serverID && formData.serverID.toLowerCase() !== 'global') {
+                        triggerAccountVerification(formData.playerID, formData.serverID);
+                      }
+                    }}
+                    placeholder="Server ID (e.g. 11446)"
+                    className={`w-full h-11 sm:h-12 bg-[#060b18] border rounded-xl pl-3.5 pr-24 text-sm sm:text-base font-mono text-white placeholder-slate-500 focus:outline-none transition-all ${
+                      verifiedAccount?.valid === false
+                        ? 'border-rose-500/80 focus:border-rose-500 focus:ring-2 focus:ring-rose-500/20'
+                        : verifiedAccount?.valid
+                        ? 'border-emerald-500/80 focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20'
+                        : 'border-slate-700/80 focus:border-pink-500 focus:ring-2 focus:ring-pink-500/20'
+                    }`}
+                  />
+                  <div className="absolute right-1.5 top-1/2 -translate-y-1/2 flex items-center gap-1">
+                    {formData.serverID && (
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setFormData(prev => ({ ...prev, serverID: '' }));
+                          setVerifiedAccount(null);
+                          lastVerifiedKeyRef.current = '';
+                        }}
+                        className="w-6 h-6 rounded-full bg-slate-800 hover:bg-slate-700 text-slate-400 hover:text-white flex items-center justify-center text-xs transition-colors cursor-pointer"
+                        title="Clear"
+                      >
+                        ✕
+                      </button>
+                    )}
+                    <button
+                      type="button"
+                      onClick={handlePasteServerId}
+                      className="h-8 px-2.5 rounded-lg bg-pink-500/15 hover:bg-pink-500/25 border border-pink-500/30 text-pink-300 hover:text-white text-xs font-bold flex items-center gap-1 transition-all cursor-pointer active:scale-95"
+                      title="Paste Server ID"
+                    >
+                      {pastedServerId ? (
+                        <>
+                          <span className="text-emerald-400">✓</span>
+                          <span className="text-emerald-400 font-extrabold text-[11px]">{language === 'km' ? 'បានដាក់' : 'Pasted'}</span>
+                        </>
+                      ) : (
+                        <>
+                          <span>📋</span>
+                          <span className="font-extrabold text-[11px]">Paste</span>
+                        </>
+                      )}
+                    </button>
+                  </div>
+                </div>
               </div>
             )}
 
@@ -2418,6 +2714,28 @@ const TopUp = () => {
             <div className="text-[11px] font-semibold text-emerald-400 flex items-center gap-1.5">
               <span>⚡</span>
               <span>{autoDetectedMessage}</span>
+            </div>
+          )}
+
+          {/* Prominent Account Not Found Warning Card */}
+          {verifiedAccount && !verifiedAccount.valid && (
+            <div className="p-3.5 sm:p-4 rounded-2xl bg-gradient-to-r from-rose-950/80 via-rose-900/40 to-rose-950/80 border border-rose-500/60 text-rose-200 text-xs sm:text-sm flex items-start gap-3 shadow-xl animate-fadeIn">
+              <div className="w-8 h-8 rounded-full bg-rose-500/20 border border-rose-500/50 flex items-center justify-center text-rose-400 text-base shrink-0 font-bold">
+                ✕
+              </div>
+              <div className="space-y-1 min-w-0 flex-1">
+                <div className="font-black text-rose-300 text-sm flex items-center justify-between">
+                  <span>{language === 'km' ? 'រកមិនឃើញគណនីអ្នកលេងទេ (Account Not Found)' : 'Player Account Not Found'}</span>
+                  <span className="text-[10px] uppercase font-mono px-2 py-0.5 rounded bg-rose-500/25 text-rose-300 font-bold border border-rose-500/40">
+                    {language === 'km' ? 'មិនអាចទូទាត់បាន' : 'Payment Blocked'}
+                  </span>
+                </div>
+                <p className="text-[11px] sm:text-xs text-rose-200/90 leading-relaxed font-khmer">
+                  {language === 'km'
+                    ? 'សូមពិនិត្យមើល Player ID និង Server ID នៅក្នុង Profile ហ្គេមរបស់អ្នកឡើងវិញ រួចចុច Paste ឬបញ្ចូលម្តងទៀត។ ប្រព័ន្ធមិនអនុញ្ញាតឲ្យបង់ប្រាក់ទេ ប្រសិនបើគ្មានគណនីត្រឹមត្រូវ។'
+                    : 'Please double-check your Player ID and Server ID from your in-game profile, then paste or re-enter them. Payment cannot proceed until account is verified.'}
+                </p>
+              </div>
             </div>
           )}
 
@@ -2803,12 +3121,20 @@ const TopUp = () => {
                   onClick={() => {
                     if (loading || isTopupDisabled) return;
                     if (!formData.playerID || !formData.playerID.trim()) {
-                      const idInput = document.getElementById('player_id_input') || document.querySelector('input[placeholder*="Player ID"], input[placeholder*="ID"], input[name="playerID"]');
-                      if (idInput) {
-                        idInput.scrollIntoView({ behavior: 'smooth', block: 'center' });
-                        setTimeout(() => idInput.focus(), 300);
-                      }
                       setError(language === 'km' ? 'សូមបញ្ចូល Player ID របស់លោកអ្នកជាមុនសិន' : 'Please enter your Player ID first');
+                      scrollToPlayerInfo('player');
+                      return;
+                    }
+                    if (selectedGame?.id?.startsWith('mlbb') && (!formData.serverID || !formData.serverID.trim() || formData.serverID.trim().toLowerCase() === 'global')) {
+                      setError(language === 'km' ? 'សូមបញ្ចូល Server ID របស់លោកអ្នកជាមុនសិន' : 'Please enter your Server ID first');
+                      scrollToPlayerInfo('server');
+                      return;
+                    }
+                    if (!verifiedAccount || !verifiedAccount.valid) {
+                      setError(language === 'km'
+                        ? 'រកមិនឃើញគណនីអ្នកលេងទេ។ សូមបញ្ចូល Player ID និង Server ID ឡើងវិញឲ្យបានត្រឹមត្រូវមុននឹងបង់ប្រាក់។'
+                        : 'Player account not found. Please verify and re-enter your Player ID and Server ID before making payment.');
+                      scrollToPlayerInfo(!formData.serverID ? 'server' : 'player');
                       return;
                     }
                     handleProceedToPayment();
@@ -2941,12 +3267,20 @@ const TopUp = () => {
             onClick={() => {
               if (loading || isTopupDisabled) return;
               if (!formData.playerID || !formData.playerID.trim()) {
-                const idInput = document.getElementById('player_id_input') || document.querySelector('input[placeholder*="Player ID"], input[placeholder*="ID"], input[name="playerID"]');
-                if (idInput) {
-                  idInput.scrollIntoView({ behavior: 'smooth', block: 'center' });
-                  setTimeout(() => idInput.focus(), 300);
-                }
                 setError(language === 'km' ? 'សូមបញ្ចូល Player ID របស់លោកអ្នកជាមុនសិន' : 'Please enter your Player ID first');
+                scrollToPlayerInfo('player');
+                return;
+              }
+              if (selectedGame?.id?.startsWith('mlbb') && (!formData.serverID || !formData.serverID.trim() || formData.serverID.trim().toLowerCase() === 'global')) {
+                setError(language === 'km' ? 'សូមបញ្ចូល Server ID របស់លោកអ្នកជាមុនសិន' : 'Please enter your Server ID first');
+                scrollToPlayerInfo('server');
+                return;
+              }
+              if (!verifiedAccount || !verifiedAccount.valid) {
+                setError(language === 'km'
+                  ? 'រកមិនឃើញគណនីអ្នកលេងទេ។ សូមបញ្ចូល Player ID និង Server ID ឡើងវិញឲ្យបានត្រឹមត្រូវមុននឹងបង់ប្រាក់។'
+                  : 'Player account not found. Please verify and re-enter your Player ID and Server ID before making payment.');
+                scrollToPlayerInfo(!formData.serverID ? 'server' : 'player');
                 return;
               }
               handleProceedToPayment();
