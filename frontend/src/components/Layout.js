@@ -2,7 +2,6 @@ import React, { useState, useEffect, useRef } from 'react';
 import { useLocation } from 'react-router-dom';
 import Navbar from './Navbar';
 import Footer from './Footer';
-import AiAssistant from './AiAssistant';
 import DesktopSidebar from './DesktopSidebar';
 import { PlayerLoginModal } from './PlayerLoginModal';
 import ProfileModal from './ProfileModal';
@@ -90,9 +89,6 @@ const Layout = ({ children }) => {
         </main>
         {!hideFooter && <Footer />}
       </div>
-
-      {/* AI Assistant mounted at layout root for top-level layering */}
-      {!isAuthPath && <AiAssistant />}
 
       {/* Global Player Login Modal Popup */}
       <PlayerLoginModal
