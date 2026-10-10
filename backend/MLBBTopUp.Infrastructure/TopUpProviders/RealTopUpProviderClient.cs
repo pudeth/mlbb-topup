@@ -65,20 +65,27 @@ public class RealTopUpProviderClient : ITopUpProviderClient
         { 706, ("mlbb_706", "38", "mlbb-706", "625_81_diamonds", "706 Diamonds (625+81 Bonus)") },
         { 716, ("mlbb_716", "716", "mlbb-716", "716_diamonds", "716 Diamonds") },
         { 878, ("mlbb_878", "878", "mlbb-878", "780_78_diamonds", "878 Diamonds") },
+        { 880, ("mlbb_4wdp", "pass_weekly", "mlbb-4wdp", "weekly_pass", "4x Weekly Diamond Pass") },
         { 963, ("mlbb_963", "963", "mlbb-963", "858_86_diamonds", "963 Diamonds") },
         { 1007, ("mlbb_1007", "1050", "mlbb-1007", "1007_156_diamonds", "1007 Diamonds (1007+156 Bonus)") },
         { 1050, ("mlbb_1050", "1050", "mlbb-1050", "933_117_diamonds", "1050 Diamonds (933+117 Bonus)") },
         { 1084, ("mlbb_1084", "1084", "mlbb-1084", "1084_diamonds", "1084 Diamonds") },
+        { 1100, ("mlbb_5wdp", "pass_weekly", "mlbb-5wdp", "weekly_pass", "5x Weekly Diamond Pass") },
+        { 1320, ("mlbb_6wdp", "pass_weekly", "mlbb-6wdp", "weekly_pass", "6x Weekly Diamond Pass") },
         { 1412, ("mlbb_1412", "1412", "mlbb-1412", "1250_162_diamonds", "1412 Diamonds (1250+162 Bonus)") },
         { 1446, ("mlbb_1446", "1446", "mlbb-1446", "1446_diamonds", "1446 Diamonds") },
         { 1860, ("mlbb_1860", "46", "mlbb-1860", "1860_335_diamonds", "1860 Diamonds (1860+335 Bonus)") },
         { 2015, ("mlbb_2015", "2015", "mlbb-2015", "2015_383_diamonds", "2015 Diamonds (2015+383 Bonus)") },
         { 2195, ("mlbb_2195", "46", "mlbb-2195", "1860_335_diamonds", "2195 Diamonds (1860+335 Bonus)") },
+        { 2452, ("mlbb_2452", "46", "mlbb-2452", "1860_335_diamonds", "2452 Diamonds (Mythic Plus)") },
+        { 2901, ("mlbb_2901", "46", "mlbb-2901", "1860_335_diamonds", "2901 Diamonds (Legendary Pack)") },
         { 2976, ("mlbb_2976", "2976", "mlbb-2976", "2976_diamonds", "2976 Diamonds") },
         { 3099, ("mlbb_3099", "3688", "mlbb-3099", "3099_589_diamonds", "3099 Diamonds (3099+589 Bonus)") },
         { 3688, ("mlbb_3688", "3688", "mlbb-3688", "3099_589_diamonds", "3688 Diamonds (3099+589 Bonus)") },
+        { 4390, ("mlbb_4390", "3688", "mlbb-4390", "3099_589_diamonds", "4390 Diamonds (Supreme Chest)") },
         { 4649, ("mlbb_4649", "5532", "mlbb-4649", "4649_883_diamonds", "4649 Diamonds (4649+883 Bonus)") },
         { 5532, ("mlbb_5532", "5532", "mlbb-5532", "4649_883_diamonds", "5532 Diamonds (4649+883 Bonus)") },
+        { 6944, ("mlbb_6944", "5532", "mlbb-6944", "4649_883_diamonds", "6944 Diamonds (Titan Pack)") },
         { 7502, ("mlbb_7502", "7502", "mlbb-7502", "7502_diamonds", "7502 Diamonds") },
         { 7740, ("mlbb_7740", "9288", "mlbb-7740", "7740_1548_diamonds", "7740 Diamonds (7740+1548 Bonus)") },
         { 9288, ("mlbb_9288", "9288", "mlbb-9288", "7740_1548_diamonds", "9288 Diamonds (7740+1548 Bonus)") }
@@ -477,6 +484,7 @@ public class RealTopUpProviderClient : ITopUpProviderClient
                           (!isNumericServer && !string.IsNullOrWhiteSpace(cleanServer)));
 
         var validFreeFirePackages = new HashSet<int> { 390, 384, 383, 385, 386, 387, 388, 389, 4852, 5021, 5022, 5023, 5024, 5025, 5026, 5028, 5029, 5030, 5031, 5032, 3077, 374, 391, 376, 377, 378, 379, 380, 381, 5292, 5293, 5294, 5295, 5298, 5299, 5296, 5297, 5301, 5302, 5303, 5146, 5147, 5148 };
+        var validMlbbPackages = new HashSet<int> { 569, 570, 571, 268, 269, 270, 271, 272, 273, 274, 276, 278, 280, 281, 283, 288, 300, 316, 337, 350, 371, 4967, 4968, 4969, 4970, 370 };
 
         // Normalize customer payment to USD
         decimal paidUsd = 0m;
@@ -489,8 +497,8 @@ public class RealTopUpProviderClient : ITopUpProviderClient
         int packageId;
 
         // OWNER STRICT RULE:
-        // If customer paid $8.25 (or ~33,825 KHR) of sold package, system MUST NEVER buy a package with provider that is more expensive ($15.03).
-        // Strictly force Package 4852 ($7.76 wholesale).
+        // System MUST NEVER buy a package with provider that is more expensive than what the customer paid.
+        // If customer paid $8.25 (or ~33,825 KHR), force Package 4852 ($7.76 wholesale) for Free Fire or Package 370 ($8.10 wholesale) for MLBB Twilight Pass.
         if (isFreeFire && (diamondAmount == 2600 || 
                            (Math.Abs(paidUsd - 8.25m) <= 0.60m && (productName?.Contains("monthly", StringComparison.OrdinalIgnoreCase) == true || diamondAmount <= 2600)) ||
                            (productName != null && productName.Contains("monthly", StringComparison.OrdinalIgnoreCase) && !productName.Contains("x2", StringComparison.OrdinalIgnoreCase) && !productName.Contains("2x", StringComparison.OrdinalIgnoreCase) && !productName.Contains("x3", StringComparison.OrdinalIgnoreCase) && !productName.Contains("3x", StringComparison.OrdinalIgnoreCase) && !productName.Contains("x4", StringComparison.OrdinalIgnoreCase) && !productName.Contains("4x", StringComparison.OrdinalIgnoreCase))))
@@ -512,6 +520,22 @@ public class RealTopUpProviderClient : ITopUpProviderClient
             _logger.LogInformation("[Strict Price Rule] Matched Free Fire Weekly Lite ($0.35 paid / 90 diamonds). Strictly assigned Package #384 ($0.32 wholesale).");
             packageId = 384;
         }
+        else if (!isFreeFire && (diamondAmount == 500 || 
+                                 (Math.Abs(paidUsd - 8.25m) <= 0.60m && (productName?.Contains("twilight", StringComparison.OrdinalIgnoreCase) == true || sku?.Contains("twilight", StringComparison.OrdinalIgnoreCase) == true || diamondAmount == 500)) ||
+                                 productName?.Contains("twilight", StringComparison.OrdinalIgnoreCase) == true ||
+                                 sku?.Contains("twilight", StringComparison.OrdinalIgnoreCase) == true))
+        {
+            _logger.LogInformation("[Strict Price Rule] Matched MLBB Twilight Pass ($8.25 paid / 500 diamonds). Strictly assigned Package #370 ($8.10 wholesale).");
+            packageId = 370;
+        }
+        else if (!isFreeFire && (diamondAmount == 210 || diamondAmount == 220 || 
+                                 (Math.Abs(paidUsd - 1.55m) <= 0.35m && (productName?.Contains("weekly", StringComparison.OrdinalIgnoreCase) == true || productName?.Contains("wdp", StringComparison.OrdinalIgnoreCase) == true || diamondAmount <= 220)) ||
+                                 ((productName?.Contains("weekly", StringComparison.OrdinalIgnoreCase) == true || productName?.Contains("wdp", StringComparison.OrdinalIgnoreCase) == true || sku?.Contains("weekly", StringComparison.OrdinalIgnoreCase) == true || sku?.Contains("wdp", StringComparison.OrdinalIgnoreCase) == true) &&
+                                  !System.Text.RegularExpressions.Regex.IsMatch($"{productName} {sku}", @"(\bx[2-6]\b|\bx\s*[2-6]\b|\b[2-6]x\b|\b[2-6]\s*(weekly|wdp|pass))", System.Text.RegularExpressions.RegexOptions.IgnoreCase))))
+        {
+            _logger.LogInformation("[Strict Price Rule] Matched MLBB Weekly Diamond Pass ($1.55 paid / 210 diamonds). Strictly assigned Package #371 ($1.54 wholesale).");
+            packageId = 371;
+        }
         else if (int.TryParse(sku, out var parsedSku) && parsedSku > 100)
         {
             packageId = parsedSku;
@@ -529,6 +553,17 @@ public class RealTopUpProviderClient : ITopUpProviderClient
             else if ((productId.Value == 5028 || productId.Value == 5029) && (diamondAmount == 90 || paidUsd < 0.55m || Math.Abs(paidUsd - 0.35m) <= 0.15m))
             {
                 packageId = 384;
+            }
+            else
+            {
+                packageId = productId.Value;
+            }
+        }
+        else if (!isFreeFire && productId.HasValue && validMlbbPackages.Contains(productId.Value))
+        {
+            if ((productId.Value == 4967 || productId.Value == 4968 || productId.Value == 4969 || productId.Value == 4970) && (diamondAmount == 210 || paidUsd < 2.70m || Math.Abs(paidUsd - 1.55m) <= 0.35m))
+            {
+                packageId = 371;
             }
             else
             {
@@ -673,34 +708,31 @@ public class RealTopUpProviderClient : ITopUpProviderClient
             int exactMlbbPackage = diamondAmount switch
             {
                 // Membership Passes
-                210 => 371,   // Weekly Diamond Pass ($1.54)
+                210 or 220 => 371,   // Weekly Diamond Pass ($1.54)
                 440 => (paidUsd <= 0 || paidUsd >= 2.70m) ? 4967 : 371,  // 2x Weekly Pass ($2.97)
-                660 => (paidUsd <= 0 || paidUsd >= 4.00m) ? 4968 : 371,  // 3x Weekly Pass ($4.46)
-                880 => (paidUsd <= 0 || paidUsd >= 5.50m) ? 4969 : 371,  // 4x Weekly Pass ($5.94)
-                1100 => (paidUsd <= 0 || paidUsd >= 7.00m) ? 4970 : 371, // 5x Weekly Pass ($7.43)
-                1320 => (paidUsd <= 0 || paidUsd >= 7.00m) ? 4970 : 371, // 6x Weekly Pass
+                660 => (paidUsd <= 0 || paidUsd >= 4.00m) ? 4968 : (paidUsd >= 2.70m ? 4967 : 371),  // 3x Weekly Pass ($4.46)
+                880 => (paidUsd <= 0 || paidUsd >= 5.50m) ? 4969 : (paidUsd >= 4.00m ? 4968 : (paidUsd >= 2.70m ? 4967 : 371)),  // 4x Weekly Pass ($5.94)
+                1100 => (paidUsd <= 0 || paidUsd >= 7.00m) ? 4970 : (paidUsd >= 5.50m ? 4969 : (paidUsd >= 4.00m ? 4968 : (paidUsd >= 2.70m ? 4967 : 371))), // 5x Weekly Pass ($7.43)
+                1320 => (paidUsd <= 0 || paidUsd >= 7.00m) ? 4970 : (paidUsd >= 5.50m ? 4969 : (paidUsd >= 4.00m ? 4968 : (paidUsd >= 2.70m ? 4967 : 371))), // 6x Weekly Pass
                 500 => 370,   // Twilight Pass ($8.10)
+                605 => (paidUsd >= 5.00m ? 274 : 273), // 165+2WDP Combo Offer ($4.78)
                 // Direct Diamonds
                 11 or 14 => 569,  // 14 Diamonds Special ($0.25)
                 28 => 570,        // 28 Diamonds Special ($0.49)
                 42 => 571,        // 42 Diamonds Special ($0.73)
                 55 => 268,        // 55 Diamonds Main ($0.79)
-                86 => 269,        // 86 Diamonds Main ($1.25)
-                110 => 269,       // 86+ Bonus ($1.25)
+                86 or 110 => 269, // 86 Diamonds Main ($1.25)
                 165 => 270,       // 165 Diamonds Main ($2.36)
                 172 => 271,       // 172 Diamonds Main ($2.46)
                 257 => 272,       // 257 Diamonds Main ($3.55)
-                275 => 273,       // 275 Diamonds Main ($3.69)
-                312 => 273,       // 275 Diamonds ($3.69)
+                275 or 312 => 273,// 275 Diamonds Main ($3.69)
                 343 or 344 => 274,// 343 Diamonds Main ($4.78)
                 429 => 276,       // 429 Diamonds Main ($5.99)
                 514 => 278,       // 514 Diamonds Main ($7.06)
                 565 => 280,       // 565 Diamonds Main ($7.58)
                 600 => 281,       // 600 Diamonds Main ($8.32)
-                706 => 283,       // 706 Diamonds Main ($9.70)
-                878 or 963 => 283,// 706 Main ($9.70)
-                1050 => 288,      // 1050 Diamonds Main ($14.63)
-                1412 => 288,      // 1050 Main ($14.63)
+                706 or 878 or 963 => 283, // 706 Diamonds Main ($9.70)
+                1050 or 1412 => 288,      // 1050 Diamonds Main ($14.63)
                 2195 or 2452 or 2901 => 300, // 2195 Diamonds Main ($29.17)
                 3688 or 4390 => 316,         // 3688 Diamonds Main ($48.68)
                 5532 or 6944 => 337,         // 5532 Diamonds Main ($73.49)
@@ -708,59 +740,59 @@ public class RealTopUpProviderClient : ITopUpProviderClient
                 _ => 0
             };
 
+            var mlbbContext = $"{sku} {productName}".ToLowerInvariant();
             if (exactMlbbPackage > 0)
             {
                 packageId = exactMlbbPackage;
             }
-            else if (sku?.Contains("2wdp", StringComparison.OrdinalIgnoreCase) == true)
-            {
-                packageId = 4967; // 2x Weekly ($2.97)
-            }
-            else if (sku?.Contains("3wdp", StringComparison.OrdinalIgnoreCase) == true)
-            {
-                packageId = 4968; // 3x Weekly ($4.46)
-            }
-            else if (sku?.Contains("4wdp", StringComparison.OrdinalIgnoreCase) == true)
-            {
-                packageId = 4969; // 4x Weekly ($5.94)
-            }
-            else if (sku?.Contains("5wdp", StringComparison.OrdinalIgnoreCase) == true)
-            {
-                packageId = 4970; // 5x Weekly ($7.43)
-            }
-            else if (sku?.Contains("wdp", StringComparison.OrdinalIgnoreCase) == true || 
-                     sku?.Contains("weekly", StringComparison.OrdinalIgnoreCase) == true)
-            {
-                packageId = 371; // Weekly Pass ($1.54)
-            }
-            else if (sku?.Contains("twilight", StringComparison.OrdinalIgnoreCase) == true)
+            else if (mlbbContext.Contains("twilight"))
             {
                 packageId = 370; // Twilight Pass ($8.10)
             }
+            else if (mlbbContext.Contains("5wdp") || mlbbContext.Contains("5 weekly") || mlbbContext.Contains("5x weekly"))
+            {
+                packageId = (paidUsd <= 0 || paidUsd >= 7.00m) ? 4970 : 371; // 5x Weekly ($7.43)
+            }
+            else if (mlbbContext.Contains("4wdp") || mlbbContext.Contains("4 weekly") || mlbbContext.Contains("4x weekly"))
+            {
+                packageId = (paidUsd <= 0 || paidUsd >= 5.50m) ? 4969 : 371; // 4x Weekly ($5.94)
+            }
+            else if (mlbbContext.Contains("3wdp") || mlbbContext.Contains("3 weekly") || mlbbContext.Contains("3x weekly"))
+            {
+                packageId = (paidUsd <= 0 || paidUsd >= 4.00m) ? 4968 : 371; // 3x Weekly ($4.46)
+            }
+            else if (mlbbContext.Contains("2wdp") || mlbbContext.Contains("2 weekly") || mlbbContext.Contains("2x weekly"))
+            {
+                packageId = (paidUsd <= 0 || paidUsd >= 2.70m) ? 4967 : 371; // 2x Weekly ($2.97)
+            }
+            else if (mlbbContext.Contains("wdp") || mlbbContext.Contains("weekly"))
+            {
+                packageId = 371; // Weekly Pass ($1.54)
+            }
             else
             {
+                // Conservative Lower-Bound MLBB Fallback (Guaranteed NEVER to overshoot customer payment)
                 packageId = diamondAmount switch
                 {
-                    <= 15 => 569,   // 14 Diamonds Special ($0.25)
-                    <= 30 => 570,   // 28 Diamonds Special ($0.49)
-                    <= 45 => 571,   // 42 Diamonds Special ($0.73)
-                    <= 60 => 268,   // 55 Diamonds Main ($0.79)
-                    <= 95 => 269,   // 86 Diamonds Main ($1.25)
-                    <= 125 => 269,  // 86 Diamonds Main ($1.25)
-                    <= 168 => 270,  // 165 Diamonds Main ($2.36)
-                    <= 200 => 271,  // 172 Diamonds Main ($2.46)
-                    <= 260 => 272,  // 257 Diamonds Main ($3.55)
-                    <= 300 => 273,  // 275 Diamonds Main ($3.69)
-                    <= 350 => 274,  // 343 Diamonds Main ($4.78)
-                    <= 450 => 276,  // 429 Diamonds Main ($5.99)
-                    <= 520 => 278,  // 514 Diamonds Main ($7.06)
-                    <= 570 => 280,  // 565 Diamonds Main ($7.58)
-                    <= 650 => 281,  // 600 Diamonds Main ($8.32)
-                    <= 800 => 283,  // 706 Diamonds Main ($9.70)
-                    <= 1200 => 288, // 1050 Diamonds Main ($14.63)
-                    <= 2500 => 300, // 2195 Diamonds Main ($29.17)
-                    <= 4000 => 316, // 3688 Diamonds Main ($48.68)
-                    <= 6000 => 337, // 5532 Diamonds Main ($73.49)
+                    < 28 => 569,    // 14 Diamonds Special ($0.25)
+                    < 42 => 570,    // 28 Diamonds Special ($0.49)
+                    < 55 => 571,    // 42 Diamonds Special ($0.73)
+                    < 86 => 268,    // 55 Diamonds Main ($0.79)
+                    < 165 => 269,   // 86 Diamonds Main ($1.25)
+                    < 172 => 270,   // 165 Diamonds Main ($2.36)
+                    < 257 => 271,   // 172 Diamonds Main ($2.46)
+                    < 275 => 272,   // 257 Diamonds Main ($3.55)
+                    < 343 => 273,   // 275 Diamonds Main ($3.69)
+                    < 429 => 274,   // 343 Diamonds Main ($4.78)
+                    < 514 => 276,   // 429 Diamonds Main ($5.99)
+                    < 565 => 278,   // 514 Diamonds Main ($7.06)
+                    < 600 => 280,   // 565 Diamonds Main ($7.58)
+                    < 706 => 281,   // 600 Diamonds Main ($8.32)
+                    < 1050 => 283,  // 706 Diamonds Main ($9.70)
+                    < 2195 => 288,  // 1050 / 1412 Diamonds Main ($14.63)
+                    < 3688 => 300,  // 2195 / 2452 / 2901 Diamonds Main ($29.17)
+                    < 5532 => 316,  // 3688 / 4390 Diamonds Main ($48.68)
+                    < 9288 => 337,  // 5532 / 6944 Diamonds Main ($73.49)
                     _ => 350        // 9288 Diamonds Main ($122.05)
                 };
             }
@@ -789,10 +821,31 @@ public class RealTopUpProviderClient : ITopUpProviderClient
                     packageId, orderId, paidUsd);
                 packageId = 384;
             }
-            else if ((packageId == 4967 || packageId == 4968 || packageId == 4969 || packageId == 4970) && (paidUsd < 2.70m || Math.Abs(paidUsd - 1.55m) <= 0.35m))
+            else if (packageId == 4970 && paidUsd < 7.00m)
             {
-                _logger.LogWarning("[Price Safeguard] Downgrading MLBB Weekly multiplier package {OriginalId} to 371 (1x WDP $1.54) for Order #{OrderId}: Customer paid ${Paid:F2}, below multiplier threshold.",
-                    packageId, orderId, paidUsd);
+                var targetId = paidUsd >= 5.50m ? 4969 : (paidUsd >= 4.00m ? 4968 : (paidUsd >= 2.70m ? 4967 : 371));
+                _logger.LogWarning("[Price Safeguard] Downgrading MLBB Weekly multiplier package 4970 to {TargetId} for Order #{OrderId}: Customer paid ${Paid:F2}, below 5x threshold.",
+                    targetId, orderId, paidUsd);
+                packageId = targetId;
+            }
+            else if (packageId == 4969 && paidUsd < 5.50m)
+            {
+                var targetId = paidUsd >= 4.00m ? 4968 : (paidUsd >= 2.70m ? 4967 : 371);
+                _logger.LogWarning("[Price Safeguard] Downgrading MLBB Weekly multiplier package 4969 to {TargetId} for Order #{OrderId}: Customer paid ${Paid:F2}, below 4x threshold.",
+                    targetId, orderId, paidUsd);
+                packageId = targetId;
+            }
+            else if (packageId == 4968 && paidUsd < 4.00m)
+            {
+                var targetId = paidUsd >= 2.70m ? 4967 : 371;
+                _logger.LogWarning("[Price Safeguard] Downgrading MLBB Weekly multiplier package 4968 to {TargetId} for Order #{OrderId}: Customer paid ${Paid:F2}, below 3x threshold.",
+                    targetId, orderId, paidUsd);
+                packageId = targetId;
+            }
+            else if (packageId == 4967 && paidUsd < 2.70m)
+            {
+                _logger.LogWarning("[Price Safeguard] Downgrading MLBB Weekly multiplier package 4967 to 371 (1x WDP $1.54) for Order #{OrderId}: Customer paid ${Paid:F2}, below 2x threshold.",
+                    orderId, paidUsd);
                 packageId = 371;
             }
 
