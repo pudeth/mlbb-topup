@@ -17,17 +17,40 @@ public class ProductsController : BaseController
     }
 
     /// <summary>
-    /// Get all active diamond packages
+    /// Get all active diamond packages (Public Customer Endpoint)
+    /// Privacy Guaranteed: CostPrice, ProfitAmount, ProfitMarginPct, and ProviderPackageId are completely omitted.
+    /// ResellerPrice is only included for authenticated Resellers or Admins.
     /// </summary>
     [HttpGet]
     public async Task<IActionResult> GetActiveProducts()
     {
         var products = await _productService.GetActiveProductsAsync();
+        var isAdmin = IsAdmin();
+        var isReseller = IsReseller();
+
+        if (!isAdmin)
+        {
+            var sanitized = products.Select(p => new ProductResponse
+            {
+                ProductId = p.ProductId,
+                DiamondAmount = p.DiamondAmount,
+                Price = p.Price,
+                Status = p.Status,
+                Description = p.Description,
+                ResellerPrice = isReseller ? p.ResellerPrice : null,
+                CostPrice = null,
+                ProfitAmount = null,
+                ProfitMarginPct = null,
+                ProviderPackageId = null
+            });
+            return Ok(sanitized);
+        }
+
         return Ok(products);
     }
 
     /// <summary>
-    /// Get all products (including inactive) - Admin only
+    /// Get all products (including inactive) - Admin only with full business metrics
     /// </summary>
     [HttpGet("all")]
     [Authorize(Roles = "Admin")]
@@ -38,7 +61,7 @@ public class ProductsController : BaseController
     }
 
     /// <summary>
-    /// Get product by ID
+    /// Get product by ID (Privacy Protected for non-admins)
     /// </summary>
     [HttpGet("{id}")]
     public async Task<IActionResult> GetProduct(int id)
@@ -48,6 +71,24 @@ public class ProductsController : BaseController
         if (product == null)
         {
             return NotFound(new { message = "Product not found" });
+        }
+
+        if (!IsAdmin())
+        {
+            var isReseller = IsReseller();
+            return Ok(new ProductResponse
+            {
+                ProductId = product.ProductId,
+                DiamondAmount = product.DiamondAmount,
+                Price = product.Price,
+                Status = product.Status,
+                Description = product.Description,
+                ResellerPrice = isReseller ? product.ResellerPrice : null,
+                CostPrice = null,
+                ProfitAmount = null,
+                ProfitMarginPct = null,
+                ProviderPackageId = null
+            });
         }
 
         return Ok(product);

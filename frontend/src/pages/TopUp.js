@@ -629,15 +629,22 @@ const TopUp = () => {
 
             const merged = [...existing];
             res.data.forEach(cloudProd => {
-              const idx = merged.findIndex(p => p.productId === cloudProd.productId);
+              // Strip any sensitive business fields if present
+              const { costPrice, costPriceFazerCards, costPriceKhmerTopUp, profitAmount, profitMarginPct, ...safeProd } = cloudProd;
+              const idx = merged.findIndex(p => p.productId === safeProd.productId);
               if (idx !== -1) {
-                merged[idx] = { ...merged[idx], ...cloudProd };
+                merged[idx] = { ...merged[idx], ...safeProd };
               } else {
-                merged.push({ ...cloudProd, game: 'mlbb' });
+                merged.push({ ...safeProd, game: 'mlbb' });
               }
             });
 
-            localStorage.setItem('admin_custom_products', JSON.stringify(merged));
+            // Clean customer localStorage so DevTools cannot inspect internal profit metrics
+            const sanitizedMerged = merged.map(p => {
+              const { costPrice, costPriceFazerCards, costPriceKhmerTopUp, profitAmount, profitMarginPct, ...safe } = p;
+              return safe;
+            });
+            localStorage.setItem('admin_custom_products', JSON.stringify(sanitizedMerged));
           } catch (e) {}
           handleProductsUpdated();
         }

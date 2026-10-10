@@ -68,6 +68,12 @@ public class OrdersController : BaseController
             }
         }
 
+        if (!IsAdmin())
+        {
+            order.CostPrice = null;
+            order.ProviderPackageId = null;
+        }
+
         return CreatedAtAction(nameof(GetOrder), new { id = order.OrderId }, order);
     }
 
@@ -103,6 +109,12 @@ public class OrdersController : BaseController
             order = await _orderService.GetOrderByIdAsync(id);
         }
 
+        if (order != null && !IsAdmin())
+        {
+            order.CostPrice = null;
+            order.ProviderPackageId = null;
+        }
+
         return Ok(order);
     }
 
@@ -119,6 +131,14 @@ public class OrdersController : BaseController
         }
 
         var orders = await _orderService.GetUserOrdersAsync(userId.Value);
+        if (!IsAdmin())
+        {
+            foreach (var o in orders)
+            {
+                o.CostPrice = null;
+                o.ProviderPackageId = null;
+            }
+        }
         return Ok(orders);
     }
 
@@ -135,6 +155,14 @@ public class OrdersController : BaseController
         }
 
         var orders = await _orderService.GetOrdersByPlayerAsync(playerId, serverId);
+        if (!IsAdmin())
+        {
+            foreach (var o in orders)
+            {
+                o.CostPrice = null;
+                o.ProviderPackageId = null;
+            }
+        }
         return Ok(orders);
     }
 

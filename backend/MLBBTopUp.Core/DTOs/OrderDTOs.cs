@@ -31,8 +31,13 @@ public class OrderResponse
     public int DiamondAmount { get; set; }
     public decimal Amount { get; set; }
     public decimal? ProductPrice { get; set; }
+
+    [System.Text.Json.Serialization.JsonIgnore(Condition = System.Text.Json.Serialization.JsonIgnoreCondition.WhenWritingNull)]
     public decimal? CostPrice { get; set; }
+
+    [System.Text.Json.Serialization.JsonIgnore(Condition = System.Text.Json.Serialization.JsonIgnoreCondition.WhenWritingNull)]
     public int? ProviderPackageId { get; set; }
+
     public string PaymentStatus { get; set; } = string.Empty;
     public string TopupStatus { get; set; } = string.Empty;
     public DateTime CreatedAt { get; set; }

@@ -25,12 +25,19 @@ public class BaseController : ControllerBase
 
     protected string? GetAuthenticatedUserRole()
     {
-        return User.FindFirst(ClaimTypes.Role)?.Value;
+        return User.FindFirst(ClaimTypes.Role)?.Value 
+               ?? User.FindFirst("role")?.Value;
     }
 
     protected bool IsAdmin()
     {
         var role = GetAuthenticatedUserRole();
-        return role?.ToLower() == "admin";
+        return string.Equals(role, "admin", StringComparison.OrdinalIgnoreCase);
+    }
+
+    protected bool IsReseller()
+    {
+        var role = GetAuthenticatedUserRole();
+        return string.Equals(role, "reseller", StringComparison.OrdinalIgnoreCase) || IsAdmin();
     }
 }

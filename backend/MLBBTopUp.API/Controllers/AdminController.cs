@@ -75,7 +75,6 @@ public class AdminController : BaseController
     [HttpPut("branding")]
     [HttpPost("/api/branding")]
     [HttpPut("/api/branding")]
-    [AllowAnonymous]
     public IActionResult UpdateBranding([FromBody] object data)
     {
         if (data != null)
@@ -441,7 +440,6 @@ public class AdminController : BaseController
     [HttpPut("games")]
     [HttpPost("/api/games")]
     [HttpPut("/api/games")]
-    [AllowAnonymous]
     public IActionResult UpdateGames([FromBody] object data)
     {
         if (data != null)
@@ -521,7 +519,6 @@ public class AdminController : BaseController
     [HttpPut("banners")]
     [HttpPost("/api/banners")]
     [HttpPut("/api/banners")]
-    [AllowAnonymous]
     public IActionResult UpdateBanners([FromBody] object data)
     {
         if (data != null)
@@ -582,7 +579,6 @@ public class AdminController : BaseController
     [HttpPut("master-status")]
     [HttpPost("/api/master-status")]
     [HttpPut("/api/master-status")]
-    [AllowAnonymous]
     public IActionResult UpdateMasterStatus([FromBody] object data)
     {
         if (data != null)
@@ -1161,7 +1157,6 @@ public class AdminController : BaseController
     /// Sync Official Real Mobile Legends Diamond Packages with Multi-Tier Pricing
     /// </summary>
     [HttpPost("provider/sync-real-packages")]
-    [AllowAnonymous]
     public async Task<IActionResult> SyncRealMLBBPackages()
     {
         var realPackages = new[]
@@ -1912,11 +1907,11 @@ public class AdminController : BaseController
     }
 
     /// <summary>
-    /// Get current Top-Up Provider Settings with live balances from both providers
+    /// <summary>
+    /// Get current Top-Up Provider Settings with live balances from both providers (Admin Only)
     /// </summary>
     [HttpGet("provider-settings")]
     [HttpGet("/api/provider-settings")]
-    [AllowAnonymous]
     public async Task<IActionResult> GetProviderSettings()
     {
         var settings = await _gatewayManager.RefreshBalancesAsync();
@@ -1928,7 +1923,6 @@ public class AdminController : BaseController
     /// </summary>
     [HttpPost("provider/switch")]
     [HttpPost("/api/provider/switch")]
-    [AllowAnonymous]
     public async Task<IActionResult> SwitchProvider([FromBody] SwitchProviderRequest request)
     {
         if (string.IsNullOrWhiteSpace(request?.Provider))
@@ -1952,7 +1946,6 @@ public class AdminController : BaseController
     [HttpPost("provider-settings")]
     [HttpPut("/api/provider-settings")]
     [HttpPost("/api/provider-settings")]
-    [AllowAnonymous]
     public async Task<IActionResult> UpdateProviderSettings([FromBody] SupplierSettingsModel dto)
     {
         if (dto == null)
@@ -1974,7 +1967,6 @@ public class AdminController : BaseController
     /// </summary>
     [HttpPost("provider/fazercards-tokens")]
     [HttpPost("/api/provider/fazercards-tokens")]
-    [AllowAnonymous]
     public async Task<IActionResult> AddFazerCardsToken([FromBody] AddFazerCardsTokenRequest request)
     {
         if (string.IsNullOrWhiteSpace(request?.Token))
@@ -1996,7 +1988,6 @@ public class AdminController : BaseController
     /// </summary>
     [HttpPost("provider/fazercards-tokens/switch")]
     [HttpPost("/api/provider/fazercards-tokens/switch")]
-    [AllowAnonymous]
     public async Task<IActionResult> SwitchFazerCardsToken([FromBody] SwitchFazerCardsTokenRequest request)
     {
         if (string.IsNullOrWhiteSpace(request?.Id))
@@ -2018,7 +2009,6 @@ public class AdminController : BaseController
     /// </summary>
     [HttpDelete("provider/fazercards-tokens/{id}")]
     [HttpDelete("/api/provider/fazercards-tokens/{id}")]
-    [AllowAnonymous]
     public async Task<IActionResult> DeleteFazerCardsToken(string id)
     {
         if (string.IsNullOrWhiteSpace(id))
@@ -2039,7 +2029,6 @@ public class AdminController : BaseController
     /// Test Connection to Top-Up Provider
     /// </summary>
     [HttpPost("provider/test-connection")]
-    [AllowAnonymous]
     public async Task<IActionResult> TestProviderConnection([FromBody] SupplierSettingsModel? dto)
     {
         var sw = System.Diagnostics.Stopwatch.StartNew();
@@ -2294,7 +2283,6 @@ public class AdminController : BaseController
     /// </summary>
     [HttpGet("bakong-settings")]
     [HttpGet("bakong/status")]
-    [AllowAnonymous]
     public async Task<IActionResult> GetBakongSettings()
     {
         var accounts = LoadBakongAccounts();
