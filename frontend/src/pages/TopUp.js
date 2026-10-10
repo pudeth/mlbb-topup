@@ -65,21 +65,21 @@ const GAME_PACKAGES_MAP = {
     { productId: 379, packageId: 379, diamondAmount: 2180, name: '2180 Diamonds', price: 19.30, resellerPrice: 18.22, category: 'Other Packages', customImage: '/images/diamond-chest-3d.png' },
     { productId: 380, packageId: 380, diamondAmount: 5600, name: '5600 Diamonds', price: 47.80, resellerPrice: 45.08, category: 'Other Packages', customImage: '/images/diamond-chest-3d.png' },
     { productId: 381, packageId: 381, diamondAmount: 11500, name: '11500 Diamonds', price: 98.00, resellerPrice: 92.86, category: 'Other Packages', customImage: '/images/diamond-chest-3d.png' },
-    { productId: 390, packageId: 390, diamondAmount: 200, name: 'Level Up Package - Level 6', price: 0.32, resellerPrice: 0.29, tag: 'Level 6 🎖️', isPass: true, isLevelPass: true, category: 'Level Pass', customImage: '/images/weekly-pass.png' },
-    { productId: 384, packageId: 384, diamondAmount: 90, name: 'WeeklyLite', price: 0.35, resellerPrice: 0.32, isPass: true, category: 'Best seller', customImage: '/images/weekly-pass.png' },
-    { productId: 385, packageId: 385, diamondAmount: 300, name: 'Level Up Package - Level 10', price: 0.66, resellerPrice: 0.61, tag: 'Level 10 🎖️', isPass: true, isLevelPass: true, category: 'Level Pass', customImage: '/images/weekly-pass.png' },
-    { productId: 386, packageId: 386, diamondAmount: 400, name: 'Level Up Package - Level 15', price: 0.66, resellerPrice: 0.61, tag: 'Level 15 🎖️', isPass: true, isLevelPass: true, category: 'Level Pass', customImage: '/images/weekly-pass.png' },
-    { productId: 387, packageId: 387, diamondAmount: 500, name: 'Level Up Package - Level 20', price: 0.66, resellerPrice: 0.61, tag: 'Level 20 🎖️', isPass: true, isLevelPass: true, category: 'Level Pass', customImage: '/images/weekly-pass.png' },
-    { productId: 388, packageId: 388, diamondAmount: 600, name: 'Level Up Package - Level 25', price: 0.66, resellerPrice: 0.61, tag: 'Level 25 🎖️', isPass: true, isLevelPass: true, category: 'Level Pass', customImage: '/images/weekly-pass.png' },
-    { productId: 5028, packageId: 5028, diamondAmount: 180, name: 'Weekly Lit x2', price: 0.68, resellerPrice: 0.63, isPass: true, category: 'Best seller', customImage: '/images/weekly-pass.png' },
-    { productId: 389, packageId: 389, diamondAmount: 800, name: 'Level Up Package - Level 30', price: 0.96, resellerPrice: 0.90, tag: 'Level 30 🎖️', isPass: true, isLevelPass: true, category: 'Level Pass', customImage: '/images/weekly-pass.png' },
-    { productId: 5029, packageId: 5029, diamondAmount: 270, name: 'Weekly Lit x3', price: 1.00, resellerPrice: 0.94, isPass: true, category: 'Best seller', customImage: '/images/weekly-pass.png' },
-    { productId: 383, packageId: 383, diamondAmount: 445, name: 'Weekly', price: 1.68, resellerPrice: 1.57, tag: 'BEST SELLER', isPass: true, category: 'Best seller', customImage: '/images/weekly-pass.png' },
-    { productId: 5024, packageId: 5024, diamondAmount: 890, name: 'Weekly x2', price: 3.35, resellerPrice: 3.12, isPass: true, category: 'Best seller', customImage: '/images/weekly-pass.png' },
-    { productId: 5025, packageId: 5025, diamondAmount: 1335, name: 'Weekly x3', price: 4.98, resellerPrice: 4.67, isPass: true, category: 'Best seller', customImage: '/images/weekly-pass.png' },
-    { productId: 4852, packageId: 4852, diamondAmount: 2600, name: 'Monthly', price: 8.25, resellerPrice: 7.76, isPass: true, category: 'Best seller', customImage: '/images/weekly-pass.png' },
-    { productId: 5021, packageId: 5021, diamondAmount: 5000, name: 'Monthly x2', price: 15.95, resellerPrice: 15.03, isPass: true, category: 'Best seller', customImage: '/images/weekly-pass.png' },
-    { productId: 5022, packageId: 5022, diamondAmount: 7800, name: 'Monthly x3', price: 23.95, resellerPrice: 22.55, isPass: true, category: 'Best seller', customImage: '/images/weekly-pass.png' },
+    { productId: 390, packageId: 390, diamondAmount: 200, name: 'Level Up (Level 6)', price: 0.32, resellerPrice: 0.29, tag: 'Level 6 🎖️', isPass: true, isLevelPass: true, category: 'Level Pass', customImage: '/images/weekly-pass.png' },
+    { productId: 384, packageId: 384, diamondAmount: 90, name: 'Weekly Lite Pass', price: 0.35, resellerPrice: 0.32, isPass: true, category: 'Best seller', customImage: '/images/weekly-pass.png' },
+    { productId: 385, packageId: 385, diamondAmount: 300, name: 'Level Up (Level 10)', price: 0.66, resellerPrice: 0.61, tag: 'Level 10 🎖️', isPass: true, isLevelPass: true, category: 'Level Pass', customImage: '/images/weekly-pass.png' },
+    { productId: 386, packageId: 386, diamondAmount: 400, name: 'Level Up (Level 15)', price: 0.66, resellerPrice: 0.61, tag: 'Level 15 🎖️', isPass: true, isLevelPass: true, category: 'Level Pass', customImage: '/images/weekly-pass.png' },
+    { productId: 387, packageId: 387, diamondAmount: 500, name: 'Level Up (Level 20)', price: 0.66, resellerPrice: 0.61, tag: 'Level 20 🎖️', isPass: true, isLevelPass: true, category: 'Level Pass', customImage: '/images/weekly-pass.png' },
+    { productId: 388, packageId: 388, diamondAmount: 600, name: 'Level Up (Level 25)', price: 0.66, resellerPrice: 0.61, tag: 'Level 25 🎖️', isPass: true, isLevelPass: true, category: 'Level Pass', customImage: '/images/weekly-pass.png' },
+    { productId: 5028, packageId: 5028, diamondAmount: 180, name: 'Weekly Lite x2', price: 0.68, resellerPrice: 0.63, isPass: true, category: 'Best seller', customImage: '/images/weekly-pass.png' },
+    { productId: 389, packageId: 389, diamondAmount: 800, name: 'Level Up (Level 30)', price: 0.96, resellerPrice: 0.90, tag: 'Level 30 🎖️', isPass: true, isLevelPass: true, category: 'Level Pass', customImage: '/images/weekly-pass.png' },
+    { productId: 5029, packageId: 5029, diamondAmount: 270, name: 'Weekly Lite x3', price: 1.00, resellerPrice: 0.94, isPass: true, category: 'Best seller', customImage: '/images/weekly-pass.png' },
+    { productId: 383, packageId: 383, diamondAmount: 445, name: 'Weekly Pass', price: 1.68, resellerPrice: 1.57, tag: 'BEST SELLER', isPass: true, category: 'Best seller', customImage: '/images/weekly-pass.png' },
+    { productId: 5024, packageId: 5024, diamondAmount: 890, name: 'Weekly Pass x2', price: 3.35, resellerPrice: 3.12, isPass: true, category: 'Best seller', customImage: '/images/weekly-pass.png' },
+    { productId: 5025, packageId: 5025, diamondAmount: 1335, name: 'Weekly Pass x3', price: 4.98, resellerPrice: 4.67, isPass: true, category: 'Best seller', customImage: '/images/weekly-pass.png' },
+    { productId: 4852, packageId: 4852, diamondAmount: 2600, name: 'Monthly Pass', price: 8.25, resellerPrice: 7.76, isPass: true, category: 'Best seller', customImage: '/images/weekly-pass.png' },
+    { productId: 5021, packageId: 5021, diamondAmount: 5000, name: 'Monthly Pass x2', price: 15.95, resellerPrice: 15.03, isPass: true, category: 'Best seller', customImage: '/images/weekly-pass.png' },
+    { productId: 5022, packageId: 5022, diamondAmount: 7800, name: 'Monthly Pass x3', price: 23.95, resellerPrice: 22.55, isPass: true, category: 'Best seller', customImage: '/images/weekly-pass.png' },
   ],
   hok: [
     { productId: 407, diamondAmount: 100, name: 'Weekly Card Plus', price: 0.99, resellerPrice: 0.91, tag: 'PASS 🌟', isPass: true },
@@ -611,8 +611,9 @@ const TopUp = () => {
       const updatedList = getPackagesForGame(selectedGame.id);
       setProducts(updatedList);
       setSelectedProduct(prev => {
+        if (!prev) return null;
         const match = updatedList.find(p => p.productId === prev?.productId);
-        return match || updatedList[0];
+        return match || null;
       });
     };
 
@@ -669,7 +670,18 @@ const TopUp = () => {
       window.removeEventListener('storage', handleProductsUpdated);
     };
   }, [selectedGame.id, getPackagesForGame]);
-  const [selectedProduct, setSelectedProduct] = useState(products[0]);
+  // Package is not pre-selected: user must actively choose a diamond package
+  const [selectedProduct, setSelectedProduct] = useState(null);
+
+  // Dedicated product select handler to update both selectedProduct and formData
+  const handleSelectProduct = useCallback((pkg) => {
+    setSelectedProduct(pkg);
+    setFormData(prev => ({
+      ...prev,
+      productId: pkg?.productId || pkg?.packageId
+    }));
+    setError('');
+  }, []);
 
   // Account Verification
   const [verifiedAccount, setVerifiedAccount] = useState(null);
@@ -699,12 +711,20 @@ const TopUp = () => {
   const [formData, setFormData] = useState(() => ({
     playerID: '',
     serverID: (matchedGame?.id?.startsWith('mlbb')) ? '' : 'Global',
-    productId: products[0]?.productId || 100,
+    productId: null,
     paymentMethod: 'abapayway',
   }));
 
   const inFlightVerifyRef = useRef(false);
   const lastVerifiedKeyRef = useRef('');
+
+  // Smooth scroll back to Step 2 Diamond Packages
+  const scrollToPackages = useCallback(() => {
+    const section = document.getElementById('packages-section');
+    if (section) {
+      section.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+  }, []);
 
   // Smooth scroll back to Step 1 Player Information with focus and visual alert
   const scrollToPlayerInfo = useCallback((fieldToFocus = 'player') => {
@@ -1471,12 +1491,12 @@ const TopUp = () => {
     startTransition(() => {
       setSelectedGame(game);
       setProducts(newPkgs);
-      setSelectedProduct(newPkgs[0]);
+      setSelectedProduct(null);
       setFormData(prev => ({
         ...prev,
         playerID: '',
         serverID: game.id.startsWith('mlbb') ? '' : 'Global',
-        productId: newPkgs[0]?.productId || 100,
+        productId: null,
         paymentMethod: 'abapayway'
       }));
       setVerifiedAccount(null);
@@ -1497,10 +1517,10 @@ const TopUp = () => {
       startTransition(() => {
         setSelectedGame(gameObj);
         setProducts(newPkgs);
-        setSelectedProduct(newPkgs[0]);
+        setSelectedProduct(null);
         setFormData(prev => ({
           ...prev,
-          productId: newPkgs[0]?.productId || 100,
+          productId: null,
           serverID: gameObj.id.startsWith('mlbb') ? '' : (prev.serverID || 'Global')
         }));
       });
@@ -1659,6 +1679,20 @@ const TopUp = () => {
   }, [orderId, paymentData?.tranId, paymentPaid, qrExpired, checkPaymentStatus]);
 
 
+  // Pay Now readiness validation: requires Player ID, Server ID (if MLBB), and actively selected Diamond Package
+  const isMlbbGame = Boolean(selectedGame?.id?.startsWith('mlbb'));
+  const hasPlayerId = Boolean(formData.playerID && formData.playerID.trim().length >= 3);
+  const hasServerId = !isMlbbGame || Boolean(formData.serverID && formData.serverID.trim() && formData.serverID.trim().toLowerCase() !== 'global');
+  const hasSelectedPackage = Boolean(selectedProduct && (selectedProduct.productId || selectedProduct.diamondAmount || selectedProduct.price));
+  const isFormReadyToPay =
+    hasPlayerId &&
+    hasServerId &&
+    hasSelectedPackage &&
+    !loading &&
+    !isTopupDisabled &&
+    !accountChecking &&
+    (!verifiedAccount || verifiedAccount.valid !== false);
+
   const handleProceedToPayment = async () => {
     if (isTopupDisabled) {
       setError(pauseReasonMessage);
@@ -1668,15 +1702,21 @@ const TopUp = () => {
     const pId = (formData.playerID || '').trim();
     const sId = (formData.serverID || '').trim();
 
-    if (!pId) {
+    if (!pId || !hasPlayerId) {
       setError(language === 'km' ? 'សូមបញ្ចូល Player ID របស់លោកអ្នកជាមុនសិន' : 'Please enter your Player ID first');
       scrollToPlayerInfo('player');
       return;
     }
 
-    if (selectedGame?.id?.startsWith('mlbb') && (!sId || sId.toLowerCase() === 'global')) {
+    if (isMlbbGame && (!sId || !hasServerId)) {
       setError(language === 'km' ? 'សូមបញ្ចូល Server ID របស់លោកអ្នកជាមុនសិន' : 'Please enter your Server ID first');
       scrollToPlayerInfo('server');
+      return;
+    }
+
+    if (!hasSelectedPackage || !selectedProduct) {
+      setError(language === 'km' ? 'សូមជ្រើសរើសកញ្ចប់ពេជ្រដែលអ្នកចង់ទិញជាមុនសិន' : 'Please select a diamond package first');
+      scrollToPackages();
       return;
     }
 
@@ -1932,15 +1972,42 @@ const TopUp = () => {
     return rawTag;
   }, []);
 
+  const getPackageRewardLabel = useCallback((pkg) => {
+    if (!pkg) return '';
+    const isLevelPassTag = pkg.isLevelPass || pkg.name?.toLowerCase().includes('level up');
+    if (isLevelPassTag) {
+      return `🎖️ ${pkg.diamondAmount ? pkg.diamondAmount.toLocaleString() : ''} 💎 Claimable`;
+    }
+    if (pkg.name?.toLowerCase().includes('weekly pass') && pkg.productId === 5) {
+      return '⚡ 220 💎 + 70 Aurora ⭐';
+    }
+    if (pkg.name?.toLowerCase().includes('2 weekly pass') || pkg.productId === 19) {
+      return '⚡ 440 💎 + 140 Aurora ⭐';
+    }
+    const isPass = isPassItem(pkg);
+    if (isPass) {
+      if (pkg.diamondAmount) {
+        return `⚡ ${pkg.diamondAmount.toLocaleString()} 💎 Pass`;
+      }
+      return '⚡ Daily Pass Rewards';
+    }
+    const unit = isMlbb ? 'Diamonds' : isFreefire ? 'Diamonds' : selectedGame.id === 'pubgm' ? 'UC' : 'Units';
+    return `💎 ${pkg.diamondAmount ? pkg.diamondAmount.toLocaleString() : ''} ${unit}`;
+  }, [isFreefire, isMlbb, isPassItem, selectedGame.id]);
+
   const getFilteredPackages = useCallback((categoryTab, query = '') => {
     return products.filter(pkg => {
       if (categoryTab === 'level_pass') {
         if (!(pkg.isLevelPass || pkg.name?.toLowerCase().includes('level up'))) return false;
       } else if (categoryTab === 'passes') {
-        const isPass = isFreefire ? (pkg.category === 'Beat seller') : (!pkg.isLevelPass && isPassItem(pkg));
+        const isPass = isFreefire 
+          ? (pkg.category === 'Best seller' || pkg.category === 'Beat seller' || (pkg.isPass && !pkg.isLevelPass))
+          : (!pkg.isLevelPass && isPassItem(pkg));
         if (!isPass) return false;
       } else if (categoryTab === 'diamonds') {
-        const isDiamond = isFreefire ? (pkg.category === 'Other Packages') : (!pkg.isLevelPass && !isPassItem(pkg));
+        const isDiamond = isFreefire 
+          ? (pkg.category === 'Other Packages' || (!pkg.isPass && !pkg.isLevelPass && !pkg.name?.toLowerCase().includes('pass') && !pkg.name?.toLowerCase().includes('level up')))
+          : (!pkg.isLevelPass && !isPassItem(pkg));
         if (!isDiamond) return false;
       }
 
@@ -1979,7 +2046,7 @@ const TopUp = () => {
             const isPopular = pkg.productId === 2 || pkg.diamondAmount === 55 || tagLower.includes('popular') || tagLower.includes('starter');
             const isRecommend = !isPopular && (pkg.productId === 3 || pkg.diamondAmount === 86 || tagLower.includes('bonus') || tagLower.includes('recommend') || tagLower.includes('best'));
             const isLevelPassTag = pkg.isLevelPass || pkg.name?.toLowerCase().includes('level up');
-            const isPurpleTag = isFreefire && (pkg.tag?.includes('ទទួលបាន') || pkg.tag?.toLowerCase().includes('discount') || pkg.category === 'Beat seller' || (pkg.isPass && !pkg.isLevelPass));
+            const isPurpleTag = isFreefire && (pkg.tag?.includes('ទទួលបាន') || pkg.tag?.toLowerCase().includes('discount') || pkg.category === 'Best seller' || pkg.category === 'Beat seller' || (pkg.isPass && !pkg.isLevelPass));
             const ribbon = isLevelPassTag
               ? { text: pkg.tag || 'LEVEL PASS 🎖️', cls: 'from-emerald-500 to-teal-600 text-white shadow-sm' }
               : isPurpleTag
@@ -1996,7 +2063,7 @@ const TopUp = () => {
               <button
                 type="button"
                 key={pkg.productId}
-                onClick={() => setSelectedProduct(pkg)}
+                onClick={() => handleSelectProduct(pkg)}
                 className={`group relative rounded-2xl p-2.5 pt-3 sm:p-3 sm:pt-3.5 flex flex-col items-center text-center select-none transition-all duration-200 cursor-pointer overflow-hidden active:scale-[0.97] ${
                   isSelected
                     ? 'bg-gradient-to-b from-[#1a1530] to-[#0a0a1a] border-2 border-amber-400 ring-2 ring-amber-400/50 shadow-lg shadow-amber-500/20'
@@ -2070,7 +2137,7 @@ const TopUp = () => {
             const isPopular = pkg.productId === 2 || pkg.diamondAmount === 55 || tagLower.includes('popular') || tagLower.includes('starter');
             const isRecommend = !isPopular && (pkg.productId === 3 || pkg.diamondAmount === 86 || tagLower.includes('bonus') || tagLower.includes('recommend') || tagLower.includes('best'));
             const isLevelPassTag = pkg.isLevelPass || pkg.name?.toLowerCase().includes('level up');
-            const isPurpleTag = isFreefire && (pkg.tag?.includes('ទទួលបាន') || pkg.tag?.toLowerCase().includes('discount') || pkg.category === 'Beat seller' || (pkg.isPass && !pkg.isLevelPass));
+            const isPurpleTag = isFreefire && (pkg.tag?.includes('ទទួលបាន') || pkg.tag?.toLowerCase().includes('discount') || pkg.category === 'Best seller' || pkg.category === 'Beat seller' || (pkg.isPass && !pkg.isLevelPass));
             const ribbon = isLevelPassTag
               ? { text: pkg.tag || 'LEVEL PASS 🎖️', cls: 'from-emerald-500 to-teal-600 text-white shadow-sm' }
               : isPurpleTag
@@ -2086,7 +2153,7 @@ const TopUp = () => {
             return (
               <div
                 key={pkg.productId}
-                onClick={() => setSelectedProduct(pkg)}
+                onClick={() => handleSelectProduct(pkg)}
                 className={`group relative rounded-2xl p-3 sm:p-4 cursor-pointer select-none transition-all duration-300 flex flex-col items-center text-center justify-between overflow-hidden ${
                   isSelected
                     ? 'bg-gradient-to-b from-[#24173d] via-[#170f28] to-[#0b0816] border-2 border-amber-400 ring-2 ring-amber-400/50 scale-[1.02] -translate-y-1 z-10 shadow-xl shadow-amber-500/20'
@@ -2152,9 +2219,9 @@ const TopUp = () => {
       );
     }
 
-    // MODE 3: 2-COLUMN COMPACT PACKAGE CARDS (NO SELECT BUTTON)
+    // MODE 3: 2-COLUMN CYBER GAMING PACKAGE CARDS (FULL DISPLAY & NO CUTOFFS)
     return (
-      <div className="grid grid-cols-2 gap-2 sm:gap-2.5 md:gap-3">
+      <div className="grid grid-cols-2 gap-2 sm:gap-3">
         {itemsList.map((pkg) => {
           const isSelected = selectedProduct?.productId === pkg.productId;
           const isPass = isPassItem(pkg);
@@ -2162,73 +2229,90 @@ const TopUp = () => {
           const isPopular = pkg.productId === 2 || pkg.diamondAmount === 55 || tagLower.includes('popular') || tagLower.includes('starter');
           const isRecommend = !isPopular && (pkg.productId === 3 || pkg.diamondAmount === 86 || tagLower.includes('bonus') || tagLower.includes('recommend') || tagLower.includes('best'));
           const isLevelPassTag = pkg.isLevelPass || pkg.name?.toLowerCase().includes('level up');
-          const isPurpleTag = isFreefire && (pkg.tag?.includes('ទទួលបាន') || pkg.tag?.toLowerCase().includes('discount') || pkg.category === 'Beat seller' || (pkg.isPass && !pkg.isLevelPass));
+          const isPurpleTag = isFreefire && (pkg.tag?.includes('ទទួលបាន') || pkg.tag?.toLowerCase().includes('discount') || pkg.category === 'Best seller' || pkg.category === 'Beat seller' || (pkg.isPass && !pkg.isLevelPass));
+          
           const ribbon = isLevelPassTag
             ? { text: pkg.tag || 'LEVEL PASS 🎖️', cls: 'from-emerald-500 to-teal-600 text-white' }
             : isPurpleTag
-            ? { text: pkg.tag || 'PASS', cls: 'from-[#a855f7] to-[#7c3aed] text-white' }
+            ? { text: pkg.tag || 'PASS ⚡', cls: 'from-[#a855f7] to-[#7c3aed] text-white' }
             : isPopular
-            ? { text: 'Popular', cls: 'from-orange-500 to-amber-500 text-white' }
+            ? { text: 'POPULAR ⭐', cls: 'from-orange-500 to-amber-500 text-white' }
             : isRecommend
-              ? { text: 'Recommend', cls: 'from-amber-300 to-yellow-500 text-slate-950' }
+              ? { text: 'BEST VALUE 🔥', cls: 'from-amber-300 to-yellow-500 text-slate-950 font-black' }
               : pkg.tag
                 ? { text: formatTagText(pkg.tag), cls: 'from-sky-600 to-indigo-600 text-white' }
                 : null;
 
+          const rewardLabel = getPackageRewardLabel(pkg);
+
           return (
             <div
               key={pkg.productId}
-              onClick={() => setSelectedProduct(pkg)}
-              className={`group relative flex items-center justify-between p-2 sm:p-2.5 md:p-3 rounded-xl sm:rounded-2xl cursor-pointer select-none transition-all duration-200 overflow-hidden active:scale-[0.98] ${
+              onClick={() => handleSelectProduct(pkg)}
+              className={`group relative flex flex-col justify-between p-2.5 sm:p-3 rounded-2xl cursor-pointer select-none transition-all duration-200 overflow-hidden active:scale-[0.98] ${
                 isSelected
-                  ? 'bg-gradient-to-r from-[#24173d] via-[#1a122e] to-[#0d091a] border-2 border-amber-400 ring-2 ring-amber-400/50 shadow-lg shadow-amber-500/25 -translate-y-0.5 z-10'
-                  : 'bg-gradient-to-r from-[#0f172a]/95 via-[#0b1220]/95 to-[#070b14]/98 border border-slate-800/90 hover:border-cyan-400/60 hover:bg-[#121c32]/90 hover:-translate-y-0.5 shadow-sm'
+                  ? 'bg-gradient-to-b from-[#25153f] via-[#1a0f30] to-[#0d071a] border-2 border-amber-400 ring-2 ring-amber-400/50 shadow-xl shadow-amber-500/25 -translate-y-0.5 z-10'
+                  : 'bg-gradient-to-b from-[#0c142b]/95 via-[#080d1e]/95 to-[#050813]/98 border border-slate-800/90 hover:border-cyan-400/60 hover:bg-[#101b38]/90 hover:-translate-y-0.5 shadow-sm'
               }`}
             >
+              {/* Ribbon Badge (Top-Left) */}
               {ribbon && (
-                <span className={`absolute top-0 left-0 px-1.5 sm:px-2 py-0.5 rounded-br-lg sm:rounded-br-xl bg-gradient-to-r ${ribbon.cls} text-[7.5px] sm:text-[8.5px] font-black uppercase tracking-wider z-20`}>
+                <span className={`absolute top-0 left-0 max-w-[75%] truncate px-2 py-0.5 rounded-br-xl bg-gradient-to-r ${ribbon.cls} text-[8px] sm:text-[9px] font-black uppercase tracking-wider z-20 shadow-sm`}>
                   {ribbon.text}
                 </span>
               )}
 
-              {/* Left Side: Artwork + Info */}
-              <div className="flex items-center gap-1.5 sm:gap-2.5 min-w-0 flex-1 pr-1.5">
-                <div className="relative w-9 h-9 sm:w-11 sm:h-11 md:w-12 md:h-12 rounded-lg sm:rounded-xl bg-slate-950/70 border border-slate-800 flex items-center justify-center shrink-0 p-0.5 sm:p-1">
-                  <ProductPackageImage pkg={pkg} size="md" className="transition-transform duration-300 group-hover:scale-110 drop-shadow-md" />
-                </div>
-                <div className="min-w-0 flex-1">
-                  <h3 className={`text-[10.5px] sm:text-xs md:text-sm font-black truncate transition-colors leading-tight ${isSelected ? 'text-amber-300' : 'text-white group-hover:text-cyan-300'}`}>
-                    {pkg.name}
-                  </h3>
-                  <div className="flex items-center gap-1 mt-0.5 text-[8.5px] sm:text-[10px] md:text-xs font-semibold text-slate-400 truncate">
-                    {isPass ? (
-                      <span className="text-amber-400 font-bold truncate">⚡ Daily Pass</span>
-                    ) : (
-                      <span className="text-cyan-300 font-bold truncate">💎 {pkg.diamondAmount}</span>
-                    )}
-                  </div>
+              {/* Selected Checkmark Badge (Top-Right) */}
+              {isSelected && (
+                <span className="absolute top-2 right-2 w-5 h-5 rounded-full bg-gradient-to-r from-amber-400 to-yellow-400 text-slate-950 flex items-center justify-center z-20 shadow-md animate-scaleUp">
+                  <svg className="w-3 h-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3.5" strokeLinecap="round" strokeLinejoin="round"><path d="M20 6L9 17l-5-5" /></svg>
+                </span>
+              )}
+
+              {/* Artwork: Centered 3D diamond or pass image with ambient cyber glow */}
+              <div className="relative w-full h-14 sm:h-16 flex items-center justify-center mt-3 sm:mt-2 mb-1">
+                <div className={`absolute inset-0 m-auto w-10 h-10 rounded-full blur-xl pointer-events-none transition-opacity ${isSelected ? 'bg-amber-400/25 opacity-100' : 'bg-cyan-500/15 opacity-60 group-hover:opacity-100'}`} />
+                <ProductPackageImage
+                  pkg={pkg}
+                  size="md"
+                  className="relative z-10 max-h-12 sm:max-h-14 object-contain transition-transform duration-300 group-hover:scale-110 drop-shadow-[0_4px_12px_rgba(0,0,0,0.6)]"
+                />
+              </div>
+
+              {/* Package Title & Rewards Info (Full width, no truncated Wee... or Level Up ...) */}
+              <div className="w-full text-center px-0.5 my-1">
+                <h3 className={`text-xs sm:text-[13px] font-black leading-tight line-clamp-2 min-h-[2rem] flex items-center justify-center transition-colors ${isSelected ? 'text-amber-300' : 'text-white group-hover:text-cyan-300'}`}>
+                  {pkg.name}
+                </h3>
+                <div className="mt-1 flex items-center justify-center">
+                  <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[9px] sm:text-[10px] font-extrabold max-w-full truncate ${
+                    isSelected
+                      ? 'bg-amber-400/15 text-amber-300 border border-amber-400/30'
+                      : isPass
+                      ? 'bg-purple-950/60 text-purple-300 border border-purple-800/50'
+                      : 'bg-cyan-950/60 text-cyan-300 border border-cyan-800/50'
+                  }`}>
+                    {rewardLabel}
+                  </span>
                 </div>
               </div>
 
-              {/* Right Side: Stacked Price + Selection Checkmark (NO Select Button) */}
-              <div className="flex items-center gap-1 sm:gap-1.5 shrink-0 text-right">
-                <div className="flex flex-col justify-center leading-tight">
-                  <span className={`font-mono font-black text-xs sm:text-sm md:text-[15px] whitespace-nowrap leading-none tracking-tight ${isSelected ? 'text-amber-300' : 'text-[#00F5B8]'}`}>
-                    {currency === 'KHR'
-                      ? `${Math.round(pkg.price * 4100).toLocaleString()} ៛`
-                      : `$${pkg.price.toFixed(2)}`}
-                  </span>
-                  <span className="text-[7.5px] sm:text-[8.5px] md:text-[9.5px] font-mono text-slate-400 whitespace-nowrap mt-0.5">
-                    {currency === 'KHR'
-                      ? `~$${pkg.price.toFixed(2)}`
-                      : `~${Math.round(pkg.price * 4100).toLocaleString()} ៛`}
-                  </span>
-                </div>
-                {isSelected && (
-                  <span className="w-4 h-4 sm:w-5 sm:h-5 rounded-full bg-amber-400 text-slate-950 flex items-center justify-center shrink-0 shadow-sm animate-scaleUp">
-                    <svg className="w-2.5 h-2.5 sm:w-3 sm:h-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3.5" strokeLinecap="round" strokeLinejoin="round"><path d="M20 6L9 17l-5-5" /></svg>
-                  </span>
-                )}
+              {/* Bottom Price Bar (Full Width, Crisp & Clear) */}
+              <div className={`mt-2 w-full py-1.5 px-2 rounded-xl border flex flex-col items-center justify-center text-center transition-all ${
+                isSelected
+                  ? 'bg-amber-400/15 border-amber-400/40'
+                  : 'bg-slate-950/80 border-slate-800 group-hover:border-slate-700 group-hover:bg-slate-900/90'
+              }`}>
+                <span className={`font-mono font-black text-xs sm:text-sm tracking-tight leading-none whitespace-nowrap ${isSelected ? 'text-amber-300' : 'text-[#00F5B8]'}`}>
+                  {currency === 'KHR'
+                    ? `${Math.round(pkg.price * 4100).toLocaleString()} ៛`
+                    : `$${pkg.price.toFixed(2)}`}
+                </span>
+                <span className="text-[8px] sm:text-[9px] font-mono text-slate-400 whitespace-nowrap mt-0.5 leading-none">
+                  {currency === 'KHR'
+                    ? `~$${pkg.price.toFixed(2)}`
+                    : `~${Math.round(pkg.price * 4100).toLocaleString()} ៛`}
+                </span>
               </div>
             </div>
           );
@@ -2328,9 +2412,9 @@ const TopUp = () => {
 
 
       {/* ======================================================== */}
-      {/* 1. GAME SHOWCASE & DETAILS CARD (Ref: media_1791438986821)*/}
+      {/* 1. GAME SHOWCASE & DETAILS CARD (Ref: media_1791643204250)*/}
       {/* ======================================================== */}
-      <div className="relative rounded-2xl sm:rounded-3xl bg-[#0b1329] border border-slate-800/90 shadow-2xl p-4 sm:p-5 overflow-hidden transition-all">
+      <div className="relative rounded-2xl sm:rounded-3xl bg-[#0b1329] border border-slate-800/90 shadow-2xl p-3 sm:p-5 overflow-hidden transition-all">
         {/* Subtle Ambient Background Artwork with Gradient Overlay */}
         <div className="absolute inset-0 z-0 pointer-events-none opacity-50 sm:opacity-55 overflow-hidden">
           <img
@@ -2348,11 +2432,11 @@ const TopUp = () => {
           <div className="absolute inset-0 bg-gradient-to-t from-[#0b1329]/80 via-transparent to-black/20" />
         </div>
 
-        {/* Card Content Row */}
-        <div className="relative z-10 flex flex-col sm:flex-row items-start sm:items-center gap-3.5 sm:gap-5">
-          {/* Game Icon with Cambodia Corner Badge & Glow */}
+        {/* Card Content Row: Always side-by-side (flex-row) for a tight, compact, non-bulky layout */}
+        <div className="relative z-10 flex flex-row items-start gap-3 sm:gap-4.5">
+          {/* Game Icon with Corner Badge */}
           <div className="relative shrink-0">
-            <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-2xl overflow-hidden border-2 border-slate-700/80 bg-slate-950 shadow-lg shadow-sky-500/10">
+            <div className="w-14 h-14 sm:w-18 sm:h-18 rounded-xl sm:rounded-2xl overflow-hidden border-2 border-slate-700/80 bg-slate-950 shadow-lg shadow-sky-500/10">
               <img
                 src={selectedGame.id.startsWith('mlbb') ? '/images/mlbb_square_logo.png' : (selectedGame.image || selectedGame.localFallbackImage || '/mlbb-logo.png')}
                 alt={selectedGame.name}
@@ -2365,20 +2449,20 @@ const TopUp = () => {
             </div>
             {/* Cambodia Server Corner Badge */}
             {(selectedGame.id.includes('freefire') || selectedGame.id.startsWith('mlbb') || selectedGame.flagTitle || selectedGame.badge?.includes('ខ្មែរ')) && (
-              <span className="absolute -top-1.5 -right-1.5 px-1.5 py-0.5 rounded text-[8.5px] font-black bg-gradient-to-r from-amber-400 to-amber-500 text-slate-950 border border-amber-300 shadow-md">
+              <span className="absolute -top-1 -right-1 px-1.5 py-0.2 rounded text-[8px] sm:text-[8.5px] font-black bg-gradient-to-r from-amber-400 to-amber-500 text-slate-950 border border-amber-300 shadow-md">
                 {selectedGame.id.includes('freefire') ? 'KH' : '5V5'}
               </span>
             )}
           </div>
 
           {/* Game Title, Description & Trust Badges */}
-          <div className="flex-1 min-w-0 space-y-2">
-            <div className="flex items-center justify-between gap-2 flex-wrap">
-              <div className="flex items-center gap-2">
-                <h1 className="text-lg sm:text-xl md:text-2xl font-black text-white tracking-wide">
+          <div className="flex-1 min-w-0 space-y-1 sm:space-y-2">
+            <div className="flex items-center justify-between gap-1.5 sm:gap-2">
+              <div className="flex items-center gap-1.5 sm:gap-2 min-w-0">
+                <h1 className="text-base sm:text-xl md:text-2xl font-black text-white tracking-wide truncate">
                   {selectedGame.name}
                 </h1>
-                <span className="px-2 py-0.5 rounded-full bg-cyan-500/15 border border-cyan-400/30 text-cyan-300 text-[10px] font-bold">
+                <span className="shrink-0 px-1.5 sm:px-2 py-0.5 rounded-full bg-cyan-500/15 border border-cyan-400/30 text-cyan-300 text-[9px] sm:text-[10px] font-bold">
                   ★ Popular
                 </span>
               </div>
@@ -2387,7 +2471,7 @@ const TopUp = () => {
               <button
                 type="button"
                 onClick={() => navigate('/')}
-                className="inline-flex items-center gap-1 px-2.5 py-1 rounded-xl bg-slate-900/90 hover:bg-slate-800 border border-slate-700/80 hover:border-slate-600 text-slate-300 hover:text-white text-xs font-bold transition-all cursor-pointer shadow-sm"
+                className="shrink-0 inline-flex items-center gap-1 px-2 sm:px-2.5 py-0.5 sm:py-1 rounded-lg sm:rounded-xl bg-slate-900/90 hover:bg-slate-800 border border-slate-700/80 hover:border-slate-600 text-slate-300 hover:text-white text-[11px] sm:text-xs font-bold transition-all cursor-pointer shadow-sm"
                 title={language === 'km' ? 'ត្រឡប់ទៅទំព័រដើម' : 'Back to Home'}
               >
                 <span>‹</span>
@@ -2395,8 +2479,8 @@ const TopUp = () => {
               </button>
             </div>
 
-            {/* Khmer Description Matching Reference Image 2 */}
-            <p className="text-xs sm:text-[13px] leading-relaxed text-slate-300/90 font-khmer">
+            {/* Khmer Description */}
+            <p className="text-[11px] sm:text-[13px] leading-snug sm:leading-relaxed text-slate-300/90 font-khmer line-clamp-2 sm:line-clamp-none">
               {selectedGame.id.startsWith('mlbb')
                 ? 'ទិញពេជ្រ Mobile Legends ដោយខ្លួនឯង! បញ្ចូលពេជ្រ Mobile Legends: Bang Bang តាមរយៈ អាយឌី ID របស់អ្នក, ជ្រើសរើសកញ្ចប់ពេជ្រ ដែលអ្នកពេញចិត្តទិញ, បង់ប្រាក់តាមមធ្យោបាយដែលមាន, ពេជ្រនឹងបញ្ជូនទៅក្នុងគណនី MLBB របស់អ្នកភ្លាមៗ។'
                 : selectedGame.id.includes('freefire')
@@ -2404,17 +2488,17 @@ const TopUp = () => {
                 : (selectedGame.description || 'បញ្ចូលទឹកប្រាក់ហ្គេមរហ័ស សុវត្ថិភាពខ្ពស់ 100% ស្វ័យប្រវត្តិតាមរយៈ Player ID ផ្លូវការ។')}
             </p>
 
-            {/* 3 Trust Badges matching reference image 2 */}
-            <div className="flex items-center gap-2 flex-wrap pt-0.5 font-sans">
-              <span className="inline-flex items-center gap-1.5 px-2.5 sm:px-3 py-1 rounded-xl bg-slate-900/90 border border-slate-700/80 text-slate-200 text-[10.5px] sm:text-xs font-bold shadow-sm">
+            {/* 3 Trust Badges */}
+            <div className="flex items-center gap-1.5 sm:gap-2 flex-wrap pt-0.5 font-sans">
+              <span className="inline-flex items-center gap-1 px-2 sm:px-2.5 py-0.5 sm:py-1 rounded-lg sm:rounded-xl bg-slate-900/90 border border-slate-700/80 text-slate-200 text-[9.5px] sm:text-xs font-bold shadow-sm">
                 <span className="text-amber-400">⚡</span>
                 <span>Instant Delivery</span>
               </span>
-              <span className="inline-flex items-center gap-1.5 px-2.5 sm:px-3 py-1 rounded-xl bg-slate-900/90 border border-slate-700/80 text-slate-200 text-[10.5px] sm:text-xs font-bold shadow-sm">
+              <span className="inline-flex items-center gap-1 px-2 sm:px-2.5 py-0.5 sm:py-1 rounded-lg sm:rounded-xl bg-slate-900/90 border border-slate-700/80 text-slate-200 text-[9.5px] sm:text-xs font-bold shadow-sm">
                 <span className="text-sky-400">🔒</span>
                 <span>Secure</span>
               </span>
-              <span className="inline-flex items-center gap-1.5 px-2.5 sm:px-3 py-1 rounded-xl bg-slate-900/90 border border-slate-700/80 text-slate-200 text-[10.5px] sm:text-xs font-bold shadow-sm">
+              <span className="inline-flex items-center gap-1 px-2 sm:px-2.5 py-0.5 sm:py-1 rounded-lg sm:rounded-xl bg-slate-900/90 border border-slate-700/80 text-slate-200 text-[9.5px] sm:text-xs font-bold shadow-sm">
                 <span className="text-emerald-400">✓</span>
                 <span>Official</span>
               </span>
@@ -2905,7 +2989,7 @@ const TopUp = () => {
                     🌐 {t('tab_all_pkgs')} ({products.length})
                   </option>
                   <option value="passes" className="bg-slate-900 text-white">
-                    🔥 {isFreefire ? 'Beat seller' : t('tab_pass_pkgs')} ({getFilteredPackages('passes').length})
+                    🔥 {isFreefire ? 'Passes & Best Sellers' : t('tab_pass_pkgs')} ({getFilteredPackages('passes').length})
                   </option>
                   {isFreefire && (
                     <option value="level_pass" className="bg-slate-900 text-white">
@@ -2913,7 +2997,7 @@ const TopUp = () => {
                     </option>
                   )}
                   <option value="diamonds" className="bg-slate-900 text-white">
-                    💎 {isFreefire ? 'Other Packages' : t('tab_diamond_pkgs')} ({getFilteredPackages('diamonds').length})
+                    💎 {isFreefire ? 'Diamond Packs' : t('tab_diamond_pkgs')} ({getFilteredPackages('diamonds').length})
                   </option>
                 </select>
                 <div className="pointer-events-none absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400">
@@ -2964,7 +3048,7 @@ const TopUp = () => {
               <div className="flex items-center justify-between gap-2 px-3.5 py-2.5 border-b border-slate-800 bg-[#071232]/90 backdrop-blur">
                 <span className="flex items-center gap-2 text-[11px] sm:text-xs font-bold text-sky-200">
                   <svg className="w-4 h-4 text-cyan-300 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><path d="M6 3h12l4 6-10 12L2 9z" /><path d="M2 9h20M12 21L8 9l4-6 4 6-4 12" /></svg>
-                  <span className="font-black">{language === 'km' ? 'កញ្ចប់ពេជ្រទាំងអស់' : 'All Diamond Packages'}</span>
+                  <span className="font-black">{language === 'km' ? 'កញ្ចប់ទាំងអស់' : 'All Game Packages'}</span>
                   <span className="px-2 py-0.5 rounded-full bg-cyan-500/15 border border-cyan-400/30 text-[10px] font-mono text-cyan-300 font-black">
                     {inlineFilteredProducts.length}
                   </span>
@@ -2974,6 +3058,60 @@ const TopUp = () => {
                   <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
                   <span>{language === 'km' ? 'បង្ហាញទាំងអស់' : 'Showing All'}</span>
                 </span>
+              </div>
+
+              {/* Fast 1-Tap Category Filter Pills */}
+              <div className="flex items-center gap-1.5 px-3 py-2 border-b border-slate-800/80 bg-[#070e24]/80 overflow-x-auto no-scrollbar">
+                <button
+                  type="button"
+                  onClick={() => setProductCategoryTab('all')}
+                  className={`px-3 py-1 rounded-full text-xs font-extrabold whitespace-nowrap transition-all cursor-pointer ${
+                    productCategoryTab === 'all'
+                      ? 'bg-gradient-to-r from-cyan-500 to-blue-600 text-white shadow-md shadow-cyan-500/25 ring-1 ring-cyan-400'
+                      : 'bg-slate-900/80 hover:bg-slate-800 text-slate-300 border border-slate-800'
+                  }`}
+                >
+                  🌐 {language === 'km' ? 'ទាំងអស់' : 'All'} ({products.length})
+                </button>
+                {getFilteredPackages('passes').length > 0 && (
+                  <button
+                    type="button"
+                    onClick={() => setProductCategoryTab('passes')}
+                    className={`px-3 py-1 rounded-full text-xs font-extrabold whitespace-nowrap transition-all cursor-pointer ${
+                      productCategoryTab === 'passes'
+                        ? 'bg-gradient-to-r from-purple-500 to-indigo-600 text-white shadow-md shadow-purple-500/25 ring-1 ring-purple-400'
+                        : 'bg-slate-900/80 hover:bg-slate-800 text-slate-300 border border-slate-800'
+                    }`}
+                  >
+                    ⚡ {isFreefire ? 'Passes & Best Sellers' : t('tab_pass_pkgs')} ({getFilteredPackages('passes').length})
+                  </button>
+                )}
+                {isFreefire && getFilteredPackages('level_pass').length > 0 && (
+                  <button
+                    type="button"
+                    onClick={() => setProductCategoryTab('level_pass')}
+                    className={`px-3 py-1 rounded-full text-xs font-extrabold whitespace-nowrap transition-all cursor-pointer ${
+                      productCategoryTab === 'level_pass'
+                        ? 'bg-gradient-to-r from-emerald-500 to-teal-600 text-white shadow-md shadow-emerald-500/25 ring-1 ring-emerald-400'
+                        : 'bg-slate-900/80 hover:bg-slate-800 text-slate-300 border border-slate-800'
+                    }`}
+                  >
+                    🎖️ Level Pass ({getFilteredPackages('level_pass').length})
+                  </button>
+                )}
+                {getFilteredPackages('diamonds').length > 0 && (
+                  <button
+                    type="button"
+                    onClick={() => setProductCategoryTab('diamonds')}
+                    className={`px-3 py-1 rounded-full text-xs font-extrabold whitespace-nowrap transition-all cursor-pointer ${
+                      productCategoryTab === 'diamonds'
+                        ? 'bg-gradient-to-r from-amber-500 to-yellow-600 text-slate-950 font-black shadow-md shadow-amber-500/25 ring-1 ring-amber-400'
+                        : 'bg-slate-900/80 hover:bg-slate-800 text-slate-300 border border-slate-800'
+                    }`}
+                  >
+                    💎 {isFreefire ? 'Diamond Packs' : t('tab_diamond_pkgs')} ({getFilteredPackages('diamonds').length})
+                  </button>
+                )}
               </div>
 
               {/* Package Cards Grid: Full Display, NO height limits, NO inner scrollbar */}
@@ -2999,16 +3137,16 @@ const TopUp = () => {
                     <span className="text-[10px] text-slate-400 uppercase font-black tracking-wider block font-khmer">
                       {language === 'km' ? 'កញ្ចប់ដែលបានជ្រើសរើស & សរុប' : 'Selected Item & Total'}
                     </span>
-                    {selectedProduct.tag && (
+                    {selectedProduct?.tag && (
                       <span className="px-2 py-0.2 rounded-full text-[9px] font-bold bg-amber-400/15 text-amber-300 border border-amber-400/30 font-khmer">
                         {selectedProduct.tag}
                       </span>
                     )}
                   </div>
                   <div className="flex items-center gap-2">
-                    <ProductPackageImage pkg={selectedProduct} size="xs" />
-                    <span className="font-black text-amber-300 text-sm sm:text-base tracking-wide font-khmer">
-                      {selectedProduct.name}
+                    <ProductPackageImage pkg={selectedProduct || {}} size="xs" />
+                    <span className={`font-black text-sm sm:text-base tracking-wide font-khmer ${selectedProduct ? 'text-amber-300' : 'text-slate-400'}`}>
+                      {selectedProduct ? selectedProduct.name : (language === 'km' ? 'សូមជ្រើសរើសកញ្ចប់ពេជ្រ (ជំហានទី ២)' : 'Please select a package (Step 2)')}
                     </span>
                   </div>
                 </div>
@@ -3043,15 +3181,19 @@ const TopUp = () => {
 
                   {/* Price Block */}
                   <div className="text-right">
-                    <span className="font-mono font-black text-emerald-400 text-xl sm:text-2xl block leading-tight drop-shadow-sm">
-                      {currency === 'KHR'
-                        ? <span>{Math.round(selectedProduct.price * 4100).toLocaleString()} <span className="font-khmer font-bold">៛</span></span>
-                        : `$${selectedProduct.price.toFixed(2)} USD`}
+                    <span className={`font-mono font-black text-xl sm:text-2xl block leading-tight drop-shadow-sm ${selectedProduct ? 'text-emerald-400' : 'text-slate-500'}`}>
+                      {selectedProduct
+                        ? (currency === 'KHR'
+                            ? <span>{Math.round(selectedProduct.price * 4100).toLocaleString()} <span className="font-khmer font-bold">៛</span></span>
+                            : `$${selectedProduct.price.toFixed(2)} USD`)
+                        : '—'}
                     </span>
                     <span className="text-[10px] text-slate-400 font-mono block">
-                      {currency === 'KHR'
-                        ? `~$${selectedProduct.price.toFixed(2)} USD`
-                        : <span>~{Math.round(selectedProduct.price * 4100).toLocaleString()} <span className="font-khmer">៛</span></span>}
+                      {selectedProduct
+                        ? (currency === 'KHR'
+                            ? `~$${selectedProduct.price.toFixed(2)} USD`
+                            : <span>~{Math.round(selectedProduct.price * 4100).toLocaleString()} <span className="font-khmer">៛</span></span>)
+                        : (language === 'km' ? 'មិនទាន់ជ្រើសរើស' : 'Not selected')}
                     </span>
                   </div>
                 </div>
@@ -3088,15 +3230,22 @@ const TopUp = () => {
                   type="button"
                   id="checkout_button"
                   onClick={() => {
-                    if (loading || isTopupDisabled) return;
-                    if (!formData.playerID || !formData.playerID.trim()) {
-                      setError(language === 'km' ? 'សូមបញ្ចូល Player ID របស់លោកអ្នកជាមុនសិន' : 'Please enter your Player ID first');
-                      scrollToPlayerInfo('player');
-                      return;
-                    }
-                    if (selectedGame?.id?.startsWith('mlbb') && (!formData.serverID || !formData.serverID.trim() || formData.serverID.trim().toLowerCase() === 'global')) {
-                      setError(language === 'km' ? 'សូមបញ្ចូល Server ID របស់លោកអ្នកជាមុនសិន' : 'Please enter your Server ID first');
-                      scrollToPlayerInfo('server');
+                    if (!isFormReadyToPay) {
+                      if (!hasPlayerId) {
+                        setError(language === 'km' ? 'សូមបញ្ចូល Player ID របស់លោកអ្នកជាមុនសិន' : 'Please enter your Player ID first');
+                        scrollToPlayerInfo('player');
+                        return;
+                      }
+                      if (!hasServerId) {
+                        setError(language === 'km' ? 'សូមបញ្ចូល Server ID របស់លោកអ្នកជាមុនសិន' : 'Please enter your Server ID first');
+                        scrollToPlayerInfo('server');
+                        return;
+                      }
+                      if (!hasSelectedPackage) {
+                        setError(language === 'km' ? 'សូមជ្រើសរើសកញ្ចប់ពេជ្រដែលអ្នកចង់ទិញ' : 'Please select a diamond package first');
+                        scrollToPackages();
+                        return;
+                      }
                       return;
                     }
                     if (!verifiedAccount || !verifiedAccount.valid) {
@@ -3108,13 +3257,19 @@ const TopUp = () => {
                     }
                     handleProceedToPayment();
                   }}
-                  disabled={loading || isTopupDisabled}
+                  disabled={!isFormReadyToPay}
                   style={{
-                    opacity: isTopupDisabled ? 0.6 : 1,
+                    opacity: !isFormReadyToPay ? 0.45 : 1,
                   }}
-                  title={isTopupDisabled ? 'Top-Up Temporarily Paused' : 'Click to pay with ABA KHQR'}
-                  className={`relative w-full sm:w-[320px] md:w-[340px] h-[64px] rounded-2xl px-3.5 py-2.5 bg-gradient-to-br from-[#0b1220] via-[#0f172a] to-[#0b1220] border border-slate-700/90 hover:border-sky-400/80 shadow-lg hover:shadow-[0_0_20px_rgba(14,165,233,0.18)] transition-all select-none active:scale-[0.985] flex items-center justify-between text-left group ${
-                    loading ? 'cursor-wait opacity-90' : isTopupDisabled ? 'cursor-not-allowed' : 'cursor-pointer'
+                  title={
+                    !isFormReadyToPay
+                      ? (language === 'km' ? 'សូមបញ្ចូល Player ID, Server ID និងជ្រើសរើសកញ្ចប់ពេជ្រជាមុនសិន' : 'Please enter Player ID, Server ID and select a diamond package')
+                      : isTopupDisabled ? 'Top-Up Temporarily Paused' : 'Click to pay with ABA KHQR'
+                  }
+                  className={`relative w-full sm:w-[320px] md:w-[340px] h-[64px] rounded-2xl px-3.5 py-2.5 bg-gradient-to-br from-[#0b1220] via-[#0f172a] to-[#0b1220] border transition-all select-none flex items-center justify-between text-left group ${
+                    !isFormReadyToPay
+                      ? 'border-slate-800/80 cursor-not-allowed shadow-none'
+                      : 'border-slate-700/90 hover:border-sky-400/80 shadow-lg hover:shadow-[0_0_20px_rgba(14,165,233,0.18)] cursor-pointer active:scale-[0.985]'
                   }`}
                 >
                   <div className="flex items-center gap-[10px] min-w-0">
@@ -3190,24 +3345,32 @@ const TopUp = () => {
         className="lg:hidden fixed left-1/2 -translate-x-1/2 z-40 w-[calc(100%-28px)] max-w-md select-none font-khmer pointer-events-none"
         style={{ bottom: 'max(16px, calc(env(safe-area-inset-bottom, 0px) + 12px))' }}
       >
-        <div className="relative overflow-hidden flex items-center justify-between gap-2 p-2 pl-3 sm:p-2.5 sm:pl-3.5 bg-gradient-to-r from-[#031d1d]/95 via-[#042827]/95 to-[#02222e]/95 backdrop-blur-2xl border border-[#00F5A0]/45 rounded-full shadow-[0_12px_36px_rgba(0,0,0,0.92),0_0_24px_rgba(0,245,160,0.24),inset_0_1px_1px_rgba(0,245,160,0.35)] ring-1 ring-[#00F5A0]/20 pointer-events-auto">
+        <div className={`relative overflow-hidden flex items-center justify-between gap-2 p-2 pl-3 sm:p-2.5 sm:pl-3.5 ${
+          isFormReadyToPay
+            ? 'bg-gradient-to-r from-[#031d1d]/95 via-[#042827]/95 to-[#02222e]/95 border-[#00F5A0]/45 shadow-[0_12px_36px_rgba(0,0,0,0.92),0_0_24px_rgba(0,245,160,0.24),inset_0_1px_1px_rgba(0,245,160,0.35)] ring-1 ring-[#00F5A0]/20'
+            : 'bg-[#0a1120]/95 border-slate-700/60 shadow-[0_12px_36px_rgba(0,0,0,0.92)] ring-1 ring-slate-800/50'
+        } backdrop-blur-2xl border rounded-full transition-all duration-300 pointer-events-auto`}>
           
           {/* Ambient Highlight Glow Layers matching Pay Now button */}
-          <div className="absolute inset-0 bg-gradient-to-r from-[#00F5A0]/10 via-[#00E5B0]/5 to-[#00D4FF]/15 pointer-events-none rounded-full" />
-          <div className="absolute right-0 top-1/2 -translate-y-1/2 w-44 h-16 bg-[#00F5A0]/20 rounded-full blur-xl pointer-events-none" />
-          <div className="absolute left-1 top-1/2 -translate-y-1/2 w-28 h-12 bg-[#00D4FF]/15 rounded-full blur-xl pointer-events-none" />
+          {isFormReadyToPay && (
+            <>
+              <div className="absolute inset-0 bg-gradient-to-r from-[#00F5A0]/10 via-[#00E5B0]/5 to-[#00D4FF]/15 pointer-events-none rounded-full" />
+              <div className="absolute right-0 top-1/2 -translate-y-1/2 w-44 h-16 bg-[#00F5A0]/20 rounded-full blur-xl pointer-events-none" />
+              <div className="absolute left-1 top-1/2 -translate-y-1/2 w-28 h-12 bg-[#00D4FF]/15 rounded-full blur-xl pointer-events-none" />
+            </>
+          )}
 
           {/* Selected Package Thumbnail & Total Price Summary */}
           <div className="flex-1 flex items-center gap-2 min-w-0 pl-0.5 relative z-10">
             {/* Mini Package Chest / Icon with matching highlight border */}
-            <div className="w-8 h-8 xs:w-9 xs:h-9 rounded-full bg-[#021818]/90 border border-[#00F5A0]/40 p-0.5 flex items-center justify-center shrink-0 shadow-inner overflow-hidden">
+            <div className={`w-8 h-8 xs:w-9 xs:h-9 rounded-full ${isFormReadyToPay ? 'bg-[#021818]/90 border-[#00F5A0]/40' : 'bg-slate-900/90 border-slate-700/60'} border p-0.5 flex items-center justify-center shrink-0 shadow-inner overflow-hidden`}>
               <ProductPackageImage pkg={selectedProduct || {}} size="xs" />
             </div>
 
             {/* Package Name & Price */}
             <div className="flex-1 min-w-0">
               <div className="flex items-center gap-1.5 min-w-0">
-                <span className="text-[11px] sm:text-xs font-black text-white truncate">
+                <span className={`text-[11px] sm:text-xs font-black truncate ${selectedProduct ? 'text-white' : 'text-slate-400'}`}>
                   {selectedProduct?.name || (language === 'km' ? 'ជ្រើសរើសកញ្ចប់' : 'Select Package')}
                 </span>
                 {selectedProduct?.tag && (
@@ -3220,10 +3383,12 @@ const TopUp = () => {
                 <span className="text-[10px] text-emerald-200/70 font-medium">
                   {language === 'km' ? 'សរុប:' : 'Total:'}
                 </span>
-                <span className="text-sm sm:text-base font-black text-[#00F5A0] tracking-tight leading-none drop-shadow-[0_0_10px_rgba(0,245,160,0.6)] font-mono">
-                  {currency === 'KHR'
-                    ? `${Math.round((selectedProduct?.price || 0.95) * 4100).toLocaleString()} ៛`
-                    : `$${(selectedProduct?.price || 0.95).toFixed(2)}`}
+                <span className={`text-sm sm:text-base font-black ${selectedProduct ? 'text-[#00F5A0] drop-shadow-[0_0_10px_rgba(0,245,160,0.6)]' : 'text-slate-500'} tracking-tight leading-none font-mono`}>
+                  {selectedProduct
+                    ? (currency === 'KHR'
+                        ? `${Math.round((selectedProduct.price || 0) * 4100).toLocaleString()} ៛`
+                        : `$${(selectedProduct.price || 0).toFixed(2)}`)
+                    : '—'}
                 </span>
               </div>
             </div>
@@ -3234,15 +3399,22 @@ const TopUp = () => {
             type="button"
             id="mobile_sticky_pay_button"
             onClick={() => {
-              if (loading || isTopupDisabled) return;
-              if (!formData.playerID || !formData.playerID.trim()) {
-                setError(language === 'km' ? 'សូមបញ្ចូល Player ID របស់លោកអ្នកជាមុនសិន' : 'Please enter your Player ID first');
-                scrollToPlayerInfo('player');
-                return;
-              }
-              if (selectedGame?.id?.startsWith('mlbb') && (!formData.serverID || !formData.serverID.trim() || formData.serverID.trim().toLowerCase() === 'global')) {
-                setError(language === 'km' ? 'សូមបញ្ចូល Server ID របស់លោកអ្នកជាមុនសិន' : 'Please enter your Server ID first');
-                scrollToPlayerInfo('server');
+              if (!isFormReadyToPay) {
+                if (!hasPlayerId) {
+                  setError(language === 'km' ? 'សូមបញ្ចូល Player ID របស់លោកអ្នកជាមុនសិន' : 'Please enter your Player ID first');
+                  scrollToPlayerInfo('player');
+                  return;
+                }
+                if (!hasServerId) {
+                  setError(language === 'km' ? 'សូមបញ្ចូល Server ID របស់លោកអ្នកជាមុនសិន' : 'Please enter your Server ID first');
+                  scrollToPlayerInfo('server');
+                  return;
+                }
+                if (!hasSelectedPackage) {
+                  setError(language === 'km' ? 'សូមជ្រើសរើសកញ្ចប់ពេជ្រដែលអ្នកចង់ទិញ' : 'Please select a diamond package first');
+                  scrollToPackages();
+                  return;
+                }
                 return;
               }
               if (!verifiedAccount || !verifiedAccount.valid) {
@@ -3254,13 +3426,13 @@ const TopUp = () => {
               }
               handleProceedToPayment();
             }}
-            disabled={loading || isTopupDisabled}
-            className={`relative z-10 px-3.5 xs:px-4 sm:px-5 py-2 xs:py-2.5 rounded-full font-black text-xs sm:text-sm uppercase tracking-wide flex items-center justify-center gap-1.5 transition-all active:scale-95 shrink-0 select-none group border border-white/40 ${
+            disabled={!isFormReadyToPay}
+            className={`relative z-10 px-3.5 xs:px-4 sm:px-5 py-2 xs:py-2.5 rounded-full font-black text-xs sm:text-sm uppercase tracking-wide flex items-center justify-center gap-1.5 transition-all shrink-0 select-none group border ${
               loading
-                ? 'bg-sky-600/70 text-white cursor-wait opacity-90'
-                : isTopupDisabled
-                ? 'bg-slate-700/80 text-slate-400 cursor-not-allowed'
-                : 'bg-gradient-to-r from-[#00F5A0] via-[#00E5B0] to-[#00D4FF] hover:from-[#00F5B0] hover:to-[#00E5FF] text-slate-950 shadow-[0_4px_18px_rgba(0,245,160,0.42),inset_0_1px_0_rgba(255,255,255,0.7)] cursor-pointer'
+                ? 'bg-sky-600/70 text-white cursor-wait opacity-90 border-sky-400/50'
+                : !isFormReadyToPay
+                ? 'bg-slate-800/80 text-slate-400 border-slate-700/60 cursor-not-allowed opacity-50 shadow-none'
+                : 'bg-gradient-to-r from-[#00F5A0] via-[#00E5B0] to-[#00D4FF] hover:from-[#00F5B0] hover:to-[#00E5FF] text-slate-950 shadow-[0_4px_18px_rgba(0,245,160,0.42),inset_0_1px_0_rgba(255,255,255,0.7)] cursor-pointer border-white/40 active:scale-95'
             }`}
           >
             {loading ? (
@@ -3273,12 +3445,14 @@ const TopUp = () => {
               </div>
             ) : (
               <div className="flex items-center gap-1.5 sm:gap-2">
-                <span className="text-sm sm:text-base leading-none shrink-0 filter drop-shadow-sm">💳</span>
-                <span className="font-black text-xs sm:text-sm text-slate-950 tracking-wider">
+                <span className={`text-sm sm:text-base leading-none shrink-0 filter drop-shadow-sm ${!isFormReadyToPay ? 'opacity-50' : ''}`}>💳</span>
+                <span className={`font-black text-xs sm:text-sm tracking-wider ${!isFormReadyToPay ? 'text-slate-400' : 'text-slate-950'}`}>
                   {language === 'km' ? 'ទូទាត់ឥឡូវ' : 'PAY NOW'}
                 </span>
-                <span className="text-xs leading-none text-slate-950/80">⚡</span>
-                <span className="w-4 h-4 xs:w-4.5 xs:h-4.5 rounded-full bg-slate-950/20 text-slate-950 flex items-center justify-center text-[11px] font-black shrink-0 transition-transform group-hover:translate-x-0.5">
+                <span className={`text-xs leading-none ${!isFormReadyToPay ? 'text-slate-500' : 'text-slate-950/80'}`}>⚡</span>
+                <span className={`w-4 h-4 xs:w-4.5 xs:h-4.5 rounded-full flex items-center justify-center text-[11px] font-black shrink-0 ${
+                  !isFormReadyToPay ? 'bg-slate-700/60 text-slate-400' : 'bg-slate-950/20 text-slate-950 transition-transform group-hover:translate-x-0.5'
+                }`}>
                   ›
                 </span>
               </div>
@@ -3617,7 +3791,7 @@ const TopUp = () => {
                     🌐 {t('tab_all_pkgs')} ({products.length})
                   </option>
                   <option value="passes" className="bg-slate-900 text-white">
-                    🔥 {isFreefire ? 'Beat seller' : t('tab_pass_pkgs')} ({getFilteredPackages('passes').length})
+                    🔥 {isFreefire ? 'Passes & Best Sellers' : t('tab_pass_pkgs')} ({getFilteredPackages('passes').length})
                   </option>
                   {isFreefire && (
                     <option value="level_pass" className="bg-slate-900 text-white">
@@ -3625,7 +3799,7 @@ const TopUp = () => {
                     </option>
                   )}
                   <option value="diamonds" className="bg-slate-900 text-white">
-                    💎 {isFreefire ? 'Other Packages' : t('tab_diamond_pkgs')} ({getFilteredPackages('diamonds').length})
+                    💎 {isFreefire ? 'Diamond Packs' : t('tab_diamond_pkgs')} ({getFilteredPackages('diamonds').length})
                   </option>
                 </select>
                 <div className="pointer-events-none absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400">
@@ -3643,14 +3817,14 @@ const TopUp = () => {
                   className="w-full appearance-none bg-[#0a1024] hover:bg-[#0f1733] border border-slate-700/80 hover:border-slate-600 focus:border-cyan-400 text-cyan-300 text-xs font-bold rounded-xl pl-3 pr-7 py-2 cursor-pointer focus:outline-none focus:ring-1 focus:ring-cyan-400/40 transition-all font-khmer shadow-sm truncate"
                   aria-label="Select layout size"
                 >
+                  <option value="list" className="bg-slate-900 text-cyan-300 font-bold">
+                    ≡ {language === 'km' ? 'បញ្ជី ២ជួរ (2-Column)' : '2-Column List View'}
+                  </option>
                   <option value="tiles" className="bg-slate-900 text-white">
                     ⊞ {language === 'km' ? 'ក្រឡា (Tiles)' : 'Tiles View'}
                   </option>
                   <option value="grid" className="bg-slate-900 text-white">
                     ⊟ {language === 'km' ? 'រូបធំ (Large)' : 'Large View'}
-                  </option>
-                  <option value="list" className="bg-slate-900 text-white">
-                    ≡ {language === 'km' ? 'បញ្ជី (List)' : 'List View'}
                   </option>
                 </select>
                 <div className="pointer-events-none absolute right-2.5 top-1/2 -translate-y-1/2 text-cyan-400">
@@ -3714,19 +3888,21 @@ const TopUp = () => {
             {/* Selected Item Info */}
             <div className="flex items-center gap-2.5 min-w-0">
               <div className="w-10 h-10 rounded-xl bg-slate-900/80 border border-amber-400/50 p-0.5 flex items-center justify-center shrink-0">
-                <ProductPackageImage pkg={selectedProduct} size="xs" />
+                <ProductPackageImage pkg={selectedProduct || {}} size="xs" />
               </div>
               <div className="min-w-0">
                 <div className="text-[10px] text-slate-400 uppercase font-black tracking-wider truncate font-khmer">
                   {language === 'km' ? 'បានជ្រើសរើស' : 'Selected'}:
                 </div>
-                <div className="text-xs sm:text-sm font-black text-amber-300 truncate font-khmer">
-                  {selectedProduct.name}
+                <div className={`text-xs sm:text-sm font-black truncate font-khmer ${selectedProduct ? 'text-amber-300' : 'text-slate-400'}`}>
+                  {selectedProduct?.name || (language === 'km' ? 'មិនទាន់បានជ្រើសរើស' : 'Not selected')}
                 </div>
                 <div className="text-xs sm:text-sm font-black text-emerald-400 font-mono">
-                  {currency === 'KHR'
-                    ? `${Math.round(selectedProduct.price * 4100).toLocaleString()} ៛`
-                    : `$${selectedProduct.price.toFixed(2)} USD`}
+                  {selectedProduct
+                    ? (currency === 'KHR'
+                        ? `${Math.round(selectedProduct.price * 4100).toLocaleString()} ៛`
+                        : `$${selectedProduct.price.toFixed(2)} USD`)
+                    : '—'}
                 </div>
               </div>
             </div>
