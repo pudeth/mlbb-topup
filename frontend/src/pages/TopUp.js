@@ -2981,21 +2981,22 @@ const TopUp = () => {
             <span>{language === 'km' ? 'សូមបញ្ចូលលេខសម្គាល់ Player ID និង Server ID ឱ្យបានត្រឹមត្រូវ ដើម្បីធ្វើការបញ្ជាក់អត្តសញ្ញាណគណនីរបស់អ្នក' : 'Please enter the correct Player ID and Server ID to verify your account identity.'}</span>
           </div>
 
-          {/* Verified Account Showcase when Account is verified (matching Image 2) */}
+          {/* Verified Account Showcase: Ultra Clean & Clear (Crown Avatar + Player Name Only) */}
           {verifiedAccount?.valid && (
-            <div className="p-3.5 sm:p-4 rounded-2xl bg-[#020717] border border-cyan-500/40 shadow-[0_0_25px_rgba(6,182,212,0.12)] space-y-3 animate-fadeIn">
-              <div className="flex items-center gap-3.5">
-                {/* Circular Golden Glowing Crown Avatar */}
+            <div className="p-3 sm:p-3.5 rounded-2xl bg-gradient-to-r from-[#03091e] via-[#06122d] to-[#03091e] border border-cyan-500/40 shadow-[0_0_25px_rgba(6,182,212,0.14)] flex items-center justify-between gap-3 animate-fadeIn">
+              <div className="flex items-center gap-3 sm:gap-3.5 min-w-0 flex-1">
+                {/* Circular Golden Glowing Crown Avatar with Checkmark */}
                 <div className="relative shrink-0">
-                  <div className="w-14 h-14 sm:w-16 sm:h-16 rounded-full border-2 border-yellow-400 shadow-[0_0_20px_rgba(250,204,21,0.55)] bg-gradient-to-br from-yellow-500/25 via-[#060810] to-yellow-950/60 flex items-center justify-center">
+                  <div className="w-12 h-12 sm:w-14 sm:h-14 rounded-full border-2 border-yellow-400 shadow-[0_0_18px_rgba(250,204,21,0.55)] bg-gradient-to-br from-yellow-500/25 via-[#060810] to-yellow-950/60 flex items-center justify-center">
                     <span className="text-2xl sm:text-3xl filter drop-shadow-[0_0_8px_rgba(250,204,21,0.8)] select-none">👑</span>
                   </div>
-                  {/* Circular checkmark badge at bottom-right corner */}
-                  <div className="absolute -bottom-0.5 -right-0.5 w-5 h-5 rounded-full bg-emerald-500 border-2 border-[#020717] flex items-center justify-center text-white text-[10px] font-black shadow-[0_0_8px_#10b981]">
+                  {/* Verified Checkmark badge */}
+                  <div className="absolute -bottom-0.5 -right-0.5 w-4.5 h-4.5 rounded-full bg-emerald-500 border-2 border-[#020717] flex items-center justify-center text-white text-[9px] font-black shadow-[0_0_8px_#10b981]">
                     ✓
                   </div>
                 </div>
 
+                {/* Player Name */}
                 <div className="min-w-0 flex-1">
                   {isEditingRealName ? (
                     <form onSubmit={handleSaveCustomRealName} className="flex items-center gap-1.5 py-0.5">
@@ -3015,16 +3016,12 @@ const TopUp = () => {
                       </button>
                     </form>
                   ) : (
-                    <div className="flex items-center gap-2 flex-wrap">
-                      <h4 className="font-black text-white text-base sm:text-lg tracking-wide truncate font-sans">
+                    <div className="flex items-center gap-2 flex-wrap min-w-0">
+                      <h4 className="font-black text-white text-base sm:text-lg tracking-wide truncate font-sans drop-shadow-sm">
                         {verifiedAccount.name && !verifiedAccount.name.startsWith('Player_') && !verifiedAccount.name.includes('Player #') && verifiedAccount.name !== 'Verified Player'
                           ? verifiedAccount.name
-                          : (KNOWN_REAL_NAMES[verifiedAccount.id] || (language === 'km' ? `អ្នកលេង ${selectedGame.name} (${verifiedAccount.id})` : `${selectedGame.name} Player (${verifiedAccount.id})`))}
+                          : (KNOWN_REAL_NAMES[verifiedAccount.id] || (language === 'km' ? `អ្នកលេង ${selectedGame.name}` : `${selectedGame.name} Player`))}
                       </h4>
-                      <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[10px] sm:text-[11px] font-black uppercase tracking-wider bg-emerald-950/70 text-emerald-300 border border-emerald-500/50 shadow-[0_0_10px_rgba(16,185,129,0.2)]">
-                        <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
-                        REAL NAME
-                      </span>
                       <button
                         type="button"
                         onClick={() => {
@@ -3034,54 +3031,22 @@ const TopUp = () => {
                         className="text-slate-400 hover:text-pink-300 p-0.5 transition-colors cursor-pointer"
                         title="Edit display name"
                       >
-                        <svg className="w-3 h-3" viewBox="0 0 20 20" fill="currentColor">
+                        <svg className="w-3.5 h-3.5" viewBox="0 0 20 20" fill="currentColor">
                           <path d="M13.586 3.586a2 2 0 112.828 2.828l-.793.793-2.828-2.828.793-.793zM11.379 5.793L3 14.172V17h2.828l8.38-8.379-2.83-2.828z" />
                         </svg>
                       </button>
                     </div>
                   )}
-
-                  <div className="flex items-center gap-2.5 text-xs sm:text-sm text-slate-300 pt-1 font-mono">
-                    <span className="flex items-center gap-1 text-cyan-400 font-bold">
-                      <svg className="w-3.5 h-3.5 text-cyan-400 shrink-0" fill="currentColor" viewBox="0 0 20 20">
-                        <path fillRule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" clipRule="evenodd" />
-                      </svg>
-                      ID: {verifiedAccount.id}
-                    </span>
-                    <span className="text-cyan-800 font-normal">|</span>
-                    <span className="flex items-center gap-1 text-cyan-400 font-bold">
-                      <svg className="w-3.5 h-3.5 text-cyan-400 shrink-0" viewBox="0 0 24 24" fill="currentColor">
-                        <path d="M12 2C6.48 2 2 3.34 2 5v14c0 1.66 4.48 3 10 3s10-1.34 10-3V5c0-1.66-4.48-3-10-3zm0 2c4.42 0 8 .9 8 1.99s-3.58 2.01-8 2.01S4 7.08 4 5.99 7.58 4 12 4zm0 16c-4.42 0-8-.9-8-1.99V16.7c1.94 1.05 4.85 1.7 8 1.7s6.06-.65 8-1.7v1.31c0 1.09-3.58 1.99-8 1.99zm0-4.5c-4.42 0-8-.9-8-1.99V12.2c1.94 1.05 4.85 1.7 8 1.7s6.06-.65 8-1.7v1.31c0 1.09-3.58 1.99-8 1.99zm0-4.5c-4.42 0-8-.9-8-1.99V7.7c1.94 1.05 4.85 1.7 8 1.7s6.06-.65 8-1.7v1.31c0 1.09-3.58 1.99-8 1.99z"/>
-                      </svg>
-                      Zone: {verifiedAccount.server || (formData.serverID ? formData.serverID : resolveRegionInfo(verifiedAccount.region).name)}
-                    </span>
-                  </div>
                 </div>
               </div>
 
-              {/* Free Fire Authentic Stat Rows Table */}
-              {isFreefire && (
-                <div className="divide-y divide-slate-800/80 text-xs font-medium pt-1 border-t border-slate-800/80">
-                  <div className="py-2 flex items-center justify-between">
-                    <span className="text-slate-400">Battle Royale</span>
-                    <div className="flex items-center gap-2 font-bold text-white">
-                      <span className="px-1.5 py-0.5 rounded text-[10px] bg-amber-500/15 text-amber-300 border border-amber-500/35">🛡️</span>
-                      <span>{verifiedAccount.rank || 'Bronze I'}</span>
-                    </div>
-                  </div>
-                  <div className="py-2 flex items-center justify-between">
-                    <span className="text-slate-400 uppercase tracking-wide text-[11px]">CLASH SQUAD</span>
-                    <div className="flex items-center gap-2 font-bold text-white">
-                      <span className="px-1.5 py-0.5 rounded text-[10px] bg-rose-500/15 text-rose-300 border border-rose-500/35">⚔️</span>
-                      <span>{verifiedAccount.rankPoints ? `${verifiedAccount.rankPoints.toLocaleString()} pts` : (verifiedAccount.rank || 'Bronze I')}</span>
-                    </div>
-                  </div>
-                  <div className="py-2 flex items-center justify-between">
-                    <span className="text-slate-400">Likes</span>
-                    <span className="font-extrabold text-white font-mono text-sm">{(verifiedAccount.likes ?? 1837304).toLocaleString()}</span>
-                  </div>
-                </div>
-              )}
+              {/* REAL NAME Verified Badge on Right */}
+              <div className="shrink-0">
+                <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] sm:text-[11px] font-black uppercase tracking-wider bg-emerald-950/80 text-emerald-300 border border-emerald-500/50 shadow-[0_0_10px_rgba(16,185,129,0.25)]">
+                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
+                  REAL NAME
+                </span>
+              </div>
             </div>
           )}
         </div>
