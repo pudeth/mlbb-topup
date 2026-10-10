@@ -1,3 +1,5 @@
+import api from './api';
+
 // Promotional Event Banners Service with Real-Time Cloud Synchronization
 // Persists dynamically to MongoDB Atlas & Backend API so changes on smartphone sync to desktop & all visitors
 
@@ -135,38 +137,45 @@ export const getAllStoredBanners = () => {
 
 // Fetch latest banners from MongoDB Atlas / Cloud backend
 export const fetchStoredBanners = async () => {
-  const urls = getApiUrls();
-  for (const base of urls) {
-    try {
-      const cleanBase = base.endsWith('/') ? base.slice(0, -1) : base;
-      const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), 6000);
-      const res = await fetch(`${cleanBase}/banners?_t=${Date.now()}`, {
-        cache: 'no-store',
-        signal: controller.signal
-      });
-      clearTimeout(timeoutId);
-
-      if (res.ok) {
-        const data = await res.json();
-        let banners = data?.banners;
-        if (banners && !Array.isArray(banners) && Array.isArray(banners.banners)) {
-          banners = banners.banners;
-        }
-        if (Array.isArray(banners) && banners.length > 0) {
-          const sanitized = sanitizeBanners(banners);
-          try {
-            localStorage.setItem(STORAGE_KEY, JSON.stringify(sanitized));
-          } catch (quotaErr) {
-            console.warn('LocalStorage quota exceeded in fetchStoredBanners:', quotaErr);
-          }
-          if (typeof window !== 'undefined') {
-            window.dispatchEvent(new Event(EVENT_NAME));
-          }
-          return sanitized.filter(b => b.status !== 'Inactive');
-        }
+  try {
+    const res = await api.get(`/banners?_t=${Date.now()}`);
+    const data = res?.data;
+    let banners = data?.banners;
+    if (banners && !Array.isArray(banners) && Array.isArray(banners.banners)) {
+      banners = banners.banners;
+    }
+    if (Array.isArray(banners) && banners.length > 0) {
+      const sanitized = sanitizeBanners(banners);
+      try {
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(sanitized));
+      } catch (quotaErr) {
+        console.warn('LocalStorage quota exceeded in fetchStoredBanners:', quotaErr);
       }
-    } catch (_) {}
+      if (typeof window !== 'undefined') {
+        window.dispatchEvent(new Event(EVENT_NAME));
+      }
+      return sanitized.filter(b => b.status !== 'Inactive');
+    }
+  } catch (_) {
+    const urls = getApiUrls();
+    for (const base of urls) {
+      try {
+        const cleanBase = base.endsWith('/') ? base.slice(0, -1) : base;
+        const res = await fetch(`${cleanBase}/banners?_t=${Date.now()}`, { cache: 'no-store' });
+        if (res.ok) {
+          const data = await res.json();
+          let banners = data?.banners;
+          if (banners && !Array.isArray(banners) && Array.isArray(banners.banners)) {
+            banners = banners.banners;
+          }
+          if (Array.isArray(banners) && banners.length > 0) {
+            const sanitized = sanitizeBanners(banners);
+            localStorage.setItem(STORAGE_KEY, JSON.stringify(sanitized));
+            return sanitized.filter(b => b.status !== 'Inactive');
+          }
+        }
+      } catch (_) {}
+    }
   }
   return getStoredBanners();
 };
@@ -187,26 +196,26 @@ export const saveStoredBanners = async (banners) => {
     window.dispatchEvent(new Event(EVENT_NAME));
   }
 
-  // 3. Guaranteed Cloud MongoDB Atlas Persistence across all endpoints
-  const urls = getApiUrls();
+  // 3. Guaranteed Cloud Persistence across all endpoints via hybrid encrypted api
   try {
-    await Promise.allSettled(
-      urls.map(async (base) => {
-        const cleanBase = base.endsWith('/') ? base.slice(0, -1) : base;
-        const controller = new AbortController();
-        const timeoutId = setTimeout(() => controller.abort(), 8000);
-        const res = await fetch(`${cleanBase}/banners`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ banners: sanitized }),
-          signal: controller.signal
-        });
-        clearTimeout(timeoutId);
-        return res.ok;
-      })
-    );
-  } catch (cloudErr) {
-    console.warn('Cloud sync attempt finished with status:', cloudErr);
+    await api.post('/banners', { banners: sanitized });
+  } catch (_) {
+    const urls = getApiUrls();
+    try {
+      await Promise.allSettled(
+        urls.map(async (base) => {
+          const cleanBase = base.endsWith('/') ? base.slice(0, -1) : base;
+          const res = await fetch(`${cleanBase}/banners`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ banners: sanitized }),
+          });
+          return res.ok;
+        })
+      );
+    } catch (cloudErr) {
+      console.warn('Cloud sync attempt finished with status:', cloudErr);
+    }
   }
 
   return sanitized;

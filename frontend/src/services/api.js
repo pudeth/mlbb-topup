@@ -1,4 +1,10 @@
 import axios from 'axios';
+import {
+  isCryptoSupported,
+  prepareEncryptedRequest,
+  prepareEncryptedHeaders,
+  decryptWithAes,
+} from '../utils/crypto';
 
 const getDefaultApiUrl = () => {
   if (process.env.REACT_APP_API_URL) return process.env.REACT_APP_API_URL;
@@ -19,14 +25,37 @@ const api = axios.create({
   },
 });
 
-
-// Request interceptor to add auth token
+// Request interceptor to add auth token and perform Hybrid Encryption
 api.interceptors.request.use(
-  (config) => {
+  async (config) => {
     const token = localStorage.getItem('token');
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
     }
+
+    // Skip encryption if explicitly flagged or WebCrypto unavailable
+    if (config.skipEncryption || !isCryptoSupported()) {
+      return config;
+    }
+
+    try {
+      // 1. POST, PUT, PATCH with request body
+      if (config.data && ['post', 'put', 'patch'].includes(config.method?.toLowerCase())) {
+        const { envelope, rawKey } = await prepareEncryptedRequest(config.data);
+        config.data = envelope;
+        config._cryptoAesKey = rawKey;
+        config.headers['X-Encrypted'] = '1';
+      }
+      // 2. GET, DELETE or empty body
+      else {
+        const { headers, rawKey } = await prepareEncryptedHeaders();
+        Object.assign(config.headers, headers);
+        config._cryptoAesKey = rawKey;
+      }
+    } catch (err) {
+      console.warn('[Crypto] Outgoing request encryption fallback:', err);
+    }
+
     return config;
   },
   (error) => {
@@ -34,10 +63,47 @@ api.interceptors.request.use(
   }
 );
 
-// Response interceptor to handle errors
+// Response interceptor to handle errors and decrypt response payload
 api.interceptors.response.use(
-  (response) => response,
-  (error) => {
+  async (response) => {
+    const rawKey = response.config?._cryptoAesKey;
+    const isEncrypted =
+      response.headers?.['x-encrypted'] === '1' || response.data?._enc === true;
+
+    if (isEncrypted && rawKey && response.data?.data && response.data?.iv) {
+      try {
+        const decryptedData = await decryptWithAes(
+          response.data.data,
+          rawKey,
+          response.data.iv
+        );
+        response.data = decryptedData;
+      } catch (err) {
+        console.error('[Crypto] Failed to decrypt response body:', err);
+      }
+    }
+
+    return response;
+  },
+  async (error) => {
+    const rawKey = error.config?._cryptoAesKey;
+    const isEncrypted =
+      error.response?.headers?.['x-encrypted'] === '1' ||
+      error.response?.data?._enc === true;
+
+    if (isEncrypted && rawKey && error.response?.data?.data && error.response?.data?.iv) {
+      try {
+        const decryptedData = await decryptWithAes(
+          error.response.data.data,
+          rawKey,
+          error.response.data.iv
+        );
+        error.response.data = decryptedData;
+      } catch (err) {
+        console.error('[Crypto] Failed to decrypt error response:', err);
+      }
+    }
+
     if (error.response?.status === 401) {
       // Token expired or invalid - only redirect if user was logged in
       const hadToken = localStorage.getItem('token');
@@ -50,6 +116,31 @@ api.interceptors.response.use(
     return Promise.reject(error);
   }
 );
+
+// Crypto API
+export const cryptoAPI = {
+  getPublicKey: () => api.get('/crypto/public-key', { skipEncryption: true }),
+};
+
+// Games & Catalog API
+export const gamesAPI = {
+  getGames: () => api.get('/games'),
+  updateGames: (data) => api.post('/games', data),
+  getMasterStatus: () => api.get('/master-status'),
+  updateMasterStatus: (data) => api.post('/master-status', data),
+};
+
+// Event Banners API
+export const bannersAPI = {
+  getBanners: () => api.get('/banners'),
+  updateBanners: (data) => api.post('/banners', data),
+};
+
+// Store Branding API
+export const brandingAPI = {
+  getBranding: () => api.get('/admin/branding'),
+  updateBranding: (data) => api.post('/admin/branding', data),
+};
 
 // Auth API
 export const authAPI = {

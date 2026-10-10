@@ -141,6 +141,9 @@ builder.Services.AddHttpClient<MLBBTopUp.Infrastructure.TopUpProviders.ITopUpPro
 builder.Services.AddScoped<MLBBTopUp.Infrastructure.TopUpProviders.ITopUpProviderClient, 
     MLBBTopUp.Infrastructure.TopUpProviders.RealTopUpProviderClient>();
 
+// Register CryptoService for RSA + AES hybrid encryption
+builder.Services.AddSingleton<ICryptoService, CryptoService>();
+
 // Configure CORS to allow both localhost and all Vercel/production domains
 builder.Services.AddCors(options =>
 {
@@ -149,7 +152,8 @@ builder.Services.AddCors(options =>
         policy.SetIsOriginAllowed(origin => true)
               .AllowAnyHeader()
               .AllowAnyMethod()
-              .AllowCredentials();
+              .AllowCredentials()
+              .WithExposedHeaders("X-Encrypted", "X-Encrypted-Key", "X-Enc-IV");
     });
 });
 
@@ -175,6 +179,9 @@ app.UseSwaggerUI(c =>
 });
 
 app.UseCors("AllowFrontend");
+
+// Hybrid Encryption Middleware (decrypts incoming requests & encrypts outgoing responses)
+app.UseMiddleware<MLBBTopUp.API.Middleware.HybridEncryptionMiddleware>();
 
 app.UseAuthentication();
 app.UseAuthorization();

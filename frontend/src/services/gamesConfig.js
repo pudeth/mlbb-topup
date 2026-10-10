@@ -1,3 +1,5 @@
+import api from './api';
+
 // Real FazerCards Upstream Provider Catalog (Games & Digital Services)
 export const DEFAULT_GAMES = [
   // ==========================================
@@ -768,42 +770,46 @@ export const getStoredGames = () => {
 };
 
 export const fetchStoredGames = async () => {
-  const urls = getApiUrls();
   const savedStatuses = getSavedGameStatuses();
 
-  for (const base of urls) {
-    try {
-      const res = await fetch(`${base}/games?_t=${Date.now()}`, {
-        cache: 'no-store',
-        headers: {
-          'Cache-Control': 'no-cache, no-store, must-revalidate',
-          'Pragma': 'no-cache'
-        }
-      });
-      if (res.ok) {
-        const data = await res.json();
-        const rawGames = Array.isArray(data?.games)
-          ? data.games
-          : (Array.isArray(data?.games?.games) ? data.games.games : null);
+  try {
+    const res = await api.get(`/games?_t=${Date.now()}`);
+    const data = res?.data;
+    const rawGames = Array.isArray(data?.games)
+      ? data.games
+      : (Array.isArray(data?.games?.games) ? data.games.games : null);
 
-        if (rawGames && rawGames.length > 0) {
-          const normalized = rawGames.map(g => {
-            const item = normalizeGameFlags(g);
-            // Lock in saved status override chosen by user so backend cold defaults never revert it
-            if (savedStatuses && savedStatuses[item.id] !== undefined) {
-              item.status = savedStatuses[item.id];
-            }
-            return item;
-          });
-          localStorage.setItem(STORAGE_KEY, JSON.stringify(normalized));
-          if (typeof window !== 'undefined') {
-            window.dispatchEvent(new Event('gamesConfigUpdated'));
-            window.dispatchEvent(new CustomEvent('gamesConfigUpdated', { detail: normalized }));
-          }
-          return normalized;
+    if (rawGames && rawGames.length > 0) {
+      const normalized = rawGames.map(g => {
+        const item = normalizeGameFlags(g);
+        if (savedStatuses && savedStatuses[item.id] !== undefined) {
+          item.status = savedStatuses[item.id];
         }
+        return item;
+      });
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(normalized));
+      if (typeof window !== 'undefined') {
+        window.dispatchEvent(new Event('gamesConfigUpdated'));
+        window.dispatchEvent(new CustomEvent('gamesConfigUpdated', { detail: normalized }));
       }
-    } catch (e) {}
+      return normalized;
+    }
+  } catch (e) {
+    const urls = getApiUrls();
+    for (const base of urls) {
+      try {
+        const res = await fetch(`${base}/games?_t=${Date.now()}`, { cache: 'no-store' });
+        if (res.ok) {
+          const data = await res.json();
+          const rawGames = Array.isArray(data?.games) ? data.games : null;
+          if (rawGames && rawGames.length > 0) {
+            const normalized = rawGames.map(g => normalizeGameFlags(g));
+            localStorage.setItem(STORAGE_KEY, JSON.stringify(normalized));
+            return normalized;
+          }
+        }
+      } catch (_) {}
+    }
   }
   return getStoredGames();
 };
@@ -833,21 +839,21 @@ export const saveStoredGames = async (games) => {
       window.dispatchEvent(new CustomEvent('gamesConfigUpdated', { detail: normalized }));
     }
 
-    // 3. Broadcast to all backend APIs (MongoDB Atlas via Python microservice + .NET backend)
-    const urls = getApiUrls();
-    const token = typeof window !== 'undefined' ? localStorage.getItem('token') : null;
-    const headers = { 'Content-Type': 'application/json' };
-    if (token) headers['Authorization'] = `Bearer ${token}`;
-
-    await Promise.allSettled(
-      urls.map((base) =>
-        fetch(`${base}/games`, {
-          method: 'POST',
-          headers,
-          body: JSON.stringify({ games: normalized, list: normalized, statuses: currentStatuses }),
-        })
-      )
-    );
+    // 3. Broadcast securely via hybrid encrypted api
+    try {
+      await api.post('/games', { games: normalized, list: normalized, statuses: currentStatuses });
+    } catch (_) {
+      const urls = getApiUrls();
+      await Promise.allSettled(
+        urls.map((base) =>
+          fetch(`${base}/games`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ games: normalized, list: normalized, statuses: currentStatuses }),
+          })
+        )
+      );
+    }
   } catch (err) {
     console.warn('Error saving stored games to cloud:', err);
   }
@@ -891,28 +897,31 @@ export const getMasterTopupStatus = () => {
 };
 
 export const fetchMasterTopupStatus = async () => {
-  const urls = getApiUrls();
-  for (const base of urls) {
-    try {
-      const res = await fetch(`${base}/master-status?_t=${Date.now()}`, {
-        cache: 'no-store',
-        headers: {
-          'Cache-Control': 'no-cache, no-store, must-revalidate',
-          'Pragma': 'no-cache'
-        }
-      });
-      if (res.ok) {
-        const data = await res.json();
-        if (data?.success && data.masterStatus) {
-          localStorage.setItem(MASTER_STATUS_KEY, JSON.stringify(data.masterStatus));
-          if (typeof window !== 'undefined') {
-            window.dispatchEvent(new Event('gamesConfigUpdated'));
-            window.dispatchEvent(new CustomEvent('masterTopupStatusUpdated', { detail: data.masterStatus }));
-          }
-          return data.masterStatus;
-        }
+  try {
+    const res = await api.get(`/master-status?_t=${Date.now()}`);
+    const data = res?.data;
+    if (data?.success && data.masterStatus) {
+      localStorage.setItem(MASTER_STATUS_KEY, JSON.stringify(data.masterStatus));
+      if (typeof window !== 'undefined') {
+        window.dispatchEvent(new Event('gamesConfigUpdated'));
+        window.dispatchEvent(new CustomEvent('masterTopupStatusUpdated', { detail: data.masterStatus }));
       }
-    } catch (e) {}
+      return data.masterStatus;
+    }
+  } catch (e) {
+    const urls = getApiUrls();
+    for (const base of urls) {
+      try {
+        const res = await fetch(`${base}/master-status?_t=${Date.now()}`, { cache: 'no-store' });
+        if (res.ok) {
+          const data = await res.json();
+          if (data?.success && data.masterStatus) {
+            localStorage.setItem(MASTER_STATUS_KEY, JSON.stringify(data.masterStatus));
+            return data.masterStatus;
+          }
+        }
+      } catch (_) {}
+    }
   }
   return getMasterTopupStatus();
 };
@@ -927,21 +936,21 @@ export const saveMasterTopupStatus = async (statusData) => {
       window.dispatchEvent(new Event('gamesConfigUpdated'));
       window.dispatchEvent(new CustomEvent('masterTopupStatusUpdated', { detail: data }));
     }
-    // Immediately broadcast to all API backends
-    const urls = getApiUrls();
-    const token = typeof window !== 'undefined' ? localStorage.getItem('token') : null;
-    const headers = { 'Content-Type': 'application/json' };
-    if (token) headers['Authorization'] = `Bearer ${token}`;
-
-    await Promise.allSettled(
-      urls.map((base) =>
-        fetch(`${base}/master-status`, {
-          method: 'POST',
-          headers,
-          body: JSON.stringify(data),
-        })
-      )
-    );
+    // Secure broadcast via hybrid encrypted API
+    try {
+      await api.post('/master-status', data);
+    } catch (_) {
+      const urls = getApiUrls();
+      await Promise.allSettled(
+        urls.map((base) =>
+          fetch(`${base}/master-status`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(data),
+          })
+        )
+      );
+    }
     return data;
   } catch (err) {
     console.warn('Error saving master topup status to cloud:', err);

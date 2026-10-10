@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import api from './api';
 
 // Store Branding Service & State Manager
 export const DEFAULT_BRANDING = {
@@ -85,19 +86,9 @@ export const saveStoreBranding = (newBranding) => {
     if (typeof window !== 'undefined') {
       window.dispatchEvent(new CustomEvent(EVENT_NAME, { detail: updated }));
     }
-    // Asynchronously sync to backend / MongoDB Atlas
+    // Asynchronously sync to backend via hybrid encrypted api
     try {
-      const apiUrl = process.env.REACT_APP_API_URL || (typeof window !== 'undefined' && window.location.hostname !== 'localhost' ? 'https://mlbb-backend-api.onrender.com/api' : 'http://localhost:5000/api');
-      const token = typeof localStorage !== 'undefined' ? (localStorage.getItem('token') || localStorage.getItem('auth_token') || localStorage.getItem('access_token')) : null;
-      const headers = { 'Content-Type': 'application/json' };
-      if (token) {
-        headers['Authorization'] = `Bearer ${token}`;
-      }
-      fetch(`${apiUrl}/admin/branding`, {
-        method: 'POST',
-        headers,
-        body: JSON.stringify(updated),
-      }).catch(() => {});
+      api.post('/admin/branding', updated).catch(() => {});
     } catch (_) {}
     return updated;
   } catch (err) {
@@ -124,21 +115,18 @@ export const useStoreBranding = () => {
   const [branding, setBranding] = useState(getStoreBranding);
 
   useEffect(() => {
-    // 1. Fetch remote branding from backend / MongoDB Atlas on initial load
+    // 1. Fetch remote branding from backend on initial load (hybrid encrypted)
     const fetchRemoteBranding = async () => {
       try {
-        const apiUrl = process.env.REACT_APP_API_URL || (typeof window !== 'undefined' && window.location.hostname !== 'localhost' ? 'https://mlbb-backend-api.onrender.com/api' : 'http://localhost:5000/api');
-        const res = await fetch(`${apiUrl}/admin/branding`);
-        if (res.ok) {
-          const json = await res.json();
-          if (json?.branding) {
-            const remote = json.branding;
-            if (isLegacyOrInvalidLogo(remote.logoImage)) {
-              remote.logoImage = '/tin-logo.png';
-              remote.logoType = 'image';
-            }
-            saveStoreBranding(remote);
+        const res = await api.get('/admin/branding');
+        const json = res?.data;
+        if (json?.branding) {
+          const remote = json.branding;
+          if (isLegacyOrInvalidLogo(remote.logoImage)) {
+            remote.logoImage = '/tin-logo.png';
+            remote.logoType = 'image';
           }
+          saveStoreBranding(remote);
         }
       } catch (_) {}
     };
