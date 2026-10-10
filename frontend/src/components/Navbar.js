@@ -777,19 +777,6 @@ const Navbar = () => {
       )}
     </header>
 
-    {/* Mobile Smart Search Bar - in natural document flow right below sticky header */}
-    {!isAuthPage && (
-      <div className="lg:hidden max-w-7xl mx-auto px-3 sm:px-6 pt-1.5 pb-2.5 relative z-10 transition-opacity duration-200">
-        <SmartSearchBar
-          isMobile={true}
-          onFilterClick={() => {
-            const el = document.getElementById('games-section');
-            if (el) el.scrollIntoView({ behavior: 'smooth' });
-          }}
-        />
-      </div>
-    )}
-
     {/* Global Quick Cyber Search Modal */}
     {searchModalOpen && (
       <div 

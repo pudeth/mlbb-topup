@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useLanguage } from '../context/LanguageContext';
 import { getStoredGames, getMasterTopupStatus, fetchStoredGames, fetchMasterTopupStatus, getSavedGameStatuses } from '../services/gamesConfig';
+import { SmartSearchBar } from './SmartSearchBar';
 
 // 12 Popular Games Preset matching desktop/laptop screenshot exactly
 const POPULAR_GAMES_PRESET = [
@@ -502,6 +503,17 @@ const GameSelection = () => {
         })}
       </div>
 
+      {/* Smart Search Bar: Moved down to below categories of game */}
+      <div className="w-full relative z-20">
+        <SmartSearchBar
+          isMobile={true}
+          onFilterClick={() => {
+            const el = document.getElementById('games-grid');
+            if (el) el.scrollIntoView({ behavior: 'smooth' });
+          }}
+        />
+      </div>
+
       {/* Section Header: Popular Games */}
       <div className="flex items-center justify-between pt-1">
         <div className="flex items-center gap-2.5">
@@ -531,7 +543,7 @@ const GameSelection = () => {
       </div>
 
       {/* Popular Games Responsive Grid: 3 cols on mobile (1 row has 3 product cards), 3 on tablet, 4 on desktop */}
-      <div className="grid grid-cols-3 sm:grid-cols-3 md:grid-cols-4 gap-2 sm:gap-3.5 lg:gap-4.5">
+      <div id="games-grid" className="grid grid-cols-3 sm:grid-cols-3 md:grid-cols-4 gap-2 sm:gap-3.5 lg:gap-4.5">
         {filteredGames.map((game) => {
           const isMasterPaused = masterStatus?.status && masterStatus.status !== 'Active';
           const isGamePaused = game.status && game.status !== 'Active';
@@ -617,6 +629,12 @@ const GameSelection = () => {
           );
         })}
       </div>
+
+      {filteredGames.length === 0 && (
+        <div className="py-12 text-center text-slate-400 text-xs sm:text-sm font-medium">
+          {language === 'km' ? 'រកមិនឃើញហ្គេមដែលត្រូវនឹងការស្វែងរកទេ' : 'No games found matching your search.'}
+        </div>
+      )}
 
       {/* ========================================================= */}
       {/* SECTION: ពិសេសសម្រាប់អ្នក / Special for You (Exact 3 Cards matching mockup) */}

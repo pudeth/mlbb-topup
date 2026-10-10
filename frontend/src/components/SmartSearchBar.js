@@ -274,9 +274,7 @@ export const SmartSearchBar = ({ isMobile = false, onFilterClick }) => {
               isOpen && query.trim().length > 0
                 ? 'bg-[#0f172a] border-sky-400 text-white font-bold ring-2 ring-sky-500/40 shadow-[0_0_20px_rgba(56,189,248,0.25)]'
                 : 'bg-[#0b101e] border-slate-700/80 text-white font-medium'
-            } border ${
-              isMobile ? 'rounded-2xl pl-10 pr-9 py-2.5 text-sm' : 'rounded-full pl-10 pr-9 py-2 text-xs'
-            } placeholder-slate-400 focus:outline-none focus:border-sky-400 focus:ring-2 focus:ring-sky-500/40 transition-all shadow-inner text-white`}
+            } border rounded-full pl-10 pr-9 py-2.5 text-xs sm:text-sm placeholder-slate-400 focus:outline-none focus:border-sky-400 focus:ring-2 focus:ring-sky-500/40 transition-all shadow-inner text-white`}
             onChange={handleInputChange}
             onFocus={() => {
               if (query.trim().length > 0) setIsOpen(true);
