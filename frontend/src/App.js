@@ -1,5 +1,5 @@
 import React from 'react';
-import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route, Navigate, useNavigate } from 'react-router-dom';
 import { AuthProvider } from './context/AuthContext';
 import { LanguageProvider } from './context/LanguageContext';
 
@@ -18,6 +18,33 @@ import ApiDocs from './pages/ApiDocs';
 import AdminRoute from './components/AdminRoute';
 import Layout from './components/Layout';
 
+// Seamless Player Login Redirect: when customers visit /login, navigate to home and pop up Player Login
+function PlayerLoginRedirect() {
+  const navigate = useNavigate();
+
+  React.useEffect(() => {
+    navigate('/', { replace: true });
+    const timer = setTimeout(() => {
+      window.dispatchEvent(new CustomEvent('open-player-login'));
+    }, 150);
+    return () => clearTimeout(timer);
+  }, [navigate]);
+
+  return null;
+}
+
+// Subdomain-aware Home: If accessing through an admin subdomain (e.g. admin.*), routes directly to /admin
+function SmartHome() {
+  const isSubdomainAdmin = typeof window !== 'undefined' && 
+    (window.location.hostname.startsWith('admin.') || window.location.hostname.startsWith('adm.'));
+
+  if (isSubdomainAdmin) {
+    return <Navigate to="/admin" replace />;
+  }
+
+  return <Home />;
+}
+
 function App() {
   return (
     <LanguageProvider>
@@ -25,10 +52,13 @@ function App() {
         <Router>
           <Layout>
             <Routes>
-              <Route path="/" element={<Home />} />
+              {/* Storefront routes */}
+              <Route path="/" element={<SmartHome />} />
               <Route path="/topup" element={<TopUp />} />
               <Route path="/order-status/:orderId" element={<OrderStatus />} />
-              <Route path="/login" element={<Login />} />
+              
+              {/* Player Login redirect: visitors browsing /login are safely directed to storefront with player login modal */}
+              <Route path="/login" element={<PlayerLoginRedirect />} />
               <Route path="/register" element={<Register />} />
               <Route path="/support" element={<Support />} />
               <Route path="/privacy" element={<PrivacyPolicy />} />
@@ -46,7 +76,19 @@ function App() {
               <Route path="/order-history" element={<OrderHistory />} />
               <Route path="/player-login" element={<OrderHistory />} />
               
-              {/* Admin routes */}
+              {/* Dedicated Secret Admin Login Routes: https://mlbb-topup-jet.vercel.app/K#99 */}
+              <Route path="/K" element={<Login />} />
+              <Route path="/k" element={<Login />} />
+              <Route path="/K99" element={<Login />} />
+              <Route path="/k99" element={<Login />} />
+              <Route path="/K-99" element={<Login />} />
+              <Route path="/k-99" element={<Login />} />
+              <Route path="/admin-login" element={<Navigate to="/K#99" replace />} />
+              <Route path="/admin/login" element={<Navigate to="/K#99" replace />} />
+              <Route path="/topup/admin-login" element={<Navigate to="/K#99" replace />} />
+              <Route path="/topup/admin/login" element={<Navigate to="/K#99" replace />} />
+
+              {/* Admin Dashboard Protected routes */}
               <Route path="/admin" element={
                 <AdminRoute>
                   <AdminDashboard />

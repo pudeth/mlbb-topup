@@ -139,7 +139,16 @@ const Navbar = () => {
     { icon: '🎧', title: t('ticker_4_title'), desc: t('ticker_4_desc') },
   ];
 
-  const isAuthPage = location.pathname.startsWith('/login') || location.pathname.startsWith('/register');
+  const isAuthPage = location.pathname.startsWith('/login') || 
+    location.pathname.startsWith('/register') || 
+    location.pathname === '/K' || 
+    location.pathname === '/k' || 
+    location.pathname.startsWith('/K/') || 
+    location.pathname.startsWith('/k/') || 
+    location.pathname.toLowerCase().startsWith('/k99') || 
+    location.pathname.toLowerCase().startsWith('/k-99') || 
+    location.pathname.includes('admin-login') || 
+    location.pathname.endsWith('/admin/login');
 
   return (
     <>

@@ -26,19 +26,33 @@ const Layout = ({ children }) => {
     };
   }, []);
 
-  const isAdminPath = location.pathname.startsWith('/admin') || location.pathname.startsWith('/topup/admin') || location.pathname.includes('/admin');
-  const isAuthPath = location.pathname.startsWith('/login') || location.pathname.startsWith('/register');
+  const isAdminDashboard = (location.pathname.startsWith('/admin') || location.pathname.startsWith('/topup/admin')) 
+    && !location.pathname.includes('login');
+  const isAuthPath = location.pathname.startsWith('/login') || 
+    location.pathname.startsWith('/register') || 
+    location.pathname === '/K' || 
+    location.pathname === '/k' || 
+    location.pathname.startsWith('/K/') || 
+    location.pathname.startsWith('/k/') || 
+    location.pathname.toLowerCase().startsWith('/k99') || 
+    location.pathname.toLowerCase().startsWith('/k-99') || 
+    location.pathname.includes('admin-login') || 
+    location.pathname.endsWith('/admin/login');
 
   // Automatically scroll to top ONLY on actual page (pathname) navigation, NOT on search params
   const prevPathnameRef = useRef(location.pathname);
   useEffect(() => {
     if (location.hash) {
-      const el = document.querySelector(location.hash);
-      if (el) {
-        setTimeout(() => {
-          el.scrollIntoView({ behavior: 'smooth' });
-        }, 100);
-        return;
+      try {
+        const el = document.querySelector(location.hash);
+        if (el) {
+          setTimeout(() => {
+            el.scrollIntoView({ behavior: 'smooth' });
+          }, 100);
+          return;
+        }
+      } catch (err) {
+        // Silently ignore non-standard hash fragments such as #99
       }
     }
     // Only scroll to top if pathname changed (e.g. / to /topup), NEVER on query param changes
@@ -48,7 +62,7 @@ const Layout = ({ children }) => {
     }
   }, [location.pathname, location.hash]);
 
-  if (isAdminPath) {
+  if (isAdminDashboard) {
     return (
       <div className="h-screen min-h-[100dvh] bg-[#07090E] text-slate-100 relative overflow-hidden">
         <main className="h-full relative z-10">{children}</main>
@@ -58,8 +72,7 @@ const Layout = ({ children }) => {
 
   const hideFooter =
     location.pathname.startsWith('/topup') ||
-    location.pathname.startsWith('/login') ||
-    location.pathname.startsWith('/register');
+    isAuthPath;
 
   return (
     <div className="min-h-screen flex flex-col bg-dark-bg text-slate-100 relative overflow-x-clip">

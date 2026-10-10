@@ -1822,7 +1822,7 @@ const PRICING_GAMES = [
   const handleLogout = () => {
     if (window.confirm('Are you sure you want to log out of the Admin Dashboard?')) {
       logout();
-      navigate('/login');
+      navigate('/K#99');
     }
   };
 

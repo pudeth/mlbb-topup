@@ -15,11 +15,11 @@ const AdminRoute = ({ children }) => {
   }
 
   if (!isAuthenticated()) {
-    return <Navigate to="/login" state={{ from: location.pathname }} replace />;
+    return <Navigate to="/K#99" state={{ from: location.pathname }} replace />;
   }
 
   if (!isAdmin()) {
-    return <Navigate to="/login" state={{ from: location.pathname, requireAdmin: true }} replace />;
+    return <Navigate to="/K#99" state={{ from: location.pathname, requireAdmin: true }} replace />;
   }
 
   return children;

@@ -103,7 +103,8 @@ api.interceptors.response.use(
       localStorage.removeItem('token');
       localStorage.removeItem('user');
       if (hadToken && window.location.pathname !== '/topup') {
-        window.location.href = '/login';
+        const isAdminPath = window.location.pathname.startsWith('/admin') || window.location.pathname.includes('admin');
+        window.location.href = isAdminPath ? '/K#99' : '/';
       }
     }
     return Promise.reject(error);
