@@ -556,9 +556,9 @@ const GameSelection = () => {
                   : 'bg-gradient-to-b from-[#0f172a]/95 via-[#0b1222]/95 to-[#070b16]/98 border border-slate-800/90 hover:border-cyan-500/60 shadow-[0_4px_20px_rgba(0,0,0,0.6)] hover:shadow-[0_12px_35px_rgba(14,165,233,0.25)] hover:-translate-y-1 cursor-pointer'
               }`}
             >
-              {/* Premium Cyber Game Image Frame */}
-              <div className="relative mb-1.5 sm:mb-2.5 rounded-xl sm:rounded-2xl p-[1.5px] bg-gradient-to-b from-cyan-400/40 via-slate-700/50 to-blue-600/30 group-hover:from-cyan-300 group-hover:via-sky-400 group-hover:to-blue-500 transition-all duration-300 shadow-[0_4px_16px_rgba(0,0,0,0.5)] group-hover:shadow-[0_0_24px_rgba(14,165,233,0.38)]">
-                <div className="relative aspect-[4/3] w-full rounded-[10px] sm:rounded-[14px] overflow-hidden bg-slate-950">
+              {/* Premium Cyber Game Image Frame (1:1 uncropped square ratio) */}
+              <div className="relative mb-1.5 sm:mb-2.5 rounded-xl sm:rounded-2xl p-[1.5px] bg-gradient-to-b from-cyan-400/50 via-slate-700/60 to-blue-600/40 group-hover:from-cyan-300 group-hover:via-sky-400 group-hover:to-blue-500 transition-all duration-300 shadow-[0_4px_16px_rgba(0,0,0,0.5)] group-hover:shadow-[0_0_24px_rgba(14,165,233,0.38)]">
+                <div className="relative aspect-square w-full rounded-[10px] sm:rounded-[14px] overflow-hidden bg-slate-950 flex items-center justify-center">
                   <img
                     src={game.image}
                     alt={game.name}
@@ -566,25 +566,21 @@ const GameSelection = () => {
                       e.target.onerror = null;
                       e.target.src = game.fallbackImage || game.localFallbackImage || '/mlbb-logo.png';
                     }}
-                    className="w-full h-full object-cover group-hover:scale-108 transition-transform duration-500 ease-out filter brightness-[1.02] contrast-[1.03] group-hover:brightness-[1.08]"
+                    className="w-full h-full object-cover object-center group-hover:scale-105 transition-transform duration-500 ease-out filter brightness-[1.02] contrast-[1.03] group-hover:brightness-[1.06]"
                   />
 
-                  {/* Subtle Atmospheric Vignette Overlay */}
-                  <div className="absolute inset-0 pointer-events-none bg-gradient-to-t from-slate-950/75 via-transparent to-black/20 opacity-70 group-hover:opacity-40 transition-opacity duration-300" />
+                  {/* Subtle Ambient Light Overlay (no heavy dark cropping) */}
+                  <div className="absolute inset-0 pointer-events-none bg-gradient-to-t from-slate-950/25 via-transparent to-transparent opacity-60 group-hover:opacity-20 transition-opacity duration-300" />
 
                   {/* Inner High-Tech Bevel Ring */}
                   <div className="absolute inset-0 pointer-events-none rounded-[10px] sm:rounded-[14px] ring-1 ring-inset ring-white/15 group-hover:ring-cyan-300/40 transition-colors duration-300" />
 
                   {/* Diagonal Shimmer Light Sweep on Hover */}
-                  <div className="absolute inset-0 -translate-x-full group-hover:translate-x-full transition-transform duration-1000 bg-gradient-to-r from-transparent via-white/20 to-transparent skew-x-12 pointer-events-none z-10" />
-
-                  {/* Cyber Tech Corner Accents */}
-                  <div className="absolute top-1 left-1 sm:top-1.5 sm:left-1.5 w-2 h-2 sm:w-2.5 sm:h-2.5 border-t-2 border-l-2 border-cyan-400/80 rounded-tl-sm pointer-events-none opacity-80 group-hover:opacity-100 group-hover:border-cyan-300 transition-all z-10" />
-                  <div className="absolute bottom-1 right-1 sm:bottom-1.5 sm:right-1.5 w-2 h-2 sm:w-2.5 sm:h-2.5 border-b-2 border-r-2 border-blue-400/80 rounded-br-sm pointer-events-none opacity-80 group-hover:opacity-100 group-hover:border-sky-300 transition-all z-10" />
+                  <div className="absolute inset-0 -translate-x-full group-hover:translate-x-full transition-transform duration-1000 bg-gradient-to-r from-transparent via-white/15 to-transparent skew-x-12 pointer-events-none z-10" />
 
                   {/* Top Right Status Badge */}
                   {game.badge && (
-                    <div className="absolute top-1 right-1 sm:top-1.5 sm:right-1.5 z-20">
+                    <div className="absolute top-1.5 right-1.5 sm:top-2 sm:right-2 z-20">
                       {renderBadge(game.badge, game.badgeType)}
                     </div>
                   )}
