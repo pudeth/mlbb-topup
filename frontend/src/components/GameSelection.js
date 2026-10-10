@@ -440,7 +440,7 @@ const GameSelection = () => {
   const renderBadge = (badge, badgeType) => {
     if (badgeType === 'paused') {
       return (
-        <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full text-[7.5px] sm:text-[9.5px] font-black tracking-wider uppercase bg-amber-500/25 text-amber-300 border border-amber-500/40 backdrop-blur-md shadow-xs">
+        <span className="inline-flex items-center gap-1 px-1.5 sm:px-2 py-0.5 rounded-full text-[7.5px] sm:text-[9px] font-black tracking-wider uppercase bg-amber-500/25 text-amber-300 border border-amber-400/50 backdrop-blur-md shadow-[0_2px_8px_rgba(245,158,11,0.35)]">
           <span className="w-1.5 h-1.5 rounded-full bg-amber-400 animate-pulse" />
           <span>PAUSED</span>
         </span>
@@ -448,7 +448,7 @@ const GameSelection = () => {
     }
     if (badgeType === 'closed') {
       return (
-        <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full text-[7.5px] sm:text-[9.5px] font-black tracking-wider uppercase bg-rose-500/25 text-rose-300 border border-rose-500/40 backdrop-blur-md shadow-xs">
+        <span className="inline-flex items-center gap-1 px-1.5 sm:px-2 py-0.5 rounded-full text-[7.5px] sm:text-[9px] font-black tracking-wider uppercase bg-rose-500/25 text-rose-300 border border-rose-400/50 backdrop-blur-md shadow-[0_2px_8px_rgba(244,63,94,0.35)]">
           <span className="w-1.5 h-1.5 rounded-full bg-rose-500" />
           <span>CLOSED</span>
         </span>
@@ -456,15 +456,17 @@ const GameSelection = () => {
     }
     if (badgeType === 'new') {
       return (
-        <span className="inline-flex items-center px-1.5 py-0.5 rounded-full text-[7.5px] sm:text-[9.5px] font-black tracking-wider uppercase bg-gradient-to-r from-emerald-500 to-teal-500 text-slate-950 shadow-xs font-mono">
-          NEW
+        <span className="inline-flex items-center gap-1 px-1.5 sm:px-2 py-0.5 rounded-full text-[7.5px] sm:text-[9px] font-black tracking-wider uppercase bg-gradient-to-r from-emerald-400 via-teal-400 to-emerald-500 text-slate-950 shadow-[0_2px_10px_rgba(16,185,129,0.5)] border border-emerald-300/60 font-mono">
+          <span className="w-1 h-1 rounded-full bg-slate-950 animate-ping shrink-0" />
+          <span>NEW</span>
         </span>
       );
     }
     // Default HOT
     return (
-      <span className="inline-flex items-center px-1.5 py-0.5 rounded-full text-[7.5px] sm:text-[9.5px] font-black tracking-wider uppercase bg-gradient-to-r from-red-600 to-rose-600 text-white shadow-xs font-mono">
-        HOT
+      <span className="inline-flex items-center gap-1 px-1.5 sm:px-2 py-0.5 rounded-full text-[7.5px] sm:text-[9px] font-black tracking-wider uppercase bg-gradient-to-r from-red-500 via-rose-600 to-orange-500 text-white shadow-[0_2px_12px_rgba(239,68,68,0.55)] border border-red-400/50 font-mono">
+        <span className="text-[8px] sm:text-[9px] leading-none">🔥</span>
+        <span>HOT</span>
       </span>
     );
   };
@@ -551,27 +553,42 @@ const GameSelection = () => {
               className={`group relative rounded-xl sm:rounded-3xl p-2 sm:p-3.5 transition-all duration-300 flex flex-col justify-between select-none overflow-hidden ${
                 isInactive
                   ? 'bg-gradient-to-b from-[#0c1222]/90 to-[#070b16]/95 border border-slate-800/80 opacity-80 cursor-not-allowed'
-                  : 'bg-gradient-to-b from-[#0f172a]/95 via-[#0b1222]/95 to-[#070b16]/98 border border-slate-800/90 hover:border-sky-500/60 shadow-[0_4px_20px_rgba(0,0,0,0.6)] hover:shadow-[0_12px_35px_rgba(14,165,233,0.22)] hover:-translate-y-1 cursor-pointer'
+                  : 'bg-gradient-to-b from-[#0f172a]/95 via-[#0b1222]/95 to-[#070b16]/98 border border-slate-800/90 hover:border-cyan-500/60 shadow-[0_4px_20px_rgba(0,0,0,0.6)] hover:shadow-[0_12px_35px_rgba(14,165,233,0.25)] hover:-translate-y-1 cursor-pointer'
               }`}
             >
-              {/* Game Artwork Cover (Clean, bright & completely unobstructed) */}
-              <div className="relative aspect-[4/3] w-full rounded-lg sm:rounded-2xl overflow-hidden bg-slate-950 mb-1.5 sm:mb-2.5 border border-slate-800/70 shadow-sm">
-                <img
-                  src={game.image}
-                  alt={game.name}
-                  onError={(e) => {
-                    e.target.onerror = null;
-                    e.target.src = game.fallbackImage || game.localFallbackImage || '/mlbb-logo.png';
-                  }}
-                  className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500 filter brightness-[1.03] contrast-[1.02]"
-                />
+              {/* Premium Cyber Game Image Frame */}
+              <div className="relative mb-1.5 sm:mb-2.5 rounded-xl sm:rounded-2xl p-[1.5px] bg-gradient-to-b from-cyan-400/40 via-slate-700/50 to-blue-600/30 group-hover:from-cyan-300 group-hover:via-sky-400 group-hover:to-blue-500 transition-all duration-300 shadow-[0_4px_16px_rgba(0,0,0,0.5)] group-hover:shadow-[0_0_24px_rgba(14,165,233,0.38)]">
+                <div className="relative aspect-[4/3] w-full rounded-[10px] sm:rounded-[14px] overflow-hidden bg-slate-950">
+                  <img
+                    src={game.image}
+                    alt={game.name}
+                    onError={(e) => {
+                      e.target.onerror = null;
+                      e.target.src = game.fallbackImage || game.localFallbackImage || '/mlbb-logo.png';
+                    }}
+                    className="w-full h-full object-cover group-hover:scale-108 transition-transform duration-500 ease-out filter brightness-[1.02] contrast-[1.03] group-hover:brightness-[1.08]"
+                  />
 
-                {/* Top Right Status Badge */}
-                {game.badge && (
-                  <div className="absolute top-1 right-1 sm:top-1.5 sm:right-1.5 z-20">
-                    {renderBadge(game.badge, game.badgeType)}
-                  </div>
-                )}
+                  {/* Subtle Atmospheric Vignette Overlay */}
+                  <div className="absolute inset-0 pointer-events-none bg-gradient-to-t from-slate-950/75 via-transparent to-black/20 opacity-70 group-hover:opacity-40 transition-opacity duration-300" />
+
+                  {/* Inner High-Tech Bevel Ring */}
+                  <div className="absolute inset-0 pointer-events-none rounded-[10px] sm:rounded-[14px] ring-1 ring-inset ring-white/15 group-hover:ring-cyan-300/40 transition-colors duration-300" />
+
+                  {/* Diagonal Shimmer Light Sweep on Hover */}
+                  <div className="absolute inset-0 -translate-x-full group-hover:translate-x-full transition-transform duration-1000 bg-gradient-to-r from-transparent via-white/20 to-transparent skew-x-12 pointer-events-none z-10" />
+
+                  {/* Cyber Tech Corner Accents */}
+                  <div className="absolute top-1 left-1 sm:top-1.5 sm:left-1.5 w-2 h-2 sm:w-2.5 sm:h-2.5 border-t-2 border-l-2 border-cyan-400/80 rounded-tl-sm pointer-events-none opacity-80 group-hover:opacity-100 group-hover:border-cyan-300 transition-all z-10" />
+                  <div className="absolute bottom-1 right-1 sm:bottom-1.5 sm:right-1.5 w-2 h-2 sm:w-2.5 sm:h-2.5 border-b-2 border-r-2 border-blue-400/80 rounded-br-sm pointer-events-none opacity-80 group-hover:opacity-100 group-hover:border-sky-300 transition-all z-10" />
+
+                  {/* Top Right Status Badge */}
+                  {game.badge && (
+                    <div className="absolute top-1 right-1 sm:top-1.5 sm:right-1.5 z-20">
+                      {renderBadge(game.badge, game.badgeType)}
+                    </div>
+                  )}
+                </div>
               </div>
 
               {/* Game Details: Title, Server Name & Genre */}
